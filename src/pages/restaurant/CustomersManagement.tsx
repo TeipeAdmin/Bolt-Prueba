@@ -48,7 +48,7 @@ export const CustomersManagement: React.FC = () => {
 
   useEffect(() => {
     filterAndSortCustomers();
-  }, [customers, searchTerm, sortBy, filterBy, statusFilter]);
+  }, [customers, searchTerm, sortBy, sortDirection, filterBy, statusFilter]);
 
   const loadCustomersData = () => {
     if (!restaurant) return;
