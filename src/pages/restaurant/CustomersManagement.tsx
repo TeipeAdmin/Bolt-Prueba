@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User, Phone, Mail, MapPin, Calendar, ShoppingBag, Filter, Search, Star, Edit, ArrowUpDown, Trash2 } from 'lucide-react';
-import { Order, Customer } from '../../types';
+import { Order, Customer, Subscription } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -33,6 +33,8 @@ export const CustomersManagement: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<CustomerData | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [customerToDelete, setCustomerToDelete] = useState<CustomerData | null>(null);
   const [editForm, setEditForm] = useState({
     name: '',
     phone: '',
@@ -56,6 +58,7 @@ export const CustomersManagement: React.FC = () => {
     if (!restaurant) return;
 
     const allOrders = loadFromStorage('orders') || [];
+    const vipCustomers = loadFromStorage('vipCustomers') || [];
     const restaurantOrders = allOrders.filter((order: Order) => 
       order.restaurant_id === restaurant.id
     );
@@ -80,6 +83,9 @@ export const CustomersManagement: React.FC = () => {
         existing.address = order.customer.address || existing.address;
         existing.delivery_instructions = order.customer.delivery_instructions || existing.delivery_instructions;
       } else {
+        const isVip = vipCustomers.some((vip: any) => 
+          vip.restaurant_id === restaurant.id && vip.phone === order.customer.phone
+        );
         customerMap.set(customerKey, {
           id: order.customer.phone,
           name: order.customer.name,
@@ -91,7 +97,7 @@ export const CustomersManagement: React.FC = () => {
           totalSpent: order.status === 'delivered' ? order.total : 0,
           lastOrderDate: order.created_at,
           orderTypes: [order.order_type],
-          isVip: false,
+          isVip: isVip,
         });
       }
     });
@@ -170,21 +176,25 @@ export const CustomersManagement: React.FC = () => {
     const customer = customers.find(c => c.id === customerId);
     if (!customer) return;
 
-    // Update customers in localStorage by updating all orders from this customer
-    const allOrders = loadFromStorage('orders') || [];
-    const updatedOrders = allOrders.map((order: Order) => {
-      if (order.customer.phone === customer.phone) {
-        return {
-          ...order,
-          customer: {
-            ...order.customer,
-            isVip: !customer.isVip,
-          }
-        };
-      }
-      return order;
-    });
-    saveToStorage('orders', updatedOrders);
+    // Update VIP customers in localStorage
+    const vipCustomers = loadFromStorage('vipCustomers') || [];
+    
+    if (customer.isVip) {
+      // Remove from VIP list
+      const updatedVipCustomers = vipCustomers.filter((vip: any) => 
+        !(vip.restaurant_id === restaurant?.id && vip.phone === customer.phone)
+      );
+      saveToStorage('vipCustomers', updatedVipCustomers);
+    } else {
+      // Add to VIP list
+      const newVipCustomer = {
+        restaurant_id: restaurant?.id,
+        phone: customer.phone,
+        name: customer.name,
+        created_at: new Date().toISOString(),
+      };
+      saveToStorage('vipCustomers', [...vipCustomers, newVipCustomer]);
+    }
 
     // Update local state
     setCustomers(prevCustomers =>
@@ -272,8 +282,17 @@ export const CustomersManagement: React.FC = () => {
   const handleDeleteCustomer = (customerId: string) => {
     const customer = customers.find(c => c.id === customerId);
     if (!customer) return;
+    
+    setCustomerToDelete(customer);
+    setShowDeleteModal(true);
+  };
 
-    deleteCustomerData(customer);
+  const confirmDeleteCustomer = () => {
+    if (!customerToDelete) return;
+    
+    deleteCustomerData(customerToDelete);
+    setShowDeleteModal(false);
+    setCustomerToDelete(null);
   };
 
   const deleteCustomerData = (customer: CustomerData) => {
@@ -283,6 +302,13 @@ export const CustomersManagement: React.FC = () => {
       order.customer.phone !== customer.phone
     );
     saveToStorage('orders', updatedOrders);
+
+    // Remove from VIP customers if exists
+    const vipCustomers = loadFromStorage('vipCustomers') || [];
+    const updatedVipCustomers = vipCustomers.filter((vip: any) => 
+      !(vip.restaurant_id === restaurant?.id && vip.phone === customer.phone)
+    );
+    saveToStorage('vipCustomers', updatedVipCustomers);
 
     // Update local state by reloading data
     loadCustomersData();
@@ -695,8 +721,9 @@ export const CustomersManagement: React.FC = () => {
             <Button
               variant="danger"
               onClick={() => {
-                if (editingCustomer && confirm(`¿Estás seguro de que quieres eliminar al cliente "${editingCustomer.name}"? Esta acción eliminará todos sus pedidos asociados y no se puede deshacer.`)) {
-                  deleteCustomerData(editingCustomer);
+                if (editingCustomer) {
+                  setCustomerToDelete(editingCustomer);
+                  setShowDeleteModal(true);
                   handleCloseEditModal();
                 }
               }}
@@ -711,6 +738,66 @@ export const CustomersManagement: React.FC = () => {
             </Button>
           </div>
         </div>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setCustomerToDelete(null);
+        }}
+        title="Confirmar Eliminación"
+        size="md"
+      >
+        {customerToDelete && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-center mb-6">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 className="w-8 h-8 text-red-600" />
+              </div>
+            </div>
+            
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                ¿Eliminar cliente "{customerToDelete.name}"?
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Esta acción eliminará permanentemente:
+              </p>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                <ul className="text-sm text-red-800 space-y-1">
+                  <li>• Toda la información del cliente</li>
+                  <li>• {customerToDelete.totalOrders} pedido{customerToDelete.totalOrders !== 1 ? 's' : ''} asociado{customerToDelete.totalOrders !== 1 ? 's' : ''}</li>
+                  <li>• Historial de compras (${customerToDelete.totalSpent.toFixed(2)})</li>
+                  {customerToDelete.isVip && <li>• Estado VIP del cliente</li>}
+                </ul>
+              </div>
+              <p className="text-sm text-gray-500">
+                <strong>Esta acción no se puede deshacer.</strong>
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setCustomerToDelete(null);
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="danger"
+                onClick={confirmDeleteCustomer}
+                icon={Trash2}
+              >
+                Eliminar Cliente
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );
