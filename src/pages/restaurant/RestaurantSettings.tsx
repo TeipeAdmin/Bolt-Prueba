@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Globe, Clock, Truck, QrCode, Palette, Bell, MapPin, HelpCircle, Send } from 'lucide-react';
+import { Save, Globe, Clock, Truck, QrCode, Palette, Bell, MapPin, HelpCircle, Send, Eye, Calendar, Mail, Phone, Building } from 'lucide-react';
 import { Restaurant } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -8,6 +8,7 @@ import { useToast } from '../../hooks/useToast';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
+import { Modal } from '../../components/ui/Modal';
 
 export const RestaurantSettings: React.FC = () => {
   const { restaurant, user } = useAuth();
@@ -27,6 +28,8 @@ export const RestaurantSettings: React.FC = () => {
   const [supportLoading, setSupportLoading] = useState(false);
   const [supportSuccess, setSupportSuccess] = useState(false);
   const [supportTickets, setSupportTickets] = useState<any[]>([]);
+  const [selectedTicket, setSelectedTicket] = useState<any>(null);
+  const [showTicketDetailModal, setShowTicketDetailModal] = useState(false);
 
   useEffect(() => {
     // Cargar tickets existentes
@@ -188,6 +191,53 @@ Fecha: ${new Date().toLocaleString()}
     } finally {
       setSupportLoading(false);
     }
+  };
+
+  const handleViewTicketDetails = (ticket: any) => {
+    setSelectedTicket(ticket);
+    setShowTicketDetailModal(true);
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <Badge variant="warning">Pendiente</Badge>;
+      case 'in_progress':
+        return <Badge variant="info">En Progreso</Badge>;
+      case 'resolved':
+        return <Badge variant="success">Resuelto</Badge>;
+      case 'closed':
+        return <Badge variant="gray">Cerrado</Badge>;
+      default:
+        return <Badge variant="gray">Desconocido</Badge>;
+    }
+  };
+
+  const getPriorityBadge = (priority: string) => {
+    switch (priority) {
+      case 'urgent':
+        return <Badge variant="error">Urgente</Badge>;
+      case 'high':
+        return <Badge variant="warning">Alta</Badge>;
+      case 'medium':
+        return <Badge variant="info">Media</Badge>;
+      case 'low':
+        return <Badge variant="gray">Baja</Badge>;
+      default:
+        return <Badge variant="gray">Media</Badge>;
+    }
+  };
+
+  const getCategoryName = (category: string) => {
+    const categories: { [key: string]: string } = {
+      general: 'Consulta General',
+      technical: 'Problema Técnico',
+      billing: 'Facturación',
+      feature: 'Solicitud de Función',
+      account: 'Cuenta y Configuración',
+      other: 'Otro'
+    };
+    return categories[category] || category;
   };
 
   const tabs = [
@@ -926,16 +976,35 @@ Fecha: ${new Date().toLocaleString()}
                 {supportTickets.length > 0 && (
                   <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                     <h4 className="text-gray-800 font-medium mb-3">Tickets enviados recientemente:</h4>
-                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
                       {supportTickets
                         .filter(ticket => ticket.restaurantId === restaurant?.id)
-                        .slice(-3)
+                        .slice(-5)
                         .reverse()
                         .map(ticket => (
-                          <div key={ticket.id} className="text-sm text-gray-600 bg-white p-2 rounded border">
-                            <div className="font-medium">{ticket.subject}</div>
-                            <div className="text-xs text-gray-500">
-                              {new Date(ticket.createdAt).toLocaleString()} - {ticket.priority.toUpperCase()}
+                          <div key={ticket.id} className="bg-white p-3 rounded border border-gray-200 hover:border-gray-300 transition-colors">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="font-medium text-gray-900 text-sm truncate flex-1 mr-2">
+                                {ticket.subject}
+                              </div>
+                              <div className="flex gap-1 flex-shrink-0">
+                                {getPriorityBadge(ticket.priority)}
+                                {getStatusBadge(ticket.status)}
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <div className="text-xs text-gray-500">
+                                {new Date(ticket.createdAt).toLocaleDateString()} • {getCategoryName(ticket.category)}
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                icon={Eye}
+                                onClick={() => handleViewTicketDetails(ticket)}
+                                className="text-blue-600 hover:text-blue-700"
+                              >
+                                Ver Detalles
+                              </Button>
                             </div>
                           </div>
                         ))}
@@ -987,6 +1056,125 @@ Fecha: ${new Date().toLocaleString()}
           )}
         </div>
       </div>
+
+      {/* Ticket Detail Modal for Restaurant */}
+      <Modal
+        isOpen={showTicketDetailModal}
+        onClose={() => {
+          setShowTicketDetailModal(false);
+          setSelectedTicket(null);
+        }}
+        title="Detalles del Ticket"
+        size="lg"
+      >
+        {selectedTicket && (
+          <div className="space-y-6">
+            {/* Header */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-lg font-semibold text-gray-900">{selectedTicket.subject}</h3>
+                <div className="flex gap-2">
+                  {getPriorityBadge(selectedTicket.priority)}
+                  {getStatusBadge(selectedTicket.status)}
+                </div>
+              </div>
+              <div className="text-sm text-gray-600">
+                Ticket ID: {selectedTicket.id} • {new Date(selectedTicket.createdAt).toLocaleString()}
+              </div>
+            </div>
+
+            {/* Ticket Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h4 className="text-md font-medium text-gray-900 mb-3">Información del Ticket</h4>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="text-gray-600">Categoría:</span> {getCategoryName(selectedTicket.category)}
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Prioridad:</span> {selectedTicket.priority.charAt(0).toUpperCase() + selectedTicket.priority.slice(1)}
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="text-md font-medium text-gray-900 mb-3">Información de Contacto</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center">
+                    <Mail className="w-4 h-4 text-gray-400 mr-2" />
+                    <span>{selectedTicket.contactEmail}</span>
+                  </div>
+                  {selectedTicket.contactPhone && (
+                    <div className="flex items-center">
+                      <Phone className="w-4 h-4 text-gray-400 mr-2" />
+                      <span>{selectedTicket.contactPhone}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Original Message */}
+            <div>
+              <h4 className="text-md font-medium text-gray-900 mb-3">Tu Mensaje</h4>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-800 whitespace-pre-wrap">{selectedTicket.message}</p>
+              </div>
+            </div>
+
+            {/* Admin Response */}
+            {selectedTicket.response ? (
+              <div>
+                <h4 className="text-md font-medium text-gray-900 mb-3">Respuesta del Equipo de Soporte</h4>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <p className="text-sm text-green-800 whitespace-pre-wrap">{selectedTicket.response}</p>
+                  {selectedTicket.responseDate && (
+                    <div className="text-xs text-green-600 mt-3 pt-3 border-t border-green-200">
+                      <div className="flex items-center">
+                        <Calendar className="w-3 h-3 mr-1" />
+                        Respondido el: {new Date(selectedTicket.responseDate).toLocaleString()}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div className="flex items-center">
+                  <HelpCircle className="w-5 h-5 text-yellow-600 mr-2" />
+                  <div>
+                    <h4 className="text-yellow-800 font-medium">Esperando Respuesta</h4>
+                    <p className="text-yellow-700 text-sm">
+                      Tu ticket está siendo revisado por nuestro equipo. Te contactaremos pronto.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Admin Notes (if any) */}
+            {selectedTicket.adminNotes && (
+              <div>
+                <h4 className="text-md font-medium text-gray-900 mb-3">Notas Adicionales</h4>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{selectedTicket.adminNotes}</p>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end pt-4 border-t border-gray-200">
+              <Button
+                onClick={() => {
+                  setShowTicketDetailModal(false);
+                  setSelectedTicket(null);
+                }}
+              >
+                Cerrar
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };
