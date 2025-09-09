@@ -547,17 +547,17 @@ export const CustomersManagement: React.FC = () => {
                     <div className="flex items-center relative">
                       {t('segment')}
                       <Info className="w-3 h-3 ml-1 text-gray-400" />
-                      <div className="fixed bottom-auto left-auto mb-2 hidden group-hover:block bg-white text-gray-800 text-xs rounded-lg p-3 w-64 shadow-xl border border-gray-200 transform -translate-x-1/2 -translate-y-full" style={{ zIndex: 99999, position: 'fixed', top: 'auto', left: '50%', bottom: '100%' }}>
+                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 hidden group-hover:block bg-white text-gray-800 text-xs rounded-lg p-3 w-64 shadow-xl border border-gray-200 z-50">
                         <div className="space-y-1">
                           <div><strong className="text-green-300">VIP:</strong> Asignado manualmente</div>
                           <div><strong className="text-blue-300">Nuevo:</strong> 1 pedido</div>
                           <div><strong className="text-gray-300">Regular:</strong> 2-4 pedidos</div>
                           <div><strong className="text-orange-300">Frecuente:</strong> 5+ pedidos</div>
-                          <div className="text-xs text-gray-400 mt-2 pt-2 border-t border-gray-600">
+                          <div className="text-xs text-gray-400 mt-2 pt-2 border-t border-gray-300">
                             * Un cliente puede ser VIP y tener otro segmento
                           </div>
                         </div>
-                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-white" style={{ zIndex: 99999 }}></div>
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-white"></div>
                       </div>
                     </div>
                   </th>
