@@ -348,16 +348,23 @@ export const CustomersManagement: React.FC = () => {
   };
 
   const getCustomerSegment = (totalSpent: number, totalOrders: number) => {
-    // VIP solo se asigna manualmente, no por número de pedidos
+    const segments = [];
+    
     if (totalOrders === 1) {
-      return <Badge variant="info">{t('newCustomer')}</Badge>;
+      segments.push(<Badge key="new" variant="info">{t('newCustomer')}</Badge>);
     } else if (totalOrders >= 2 && totalOrders <= 4) {
-      return <Badge variant="gray">{t('regular')}</Badge>;
+      segments.push(<Badge key="regular" variant="gray">{t('regular')}</Badge>);
     } else if (totalOrders >= 5) {
-      return <Badge variant="warning">{t('frequent')}</Badge>;
+      segments.push(<Badge key="frequent" variant="warning">{t('frequent')}</Badge>);
     } else {
-      return <Badge variant="gray">{t('regular')}</Badge>;
+      segments.push(<Badge key="default" variant="gray">{t('regular')}</Badge>);
     }
+    
+    return (
+      <div className="flex flex-wrap gap-1">
+        {segments}
+      </div>
+    );
   };
 
   const stats = {
@@ -539,18 +546,21 @@ export const CustomersManagement: React.FC = () => {
                     {t('orderTypes')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider relative group">
-                    <div className="flex items-center">
+                    <div className="flex items-center relative">
                       {t('segment')}
                       <Info className="w-3 h-3 ml-1 text-gray-400" />
-                    </div>
-                    <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded-lg p-3 w-64 z-10 shadow-lg">
-                      <div className="space-y-1">
-                        <div><strong className="text-yellow-300">VIP:</strong> Asignado manualmente</div>
-                        <div><strong className="text-blue-300">Nuevo:</strong> 1 pedido</div>
-                        <div><strong className="text-gray-300">Regular:</strong> 2-4 pedidos</div>
-                        <div><strong className="text-orange-300">Frecuente:</strong> 5+ pedidos</div>
+                      <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded-lg p-3 w-64 z-50 shadow-lg">
+                        <div className="space-y-1">
+                          <div><strong className="text-green-300">VIP:</strong> Asignado manualmente</div>
+                          <div><strong className="text-blue-300">Nuevo:</strong> 1 pedido</div>
+                          <div><strong className="text-gray-300">Regular:</strong> 2-4 pedidos</div>
+                          <div><strong className="text-orange-300">Frecuente:</strong> 5+ pedidos</div>
+                          <div className="text-xs text-gray-400 mt-2 pt-2 border-t border-gray-600">
+                            * Un cliente puede ser VIP y tener otro segmento
+                          </div>
+                        </div>
+                        <div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
                       </div>
-                      <div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
                     </div>
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -622,7 +632,10 @@ export const CustomersManagement: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {getCustomerSegment(customer.totalSpent, customer.totalOrders)}
+                      <div className="flex flex-wrap gap-1">
+                        {customer.isVip && <Badge variant="success">VIP</Badge>}
+                        {getCustomerSegment(customer.totalSpent, customer.totalOrders)}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(customer.lastOrderDate).toLocaleDateString()}
