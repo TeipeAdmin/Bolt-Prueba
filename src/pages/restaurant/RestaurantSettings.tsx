@@ -922,16 +922,6 @@ Fecha: ${new Date().toLocaleString()}
                   />
                 </div>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h4 className="text-blue-800 font-medium mb-2">Información que se enviará:</h4>
-                  <ul className="text-blue-700 text-sm space-y-1">
-                    <li>• Nombre del restaurante: {restaurant?.name}</li>
-                    <li>• Email de la cuenta: {restaurant?.email}</li>
-                    <li>• Dominio: {restaurant?.domain}</li>
-                    <li>• Fecha y hora del reporte</li>
-                  </ul>
-                </div>
-
                 {/* Historial de tickets */}
                 {supportTickets.length > 0 && (
                   <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
