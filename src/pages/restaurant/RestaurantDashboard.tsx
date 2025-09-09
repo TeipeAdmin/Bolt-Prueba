@@ -1,17 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, ShoppingBag, Menu, Eye, TrendingUp, Trash2 } from 'lucide-react';
+import { BarChart3, ShoppingBag, Menu, Eye, TrendingUp } from 'lucide-react';
 import { Product, Order, Category, Subscription } from '../../types';
-import { loadFromStorage, availablePlans, saveToStorage } from '../../data/mockData';
+import { loadFromStorage, availablePlans } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { useToast } from '../../hooks/useToast';
 import { Badge } from '../../components/ui/Badge';
-import { Button } from '../../components/ui/Button';
 
 export const RestaurantDashboard: React.FC = () => {
   const { restaurant } = useAuth();
   const { t } = useLanguage();
-  const { showToast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -66,21 +63,6 @@ export const RestaurantDashboard: React.FC = () => {
     return plan ? plan.name : currentSubscription.plan_type;
   };
 
-  const handleDeleteOrder = (orderId: string, orderNumber: string) => {
-    if (confirm(`¿Estás seguro de que quieres eliminar el pedido ${orderNumber}? Esta acción no se puede deshacer.`)) {
-      const allOrders = loadFromStorage('orders') || [];
-      const updatedOrders = allOrders.filter((o: Order) => o.id !== orderId);
-      saveToStorage('orders', updatedOrders);
-      loadDashboardData();
-      
-      showToast(
-        'info',
-        'Pedido Eliminado',
-        `El pedido ${orderNumber} ha sido eliminado exitosamente.`,
-        4000
-      );
-    }
-  };
   const stats = {
     totalProducts: products.length,
     activeProducts: products.filter(p => p.status === 'active').length,
@@ -272,9 +254,6 @@ export const RestaurantDashboard: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t('date')}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {t('actions')}
-                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -306,16 +285,6 @@ export const RestaurantDashboard: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(order.created_at).toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        icon={Trash2}
-                        onClick={() => handleDeleteOrder(order.id, order.order_number)}
-                        className="text-red-600 hover:text-red-700"
-                        title="Eliminar pedido"
-                      />
                     </td>
                   </tr>
                 ))}
