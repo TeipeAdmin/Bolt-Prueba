@@ -1,26 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, TrendingUp, ShoppingBag, DollarSign, Calendar, Users, Filter, Download, X } from 'lucide-react';
+import { BarChart3, TrendingUp, ShoppingBag, DollarSign, Calendar, Users, Filter } from 'lucide-react';
 import { Product, Order, Category } from '../../types';
 import { loadFromStorage } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
-import { useToast } from '../../hooks/useToast';
 import { Badge } from '../../components/ui/Badge';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 
 export const RestaurantAnalytics: React.FC = () => {
   const { restaurant } = useAuth();
-  const { showToast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedOrderType, setSelectedOrderType] = useState<string>('all');
-  const [selectedStatus, setSelectedStatus] = useState<string>('all');
-  
+
   useEffect(() => {
     if (restaurant) {
       loadAnalyticsData();
@@ -50,7 +45,6 @@ export const RestaurantAnalytics: React.FC = () => {
 
   // Filter orders by date range
   const filteredOrders = orders.filter(order => {
-    // Date filter
     if (!startDate && !endDate) return true;
     
     const orderDate = new Date(order.created_at);
@@ -124,107 +118,6 @@ export const RestaurantAnalytics: React.FC = () => {
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 5);
 
-  const exportToCSV = () => {
-    if (filteredOrders.length === 0) {
-      showToast('No hay datos para exportar', 'warning');
-      return;
-    }
-
-    // Create CSV content
-    const headers = [
-      'Número de Pedido',
-      'Fecha',
-      'Cliente',
-      'Teléfono',
-      'Email',
-      'Tipo de Pedido',
-      'Estado',
-      'Productos',
-      'Cantidad Total',
-      'Total',
-      'Dirección'
-    ];
-
-    const csvContent = [
-      // Add summary section
-      ['RESUMEN EJECUTIVO'],
-      ['Total de Pedidos', totalOrders.toString()],
-      ['Pedidos Completados', completedOrders.toString()],
-      ['Ingresos Totales', `$${totalRevenue.toFixed(2)}`],
-      ['Ticket Promedio', `$${averageOrderValue.toFixed(2)}`],
-      ['Período', `${startDate || 'Inicio'} - ${endDate || 'Hoy'}`],
-      [''],
-      ['DESGLOSE POR ESTADO'],
-      ['Pendientes', ordersByStatus.pending.toString()],
-      ['Confirmados', ordersByStatus.confirmed.toString()],
-      ['Preparando', ordersByStatus.preparing.toString()],
-      ['Listos', ordersByStatus.ready.toString()],
-      ['Entregados', ordersByStatus.delivered.toString()],
-      ['Cancelados', ordersByStatus.cancelled.toString()],
-      [''],
-      ['DETALLE DE PEDIDOS'],
-      headers,
-      ...filteredOrders.map(order => [
-        order.order_number,
-        new Date(order.created_at).toLocaleDateString(),
-        order.customer.name,
-        order.customer.phone || '',
-        order.customer.email || '',
-        order.order_type === 'pickup' ? 'Recoger' : 
-        order.order_type === 'delivery' ? 'Delivery' : 'Mesa',
-        order.status === 'pending' ? 'Pendiente' :
-        order.status === 'confirmed' ? 'Confirmado' :
-        order.status === 'preparing' ? 'Preparando' :
-        order.status === 'ready' ? 'Listo' :
-        order.status === 'delivered' ? 'Entregado' :
-        order.status === 'cancelled' ? 'Cancelado' : order.status,
-        order.items.map(item => `${item.product.name} (${item.variation.name})`).join('; '),
-        order.items.reduce((sum, item) => sum + item.quantity, 0).toString(),
-        `$${order.total.toFixed(2)}`,
-        order.delivery_address || ''
-      ])
-    ];
-
-    // Convert to CSV string
-    const csvString = csvContent
-      .map(row => 
-        row.map(cell => {
-          const cellStr = cell?.toString() || '';
-          // Escape quotes and wrap in quotes if contains comma, quote, or newline
-          if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
-            return `"${cellStr.replace(/"/g, '""')}"`;
-          }
-          return cellStr;
-        }).join(',')
-      )
-      .join('\n');
-
-    // Create and download file
-    const blob = new Blob(['\ufeff' + csvString], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    
-    // Generate filename with filters
-    const filterSuffix = [
-      startDate && `desde_${startDate}`,
-      endDate && `hasta_${endDate}`,
-      selectedCategory !== 'all' && `cat_${categories.find(c => c.id === selectedCategory)?.name}`,
-      selectedOrderType !== 'all' && selectedOrderType,
-      selectedStatus !== 'all' && selectedStatus
-    ].filter(Boolean).join('_');
-    
-    const filename = `estadisticas_${restaurant?.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}${filterSuffix ? '_' + filterSuffix : ''}.csv`;
-    
-    link.setAttribute('href', url);
-    link.setAttribute('download', filename);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    showToast(`Estadísticas exportadas: ${filteredOrders.length} pedidos`, 'success');
-  };
-
   const getStatusBadge = (status: Order['status']) => {
     switch (status) {
       case 'pending':
@@ -250,16 +143,12 @@ export const RestaurantAnalytics: React.FC = () => {
         <div className="text-sm text-gray-500">
           Última actualización: {new Date().toLocaleString()}
         </div>
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            icon={Download}
-            onClick={exportToCSV}
-            className="text-green-600 hover:text-green-700 hover:bg-green-50"
-          >
-            Exportar CSV
-          </Button>
+      </div>
+
+      {/* Filter Toggle */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900">Estadísticas del Restaurante</h2>
           <Button
             variant="outline"
             size="sm"
@@ -267,124 +156,55 @@ export const RestaurantAnalytics: React.FC = () => {
             onClick={() => setShowFilters(!showFilters)}
             className={showFilters ? 'bg-blue-50 border-blue-200 text-blue-700' : ''}
           >
-            Filtros Avanzados
+            Filtrar por Fechas
           </Button>
         </div>
-      </div>
-
-      {/* Advanced Filters Panel */}
-      {showFilters && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Filtros Avanzados</h3>
-          
-          {/* Date Range */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-            <Input
-              type="date"
-              label="Desde"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-            />
-            <Input
-              type="date"
-              label="Hasta"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-            />
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="all">Todas las categorías</option>
-                {categories.map(category => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Pedido</label>
-              <select
-                value={selectedOrderType}
-                onChange={(e) => setSelectedOrderType(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="all">Todos los tipos</option>
-                <option value="pickup">Recoger</option>
-                <option value="delivery">Delivery</option>
-                <option value="table">Mesa</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
-              <select
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="all">Todos los estados</option>
-                <option value="pending">Pendiente</option>
-                <option value="confirmed">Confirmado</option>
-                <option value="preparing">Preparando</option>
-                <option value="ready">Listo</option>
-                <option value="delivered">Entregado</option>
-                <option value="cancelled">Cancelado</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Active Filters Summary */}
-          {(startDate || endDate || selectedCategory !== 'all' || selectedOrderType !== 'all' || selectedStatus !== 'all') && (
-            <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center flex-wrap gap-2">
-                  <span className="text-sm font-medium text-blue-800">Filtros activos:</span>
-                  {startDate && (
-                    <Badge variant="info">Desde: {startDate}</Badge>
-                  )}
-                  {endDate && (
-                    <Badge variant="info">Hasta: {endDate}</Badge>
-                  )}
-                  {selectedCategory !== 'all' && (
-                    <Badge variant="info">
-                      Categoría: {categories.find(c => c.id === selectedCategory)?.name}
-                    </Badge>
-                  )}
-                  {selectedOrderType !== 'all' && (
-                    <Badge variant="info">Tipo: {selectedOrderType}</Badge>
-                  )}
-                  {selectedStatus !== 'all' && (
-                    <Badge variant="info">Estado: {selectedStatus}</Badge>
-                  )}
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setStartDate('');
-                    setEndDate('');
-                    setSelectedCategory('all');
-                    setSelectedOrderType('all');
-                    setSelectedStatus('all');
-                  }}
-                  className="text-blue-600 hover:text-blue-700"
-                >
-                  Limpiar Todos
-                </Button>
+        
+        {/* Collapsible Date Filters */}
+        {showFilters && (
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="flex items-center gap-4">
+                <Input
+                  type="date"
+                  label="Desde"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-auto"
+                />
+                <Input
+                  type="date"
+                  label="Hasta"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-auto"
+                />
               </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setStartDate('');
+                  setEndDate('');
+                }}
+                className="text-blue-600 hover:text-blue-700"
+              >
+                Limpiar Filtros
+              </Button>
             </div>
-          )}
-        </div>
-      )}
-
-      {/* Filter Toggle */}
+            {(startDate || endDate) && (
+              <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex items-center">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+                  <span className="text-sm font-medium text-blue-800">
+                    Mostrando datos desde {startDate || 'el inicio'} hasta {endDate || 'hoy'}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Main Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
