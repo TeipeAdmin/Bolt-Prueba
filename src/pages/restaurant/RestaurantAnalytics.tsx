@@ -703,7 +703,7 @@ export const RestaurantAnalytics: React.FC = () => {
                 {recentOrders.map(order => (
                   <div key={order.id} className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-900">#{order.order_number}</p>
+                      <p className="text-sm font-medium text-gray-900">{order.order_number}</p>
                       <p className="text-xs text-gray-500">
                         {new Date(order.created_at).toLocaleDateString()} - {order.customer.name}
                       </p>
