@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Phone, Mail, MapPin, Calendar, ShoppingBag, Filter, Search, Star, Edit, ArrowUpDown, Trash2 } from 'lucide-react';
+import { User, Phone, Mail, MapPin, Calendar, ShoppingBag, Filter, Search, Star, Edit, ArrowUpDown, Trash2, Info } from 'lucide-react';
 import { Order, Customer, Subscription } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -348,21 +348,23 @@ export const CustomersManagement: React.FC = () => {
   };
 
   const getCustomerSegment = (totalSpent: number, totalOrders: number) => {
-    if (totalOrders >= 10) {
-      return <Badge variant="error">{t('vip')}</Badge>;
+    // VIP solo se asigna manualmente, no por número de pedidos
+    if (totalOrders === 1) {
+      return <Badge variant="info">{t('newCustomer')}</Badge>;
+    } else if (totalOrders >= 2 && totalOrders <= 4) {
+      return <Badge variant="gray">{t('regular')}</Badge>;
     } else if (totalOrders >= 5) {
       return <Badge variant="warning">{t('frequent')}</Badge>;
     } else {
-      return <Badge variant="gray">{t('newCustomer')}</Badge>;
+      return <Badge variant="gray">{t('regular')}</Badge>;
     }
   };
 
   const stats = {
     totalCustomers: customers.length,
-    vipCustomers: customers.filter(c => c.isVip || c.totalOrders >= 10).length,
+    vipCustomers: customers.filter(c => c.isVip).length,
     frequentCustomers: customers.filter(c => {
-      const isVip = c.isVip || c.totalOrders >= 10;
-      return c.totalOrders >= 5 && !isVip;
+      return c.totalOrders >= 5 && !c.isVip;
     }).length,
     averageSpent: customers.length > 0 ? customers.reduce((sum, c) => sum + c.totalSpent, 0) / customers.length : 0,
   };
@@ -536,8 +538,20 @@ export const CustomersManagement: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t('orderTypes')}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {t('segment')}
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider relative group">
+                    <div className="flex items-center">
+                      {t('segment')}
+                      <Info className="w-3 h-3 ml-1 text-gray-400" />
+                    </div>
+                    <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded-lg p-3 w-64 z-10 shadow-lg">
+                      <div className="space-y-1">
+                        <div><strong className="text-yellow-300">VIP:</strong> Asignado manualmente</div>
+                        <div><strong className="text-blue-300">Nuevo:</strong> 1 pedido</div>
+                        <div><strong className="text-gray-300">Regular:</strong> 2-4 pedidos</div>
+                        <div><strong className="text-orange-300">Frecuente:</strong> 5+ pedidos</div>
+                      </div>
+                      <div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+                    </div>
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t('lastOrder')}
