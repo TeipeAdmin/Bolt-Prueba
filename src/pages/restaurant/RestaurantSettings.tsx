@@ -770,6 +770,171 @@ Fecha: ${new Date().toLocaleString()}
               </div>
             </div>
           )}
+
+          {activeTab === 'support' && (
+            <div className="space-y-6">
+              <div className="text-center mb-6">
+                <HelpCircle className="w-16 h-16 text-blue-600 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Centro de Soporte</h3>
+                <p className="text-gray-600">
+                  ¿Necesitas ayuda? Completa el formulario y nuestro equipo te contactará pronto.
+                </p>
+              </div>
+
+              {supportSuccess && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center mr-3">
+                      <span className="text-white text-sm">✓</span>
+                    </div>
+                    <div>
+                      <h4 className="text-green-800 font-medium">¡Solicitud enviada!</h4>
+                      <p className="text-green-700 text-sm">
+                        Tu solicitud de soporte ha sido enviada. Te contactaremos pronto.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <form onSubmit={handleSupportSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Asunto *
+                    </label>
+                    <input
+                      type="text"
+                      value={supportForm.subject}
+                      onChange={(e) => setSupportForm(prev => ({ ...prev, subject: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Describe brevemente tu consulta"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Categoría
+                    </label>
+                    <select
+                      value={supportForm.category}
+                      onChange={(e) => setSupportForm(prev => ({ ...prev, category: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="general">Consulta General</option>
+                      <option value="technical">Problema Técnico</option>
+                      <option value="billing">Facturación</option>
+                      <option value="feature">Solicitud de Función</option>
+                      <option value="account">Cuenta y Configuración</option>
+                      <option value="other">Otro</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Prioridad
+                    </label>
+                    <select
+                      value={supportForm.priority}
+                      onChange={(e) => setSupportForm(prev => ({ ...prev, priority: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="low">Baja - No es urgente</option>
+                      <option value="medium">Media - Respuesta en 24-48h</option>
+                      <option value="high">Alta - Respuesta en 2-8h</option>
+                      <option value="urgent">Urgente - Respuesta inmediata</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email de Contacto *
+                    </label>
+                    <input
+                      type="email"
+                      value={supportForm.contactEmail}
+                      onChange={(e) => setSupportForm(prev => ({ ...prev, contactEmail: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="tu@email.com"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Teléfono de Contacto (Opcional)
+                  </label>
+                  <input
+                    type="tel"
+                    value={supportForm.contactPhone}
+                    onChange={(e) => setSupportForm(prev => ({ ...prev, contactPhone: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="+1 (555) 123-4567"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Descripción del Problema o Consulta *
+                  </label>
+                  <textarea
+                    value={supportForm.message}
+                    onChange={(e) => setSupportForm(prev => ({ ...prev, message: e.target.value }))}
+                    rows={6}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Describe detalladamente tu consulta o problema. Incluye pasos para reproducir el problema si es técnico."
+                    required
+                  />
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="text-blue-800 font-medium mb-2">Información que se enviará:</h4>
+                  <ul className="text-blue-700 text-sm space-y-1">
+                    <li>• Nombre del restaurante: {restaurant?.name}</li>
+                    <li>• Email de la cuenta: {restaurant?.email}</li>
+                    <li>• Dominio: {restaurant?.domain}</li>
+                    <li>• Fecha y hora del reporte</li>
+                  </ul>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setSupportForm({
+                      subject: '',
+                      priority: 'medium',
+                      category: 'general',
+                      message: '',
+                      contactEmail: restaurant?.email || '',
+                      contactPhone: restaurant?.phone || ''
+                    })}
+                  >
+                    Limpiar Formulario
+                  </Button>
+                  <Button
+                    type="submit"
+                    loading={supportLoading}
+                    icon={Send}
+                    disabled={!supportForm.subject.trim() || !supportForm.message.trim() || !supportForm.contactEmail.trim()}
+                  >
+                    Enviar Solicitud
+                  </Button>
+                </div>
+              </form>
+
+              <div className="mt-8 bg-gray-50 rounded-lg p-6">
+                <h4 className="text-gray-900 font-medium mb-3">Otros canales de soporte:</h4>
+                <div className="space-y-2 text-sm text-gray-600">
+                  <p>📧 Email directo: <a href="mailto:admin@digitalfenixpro.com" className="text-blue-600 hover:text-blue-700">admin@digitalfenixpro.com</a></p>
+                  <p>⏰ Horario de atención: Lunes a Viernes, 9:00 AM - 6:00 PM</p>
+                  <p>🕐 Tiempo de respuesta típico: 2-24 horas según prioridad</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
