@@ -20,6 +20,7 @@ export const RestaurantAnalytics: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedOrderType, setSelectedOrderType] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  
   useEffect(() => {
     if (restaurant) {
       loadAnalyticsData();
@@ -56,20 +57,10 @@ export const RestaurantAnalytics: React.FC = () => {
     const start = startDate ? new Date(startDate) : new Date('1900-01-01');
     const end = endDate ? new Date(endDate + 'T23:59:59') : new Date('2100-12-31');
     
-    const dateMatch = orderDate >= start && orderDate <= end;
-    
-    // Order type filter
-    const typeMatch = selectedOrderType === 'all' || order.order_type === selectedOrderType;
-    
-    // Status filter
-    const statusMatch = selectedStatus === 'all' || order.status === selectedStatus;
-    
-    // Category filter (check if any item in the order belongs to selected category)
-    const categoryMatch = selectedCategory === 'all' || 
-      order.items.some(item => item.product.category_id === selectedCategory);
-    
-    return dateMatch && typeMatch && statusMatch && categoryMatch;
+    return orderDate >= start && orderDate <= end;
   });
+
+  // Calculate analytics
   const totalOrders = filteredOrders.length;
   const completedOrders = filteredOrders.filter(o => o.status === 'delivered').length;
   const totalRevenue = filteredOrders.filter(o => o.status === 'delivered').reduce((sum, order) => sum + order.total, 0);
@@ -133,115 +124,6 @@ export const RestaurantAnalytics: React.FC = () => {
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 5);
 
-  const clearAllFilters = () => {
-    setStartDate('');
-    setEndDate('');
-    setSelectedCategory('all');
-    setSelectedOrderType('all');
-    setSelectedStatus('all');
-  };
-
-  const hasActiveFilters = () => {
-    return startDate || endDate || selectedCategory !== 'all' || 
-           selectedOrderType !== 'all' || selectedStatus !== 'all';
-  };
-
-  const exportAnalyticsToCSV = () => {
-    if (filteredOrders.length === 0) {
-      showToast(
-        'warning',
-        'Sin datos para exportar',
-        'No hay pedidos que coincidan con los filtros actuales.',
-        4000
-      );
-      return;
-    }
-
-    // Preparar datos del resumen
-    const summaryData = [
-      ['RESUMEN DE ESTADÍSTICAS'],
-      [''],
-      ['Período:', startDate || 'Desde el inicio', 'hasta', endDate || 'hoy'],
-      ['Total de pedidos:', totalOrders],
-      ['Pedidos completados:', completedOrders],
-      ['Ingresos totales:', `$${totalRevenue.toFixed(2)}`],
-      ['Ticket promedio:', `$${averageOrderValue.toFixed(2)}`],
-      [''],
-      ['PEDIDOS POR ESTADO:'],
-      ['Pendientes:', ordersByStatus.pending],
-      ['Confirmados:', ordersByStatus.confirmed],
-      ['Preparando:', ordersByStatus.preparing],
-      ['Listos:', ordersByStatus.ready],
-      ['Entregados:', ordersByStatus.delivered],
-      ['Cancelados:', ordersByStatus.cancelled],
-      [''],
-      ['DETALLE DE PEDIDOS:'],
-      [''],
-      ['Número de Pedido', 'Cliente', 'Teléfono', 'Tipo', 'Estado', 'Total', 'Fecha', 'Productos']
-    ];
-
-    // Agregar datos de pedidos
-    const ordersData = filteredOrders.map(order => [
-      order.order_number,
-      order.customer.name,
-      order.customer.phone,
-      order.order_type === 'pickup' ? 'Recoger' : 
-      order.order_type === 'delivery' ? 'Delivery' : 
-      order.order_type === 'table' ? `Mesa ${order.table_number}` : order.order_type,
-      order.status === 'pending' ? 'Pendiente' :
-      order.status === 'confirmed' ? 'Confirmado' :
-      order.status === 'preparing' ? 'Preparando' :
-      order.status === 'ready' ? 'Listo' :
-      order.status === 'delivered' ? 'Entregado' :
-      order.status === 'cancelled' ? 'Cancelado' : order.status,
-      `$${order.total.toFixed(2)}`,
-      new Date(order.created_at).toLocaleString(),
-      order.items.map(item => `${item.product.name} (${item.variation.name}) x${item.quantity}`).join('; ')
-    ]);
-
-    // Combinar todos los datos
-    const allData = [...summaryData, ...ordersData];
-
-    // Crear contenido CSV
-    const csvContent = allData.map(row => 
-      row.map(field => 
-        typeof field === 'string' && (field.includes(',') || field.includes('\n') || field.includes('"'))
-          ? `"${field.replace(/"/g, '""')}"`
-          : field
-      ).join(',')
-    ).join('\n');
-
-    // Crear y descargar archivo
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    
-    if (link.download !== undefined) {
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      
-      // Generar nombre de archivo
-      const today = new Date().toISOString().split('T')[0];
-      let fileName = `estadisticas_${restaurant?.name?.replace(/[^a-zA-Z0-9]/g, '_')}_${today}`;
-      
-      if (startDate || endDate) {
-        fileName += `_${startDate || 'inicio'}_${endDate || 'hoy'}`;
-      }
-      
-      link.setAttribute('download', `${fileName}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-
-    showToast(
-      'success',
-      'Estadísticas Exportadas',
-      `Se han exportado ${filteredOrders.length} pedidos y el resumen de estadísticas.`,
-      4000
-    );
-  };
-
   const getStatusBadge = (status: Order['status']) => {
     switch (status) {
       case 'pending':
@@ -264,17 +146,15 @@ export const RestaurantAnalytics: React.FC = () => {
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">Estadísticas del Restaurante</h1>
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            icon={Download}
-            onClick={exportAnalyticsToCSV}
-            className="text-green-600 hover:text-green-700 hover:bg-green-50"
-          >
-            Exportar CSV
-          </Button>
+        <div className="text-sm text-gray-500">
+          Última actualización: {new Date().toLocaleString()}
+        </div>
+      </div>
+
+      {/* Filter Toggle */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900">Estadísticas del Restaurante</h2>
           <Button
             variant="outline"
             size="sm"
@@ -282,145 +162,55 @@ export const RestaurantAnalytics: React.FC = () => {
             onClick={() => setShowFilters(!showFilters)}
             className={showFilters ? 'bg-blue-50 border-blue-200 text-blue-700' : ''}
           >
-            Filtros Avanzados
+            Filtrar por Fechas
           </Button>
         </div>
-      </div>
-
-      {/* Advanced Filters */}
-      {showFilters && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium text-gray-900">Filtros Avanzados</h3>
-            {hasActiveFilters() && (
+        
+        {/* Collapsible Date Filters */}
+        {showFilters && (
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="flex items-center gap-4">
+                <Input
+                  type="date"
+                  label="Desde"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-auto"
+                />
+                <Input
+                  type="date"
+                  label="Hasta"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-auto"
+                />
+              </div>
               <Button
                 variant="ghost"
                 size="sm"
-                icon={X}
-                onClick={clearAllFilters}
-                className="text-red-600 hover:text-red-700"
+                onClick={() => {
+                  setStartDate('');
+                  setEndDate('');
+                }}
+                className="text-blue-600 hover:text-blue-700"
               >
-                Limpiar Todos
+                Limpiar Filtros
               </Button>
+            </div>
+            {(startDate || endDate) && (
+              <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex items-center">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+                  <span className="text-sm font-medium text-blue-800">
+                    Mostrando datos desde {startDate || 'el inicio'} hasta {endDate || 'hoy'}
+                  </span>
+                </div>
+              </div>
             )}
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            {/* Date Range */}
-            <div className="lg:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Rango de Fechas</label>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="flex-1"
-                />
-                <span className="text-gray-500">-</span>
-                <Input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="flex-1"
-                />
-              </div>
-            </div>
-            
-            {/* Category Filter */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Categoría</label>
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="all">Todas las categorías</option>
-                {categories.map(category => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            
-            {/* Order Type Filter */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Pedido</label>
-              <select
-                value={selectedOrderType}
-                onChange={(e) => setSelectedOrderType(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="all">Todos los tipos</option>
-                <option value="pickup">Recoger</option>
-                <option value="delivery">Delivery</option>
-                <option value="table">Mesa</option>
-              </select>
-            </div>
-            
-            {/* Status Filter */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Estado</label>
-              <select
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="all">Todos los estados</option>
-                <option value="pending">Pendiente</option>
-                <option value="confirmed">Confirmado</option>
-                <option value="preparing">Preparando</option>
-                <option value="ready">Listo</option>
-                <option value="delivered">Entregado</option>
-                <option value="cancelled">Cancelado</option>
-              </select>
-            </div>
-          </div>
-          
-          {/* Active Filters Summary */}
-          {hasActiveFilters() && (
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="flex items-center flex-wrap gap-2">
-                <span className="text-sm font-medium text-blue-800">Filtros activos:</span>
-                {(startDate || endDate) && (
-                  <Badge variant="info">
-                    📅 {startDate || 'inicio'} - {endDate || 'hoy'}
-                  </Badge>
-                )}
-                {selectedCategory !== 'all' && (
-                  <Badge variant="info">
-                    📂 {categories.find(c => c.id === selectedCategory)?.name}
-                  </Badge>
-                )}
-                {selectedOrderType !== 'all' && (
-                  <Badge variant="info">
-                    🛍️ {selectedOrderType === 'pickup' ? 'Recoger' : 
-                        selectedOrderType === 'delivery' ? 'Delivery' : 'Mesa'}
-                  </Badge>
-                )}
-                {selectedStatus !== 'all' && (
-                  <Badge variant="info">
-                    📊 {selectedStatus === 'pending' ? 'Pendiente' :
-                        selectedStatus === 'confirmed' ? 'Confirmado' :
-                        selectedStatus === 'preparing' ? 'Preparando' :
-                        selectedStatus === 'ready' ? 'Listo' :
-                        selectedStatus === 'delivered' ? 'Entregado' : 'Cancelado'}
-                  </Badge>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Filter Toggle - Remove old simple filter */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6 space-y-4">
-        <div className="text-sm text-gray-500">
-          Última actualización: {new Date().toLocaleString()}
-        </div>
+        )}
       </div>
-
-      {/* Filter Toggle */}
 
       {/* Main Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
