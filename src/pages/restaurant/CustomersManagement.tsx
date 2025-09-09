@@ -165,12 +165,41 @@ export const CustomersManagement: React.FC = () => {
   };
 
   const toggleVipStatus = (customerId: string) => {
+    const customer = customers.find(c => c.id === customerId);
+    if (!customer) return;
+
+    // Update customers in localStorage by updating all orders from this customer
+    const allOrders = loadFromStorage('orders') || [];
+    const updatedOrders = allOrders.map((order: Order) => {
+      if (order.customer.phone === customer.phone) {
+        return {
+          ...order,
+          customer: {
+            ...order.customer,
+            isVip: !customer.isVip,
+          }
+        };
+      }
+      return order;
+    });
+    saveToStorage('orders', updatedOrders);
+
+    // Update local state
     setCustomers(prevCustomers =>
-      prevCustomers.map(customer =>
-        customer.id === customerId
-          ? { ...customer, isVip: !customer.isVip }
-          : customer
+      prevCustomers.map(c =>
+        c.id === customerId
+          ? { ...c, isVip: !c.isVip }
+          : c
       )
+    );
+
+    showToast(
+      'success',
+      customer.isVip ? 'Cliente VIP Removido' : 'Cliente VIP Agregado',
+      customer.isVip 
+        ? `${customer.name} ya no es un cliente VIP.`
+        : `${customer.name} ahora es un cliente VIP.`,
+      4000
     );
   };
 
@@ -242,25 +271,28 @@ export const CustomersManagement: React.FC = () => {
     const customer = customers.find(c => c.id === customerId);
     if (!customer) return;
 
-    if (confirm(`¿Estás seguro de que quieres eliminar al cliente "${customer.name}"? Esta acción eliminará todos sus pedidos asociados y no se puede deshacer.`)) {
-      // Remove all orders from this customer
-      const allOrders = loadFromStorage('orders') || [];
-      const updatedOrders = allOrders.filter((order: Order) => 
-        order.customer.phone !== customer.phone
-      );
-      saveToStorage('orders', updatedOrders);
-
-      // Update local state by reloading data
-      loadCustomersData();
-      
-      showToast(
-        'info',
-        'Cliente Eliminado',
-        `El cliente "${customer.name}" y todos sus pedidos han sido eliminados.`,
-        5000
-      );
-    }
+    deleteCustomerData(customer);
   };
+
+  const deleteCustomerData = (customer: CustomerData) => {
+    // Remove all orders from this customer
+    const allOrders = loadFromStorage('orders') || [];
+    const updatedOrders = allOrders.filter((order: Order) => 
+      order.customer.phone !== customer.phone
+    );
+    saveToStorage('orders', updatedOrders);
+
+    // Update local state by reloading data
+    loadCustomersData();
+    
+    showToast(
+      'info',
+      'Cliente Eliminado',
+      `El cliente "${customer.name}" y todos sus pedidos han sido eliminados.`,
+      5000
+    );
+  };
+
   const handleCloseEditModal = () => {
     setShowEditModal(false);
     setEditingCustomer(null);
@@ -657,6 +689,17 @@ export const CustomersManagement: React.FC = () => {
               onClick={handleCloseEditModal}
             >
               {t('cancel')}
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                if (editingCustomer && confirm(`¿Estás seguro de que quieres eliminar al cliente "${editingCustomer.name}"? Esta acción eliminará todos sus pedidos asociados y no se puede deshacer.`)) {
+                  deleteCustomerData(editingCustomer);
+                  handleCloseEditModal();
+                }
+              }}
+            >
+              Eliminar Cliente
             </Button>
             <Button
               onClick={handleSaveCustomer}
