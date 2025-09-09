@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Globe, Clock, Truck, QrCode, Palette, Bell, MapPin } from 'lucide-react';
+import { Save, Globe, Clock, Truck, QrCode, Palette, Bell, MapPin, HelpCircle, Send } from 'lucide-react';
 import { Restaurant } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -16,6 +16,16 @@ export const RestaurantSettings: React.FC = () => {
   const [activeTab, setActiveTab] = useState('general');
   const [formData, setFormData] = useState<Restaurant | null>(null);
   const [loading, setLoading] = useState(false);
+  const [supportForm, setSupportForm] = useState({
+    subject: '',
+    priority: 'medium',
+    category: 'general',
+    message: '',
+    contactEmail: '',
+    contactPhone: ''
+  });
+  const [supportLoading, setSupportLoading] = useState(false);
+  const [supportSuccess, setSupportSuccess] = useState(false);
 
   useEffect(() => {
     if (restaurant) {
@@ -80,6 +90,73 @@ export const RestaurantSettings: React.FC = () => {
     setFormData(newData);
   };
 
+  const handleSupportSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSupportLoading(true);
+
+    try {
+      // Crear el contenido del email
+      const emailContent = `
+NUEVO TICKET DE SOPORTE
+
+INFORMACIÓN DEL RESTAURANTE:
+- Nombre: ${restaurant?.name}
+- Email: ${restaurant?.email}
+- Dominio: ${restaurant?.domain}
+- ID: ${restaurant?.id}
+
+INFORMACIÓN DEL TICKET:
+- Asunto: ${supportForm.subject}
+- Categoría: ${supportForm.category}
+- Prioridad: ${supportForm.priority}
+- Email de contacto: ${supportForm.contactEmail}
+- Teléfono de contacto: ${supportForm.contactPhone}
+
+MENSAJE:
+${supportForm.message}
+
+---
+Enviado desde el panel de administración
+Fecha: ${new Date().toLocaleString()}
+      `.trim();
+
+      // Crear el enlace mailto
+      const subject = encodeURIComponent(`[SOPORTE] ${supportForm.subject} - ${restaurant?.name}`);
+      const body = encodeURIComponent(emailContent);
+      const mailtoLink = `mailto:admin@digitalfenixpro.com?subject=${subject}&body=${body}`;
+      
+      // Abrir el cliente de email
+      window.location.href = mailtoLink;
+      
+      // Mostrar mensaje de éxito
+      setSupportSuccess(true);
+      
+      // Limpiar formulario después de 2 segundos
+      setTimeout(() => {
+        setSupportForm({
+          subject: '',
+          priority: 'medium',
+          category: 'general',
+          message: '',
+          contactEmail: restaurant?.email || '',
+          contactPhone: restaurant?.phone || ''
+        });
+        setSupportSuccess(false);
+      }, 3000);
+
+    } catch (error) {
+      console.error('Error sending support request:', error);
+      showToast(
+        'error',
+        'Error',
+        'Hubo un problema al enviar la solicitud de soporte.',
+        4000
+      );
+    } finally {
+      setSupportLoading(false);
+    }
+  };
+
   const tabs = [
     { id: 'general', name: 'General', icon: Globe },
     { id: 'hours', name: 'Horarios', icon: Clock },
@@ -88,6 +165,7 @@ export const RestaurantSettings: React.FC = () => {
     { id: 'tables', name: 'Pedidos en Mesa', icon: QrCode },
     { id: 'theme', name: 'Tema', icon: Palette },
     { id: 'notifications', name: 'Notificaciones', icon: Bell },
+    { id: 'support', name: 'Soporte', icon: HelpCircle },
   ];
 
   if (!formData) {
