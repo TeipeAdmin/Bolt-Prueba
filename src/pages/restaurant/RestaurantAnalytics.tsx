@@ -20,6 +20,7 @@ export const RestaurantAnalytics: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedOrderType, setSelectedOrderType] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     if (restaurant) {
@@ -31,6 +32,11 @@ export const RestaurantAnalytics: React.FC = () => {
       setStartDate(thirtyDaysAgo.toISOString().split('T')[0]);
     }
   }, [restaurant]);
+
+  useEffect(() => {
+    // Update filtered orders when filters change
+    // This effect will run whenever any filter state changes
+  }, [orders, startDate, endDate, selectedCategory, selectedOrderType, selectedStatus]);
 
   const loadAnalyticsData = () => {
     if (!restaurant) return;
@@ -49,15 +55,46 @@ export const RestaurantAnalytics: React.FC = () => {
   };
 
   // Filter orders by date range
-  const filteredOrders = orders.filter(order => {
-    if (!startDate && !endDate) return true;
-    
-    const orderDate = new Date(order.created_at);
-    const start = startDate ? new Date(startDate) : new Date('1900-01-01');
-    const end = endDate ? new Date(endDate + 'T23:59:59') : new Date('2100-12-31');
-    
-    return orderDate >= start && orderDate <= end;
-  });
+  const getFilteredOrders = () => {
+    return orders.filter(order => {
+      // Date filter
+      if (startDate || endDate) {
+        const orderDate = new Date(order.created_at);
+        const start = startDate ? new Date(startDate) : new Date('1900-01-01');
+        const end = endDate ? new Date(endDate + 'T23:59:59') : new Date('2100-12-31');
+        
+        if (orderDate < start || orderDate > end) {
+          return false;
+        }
+      }
+
+      // Category filter
+      if (selectedCategory !== 'all') {
+        const hasProductInCategory = order.items.some(item => 
+          item.product.category_id === selectedCategory
+        );
+        if (!hasProductInCategory) {
+          return false;
+        }
+      }
+
+      // Order type filter
+      if (selectedOrderType !== 'all' && order.order_type !== selectedOrderType) {
+        return false;
+      }
+
+      // Status filter
+      if (selectedStatus !== 'all' && order.status !== selectedStatus) {
+        return false;
+      }
+
+      return true;
+    });
+  };
+
+  const filteredOrders = getFilteredOrders();
+
+  // Remove the old filter logic
 
   const getActiveFiltersCount = () => {
     let count = 0;
@@ -395,145 +432,6 @@ export const RestaurantAnalytics: React.FC = () => {
         </div>
       </div>
 
-      {/* Advanced Filters */}
-      {showFilters && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">Filtros Avanzados</h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              icon={X}
-              onClick={() => setShowFilters(false)}
-              className="text-gray-400 hover:text-gray-600"
-            />
-          </div>
-          
-          {/* Filter Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Date Range */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Rango de Fechas</label>
-              <Input
-                type="date"
-                placeholder="Desde"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full"
-              />
-              <Input
-                type="date"
-                placeholder="Hasta"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            
-            {/* Category Filter */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Categoría</label>
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="all">Todas las categorías</option>
-                {categories.map(category => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            
-            {/* Order Type Filter */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Pedido</label>
-              <select
-                value={selectedOrderType}
-                onChange={(e) => setSelectedOrderType(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="all">Todos los tipos</option>
-                <option value="pickup">Recoger</option>
-                <option value="delivery">Delivery</option>
-                <option value="table">Mesa</option>
-              </select>
-            </div>
-            
-            {/* Status Filter */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Estado</label>
-              <select
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="all">Todos los estados</option>
-                <option value="pending">Pendiente</option>
-                <option value="confirmed">Confirmado</option>
-                <option value="preparing">Preparando</option>
-                <option value="ready">Listo</option>
-                <option value="delivered">Entregado</option>
-                <option value="cancelled">Cancelado</option>
-              </select>
-            </div>
-          </div>
-          
-          {/* Active Filters Summary */}
-          {getActiveFiltersCount() > 0 && (
-            <div className="flex flex-wrap items-center gap-2 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <span className="text-sm font-medium text-blue-800">Filtros activos:</span>
-              
-              {(startDate || endDate) && (
-                <Badge variant="info">
-                  📅 {startDate || 'inicio'} - {endDate || 'hoy'}
-                </Badge>
-              )}
-              
-              {selectedCategory !== 'all' && (
-                <Badge variant="info">
-                  📂 {categories.find(c => c.id === selectedCategory)?.name}
-                </Badge>
-              )}
-              
-              {selectedOrderType !== 'all' && (
-                <Badge variant="info">
-                  🛍️ {selectedOrderType === 'pickup' ? 'Recoger' : 
-                      selectedOrderType === 'delivery' ? 'Delivery' : 'Mesa'}
-                </Badge>
-              )}
-              
-              {selectedStatus !== 'all' && (
-                <Badge variant="info">
-                  📊 {selectedStatus === 'pending' ? 'Pendiente' :
-                      selectedStatus === 'confirmed' ? 'Confirmado' :
-                      selectedStatus === 'preparing' ? 'Preparando' :
-                      selectedStatus === 'ready' ? 'Listo' :
-                      selectedStatus === 'delivered' ? 'Entregado' :
-                      selectedStatus === 'cancelled' ? 'Cancelado' : selectedStatus}
-                </Badge>
-              )}
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearAllFilters}
-                className="text-blue-600 hover:text-blue-700 ml-2"
-              >
-                Limpiar Todos
-              </Button>
-            </div>
-          )}
-          
-          {/* Results Summary */}
-          <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-            📊 Mostrando <strong>{filteredOrders.length}</strong> pedido{filteredOrders.length !== 1 ? 's' : ''} 
-            {getActiveFiltersCount() > 0 ? ' que coinciden con los filtros' : ' en total'}
-          </div>
-        </div>
-      )}
 
       {/* Main Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
