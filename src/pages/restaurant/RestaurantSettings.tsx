@@ -28,6 +28,18 @@ export const RestaurantSettings: React.FC = () => {
   const [supportSuccess, setSupportSuccess] = useState(false);
   const [supportTickets, setSupportTickets] = useState<any[]>([]);
 
+  const getCategoryName = (category: string) => {
+    const categories: { [key: string]: string } = {
+      general: 'Consulta General',
+      technical: 'Problema Técnico',
+      billing: 'Facturación',
+      feature: 'Solicitud de Función',
+      account: 'Cuenta y Configuración',
+      other: 'Otro'
+    };
+    return categories[category] || category;
+  };
+
   useEffect(() => {
     // Cargar tickets existentes
     const existingTickets = loadFromStorage('supportTickets', []);
@@ -933,19 +945,73 @@ Fecha: ${new Date().toLocaleString()}
                 </div>
 
                 {/* Historial de tickets */}
-                {supportTickets.length > 0 && (
+                {supportTickets.filter(ticket => ticket.restaurantId === restaurant?.id).length > 0 && (
                   <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                    <h4 className="text-gray-800 font-medium mb-3">Tickets enviados recientemente:</h4>
-                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                    <h4 className="text-gray-800 font-medium mb-3">Historial de Tickets de Soporte:</h4>
+                    <div className="space-y-3 max-h-64 overflow-y-auto">
                       {supportTickets
                         .filter(ticket => ticket.restaurantId === restaurant?.id)
-                        .slice(-3)
+                        .slice(-5)
                         .reverse()
                         .map(ticket => (
-                          <div key={ticket.id} className="text-sm text-gray-600 bg-white p-2 rounded border">
-                            <div className="font-medium">{ticket.subject}</div>
+                          <div key={ticket.id} className="bg-white p-4 rounded-lg border border-gray-200 space-y-3">
+                            {/* Ticket Header */}
+                            <div className="flex items-center justify-between">
+                              <div className="font-medium text-gray-900">{ticket.subject}</div>
+                              <div className="flex gap-2">
+                                {ticket.priority === 'urgent' && <Badge variant="error">Urgente</Badge>}
+                                {ticket.priority === 'high' && <Badge variant="warning">Alta</Badge>}
+                                {ticket.priority === 'medium' && <Badge variant="info">Media</Badge>}
+                                {ticket.priority === 'low' && <Badge variant="gray">Baja</Badge>}
+                                
+                                {ticket.status === 'pending' && <Badge variant="warning">Pendiente</Badge>}
+                                {ticket.status === 'in_progress' && <Badge variant="info">En Progreso</Badge>}
+                                {ticket.status === 'resolved' && <Badge variant="success">Resuelto</Badge>}
+                                {ticket.status === 'closed' && <Badge variant="gray">Cerrado</Badge>}
+                              </div>
+                            </div>
+                            
+                            {/* Ticket Info */}
                             <div className="text-xs text-gray-500">
-                              {new Date(ticket.createdAt).toLocaleString()} - {ticket.priority.toUpperCase()}
+                              <div className="flex items-center justify-between">
+                                <span>Enviado: {new Date(ticket.createdAt).toLocaleString()}</span>
+                                <span>Categoría: {getCategoryName(ticket.category)}</span>
+                              </div>
+                            </div>
+                            
+                            {/* Original Message */}
+                            <div className="text-sm text-gray-700 bg-gray-50 p-3 rounded border-l-4 border-blue-400">
+                              <div className="font-medium text-blue-800 mb-1">Tu consulta:</div>
+                              <div className="text-gray-700">{ticket.message}</div>
+                            </div>
+                            
+                            {/* Admin Response */}
+                            {ticket.response && (
+                              <div className="text-sm bg-green-50 p-3 rounded border-l-4 border-green-400">
+                                <div className="font-medium text-green-800 mb-1 flex items-center">
+                                  <span>Respuesta del Administrador:</span>
+                                  {ticket.responseDate && (
+                                    <span className="text-xs text-green-600 ml-2">
+                                      {new Date(ticket.responseDate).toLocaleString()}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-green-800 whitespace-pre-wrap">{ticket.response}</div>
+                              </div>
+                            )}
+                            
+                            {/* Status Message */}
+                            {!ticket.response && ticket.status === 'pending' && (
+                              <div className="text-xs text-yellow-700 bg-yellow-50 p-2 rounded">
+                                ⏳ Tu ticket está pendiente de revisión. Te contactaremos pronto.
+                              </div>
+                            )}
+                            
+                            {!ticket.response && ticket.status === 'in_progress' && (
+                              <div className="text-xs text-blue-700 bg-blue-50 p-2 rounded">
+                                🔄 Tu ticket está siendo revisado por nuestro equipo.
+                              </div>
+                            )}
                             </div>
                           </div>
                         ))}
