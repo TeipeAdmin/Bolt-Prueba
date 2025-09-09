@@ -774,6 +774,19 @@ export const CustomersManagement: React.FC = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <input
+                      type="checkbox"
+                      checked={selectedCustomers.size === filteredCustomers.length && filteredCustomers.length > 0}
+                      ref={(el) => {
+                        if (el) {
+                          el.indeterminate = selectedCustomers.size > 0 && selectedCustomers.size < filteredCustomers.length;
+                        }
+                      }}
+                      onChange={toggleSelectAll}
+                      className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t('customer')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
