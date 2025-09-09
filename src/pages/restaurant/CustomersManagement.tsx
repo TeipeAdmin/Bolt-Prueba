@@ -602,17 +602,6 @@ export const CustomersManagement: React.FC = () => {
               Editar {selectedCustomers.size} seleccionado{selectedCustomers.size !== 1 ? 's' : ''}
             </Button>
           )}
-          {selectedCustomers.size > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              icon={Users}
-              onClick={handleBulkEdit}
-              className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
-            >
-              Editar {selectedCustomers.size} seleccionado{selectedCustomers.size !== 1 ? 's' : ''}
-            </Button>
-          )}
           <Button
             variant="outline"
             size="sm"
