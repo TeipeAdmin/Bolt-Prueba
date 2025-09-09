@@ -1,20 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, TrendingUp, ShoppingBag, DollarSign, Calendar, Users, Filter } from 'lucide-react';
+import { BarChart3, TrendingUp, ShoppingBag, DollarSign, Calendar, Users, Filter, Download, X } from 'lucide-react';
 import { Product, Order, Category } from '../../types';
 import { loadFromStorage } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
 import { Badge } from '../../components/ui/Badge';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
+import { useToast } from '../../hooks/useToast';
 
 export const RestaurantAnalytics: React.FC = () => {
   const { restaurant } = useAuth();
+  const { showToast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedOrderType, setSelectedOrderType] = useState<string>('all');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
 
   useEffect(() => {
     if (restaurant) {
@@ -52,7 +57,6 @@ export const RestaurantAnalytics: React.FC = () => {
     const end = endDate ? new Date(endDate + 'T23:59:59') : new Date('2100-12-31');
     
     return orderDate >= start && orderDate <= end;
-  });
 
   // Calculate analytics
   const totalOrders = filteredOrders.length;
