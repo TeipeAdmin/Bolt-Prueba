@@ -547,7 +547,7 @@ export const CustomersManagement: React.FC = () => {
                     <div className="flex items-center relative">
                       {t('segment')}
                       <Info className="w-3 h-3 ml-1 text-gray-400" />
-                      <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block bg-white text-gray-800 text-xs rounded-lg p-3 w-64 z-50 shadow-xl border border-gray-200">
+                      <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block bg-white text-gray-800 text-xs rounded-lg p-3 w-64 shadow-xl border border-gray-200" style={{ zIndex: 9999 }}>
                         <div className="space-y-1">
                           <div><strong className="text-green-300">VIP:</strong> Asignado manualmente</div>
                           <div><strong className="text-blue-300">Nuevo:</strong> 1 pedido</div>
@@ -557,7 +557,7 @@ export const CustomersManagement: React.FC = () => {
                             * Un cliente puede ser VIP y tener otro segmento
                           </div>
                         </div>
-                        <div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-white"></div>
+                        <div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-white" style={{ zIndex: 9999 }}></div>
                       </div>
                     </div>
                   </th>
