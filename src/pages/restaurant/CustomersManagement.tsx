@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Phone, Mail, MapPin, Calendar, ShoppingBag, Filter, Search, Star, Edit, ArrowUpDown, Trash2, Info } from 'lucide-react';
+import { User, Phone, Mail, MapPin, Calendar, ShoppingBag, Filter, Search, Star, Edit, ArrowUpDown, Trash2, Info, Download } from 'lucide-react';
 import { Order, Customer, Subscription } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -367,6 +367,119 @@ export const CustomersManagement: React.FC = () => {
     );
   };
 
+  const exportToCSV = () => {
+    // Usar los clientes filtrados actuales
+    const dataToExport = filteredCustomers;
+    
+    if (dataToExport.length === 0) {
+      showToast(
+        'warning',
+        'Sin datos para exportar',
+        'No hay clientes que coincidan con los filtros actuales.',
+        4000
+      );
+      return;
+    }
+
+    // Definir las columnas del CSV
+    const headers = [
+      'Nombre',
+      'Teléfono',
+      'Email',
+      'Dirección',
+      'Total Pedidos',
+      'Total Gastado',
+      'Promedio por Pedido',
+      'Tipos de Pedido',
+      'Es VIP',
+      'Segmento',
+      'Último Pedido',
+      'Referencias de Entrega'
+    ];
+
+    // Función para obtener el segmento como texto
+    const getSegmentText = (totalOrders: number, isVip: boolean) => {
+      const segments = [];
+      
+      if (isVip) segments.push('VIP');
+      
+      if (totalOrders === 1) {
+        segments.push('Nuevo');
+      } else if (totalOrders >= 2 && totalOrders <= 4) {
+        segments.push('Regular');
+      } else if (totalOrders >= 5) {
+        segments.push('Frecuente');
+      }
+      
+      return segments.join(', ');
+    };
+
+    // Convertir datos a formato CSV
+    const csvData = dataToExport.map(customer => [
+      customer.name,
+      customer.phone,
+      customer.email || '',
+      customer.address || '',
+      customer.totalOrders,
+      customer.totalSpent.toFixed(2),
+      (customer.totalSpent / customer.totalOrders).toFixed(2),
+      customer.orderTypes.join(', '),
+      customer.isVip ? 'Sí' : 'No',
+      getSegmentText(customer.totalOrders, customer.isVip),
+      new Date(customer.lastOrderDate).toLocaleDateString(),
+      customer.delivery_instructions || ''
+    ]);
+
+    // Crear contenido CSV
+    const csvContent = [
+      headers.join(','),
+      ...csvData.map(row => 
+        row.map(field => 
+          // Escapar comillas y envolver en comillas si contiene comas, saltos de línea o comillas
+          typeof field === 'string' && (field.includes(',') || field.includes('\n') || field.includes('"'))
+            ? `"${field.replace(/"/g, '""')}"`
+            : field
+        ).join(',')
+      )
+    ].join('\n');
+
+    // Crear y descargar archivo
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      
+      // Generar nombre de archivo con fecha y filtros aplicados
+      const today = new Date().toISOString().split('T')[0];
+      let fileName = `clientes_${restaurant?.name?.replace(/[^a-zA-Z0-9]/g, '_')}_${today}`;
+      
+      // Añadir información de filtros al nombre
+      if (searchTerm) {
+        fileName += `_busqueda_${searchTerm.replace(/[^a-zA-Z0-9]/g, '_')}`;
+      }
+      if (filterBy !== 'all') {
+        fileName += `_${filterBy}`;
+      }
+      if (statusFilter !== 'all') {
+        fileName += `_${statusFilter}`;
+      }
+      
+      link.setAttribute('download', `${fileName}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    showToast(
+      'success',
+      'CSV Exportado',
+      `Se han exportado ${dataToExport.length} cliente${dataToExport.length !== 1 ? 's' : ''} exitosamente.`,
+      4000
+    );
+  };
   const stats = {
     totalCustomers: customers.length,
     vipCustomers: customers.filter(c => c.isVip).length,
@@ -378,15 +491,26 @@ export const CustomersManagement: React.FC = () => {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">{t('customerManagement')}</h1>
-        <Button
-          variant="outline"
-          size="sm"
-          icon={Filter}
-          onClick={() => setShowFilters(!showFilters)}
-          className={showFilters ? 'bg-blue-50 border-blue-200 text-blue-700' : ''}
-        >
-          Filtros y Búsqueda
-        </Button>
+        <div className="flex gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            icon={Download}
+            onClick={exportToCSV}
+            className="text-green-600 hover:text-green-700 hover:bg-green-50"
+          >
+            Exportar CSV
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            icon={Filter}
+            onClick={() => setShowFilters(!showFilters)}
+            className={showFilters ? 'bg-blue-50 border-blue-200 text-blue-700' : ''}
+          >
+            Filtros y Búsqueda
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
