@@ -26,6 +26,7 @@ export const CustomersManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'orders' | 'spent' | 'date'>('name');
   const [filterBy, setFilterBy] = useState<'all' | 'vip' | 'frequent' | 'regular' | 'new'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<CustomerData | null>(null);
   const [editForm, setEditForm] = useState({
@@ -45,7 +46,7 @@ export const CustomersManagement: React.FC = () => {
 
   useEffect(() => {
     filterAndSortCustomers();
-  }, [customers, searchTerm, sortBy, filterBy]);
+  }, [customers, searchTerm, sortBy, filterBy, statusFilter]);
 
   const loadCustomersData = () => {
     if (!restaurant) return;
@@ -118,6 +119,21 @@ export const CustomersManagement: React.FC = () => {
           default:
             return true;
         }
+      });
+    }
+
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(customer => {
+        const daysSinceLastOrder = Math.ceil((new Date().getTime() - new Date(customer.lastOrderDate).getTime()) / (1000 * 60 * 60 * 24));
+        const isActive = daysSinceLastOrder <= 30; // Active if ordered in last 30 days
+        
+        if (statusFilter === 'active') {
+          return isActive;
+        } else if (statusFilter === 'inactive') {
+          return !isActive;
+        }
+        return true;
       });
     }
 
@@ -318,6 +334,18 @@ export const CustomersManagement: React.FC = () => {
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-gray-500" />
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as any)}
+                className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">Todos los estados</option>
+                <option value="active">Activos (últimos 30 días)</option>
+                <option value="inactive">Inactivos (+30 días)</option>
+              </select>
+            </div>
             <div className="flex items-center gap-2">
               <Filter className="w-4 h-4 text-gray-500" />
               <select
