@@ -466,94 +466,272 @@ export const RestaurantSettings: React.FC = () => {
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                       {Array.from({ length: formData.settings.table_orders?.table_numbers || 10 }, (_, i) => i + 1).map(tableNum => (
                         <div key={tableNum} className="bg-white border border-gray-200 rounded-lg p-4 text-center">
-                          <div className="w-20 h-20 bg-gray-100 rounded-lg mx-auto mb-2 flex items-center justify-center">
-                            <QrCode className="w-8 h-8 text-gray-400" />
+                          <div className="w-20 h-20 bg-white border-2 border-gray-300 rounded-lg mx-auto mb-2 flex items-center justify-center relative">
+                            <img
+                              src={`https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(`${window.location.origin}/${formData.domain}?table=${tableNum}`)}`}
+                              alt={`QR Mesa ${tableNum}`}
+                              className="w-full h-full object-contain rounded"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                target.nextElementSibling!.classList.remove('hidden');
+                              }}
+                            />
+                            <div className="hidden absolute inset-0 flex items-center justify-center">
+                              <QrCode className="w-8 h-8 text-gray-400" />
+                            </div>
                           </div>
                           <p className="text-sm font-medium text-gray-900">Mesa {tableNum}</p>
                           <p className="text-xs text-gray-500 mt-1">
                             ?table={tableNum}
                           </p>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="mt-2 w-full text-xs"
-                            onClick={() => {
-                              const qrUrl = `${window.location.origin}/${formData.domain}?table=${tableNum}`;
-                              const printWindow = window.open('', '_blank');
-                              if (printWindow) {
-                                printWindow.document.write(`
-                                  <html>
-                                    <head>
-                                      <title>QR Mesa ${tableNum} - ${formData.name}</title>
-                                      <style>
-                                        body { 
-                                          font-family: Arial, sans-serif; 
-                                          text-align: center; 
-                                          padding: 20px;
-                                          margin: 0;
-                                        }
-                                        .qr-container {
-                                          border: 2px solid #000;
-                                          padding: 20px;
-                                          margin: 20px auto;
-                                          max-width: 300px;
-                                          border-radius: 10px;
-                                        }
-                                        .restaurant-name {
-                                          font-size: 24px;
-                                          font-weight: bold;
-                                          margin-bottom: 10px;
-                                        }
-                                        .table-number {
-                                          font-size: 36px;
-                                          font-weight: bold;
-                                          color: #2563eb;
-                                          margin: 20px 0;
-                                        }
-                                        .instructions {
-                                          font-size: 14px;
-                                          color: #666;
-                                          margin-top: 15px;
-                                        }
-                                        .url {
-                                          font-size: 12px;
-                                          color: #999;
-                                          word-break: break-all;
-                                          margin-top: 10px;
-                                        }
-                                        @media print {
-                                          body { margin: 0; }
-                                          .qr-container { border: 2px solid #000; }
-                                        }
-                                      </style>
-                                    </head>
-                                    <body>
-                                      <div class="qr-container">
-                                        <div class="restaurant-name">${formData.name}</div>
-                                        <div class="table-number">MESA ${tableNum}</div>
-                                        <div style="margin: 20px 0;">
-                                          <div style="width: 150px; height: 150px; border: 2px dashed #ccc; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #666;">
-                                            Código QR<br/>para Mesa ${tableNum}
+                          <div className="flex gap-1 mt-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1 text-xs"
+                              onClick={() => {
+                                const qrUrl = `${window.location.origin}/${formData.domain}?table=${tableNum}`;
+                                const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrUrl)}`;
+                                
+                                const printWindow = window.open('', '_blank');
+                                if (printWindow) {
+                                  printWindow.document.write(`
+                                    <html>
+                                      <head>
+                                        <title>QR Mesa ${tableNum} - ${formData.name}</title>
+                                        <style>
+                                          body { 
+                                            font-family: Arial, sans-serif; 
+                                            text-align: center; 
+                                            padding: 20px;
+                                            margin: 0;
+                                          }
+                                          .qr-container {
+                                            border: 2px solid #000;
+                                            padding: 30px;
+                                            margin: 20px auto;
+                                            max-width: 400px;
+                                            border-radius: 10px;
+                                            background: white;
+                                          }
+                                          .restaurant-name {
+                                            font-size: 28px;
+                                            font-weight: bold;
+                                            margin-bottom: 10px;
+                                            color: #1f2937;
+                                          }
+                                          .table-number {
+                                            font-size: 42px;
+                                            font-weight: bold;
+                                            color: #2563eb;
+                                            margin: 20px 0;
+                                          }
+                                          .qr-image {
+                                            width: 200px;
+                                            height: 200px;
+                                            margin: 20px auto;
+                                            border: 1px solid #e5e7eb;
+                                            border-radius: 8px;
+                                          }
+                                          .instructions {
+                                            font-size: 16px;
+                                            color: #374151;
+                                            margin-top: 20px;
+                                            line-height: 1.5;
+                                          }
+                                          .url {
+                                            font-size: 12px;
+                                            color: #6b7280;
+                                            word-break: break-all;
+                                            margin-top: 15px;
+                                            padding: 10px;
+                                            background: #f9fafb;
+                                            border-radius: 6px;
+                                          }
+                                          @media print {
+                                            body { margin: 0; }
+                                            .qr-container { border: 2px solid #000; }
+                                          }
+                                        </style>
+                                      </head>
+                                      <body>
+                                        <div class="qr-container">
+                                          <div class="restaurant-name">${formData.name}</div>
+                                          <div class="table-number">MESA ${tableNum}</div>
+                                          <img src="${qrImageUrl}" alt="QR Mesa ${tableNum}" class="qr-image" />
+                                          <div class="instructions">
+                                            <strong>Escanea el código QR con tu teléfono</strong><br/>
+                                            para ver nuestro menú y hacer tu pedido
                                           </div>
+                                          <div class="url">${qrUrl}</div>
                                         </div>
-                                        <div class="instructions">
-                                          Escanea el código QR con tu teléfono<br/>
-                                          para ver nuestro menú y hacer tu pedido
-                                        </div>
-                                        <div class="url">${qrUrl}</div>
-                                      </div>
-                                    </body>
-                                  </html>
-                                `);
-                                printWindow.document.close();
-                                printWindow.print();
-                              }
-                            }}
-                          >
-                            Imprimir
-                          </Button>
+                                      </body>
+                                    </html>
+                                  `);
+                                  printWindow.document.close();
+                                  printWindow.print();
+                                }
+                              }}
+                            >
+                              🖨️
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1 text-xs"
+                              onClick={() => {
+                                const qrUrl = `${window.location.origin}/${formData.domain}?table=${tableNum}`;
+                                const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrUrl)}`;
+                                
+                                // Create a temporary link to download the QR code
+                                const link = document.createElement('a');
+                                link.href = qrImageUrl;
+                                link.download = `QR-Mesa-${tableNum}-${formData.name.replace(/[^a-zA-Z0-9]/g, '_')}.png`;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                              }}
+                            >
+                              📥
+                            </Button>
+                          </div>
                         </div>
                       ))}
+                    </div>
+                    
+                    <div className="mt-6 flex gap-3">
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          const tableCount = formData.settings.table_orders?.table_numbers || 10;
+                          const qrUrl = `${window.location.origin}/${formData.domain}`;
+                          
+                          const printWindow = window.open('', '_blank');
+                          if (printWindow) {
+                            let htmlContent = `
+                              <html>
+                                <head>
+                                  <title>Códigos QR - ${formData.name}</title>
+                                  <style>
+                                    body { 
+                                      font-family: Arial, sans-serif; 
+                                      margin: 0;
+                                      padding: 20px;
+                                    }
+                                    .page-title {
+                                      text-align: center;
+                                      font-size: 24px;
+                                      font-weight: bold;
+                                      margin-bottom: 30px;
+                                      color: #1f2937;
+                                    }
+                                    .qr-grid {
+                                      display: grid;
+                                      grid-template-columns: repeat(2, 1fr);
+                                      gap: 30px;
+                                      max-width: 800px;
+                                      margin: 0 auto;
+                                    }
+                                    .qr-item {
+                                      border: 2px solid #000;
+                                      padding: 20px;
+                                      text-align: center;
+                                      border-radius: 10px;
+                                      background: white;
+                                      page-break-inside: avoid;
+                                    }
+                                    .restaurant-name {
+                                      font-size: 18px;
+                                      font-weight: bold;
+                                      margin-bottom: 5px;
+                                    }
+                                    .table-number {
+                                      font-size: 28px;
+                                      font-weight: bold;
+                                      color: #2563eb;
+                                      margin: 15px 0;
+                                    }
+                                    .qr-image {
+                                      width: 150px;
+                                      height: 150px;
+                                      margin: 15px auto;
+                                      border: 1px solid #e5e7eb;
+                                      border-radius: 8px;
+                                    }
+                                    .instructions {
+                                      font-size: 12px;
+                                      color: #374151;
+                                      margin-top: 10px;
+                                      line-height: 1.4;
+                                    }
+                                    @media print {
+                                      body { margin: 0; }
+                                      .qr-item { border: 2px solid #000; }
+                                    }
+                                  </style>
+                                </head>
+                                <body>
+                                  <div class="page-title">Códigos QR - ${formData.name}</div>
+                                  <div class="qr-grid">
+                            `;
+                            
+                            for (let i = 1; i <= tableCount; i++) {
+                              const tableQrUrl = `${qrUrl}?table=${i}`;
+                              const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(tableQrUrl)}`;
+                              
+                              htmlContent += `
+                                <div class="qr-item">
+                                  <div class="restaurant-name">${formData.name}</div>
+                                  <div class="table-number">MESA ${i}</div>
+                                  <img src="${qrImageUrl}" alt="QR Mesa ${i}" class="qr-image" />
+                                  <div class="instructions">
+                                    Escanea con tu teléfono<br/>
+                                    para ver el menú
+                                  </div>
+                                </div>
+                              `;
+                            }
+                            
+                            htmlContent += `
+                                  </div>
+                                </body>
+                              </html>
+                            `;
+                            
+                            printWindow.document.write(htmlContent);
+                            printWindow.document.close();
+                            printWindow.print();
+                          }
+                        }}
+                      >
+                        🖨️ Imprimir Todos los QR
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          const tableCount = formData.settings.table_orders?.table_numbers || 10;
+                          const qrUrl = `${window.location.origin}/${formData.domain}`;
+                          
+                          // Create a zip-like experience by downloading multiple files
+                          for (let i = 1; i <= tableCount; i++) {
+                            setTimeout(() => {
+                              const tableQrUrl = `${qrUrl}?table=${i}`;
+                              const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(tableQrUrl)}`;
+                              
+                              const link = document.createElement('a');
+                              link.href = qrImageUrl;
+                              link.download = `QR-Mesa-${i}-${formData.name.replace(/[^a-zA-Z0-9]/g, '_')}.png`;
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                            }, i * 500); // Delay each download by 500ms
+                          }
+                        }}
+                      >
+                        📥 Descargar Todos los QR
+                      </Button>
                     </div>
                     
                     <div className="mt-6 p-4 bg-gray-50 rounded-lg">
