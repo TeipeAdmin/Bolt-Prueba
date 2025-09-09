@@ -26,6 +26,7 @@ export const RestaurantSettings: React.FC = () => {
   });
   const [supportLoading, setSupportLoading] = useState(false);
   const [supportSuccess, setSupportSuccess] = useState(false);
+  const [supportTickets, setSupportTickets] = useState<any[]>([]);
 
   useEffect(() => {
     if (restaurant) {
