@@ -337,79 +337,75 @@ export const CustomersManagement: React.FC = () => {
 
       {/* Collapsible Filters and Search */}
       {showFilters && (
-        <div className="bg-white rounded-lg shadow p-4 mb-6">
-          <div className="flex flex-col lg:flex-row gap-4">
-            {/* Search Bar */}
-            <div className="flex-1 min-w-0">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder={`${t('search')} clientes por nombre, teléfono o email...`}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
+        <div className="bg-white rounded-lg shadow p-4 mb-6 space-y-4">
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder={`${t('search')} clientes por nombre, teléfono o email...`}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* Status Filter */}
+            <div className="flex items-center gap-2 whitespace-nowrap">
+              <Filter className="w-4 h-4 text-gray-500 flex-shrink-0" />
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as any)}
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0"
+              >
+                <option value="all">Todos los estados</option>
+                <option value="active">Activos (últimos 30 días)</option>
+                <option value="inactive">Inactivos (+30 días)</option>
+              </select>
             </div>
             
-            {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-3 lg:flex-shrink-0">
-              {/* Status Filter */}
-              <div className="flex items-center gap-2 whitespace-nowrap">
-                <Filter className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value as any)}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0"
-                >
-                  <option value="all">Todos los estados</option>
-                  <option value="active">Activos (últimos 30 días)</option>
-                  <option value="inactive">Inactivos (+30 días)</option>
-                </select>
-              </div>
-              
-              {/* Segment Filter */}
-              <div className="flex items-center gap-2 whitespace-nowrap">
-                <Filter className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                <select
-                  value={filterBy}
-                  onChange={(e) => setFilterBy(e.target.value as any)}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0"
-                >
-                  <option value="all">Todos los segmentos</option>
-                  <option value="vip">Solo VIP</option>
-                  <option value="frequent">Solo Frecuentes</option>
-                  <option value="new">Solo Nuevos</option>
-                </select>
-              </div>
-              
-              {/* Sort Filter */}
-              <div className="flex items-center gap-2 whitespace-nowrap">
-                <Filter className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as any)}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0"
-                >
-                  <option value="name">Ordenar por {t('name')}</option>
-                  <option value="orders">Ordenar por {t('ordersCount')}</option>
-                  <option value="spent">Ordenar por {t('totalSpent')}</option>
-                  <option value="date">Ordenar por {t('date')}</option>
-                </select>
-              </div>
-              
-              {/* Sort Direction Arrow Button */}
-              <div className="flex items-center gap-2 whitespace-nowrap">
-                <button
-                  onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50 transition-colors flex items-center gap-1"
-                  title={sortDirection === 'asc' ? 'Cambiar a descendente' : 'Cambiar a ascendente'}
-                >
-                  <ArrowUpDown className="w-4 h-4" />
-                  {sortDirection === 'asc' ? '↑' : '↓'}
-                </button>
-              </div>
+            {/* Segment Filter */}
+            <div className="flex items-center gap-2 whitespace-nowrap">
+              <Filter className="w-4 h-4 text-gray-500 flex-shrink-0" />
+              <select
+                value={filterBy}
+                onChange={(e) => setFilterBy(e.target.value as any)}
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0"
+              >
+                <option value="all">Todos los segmentos</option>
+                <option value="vip">Solo VIP</option>
+                <option value="frequent">Solo Frecuentes</option>
+                <option value="new">Solo Nuevos</option>
+              </select>
+            </div>
+            
+            {/* Sort Filter */}
+            <div className="flex items-center gap-2 whitespace-nowrap">
+              <Filter className="w-4 h-4 text-gray-500 flex-shrink-0" />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0"
+              >
+                <option value="name">Ordenar por {t('name')}</option>
+                <option value="orders">Ordenar por {t('ordersCount')}</option>
+                <option value="spent">Ordenar por {t('totalSpent')}</option>
+                <option value="date">Ordenar por {t('date')}</option>
+              </select>
+            </div>
+            
+            {/* Sort Direction Arrow Button */}
+            <div className="flex items-center gap-2 whitespace-nowrap">
+              <button
+                onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50 transition-colors flex items-center gap-1"
+                title={sortDirection === 'asc' ? 'Cambiar a descendente' : 'Cambiar a ascendente'}
+              >
+                <ArrowUpDown className="w-4 h-4" />
+                {sortDirection === 'asc' ? '↑' : '↓'}
+              </button>
             </div>
           </div>
         </div>
