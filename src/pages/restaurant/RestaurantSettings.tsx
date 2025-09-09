@@ -482,14 +482,11 @@ export const RestaurantSettings: React.FC = () => {
                             </div>
                           </div>
                           <p className="text-sm font-medium text-gray-900">Mesa {tableNum}</p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            ?table={tableNum}
-                          </p>
-                          <div className="flex gap-1 mt-2">
+                          <div className="flex flex-col gap-2 mt-3">
                             <Button
                               variant="outline"
                               size="sm"
-                              className="flex-1 text-xs"
+                              className="w-full text-xs py-1 px-2"
                               onClick={() => {
                                 const qrUrl = `${window.location.origin}/${formData.domain}?table=${tableNum}`;
                                 const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrUrl)}`;
@@ -574,12 +571,12 @@ export const RestaurantSettings: React.FC = () => {
                                 }
                               }}
                             >
-                              🖨️
+                              Imprimir
                             </Button>
                             <Button
                               variant="outline"
                               size="sm"
-                              className="flex-1 text-xs"
+                              className="w-full text-xs py-1 px-2"
                               onClick={() => {
                                 const qrUrl = `${window.location.origin}/${formData.domain}?table=${tableNum}`;
                                 const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrUrl)}`;
@@ -593,7 +590,7 @@ export const RestaurantSettings: React.FC = () => {
                                 document.body.removeChild(link);
                               }}
                             >
-                              📥
+                              Descargar
                             </Button>
                           </div>
                         </div>
@@ -705,7 +702,7 @@ export const RestaurantSettings: React.FC = () => {
                           }
                         }}
                       >
-                        🖨️ Imprimir Todos los QR
+                        Imprimir Todos los QR
                       </Button>
                       
                       <Button
@@ -730,7 +727,7 @@ export const RestaurantSettings: React.FC = () => {
                           }
                         }}
                       >
-                        📥 Descargar Todos los QR
+                        Descargar Todos los QR
                       </Button>
                     </div>
                     
