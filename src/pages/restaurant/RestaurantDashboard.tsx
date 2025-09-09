@@ -48,12 +48,14 @@ export const RestaurantDashboard: React.FC = () => {
   // Calculate last month's revenue
   const getLastMonthRevenue = () => {
     const now = new Date();
-    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
     
-    return orders.filter(o => {
-      const orderDate = new Date(o.created_at);
-      return o.status === 'delivered' && orderDate >= lastMonth && orderDate < thisMonth;
+    return orders.filter(order => {
+      const orderDate = new Date(order.created_at);
+      return order.status === 'delivered' && 
+             orderDate >= lastMonthStart && 
+             orderDate <= lastMonthEnd;
     }).reduce((sum, order) => sum + order.total, 0);
   };
 
