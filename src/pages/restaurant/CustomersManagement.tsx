@@ -4,6 +4,7 @@ import { Order, Customer } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useToast } from '../../hooks/useToast';
 import { Badge } from '../../components/ui/Badge';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
@@ -21,6 +22,7 @@ interface CustomerData extends Customer {
 export const CustomersManagement: React.FC = () => {
   const { restaurant } = useAuth();
   const { t } = useLanguage();
+  const { showToast } = useToast();
   const [customers, setCustomers] = useState<CustomerData[]>([]);
   const [filteredCustomers, setFilteredCustomers] = useState<CustomerData[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
