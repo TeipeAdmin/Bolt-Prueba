@@ -899,6 +899,26 @@ Fecha: ${new Date().toLocaleString()}
                   </ul>
                 </div>
 
+                {/* Historial de tickets */}
+                {supportTickets.length > 0 && (
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <h4 className="text-gray-800 font-medium mb-3">Tickets enviados recientemente:</h4>
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                      {supportTickets
+                        .filter(ticket => ticket.restaurantId === restaurant?.id)
+                        .slice(-3)
+                        .reverse()
+                        .map(ticket => (
+                          <div key={ticket.id} className="text-sm text-gray-600 bg-white p-2 rounded border">
+                            <div className="font-medium">{ticket.subject}</div>
+                            <div className="text-xs text-gray-500">
+                              {new Date(ticket.createdAt).toLocaleString()} - {ticket.priority.toUpperCase()}
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
                 <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
                   <Button
                     type="button"
@@ -931,6 +951,13 @@ Fecha: ${new Date().toLocaleString()}
                   <p>📧 Email directo: <a href="mailto:admin@digitalfenixpro.com" className="text-blue-600 hover:text-blue-700">admin@digitalfenixpro.com</a></p>
                   <p>⏰ Horario de atención: Lunes a Viernes, 9:00 AM - 6:00 PM</p>
                   <p>🕐 Tiempo de respuesta típico: 2-24 horas según prioridad</p>
+                </div>
+                
+                <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-yellow-800 text-sm">
+                    <strong>Nota:</strong> Los tickets se almacenan localmente y se envían automáticamente a nuestro sistema de soporte. 
+                    Recibirás una respuesta en el email de contacto proporcionado.
+                  </p>
                 </div>
               </div>
             </div>
