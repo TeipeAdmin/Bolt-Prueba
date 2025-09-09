@@ -9,7 +9,8 @@ import {
   CreditCard,
   Home,
   FolderOpen,
-  Crown
+  Crown,
+  HelpCircle
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -44,6 +45,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
     { id: 'restaurants', name: 'Restaurants', icon: Store },
     { id: 'users', name: 'Users', icon: Users },
     { id: 'subscriptions', name: 'Subscriptions', icon: CreditCard },
+    { id: 'support', name: 'Soporte', icon: HelpCircle },
     { id: 'analytics', name: t('analytics'), icon: BarChart3 },
   ];
 

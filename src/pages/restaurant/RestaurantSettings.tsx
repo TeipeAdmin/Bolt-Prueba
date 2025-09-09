@@ -29,6 +29,12 @@ export const RestaurantSettings: React.FC = () => {
   const [supportTickets, setSupportTickets] = useState<any[]>([]);
 
   useEffect(() => {
+    // Cargar tickets existentes
+    const existingTickets = loadFromStorage('supportTickets', []);
+    setSupportTickets(existingTickets);
+  }, []);
+
+  useEffect(() => {
     if (restaurant) {
       setFormData({ ...restaurant });
     }
@@ -96,8 +102,38 @@ export const RestaurantSettings: React.FC = () => {
     setSupportLoading(true);
 
     try {
-      // Crear el contenido del email
-      const emailContent = `
+      // Crear el ticket de soporte
+      const newTicket = {
+        id: `ticket-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        restaurantId: restaurant?.id,
+        restaurantName: restaurant?.name,
+        subject: supportForm.subject,
+        category: supportForm.category,
+        priority: supportForm.priority,
+        message: supportForm.message,
+        contactEmail: supportForm.contactEmail,
+        contactPhone: supportForm.contactPhone,
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      // Guardar en localStorage
+      const existingTickets = loadFromStorage('supportTickets', []);
+      saveToStorage('supportTickets', [...existingTickets, newTicket]);
+
+      // En un entorno real, aquí se enviaría al backend:
+      // const response = await fetch('/api/support-tickets', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify(newTicket)
+      // });
+
+      console.log('Ticket de soporte creado:', newTicket);
+      console.log('Email que se enviaría a admin@digitalfenixpro.com:', {
+        to: 'admin@digitalfenixpro.com',
+        subject: `[SOPORTE] ${supportForm.subject} - ${restaurant?.name}`,
+        body: `
 NUEVO TICKET DE SOPORTE
 
 INFORMACIÓN DEL RESTAURANTE:
@@ -107,6 +143,7 @@ INFORMACIÓN DEL RESTAURANTE:
 - ID: ${restaurant?.id}
 
 INFORMACIÓN DEL TICKET:
+- ID: ${newTicket.id}
 - Asunto: ${supportForm.subject}
 - Categoría: ${supportForm.category}
 - Prioridad: ${supportForm.priority}
@@ -119,17 +156,9 @@ ${supportForm.message}
 ---
 Enviado desde el panel de administración
 Fecha: ${new Date().toLocaleString()}
-      `.trim();
+        `.trim()
+      });
 
-      // Crear el enlace mailto
-      const subject = encodeURIComponent(`[SOPORTE] ${supportForm.subject} - ${restaurant?.name}`);
-      const body = encodeURIComponent(emailContent);
-      const mailtoLink = `mailto:admin@digitalfenixpro.com?subject=${subject}&body=${body}`;
-      
-      // Abrir el cliente de email
-      window.location.href = mailtoLink;
-      
-      // Mostrar mensaje de éxito
       setSupportSuccess(true);
       
       // Limpiar formulario después de 2 segundos
@@ -144,6 +173,9 @@ Fecha: ${new Date().toLocaleString()}
         });
         setSupportSuccess(false);
       }, 3000);
+      
+      // Actualizar la lista de tickets
+      setSupportTickets(prev => [...prev, newTicket]);
 
     } catch (error) {
       console.error('Error sending support request:', error);

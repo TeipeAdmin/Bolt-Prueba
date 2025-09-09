@@ -15,6 +15,7 @@ import { RestaurantAnalytics } from './restaurant/RestaurantAnalytics';
 import { CategoriesManagement } from './restaurant/CategoriesManagement';
 import { SubscriptionPlans } from './restaurant/SubscriptionPlans';
 import { CustomersManagement } from './restaurant/CustomersManagement';
+import { SupportTicketsManagement } from './superadmin/SupportTicketsManagement';
 
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -31,6 +32,8 @@ export const DashboardPage: React.FC = () => {
           return <UsersManagement />;
         case 'subscriptions':
           return <SubscriptionsManagement />;
+        case 'support':
+          return <SupportTicketsManagement />;
         case 'analytics':
           return <SuperAdminAnalytics />;
         default:
