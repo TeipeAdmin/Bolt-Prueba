@@ -564,25 +564,6 @@ export const RestaurantSettings: React.FC = () => {
           )}
 
           {activeTab === 'theme' && (
-                  <Input
-                    label={t('minimumOrder')}
-                    type="number"
-                    step="0.01"
-                    value={formData.settings.delivery.min_order_amount}
-                    onChange={(e) => updateFormData('settings.delivery.min_order_amount', parseFloat(e.target.value) || 0)}
-                  />
-                  <Input
-                    label={t('estimatedTime')}
-                    value={formData.settings.delivery.estimated_time}
-                    onChange={(e) => updateFormData('settings.delivery.estimated_time', e.target.value)}
-                    placeholder="30-45 minutos"
-                  />
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'theme' && (
             <div className="space-y-6">
               <h3 className="text-lg font-medium text-gray-900">{t('themeSettings')}</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
