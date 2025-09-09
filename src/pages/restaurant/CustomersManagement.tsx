@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Phone, Mail, MapPin, Calendar, ShoppingBag, Filter, Search, Star, Edit, ArrowUpDown } from 'lucide-react';
+import { User, Phone, Mail, MapPin, Calendar, ShoppingBag, Filter, Search, Star, Edit, ArrowUpDown, Trash2 } from 'lucide-react';
 import { Order, Customer } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -229,8 +229,38 @@ export const CustomersManagement: React.FC = () => {
 
     setShowEditModal(false);
     setEditingCustomer(null);
+    
+    showToast(
+      'success',
+      'Cliente Actualizado',
+      'La información del cliente ha sido actualizada exitosamente.',
+      4000
+    );
   };
 
+  const handleDeleteCustomer = (customerId: string) => {
+    const customer = customers.find(c => c.id === customerId);
+    if (!customer) return;
+
+    if (confirm(`¿Estás seguro de que quieres eliminar al cliente "${customer.name}"? Esta acción eliminará todos sus pedidos asociados y no se puede deshacer.`)) {
+      // Remove all orders from this customer
+      const allOrders = loadFromStorage('orders') || [];
+      const updatedOrders = allOrders.filter((order: Order) => 
+        order.customer.phone !== customer.phone
+      );
+      saveToStorage('orders', updatedOrders);
+
+      // Update local state by reloading data
+      loadCustomersData();
+      
+      showToast(
+        'info',
+        'Cliente Eliminado',
+        `El cliente "${customer.name}" y todos sus pedidos han sido eliminados.`,
+        5000
+      );
+    }
+  };
   const handleCloseEditModal = () => {
     setShowEditModal(false);
     setEditingCustomer(null);
@@ -541,6 +571,14 @@ export const CustomersManagement: React.FC = () => {
                       >
                         <Star className={`w-3 h-3 mr-1 ${customer.isVip ? 'fill-current' : ''}`} />
                         {customer.isVip ? 'Quitar VIP' : 'Hacer VIP'}
+                      </button>
+                      <button
+                        onClick={() => handleDeleteCustomer(customer.id)}
+                        className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-colors bg-red-100 text-red-800 hover:bg-red-200"
+                        title="Eliminar cliente"
+                      >
+                        <Trash2 className="w-3 h-3 mr-1" />
+                        Eliminar
                       </button>
                     </td>
                   </tr>
