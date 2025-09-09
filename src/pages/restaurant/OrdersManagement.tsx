@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, Edit, Trash2, Clock, Phone, MapPin, User, Filter, Search, CheckCircle, XCircle, AlertCircle, Package, Plus, MessageSquare } from 'lucide-react';
+import { Eye, Edit, Clock, CheckCircle, XCircle, Printer, Filter, Search, Trash2 } from 'lucide-react';
 import { Order, Product, Category } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useToast } from '../../hooks/useToast';
 import { useToast } from '../../hooks/useToast';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
@@ -14,6 +15,7 @@ export const OrdersManagement: React.FC = () => {
   const { restaurant } = useAuth();
   const { showToast } = useToast();
   const { t } = useLanguage();
+  const { showToast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -341,6 +343,22 @@ export const OrdersManagement: React.FC = () => {
       setSelectedOrders([]);
     } else {
       setSelectedOrders(paginatedOrders.map(order => order.id));
+    }
+  };
+
+  const handleDeleteOrder = (orderId: string) => {
+    if (confirm('¿Estás seguro de que quieres eliminar este pedido? Esta acción no se puede deshacer.')) {
+      const allOrders = loadFromStorage('orders') || [];
+      const updatedOrders = allOrders.filter((order: Order) => order.id !== orderId);
+      saveToStorage('orders', updatedOrders);
+      loadOrders();
+      
+      showToast(
+        'info',
+        'Pedido Eliminado',
+        'El pedido ha sido eliminado exitosamente.',
+        4000
+      );
     }
   };
 
@@ -878,6 +896,15 @@ export const OrdersManagement: React.FC = () => {
                         checked={selectedOrders.length === paginatedOrders.length && paginatedOrders.length > 0}
                         onChange={selectAllOrders}
                         className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        icon={Trash2}
+                        onClick={() => handleDeleteOrder(order.id)}
+                        className="text-red-600 hover:text-red-700"
+                        title="Eliminar pedido"
                       />
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
