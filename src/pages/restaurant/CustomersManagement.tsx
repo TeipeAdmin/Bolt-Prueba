@@ -1058,6 +1058,100 @@ export const CustomersManagement: React.FC = () => {
           </div>
         )}
       </Modal>
+
+      {/* Bulk Edit Modal */}
+      <Modal
+        isOpen={showBulkEditModal}
+        onClose={() => {
+          setShowBulkEditModal(false);
+          setBulkEditAction('vip');
+        }}
+        title="Edición Masiva"
+        size="md"
+      >
+        <div className="space-y-6">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center">
+              <Users className="w-5 h-5 text-blue-600 mr-2" />
+              <span className="text-sm font-medium text-blue-800">
+                {selectedCustomers.size} cliente{selectedCustomers.size !== 1 ? 's' : ''} seleccionado{selectedCustomers.size !== 1 ? 's' : ''}
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Selecciona la acción a realizar:
+            </label>
+            <div className="space-y-3">
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="bulkAction"
+                  value="vip"
+                  checked={bulkEditAction === 'vip'}
+                  onChange={(e) => setBulkEditAction(e.target.value as any)}
+                  className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500 mr-3"
+                />
+                <div>
+                  <span className="text-sm font-medium text-gray-900">Marcar como VIP</span>
+                  <p className="text-xs text-gray-500">Agregar estado VIP a todos los clientes seleccionados</p>
+                </div>
+              </label>
+              
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="bulkAction"
+                  value="remove_vip"
+                  checked={bulkEditAction === 'remove_vip'}
+                  onChange={(e) => setBulkEditAction(e.target.value as any)}
+                  className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500 mr-3"
+                />
+                <div>
+                  <span className="text-sm font-medium text-gray-900">Remover VIP</span>
+                  <p className="text-xs text-gray-500">Quitar estado VIP de todos los clientes seleccionados</p>
+                </div>
+              </label>
+              
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="bulkAction"
+                  value="delete"
+                  checked={bulkEditAction === 'delete'}
+                  onChange={(e) => setBulkEditAction(e.target.value as any)}
+                  className="h-4 w-4 text-red-600 border-gray-300 focus:ring-red-500 mr-3"
+                />
+                <div>
+                  <span className="text-sm font-medium text-red-900">Eliminar clientes</span>
+                  <p className="text-xs text-red-500">⚠️ Eliminar permanentemente todos los clientes y sus pedidos</p>
+                </div>
+              </label>
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setShowBulkEditModal(false);
+                setBulkEditAction('vip');
+              }}
+            >
+              {t('cancel')}
+            </Button>
+            <Button
+              onClick={executeBulkEdit}
+              variant={bulkEditAction === 'delete' ? 'danger' : 'primary'}
+              icon={bulkEditAction === 'delete' ? Trash2 : Users}
+            >
+              {bulkEditAction === 'vip' && 'Marcar como VIP'}
+              {bulkEditAction === 'remove_vip' && 'Remover VIP'}
+              {bulkEditAction === 'delete' && 'Eliminar Clientes'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
