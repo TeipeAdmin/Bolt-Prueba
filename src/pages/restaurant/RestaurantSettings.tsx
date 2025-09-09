@@ -83,7 +83,9 @@ export const RestaurantSettings: React.FC = () => {
   const tabs = [
     { id: 'general', name: 'General', icon: Globe },
     { id: 'hours', name: 'Horarios', icon: Clock },
+    { id: 'social', name: 'Redes Sociales', icon: Globe },
     { id: 'delivery', name: 'Delivery', icon: Truck },
+    { id: 'tables', name: 'Pedidos en Mesa', icon: QrCode },
     { id: 'theme', name: 'Tema', icon: Palette },
     { id: 'notifications', name: 'Notificaciones', icon: Bell },
   ];
@@ -251,6 +253,47 @@ export const RestaurantSettings: React.FC = () => {
             </div>
           )}
 
+          {activeTab === 'social' && (
+            <div className="space-y-6">
+              <h3 className="text-lg font-medium text-gray-900">Redes Sociales</h3>
+              <p className="text-sm text-gray-600">
+                Agrega tus redes sociales para que aparezcan en tu menú público
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Input
+                  label="Facebook"
+                  value={formData.settings.social_media?.facebook || ''}
+                  onChange={(e) => updateFormData('settings.social_media.facebook', e.target.value)}
+                  placeholder="https://facebook.com/tu-restaurante"
+                />
+                <Input
+                  label="Instagram"
+                  value={formData.settings.social_media?.instagram || ''}
+                  onChange={(e) => updateFormData('settings.social_media.instagram', e.target.value)}
+                  placeholder="https://instagram.com/tu-restaurante"
+                />
+                <Input
+                  label="Twitter"
+                  value={formData.settings.social_media?.twitter || ''}
+                  onChange={(e) => updateFormData('settings.social_media.twitter', e.target.value)}
+                  placeholder="https://twitter.com/tu-restaurante"
+                />
+                <Input
+                  label="WhatsApp"
+                  value={formData.settings.social_media?.whatsapp || ''}
+                  onChange={(e) => updateFormData('settings.social_media.whatsapp', e.target.value)}
+                  placeholder="+1234567890"
+                />
+                <Input
+                  label="Sitio Web"
+                  value={formData.settings.social_media?.website || ''}
+                  onChange={(e) => updateFormData('settings.social_media.website', e.target.value)}
+                  placeholder="https://tu-restaurante.com"
+                />
+              </div>
+            </div>
+          )}
+
           {activeTab === 'delivery' && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
@@ -269,7 +312,258 @@ export const RestaurantSettings: React.FC = () => {
               </div>
 
               {formData.settings.delivery.enabled && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Input
+                      label={t('minimumOrder')}
+                      type="number"
+                      step="0.01"
+                      value={formData.settings.delivery.min_order_amount}
+                      onChange={(e) => updateFormData('settings.delivery.min_order_amount', parseFloat(e.target.value) || 0)}
+                    />
+                    <Input
+                      label={t('estimatedTime')}
+                      value={formData.settings.delivery.estimated_time}
+                      onChange={(e) => updateFormData('settings.delivery.estimated_time', e.target.value)}
+                      placeholder="30-45 minutos"
+                    />
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-md font-medium text-gray-900 mb-4">Tarifas de Delivery</h4>
+                    <div className="space-y-4">
+                      {(formData.settings.delivery.zones || []).map((zone, index) => (
+                        <div key={index} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                          <div className="flex-1">
+                            <Input
+                              label="Nombre de la Zona"
+                              value={zone.name || ''}
+                              onChange={(e) => {
+                                const newZones = [...(formData.settings.delivery.zones || [])];
+                                newZones[index] = { ...zone, name: e.target.value };
+                                updateFormData('settings.delivery.zones', newZones);
+                              }}
+                              placeholder="Centro, Norte, Sur..."
+                            />
+                          </div>
+                          <div className="w-32">
+                            <Input
+                              label="Costo ($)"
+                              type="number"
+                              step="0.01"
+                              value={zone.cost || 0}
+                              onChange={(e) => {
+                                const newZones = [...(formData.settings.delivery.zones || [])];
+                                newZones[index] = { ...zone, cost: parseFloat(e.target.value) || 0 };
+                                updateFormData('settings.delivery.zones', newZones);
+                              }}
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Descripción del Área
+                            </label>
+                            <textarea
+                              value={zone.area_description || ''}
+                              onChange={(e) => {
+                                const newZones = [...(formData.settings.delivery.zones || [])];
+                                newZones[index] = { ...zone, area_description: e.target.value };
+                                updateFormData('settings.delivery.zones', newZones);
+                              }}
+                              rows={2}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              placeholder="Descripción de la zona de cobertura..."
+                            />
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              const newZones = (formData.settings.delivery.zones || []).filter((_, i) => i !== index);
+                              updateFormData('settings.delivery.zones', newZones);
+                            }}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            Eliminar
+                          </Button>
+                        </div>
+                      ))}
+                      
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          const newZones = [...(formData.settings.delivery.zones || []), {
+                            id: Date.now().toString(),
+                            name: '',
+                            cost: 0,
+                            area_description: ''
+                          }];
+                          updateFormData('settings.delivery.zones', newZones);
+                        }}
+                      >
+                        Agregar Zona de Delivery
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'tables' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium text-gray-900">Pedidos en Mesa</h3>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.settings.table_orders?.enabled || false}
+                    onChange={(e) => updateFormData('settings.table_orders.enabled', e.target.checked)}
+                    className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    {formData.settings.table_orders?.enabled ? 'Habilitado' : 'Deshabilitado'}
+                  </span>
+                </div>
+              </div>
+              
+              {formData.settings.table_orders?.enabled && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Input
+                      label="Número de Mesas"
+                      type="number"
+                      min="1"
+                      max="100"
+                      value={formData.settings.table_orders?.table_numbers || 10}
+                      onChange={(e) => updateFormData('settings.table_orders.table_numbers', parseInt(e.target.value) || 10)}
+                    />
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-md font-medium text-gray-900 mb-4">Códigos QR de Mesas</h4>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Los códigos QR permiten a los clientes acceder directamente al menú desde su mesa.
+                    </p>
+                    
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                      <div className="flex items-center">
+                        <QrCode className="w-5 h-5 text-blue-600 mr-2" />
+                        <span className="text-sm font-medium text-blue-800">
+                          URL base para códigos QR: {window.location.origin}/{formData.domain}?table=
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                      {Array.from({ length: formData.settings.table_orders?.table_numbers || 10 }, (_, i) => i + 1).map(tableNum => (
+                        <div key={tableNum} className="bg-white border border-gray-200 rounded-lg p-4 text-center">
+                          <div className="w-20 h-20 bg-gray-100 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                            <QrCode className="w-8 h-8 text-gray-400" />
+                          </div>
+                          <p className="text-sm font-medium text-gray-900">Mesa {tableNum}</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            ?table={tableNum}
+                          </p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="mt-2 w-full text-xs"
+                            onClick={() => {
+                              const qrUrl = `${window.location.origin}/${formData.domain}?table=${tableNum}`;
+                              const printWindow = window.open('', '_blank');
+                              if (printWindow) {
+                                printWindow.document.write(`
+                                  <html>
+                                    <head>
+                                      <title>QR Mesa ${tableNum} - ${formData.name}</title>
+                                      <style>
+                                        body { 
+                                          font-family: Arial, sans-serif; 
+                                          text-align: center; 
+                                          padding: 20px;
+                                          margin: 0;
+                                        }
+                                        .qr-container {
+                                          border: 2px solid #000;
+                                          padding: 20px;
+                                          margin: 20px auto;
+                                          max-width: 300px;
+                                          border-radius: 10px;
+                                        }
+                                        .restaurant-name {
+                                          font-size: 24px;
+                                          font-weight: bold;
+                                          margin-bottom: 10px;
+                                        }
+                                        .table-number {
+                                          font-size: 36px;
+                                          font-weight: bold;
+                                          color: #2563eb;
+                                          margin: 20px 0;
+                                        }
+                                        .instructions {
+                                          font-size: 14px;
+                                          color: #666;
+                                          margin-top: 15px;
+                                        }
+                                        .url {
+                                          font-size: 12px;
+                                          color: #999;
+                                          word-break: break-all;
+                                          margin-top: 10px;
+                                        }
+                                        @media print {
+                                          body { margin: 0; }
+                                          .qr-container { border: 2px solid #000; }
+                                        }
+                                      </style>
+                                    </head>
+                                    <body>
+                                      <div class="qr-container">
+                                        <div class="restaurant-name">${formData.name}</div>
+                                        <div class="table-number">MESA ${tableNum}</div>
+                                        <div style="margin: 20px 0;">
+                                          <div style="width: 150px; height: 150px; border: 2px dashed #ccc; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #666;">
+                                            Código QR<br/>para Mesa ${tableNum}
+                                          </div>
+                                        </div>
+                                        <div class="instructions">
+                                          Escanea el código QR con tu teléfono<br/>
+                                          para ver nuestro menú y hacer tu pedido
+                                        </div>
+                                        <div class="url">${qrUrl}</div>
+                                      </div>
+                                    </body>
+                                  </html>
+                                `);
+                                printWindow.document.close();
+                                printWindow.print();
+                              }
+                            }}
+                          >
+                            Imprimir
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                      <h5 className="font-medium text-gray-900 mb-2">Instrucciones:</h5>
+                      <ul className="text-sm text-gray-600 space-y-1">
+                        <li>• Cada mesa tendrá su propio código QR único</li>
+                        <li>• Los clientes escanean el código para acceder al menú</li>
+                        <li>• El número de mesa se detecta automáticamente</li>
+                        <li>• Puedes imprimir los códigos QR individualmente</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'theme' && (
                   <Input
                     label={t('minimumOrder')}
                     type="number"
