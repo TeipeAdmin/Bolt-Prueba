@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Phone, Mail, MapPin, Calendar, ShoppingBag, Filter, Search, Star, Edit } from 'lucide-react';
+import { User, Phone, Mail, MapPin, Calendar, ShoppingBag, Filter, Search, Star, Edit, ArrowUpDown } from 'lucide-react';
 import { Order, Customer } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -399,16 +399,16 @@ export const CustomersManagement: React.FC = () => {
                 </select>
               </div>
               
-              {/* Sort Direction */}
+              {/* Sort Direction Arrow Button */}
               <div className="flex items-center gap-2 whitespace-nowrap">
-                <select
-                  value={sortDirection}
-                  onChange={(e) => setSortDirection(e.target.value as 'asc' | 'desc')}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0"
+                <button
+                  onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50 transition-colors flex items-center gap-1"
+                  title={sortDirection === 'asc' ? 'Cambiar a descendente' : 'Cambiar a ascendente'}
                 >
-                  <option value="asc">A-Z / Menor-Mayor</option>
-                  <option value="desc">Z-A / Mayor-Menor</option>
-                </select>
+                  <ArrowUpDown className="w-4 h-4" />
+                  {sortDirection === 'asc' ? '↑' : '↓'}
+                </button>
               </div>
             </div>
           </div>
