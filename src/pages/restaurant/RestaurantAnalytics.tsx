@@ -142,46 +142,11 @@ export const RestaurantAnalytics: React.FC = () => {
     }
   };
 
-  const exportToCSV = () => {
-    // Implementation for CSV export
-    showToast('Exportando datos...', 'info');
-  };
-
-  const getActiveFiltersCount = () => {
-    let count = 0;
-    if (startDate) count++;
-    if (endDate) count++;
-    if (selectedCategory !== 'all') count++;
-    if (selectedOrderType !== 'all') count++;
-    if (selectedStatus !== 'all') count++;
-    return count;
-  };
-
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <div className="text-sm text-gray-500">
           Última actualización: {new Date().toLocaleString()}
-        </div>
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            icon={Download}
-            onClick={exportToCSV}
-            className="text-green-600 hover:text-green-700 hover:bg-green-50"
-          >
-            Exportar CSV
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            icon={Filter}
-            onClick={() => setShowFilters(!showFilters)}
-            className={showFilters ? 'bg-blue-50 border-blue-200 text-blue-700' : ''}
-          >
-            Filtros Avanzados {getActiveFiltersCount() > 0 && `(${getActiveFiltersCount()})`}
-          </Button>
         </div>
       </div>
 
