@@ -557,9 +557,9 @@ export const CustomersManagement: React.FC = () => {
                       <button
                         onClick={() => handleEditCustomer(customer)}
                         className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-colors bg-blue-100 text-blue-800 hover:bg-blue-200 mr-2"
+                        title="Editar cliente"
                       >
                         <Edit className="w-3 h-3 mr-1" />
-                        Editar
                       </button>
                       <button
                         onClick={() => toggleVipStatus(customer.id)}
@@ -567,10 +567,10 @@ export const CustomersManagement: React.FC = () => {
                           customer.isVip
                             ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
                             : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                        }`}
+                        } mr-2`}
+                        title={customer.isVip ? 'Quitar VIP' : 'Hacer VIP'}
                       >
                         <Star className={`w-3 h-3 mr-1 ${customer.isVip ? 'fill-current' : ''}`} />
-                        {customer.isVip ? 'Quitar VIP' : 'Hacer VIP'}
                       </button>
                       <button
                         onClick={() => handleDeleteCustomer(customer.id)}
@@ -578,7 +578,6 @@ export const CustomersManagement: React.FC = () => {
                         title="Eliminar cliente"
                       >
                         <Trash2 className="w-3 h-3 mr-1" />
-                        Eliminar
                       </button>
                     </td>
                   </tr>
