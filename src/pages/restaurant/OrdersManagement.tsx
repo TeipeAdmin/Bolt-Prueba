@@ -14,7 +14,6 @@ export const OrdersManagement: React.FC = () => {
   const { restaurant } = useAuth();
   const { showToast } = useToast();
   const { t } = useLanguage();
-  const { showToast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showModal, setShowModal] = useState(false);
