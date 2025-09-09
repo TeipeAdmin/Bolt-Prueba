@@ -124,6 +124,107 @@ export const RestaurantAnalytics: React.FC = () => {
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 5);
 
+  const exportToCSV = () => {
+    if (filteredOrders.length === 0) {
+      showToast('No hay datos para exportar', 'warning');
+      return;
+    }
+
+    // Create CSV content
+    const headers = [
+      'Número de Pedido',
+      'Fecha',
+      'Cliente',
+      'Teléfono',
+      'Email',
+      'Tipo de Pedido',
+      'Estado',
+      'Productos',
+      'Cantidad Total',
+      'Total',
+      'Dirección'
+    ];
+
+    const csvContent = [
+      // Add summary section
+      ['RESUMEN EJECUTIVO'],
+      ['Total de Pedidos', totalOrders.toString()],
+      ['Pedidos Completados', completedOrders.toString()],
+      ['Ingresos Totales', `$${totalRevenue.toFixed(2)}`],
+      ['Ticket Promedio', `$${averageOrderValue.toFixed(2)}`],
+      ['Período', `${startDate || 'Inicio'} - ${endDate || 'Hoy'}`],
+      [''],
+      ['DESGLOSE POR ESTADO'],
+      ['Pendientes', ordersByStatus.pending.toString()],
+      ['Confirmados', ordersByStatus.confirmed.toString()],
+      ['Preparando', ordersByStatus.preparing.toString()],
+      ['Listos', ordersByStatus.ready.toString()],
+      ['Entregados', ordersByStatus.delivered.toString()],
+      ['Cancelados', ordersByStatus.cancelled.toString()],
+      [''],
+      ['DETALLE DE PEDIDOS'],
+      headers,
+      ...filteredOrders.map(order => [
+        order.order_number,
+        new Date(order.created_at).toLocaleDateString(),
+        order.customer.name,
+        order.customer.phone || '',
+        order.customer.email || '',
+        order.order_type === 'pickup' ? 'Recoger' : 
+        order.order_type === 'delivery' ? 'Delivery' : 'Mesa',
+        order.status === 'pending' ? 'Pendiente' :
+        order.status === 'confirmed' ? 'Confirmado' :
+        order.status === 'preparing' ? 'Preparando' :
+        order.status === 'ready' ? 'Listo' :
+        order.status === 'delivered' ? 'Entregado' :
+        order.status === 'cancelled' ? 'Cancelado' : order.status,
+        order.items.map(item => `${item.product.name} (${item.variation.name})`).join('; '),
+        order.items.reduce((sum, item) => sum + item.quantity, 0).toString(),
+        `$${order.total.toFixed(2)}`,
+        order.delivery_address || ''
+      ])
+    ];
+
+    // Convert to CSV string
+    const csvString = csvContent
+      .map(row => 
+        row.map(cell => {
+          const cellStr = cell?.toString() || '';
+          // Escape quotes and wrap in quotes if contains comma, quote, or newline
+          if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+            return `"${cellStr.replace(/"/g, '""')}"`;
+          }
+          return cellStr;
+        }).join(',')
+      )
+      .join('\n');
+
+    // Create and download file
+    const blob = new Blob(['\ufeff' + csvString], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    // Generate filename with filters
+    const filterSuffix = [
+      startDate && `desde_${startDate}`,
+      endDate && `hasta_${endDate}`,
+      selectedCategory !== 'all' && `cat_${categories.find(c => c.id === selectedCategory)?.name}`,
+      selectedOrderType !== 'all' && selectedOrderType,
+      selectedStatus !== 'all' && selectedStatus
+    ].filter(Boolean).join('_');
+    
+    const filename = `estadisticas_${restaurant?.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}${filterSuffix ? '_' + filterSuffix : ''}.csv`;
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showToast(`Estadísticas exportadas: ${filteredOrders.length} pedidos`, 'success');
+  };
+
   const getStatusBadge = (status: Order['status']) => {
     switch (status) {
       case 'pending':
