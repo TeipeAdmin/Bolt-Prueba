@@ -777,11 +777,6 @@ export const CustomersManagement: React.FC = () => {
                     <input
                       type="checkbox"
                       checked={selectedCustomers.size === filteredCustomers.length && filteredCustomers.length > 0}
-                      ref={(el) => {
-                        if (el) {
-                          el.indeterminate = selectedCustomers.size > 0 && selectedCustomers.size < filteredCustomers.length;
-                        }
-                      }}
                       onChange={toggleSelectAll}
                       className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                     />
@@ -830,6 +825,14 @@ export const CustomersManagement: React.FC = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredCustomers.map((customer) => (
                   <tr key={customer.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <input
+                        type="checkbox"
+                        checked={selectedCustomers.has(customer.id)}
+                        onChange={() => toggleCustomerSelection(customer.id)}
+                        className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
