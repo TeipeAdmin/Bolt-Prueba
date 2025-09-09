@@ -76,6 +76,70 @@ export const RestaurantAnalytics: React.FC = () => {
     setSelectedStatus('all');
   };
 
+  const exportToCSV = () => {
+    if (filteredOrders.length === 0) {
+      showToast('No hay datos para exportar', 'warning');
+      return;
+    }
+
+    const csvContent = generateCSVContent();
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', generateFileName());
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('Datos exportados exitosamente', 'success');
+    }
+  };
+
+  const generateCSVContent = () => {
+    const headers = [
+      'Número de Pedido',
+      'Fecha',
+      'Cliente',
+      'Tipo',
+      'Estado',
+      'Total',
+      'Items'
+    ];
+
+    const rows = filteredOrders.map(order => [
+      order.order_number,
+      new Date(order.created_at).toLocaleDateString(),
+      order.customer.name,
+      order.order_type === 'pickup' ? 'Recoger' : 
+      order.order_type === 'delivery' ? 'Delivery' : 'Mesa',
+      order.status === 'pending' ? 'Pendiente' :
+      order.status === 'confirmed' ? 'Confirmado' :
+      order.status === 'preparing' ? 'Preparando' :
+      order.status === 'ready' ? 'Listo' :
+      order.status === 'delivered' ? 'Entregado' :
+      order.status === 'cancelled' ? 'Cancelado' : order.status,
+      `$${order.total.toFixed(2)}`,
+      order.items.map(item => `${item.product.name} x${item.quantity}`).join('; ')
+    ]);
+
+    const csvRows = [headers, ...rows];
+    return csvRows.map(row => 
+      row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(',')
+    ).join('\n');
+  };
+
+  const generateFileName = () => {
+    const restaurantName = restaurant?.name || 'Restaurant';
+    const dateRange = startDate && endDate ? `_${startDate}_${endDate}` : 
+                     startDate ? `_desde_${startDate}` :
+                     endDate ? `_hasta_${endDate}` : '';
+    const timestamp = new Date().toISOString().split('T')[0];
+    return `${restaurantName}_estadisticas${dateRange}_${timestamp}.csv`;
+  };
+
   // Calculate analytics
   const totalOrders = filteredOrders.length;
   const completedOrders = filteredOrders.filter(o => o.status === 'delivered').length;
