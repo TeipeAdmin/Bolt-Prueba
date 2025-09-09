@@ -976,8 +976,8 @@ Fecha: ${new Date().toLocaleString()}
                   <p>🕐 Tiempo de respuesta típico: 2-24 horas según prioridad</p>
                 </div>
                 
-                <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-yellow-800 text-sm">
+                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-blue-800 text-sm">
                     <strong>Nota:</strong> Los tickets se almacenan localmente y se envían automáticamente a nuestro sistema de soporte. 
                     Recibirás una respuesta en el email de contacto proporcionado.
                   </p>
