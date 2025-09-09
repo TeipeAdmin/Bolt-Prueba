@@ -332,18 +332,31 @@ export const RestaurantSettings: React.FC = () => {
                   <div>
                     <h4 className="text-md font-medium text-gray-900 mb-4">Tarifas de Delivery</h4>
                     <div className="space-y-4">
-                      {(formData.settings.delivery.zones || []).map((zone, index) => (
+                      {(formData.settings.delivery.pricing_tiers || []).map((tier, index) => (
                         <div key={index} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
                           <div className="flex-1">
                             <Input
-                              label="Nombre de la Zona"
-                              value={zone.name || ''}
+                              label="Nombre de la Tarifa"
+                              value={tier.name || ''}
                               onChange={(e) => {
-                                const newZones = [...(formData.settings.delivery.zones || [])];
-                                newZones[index] = { ...zone, name: e.target.value };
-                                updateFormData('settings.delivery.zones', newZones);
+                                const newTiers = [...(formData.settings.delivery.pricing_tiers || [])];
+                                newTiers[index] = { ...tier, name: e.target.value };
+                                updateFormData('settings.delivery.pricing_tiers', newTiers);
                               }}
-                              placeholder="Centro, Norte, Sur..."
+                              placeholder="Estándar, Express, Premium..."
+                            />
+                          </div>
+                          <div className="w-32">
+                            <Input
+                              label="Pedido Mínimo ($)"
+                              type="number"
+                              step="0.01"
+                              value={tier.min_order_amount || 0}
+                              onChange={(e) => {
+                                const newTiers = [...(formData.settings.delivery.pricing_tiers || [])];
+                                newTiers[index] = { ...tier, min_order_amount: parseFloat(e.target.value) || 0 };
+                                updateFormData('settings.delivery.pricing_tiers', newTiers);
+                              }}
                             />
                           </div>
                           <div className="w-32">
@@ -351,36 +364,32 @@ export const RestaurantSettings: React.FC = () => {
                               label="Costo ($)"
                               type="number"
                               step="0.01"
-                              value={zone.cost || 0}
+                              value={tier.cost || 0}
                               onChange={(e) => {
-                                const newZones = [...(formData.settings.delivery.zones || [])];
-                                newZones[index] = { ...zone, cost: parseFloat(e.target.value) || 0 };
-                                updateFormData('settings.delivery.zones', newZones);
+                                const newTiers = [...(formData.settings.delivery.pricing_tiers || [])];
+                                newTiers[index] = { ...tier, cost: parseFloat(e.target.value) || 0 };
+                                updateFormData('settings.delivery.pricing_tiers', newTiers);
                               }}
                             />
                           </div>
                           <div className="flex-1">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Descripción del Área
-                            </label>
-                            <textarea
-                              value={zone.area_description || ''}
+                            <Input
+                              label="Tiempo Estimado"
+                              value={tier.estimated_time || ''}
                               onChange={(e) => {
-                                const newZones = [...(formData.settings.delivery.zones || [])];
-                                newZones[index] = { ...zone, area_description: e.target.value };
-                                updateFormData('settings.delivery.zones', newZones);
+                                const newTiers = [...(formData.settings.delivery.pricing_tiers || [])];
+                                newTiers[index] = { ...tier, estimated_time: e.target.value };
+                                updateFormData('settings.delivery.pricing_tiers', newTiers);
                               }}
-                              rows={2}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                              placeholder="Descripción de la zona de cobertura..."
+                              placeholder="30-45 min"
                             />
                           </div>
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => {
-                              const newZones = (formData.settings.delivery.zones || []).filter((_, i) => i !== index);
-                              updateFormData('settings.delivery.zones', newZones);
+                              const newTiers = (formData.settings.delivery.pricing_tiers || []).filter((_, i) => i !== index);
+                              updateFormData('settings.delivery.pricing_tiers', newTiers);
                             }}
                             className="text-red-600 hover:text-red-700"
                           >
@@ -392,16 +401,17 @@ export const RestaurantSettings: React.FC = () => {
                       <Button
                         variant="outline"
                         onClick={() => {
-                          const newZones = [...(formData.settings.delivery.zones || []), {
+                          const newTiers = [...(formData.settings.delivery.pricing_tiers || []), {
                             id: Date.now().toString(),
                             name: '',
+                            min_order_amount: 0,
                             cost: 0,
-                            area_description: ''
+                            estimated_time: ''
                           }];
-                          updateFormData('settings.delivery.zones', newZones);
+                          updateFormData('settings.delivery.pricing_tiers', newTiers);
                         }}
                       >
-                        Agregar Zona de Delivery
+                        Agregar Tarifa de Delivery
                       </Button>
                     </div>
                   </div>
