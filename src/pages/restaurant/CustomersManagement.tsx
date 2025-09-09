@@ -25,8 +25,10 @@ export const CustomersManagement: React.FC = () => {
   const [filteredCustomers, setFilteredCustomers] = useState<CustomerData[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'orders' | 'spent' | 'date'>('name');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [filterBy, setFilterBy] = useState<'all' | 'vip' | 'frequent' | 'regular' | 'new'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [showFilters, setShowFilters] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<CustomerData | null>(null);
   const [editForm, setEditForm] = useState({
@@ -139,18 +141,24 @@ export const CustomersManagement: React.FC = () => {
 
     // Sort customers
     filtered.sort((a, b) => {
+      let comparison = 0;
       switch (sortBy) {
         case 'name':
-          return a.name.localeCompare(b.name);
+          comparison = a.name.localeCompare(b.name);
+          break;
         case 'orders':
-          return b.totalOrders - a.totalOrders;
+          comparison = a.totalOrders - b.totalOrders;
+          break;
         case 'spent':
-          return b.totalSpent - a.totalSpent;
+          comparison = a.totalSpent - b.totalSpent;
+          break;
         case 'date':
-          return new Date(b.lastOrderDate).getTime() - new Date(a.lastOrderDate).getTime();
+          comparison = new Date(a.lastOrderDate).getTime() - new Date(b.lastOrderDate).getTime();
+          break;
         default:
-          return 0;
+          comparison = 0;
       }
+      return sortDirection === 'asc' ? comparison : -comparison;
     });
 
     setFilteredCustomers(filtered);
@@ -273,6 +281,15 @@ export const CustomersManagement: React.FC = () => {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">{t('customerManagement')}</h1>
+        <Button
+          variant="outline"
+          size="sm"
+          icon={Filter}
+          onClick={() => setShowFilters(!showFilters)}
+          className={showFilters ? 'bg-blue-50 border-blue-200 text-blue-700' : ''}
+        >
+          Filtros y Búsqueda
+        </Button>
       </div>
 
       {/* Stats Cards */}
@@ -318,71 +335,85 @@ export const CustomersManagement: React.FC = () => {
         </div>
       </div>
 
-      {/* Filters and Search */}
-      <div className="bg-white rounded-lg shadow p-4 mb-6">
-        <div className="flex flex-col lg:flex-row gap-4">
-          {/* Search Bar */}
-          <div className="flex-1 min-w-0">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder={`${t('search')} clientes por nombre, teléfono o email...`}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-          </div>
-          
-          {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-3 lg:flex-shrink-0">
-            {/* Status Filter */}
-            <div className="flex items-center gap-2 whitespace-nowrap">
-              <Filter className="w-4 h-4 text-gray-500 flex-shrink-0" />
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as any)}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0"
-              >
-                <option value="all">Todos los estados</option>
-                <option value="active">Activos (últimos 30 días)</option>
-                <option value="inactive">Inactivos (+30 días)</option>
-              </select>
+      {/* Collapsible Filters and Search */}
+      {showFilters && (
+        <div className="bg-white rounded-lg shadow p-4 mb-6">
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Search Bar */}
+            <div className="flex-1 min-w-0">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder={`${t('search')} clientes por nombre, teléfono o email...`}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
             </div>
             
-            {/* Segment Filter */}
-            <div className="flex items-center gap-2 whitespace-nowrap">
-              <Filter className="w-4 h-4 text-gray-500 flex-shrink-0" />
-              <select
-                value={filterBy}
-                onChange={(e) => setFilterBy(e.target.value as any)}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0"
-              >
-                <option value="all">Todos los segmentos</option>
-                <option value="vip">Solo VIP</option>
-                <option value="frequent">Solo Frecuentes</option>
-                <option value="new">Solo Nuevos</option>
-              </select>
-            </div>
-            
-            {/* Sort Filter */}
-            <div className="flex items-center gap-2 whitespace-nowrap">
-              <Filter className="w-4 h-4 text-gray-500 flex-shrink-0" />
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0"
-              >
-                <option value="name">Ordenar por {t('name')}</option>
-                <option value="orders">Ordenar por {t('ordersCount')}</option>
-                <option value="spent">Ordenar por {t('totalSpent')}</option>
-                <option value="date">Ordenar por {t('date')}</option>
-              </select>
+            {/* Filters */}
+            <div className="flex flex-col sm:flex-row gap-3 lg:flex-shrink-0">
+              {/* Status Filter */}
+              <div className="flex items-center gap-2 whitespace-nowrap">
+                <Filter className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value as any)}
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0"
+                >
+                  <option value="all">Todos los estados</option>
+                  <option value="active">Activos (últimos 30 días)</option>
+                  <option value="inactive">Inactivos (+30 días)</option>
+                </select>
+              </div>
+              
+              {/* Segment Filter */}
+              <div className="flex items-center gap-2 whitespace-nowrap">
+                <Filter className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                <select
+                  value={filterBy}
+                  onChange={(e) => setFilterBy(e.target.value as any)}
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0"
+                >
+                  <option value="all">Todos los segmentos</option>
+                  <option value="vip">Solo VIP</option>
+                  <option value="frequent">Solo Frecuentes</option>
+                  <option value="new">Solo Nuevos</option>
+                </select>
+              </div>
+              
+              {/* Sort Filter */}
+              <div className="flex items-center gap-2 whitespace-nowrap">
+                <Filter className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0"
+                >
+                  <option value="name">Ordenar por {t('name')}</option>
+                  <option value="orders">Ordenar por {t('ordersCount')}</option>
+                  <option value="spent">Ordenar por {t('totalSpent')}</option>
+                  <option value="date">Ordenar por {t('date')}</option>
+                </select>
+              </div>
+              
+              {/* Sort Direction */}
+              <div className="flex items-center gap-2 whitespace-nowrap">
+                <select
+                  value={sortDirection}
+                  onChange={(e) => setSortDirection(e.target.value as 'asc' | 'desc')}
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0"
+                >
+                  <option value="asc">A-Z / Menor-Mayor</option>
+                  <option value="desc">Z-A / Mayor-Menor</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Customers Table */}
       {filteredCustomers.length === 0 ? (
