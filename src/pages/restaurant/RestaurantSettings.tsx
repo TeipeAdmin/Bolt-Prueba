@@ -369,42 +369,23 @@ export const RestaurantSettings: React.FC = () => {
                               }}
                             />
                           </div>
-                           variant="primary"
-                           className="bg-blue-600 hover:bg-blue-700 text-white"
+                          <div className="w-32">
                             <Input
                               label="Tiempo Estimado"
                               value={tier.estimated_time || ''}
                               onChange={(e) => {
-                             // Descargar múltiples archivos
+                                const newTiers = [...(formData.settings.delivery.pricing_tiers || [])];
                                 newTiers[index] = { ...tier, estimated_time: e.target.value };
                                 updateFormData('settings.delivery.pricing_tiers', newTiers);
                               }}
                               placeholder="30-45 min"
                             />
-                                 // Descargar cada imagen directamente
-                                 fetch(qrImageUrl)
-                                   .then(response => response.blob())
-                                   .then(blob => {
-                                     const url = window.URL.createObjectURL(blob);
-                                     const link = document.createElement('a');
-                                     link.href = url;
-                                     link.download = `QR-Mesa-${i}-${formData.name.replace(/[^a-zA-Z0-9]/g, '_')}.png`;
-                                     document.body.appendChild(link);
-                                     link.click();
-                                     document.body.removeChild(link);
-                                     window.URL.revokeObjectURL(url);
-                                   })
-                                   .catch(error => {
-                                     console.error('Error downloading QR:', error);
-                                     // Fallback
-                                     const link = document.createElement('a');
-                                     link.href = qrImageUrl;
-                                     link.download = `QR-Mesa-${i}-${formData.name.replace(/[^a-zA-Z0-9]/g, '_')}.png`;
-                                     link.target = '_blank';
-                                     document.body.appendChild(link);
-                                     link.click();
-                                     document.body.removeChild(link);
-                                   });
+                          </div>
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              const newTiers = [...(formData.settings.delivery.pricing_tiers || [])];
+                              newTiers.splice(index, 1);
                               updateFormData('settings.delivery.pricing_tiers', newTiers);
                             }}
                             className="text-red-600 hover:text-red-700"
@@ -433,7 +414,8 @@ export const RestaurantSettings: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                                         padding: 10px;
+              )}
+            </div>
           )}
 
           {activeTab === 'tables' && (
@@ -472,111 +454,130 @@ export const RestaurantSettings: React.FC = () => {
                       Los códigos QR permiten a los clientes acceder directamente al menú desde su mesa.
                     </p>
                     
-                      <div className="flex items-center">
-                        <QrCode className="w-5 h-5 text-blue-600 mr-2" />
-                        <span className="text-sm font-medium text-blue-800">
-                              alt={`QR Mesa ${tableNum}`}
-                                         width: 200px;
-                                         height: 200px;
-                                         margin: 0 auto;
-                          <p className="text-sm font-medium text-gray-900">Mesa {tableNum}</p>
-                          <div className="flex flex-col gap-2 mt-3">
-                            <Button
-                              size="sm"
-                              className="w-full text-xs py-1 px-2"
-                              onClick={() => {
-                                const qrUrl = `${window.location.origin}/${formData.domain}?table=${tableNum}`;
-                               // Crear imagen del QR para imprimir
-                               const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qrUrl)}`;
-                               
-                               // Crear ventana de impresión solo con el QR
-                               const printWindow = window.open('', '_blank');
-                               if (printWindow) {
-                                 printWindow.document.write(`
-                                   <html>
-                                     <head>
-                                       <title>QR Mesa ${tableNum}</title>
-                                       <style>
-                                         body { 
-                                           margin: 0;
-                                           padding: 0;
-                                           display: flex;
-                                           justify-content: center;
-                                           align-items: center;
-                                           min-height: 100vh;
-                                           background: white;
-                                         }
-                                         .qr-image {
-                                           max-width: 100%;
-                                           max-height: 100%;
-                                           width: 400px;
-                                           height: 400px;
-                                         }
-                                         @media print {
-                                           body { 
-                                             margin: 0;
-                                             padding: 0;
-                                           }
-                                         }
-                                       </style>
-                                     </head>
-                                     <body>
-                                       <img src="${qrImageUrl}" alt="QR Mesa ${tableNum}" class="qr-image" />
-                                     </body>
-                                   </html>
-                                 
-                                   }, 500);
-                                 };
-                               }
-                              }}
-                            >
-                              Imprimir
-                            </Button>
-                            <Button
-                             variant="primary"
-                              size="sm"
-                             className="w-full text-xs py-1 px-2 bg-blue-600 hover:bg-blue-700 text-white"
-                              onClick={() => {
-                               
-                               // Esperar a que carguen las imágenes antes de imprimir
-                               printWindow.onload = () => {
-                                 setTimeout(() => {
-                                   printWindow.print();
-                                 }, 1000);
-                               };
-                                const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrUrl)}`;
-                                
-                               // Descargar imagen directamente
-                               fetch(qrImageUrl)
-                                 .then(response => response.blob())
-                                 .then(blob => {
-                                   const url = window.URL.createObjectURL(blob);
-                                   const link = document.createElement('a');
-                                   link.href = url;
-                                   link.download = `QR-Mesa-${tableNum}-${formData.name.replace(/[^a-zA-Z0-9]/g, '_')}.png`;
-                                   document.body.appendChild(link);
-                                   link.click();
-                                   document.body.removeChild(link);
-                                   window.URL.revokeObjectURL(url);
-                                 })
-                                 .catch(error => {
-                                   console.error('Error downloading QR:', error);
-                                   // Fallback al método anterior si falla
-                                   const link = document.createElement('a');
-                                   link.href = qrImageUrl;
-                                   link.download = `QR-Mesa-${tableNum}-${formData.name.replace(/[^a-zA-Z0-9]/g, '_')}.png`;
-                                   link.target = '_blank';
-                                   document.body.appendChild(link);
-                                   link.click();
-                                   document.body.removeChild(link);
-                                 });
-                              }}
-                            >
-                              Descargar
-                            </Button>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      {Array.from({ length: formData.settings.table_orders?.table_numbers || 10 }, (_, i) => {
+                        const tableNum = i + 1;
+                        const qrUrl = `${window.location.origin}/${formData.domain}?table=${tableNum}`;
+                        const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrUrl)}`;
+                        
+                        return (
+                          <div key={tableNum} className="border border-gray-200 rounded-lg p-4 text-center bg-white">
+                            <div className="flex items-center justify-center mb-2">
+                              <QrCode className="w-5 h-5 text-blue-600 mr-2" />
+                              <span className="text-sm font-medium text-blue-800">
+                                Mesa {tableNum}
+                              </span>
+                            </div>
+                            <div style={{
+                              width: '200px',
+                              height: '200px',
+                              margin: '0 auto',
+                              padding: '10px'
+                            }}>
+                              <img 
+                                src={qrImageUrl} 
+                                alt={`QR Mesa ${tableNum}`}
+                                style={{
+                                  width: '200px',
+                                  height: '200px',
+                                  margin: '0 auto'
+                                }}
+                              />
+                            </div>
+                            <p className="text-sm font-medium text-gray-900">Mesa {tableNum}</p>
+                            <div className="flex flex-col gap-2 mt-3">
+                              <Button
+                                size="sm"
+                                className="w-full text-xs py-1 px-2"
+                                onClick={() => {
+                                  const qrUrl = `${window.location.origin}/${formData.domain}?table=${tableNum}`;
+                                  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qrUrl)}`;
+                                  
+                                  const printWindow = window.open('', '_blank');
+                                  if (printWindow) {
+                                    printWindow.document.write(`
+                                      <html>
+                                        <head>
+                                          <title>QR Mesa ${tableNum}</title>
+                                          <style>
+                                            body { 
+                                              margin: 0;
+                                              padding: 0;
+                                              display: flex;
+                                              justify-content: center;
+                                              align-items: center;
+                                              min-height: 100vh;
+                                              background: white;
+                                            }
+                                            .qr-image {
+                                              max-width: 100%;
+                                              max-height: 100%;
+                                              width: 400px;
+                                              height: 400px;
+                                            }
+                                            @media print {
+                                              body { 
+                                                margin: 0;
+                                                padding: 0;
+                                              }
+                                            }
+                                          </style>
+                                        </head>
+                                        <body>
+                                          <img src="${qrImageUrl}" alt="QR Mesa ${tableNum}" class="qr-image" />
+                                        </body>
+                                      </html>
+                                    `);
+                                    printWindow.document.close();
+                                    
+                                    printWindow.onload = () => {
+                                      setTimeout(() => {
+                                        printWindow.print();
+                                      }, 500);
+                                    };
+                                  }
+                                }}
+                              >
+                                Imprimir
+                              </Button>
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                className="w-full text-xs py-1 px-2 bg-blue-600 hover:bg-blue-700 text-white"
+                                onClick={() => {
+                                  const qrUrl = `${window.location.origin}/${formData.domain}?table=${tableNum}`;
+                                  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrUrl)}`;
+                                  
+                                  fetch(qrImageUrl)
+                                    .then(response => response.blob())
+                                    .then(blob => {
+                                      const url = window.URL.createObjectURL(blob);
+                                      const link = document.createElement('a');
+                                      link.href = url;
+                                      link.download = `QR-Mesa-${tableNum}-${formData.name.replace(/[^a-zA-Z0-9]/g, '_')}.png`;
+                                      document.body.appendChild(link);
+                                      link.click();
+                                      document.body.removeChild(link);
+                                      window.URL.revokeObjectURL(url);
+                                    })
+                                    .catch(error => {
+                                      console.error('Error downloading QR:', error);
+                                      const link = document.createElement('a');
+                                      link.href = qrImageUrl;
+                                      link.download = `QR-Mesa-${tableNum}-${formData.name.replace(/[^a-zA-Z0-9]/g, '_')}.png`;
+                                      link.target = '_blank';
+                                      document.body.appendChild(link);
+                                      link.click();
+                                      document.body.removeChild(link);
+                                    });
+                                }}
+                              >
+                                Descargar
+                              </Button>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                     
                     <div className="mt-6 flex gap-3">
@@ -693,19 +694,34 @@ export const RestaurantSettings: React.FC = () => {
                           const tableCount = formData.settings.table_orders?.table_numbers || 10;
                           const qrUrl = `${window.location.origin}/${formData.domain}`;
                           
-                          // Create a zip-like experience by downloading multiple files
                           for (let i = 1; i <= tableCount; i++) {
                             setTimeout(() => {
                               const tableQrUrl = `${qrUrl}?table=${i}`;
                               const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(tableQrUrl)}`;
                               
-                              const link = document.createElement('a');
-                              link.href = qrImageUrl;
-                              link.download = `QR-Mesa-${i}-${formData.name.replace(/[^a-zA-Z0-9]/g, '_')}.png`;
-                              document.body.appendChild(link);
-                              link.click();
-                              document.body.removeChild(link);
-                            }, i * 500); // Delay each download by 500ms
+                              fetch(qrImageUrl)
+                                .then(response => response.blob())
+                                .then(blob => {
+                                  const url = window.URL.createObjectURL(blob);
+                                  const link = document.createElement('a');
+                                  link.href = url;
+                                  link.download = `QR-Mesa-${i}-${formData.name.replace(/[^a-zA-Z0-9]/g, '_')}.png`;
+                                  document.body.appendChild(link);
+                                  link.click();
+                                  document.body.removeChild(link);
+                                  window.URL.revokeObjectURL(url);
+                                })
+                                .catch(error => {
+                                  console.error('Error downloading QR:', error);
+                                  const link = document.createElement('a');
+                                  link.href = qrImageUrl;
+                                  link.download = `QR-Mesa-${i}-${formData.name.replace(/[^a-zA-Z0-9]/g, '_')}.png`;
+                                  link.target = '_blank';
+                                  document.body.appendChild(link);
+                                  link.click();
+                                  document.body.removeChild(link);
+                                });
+                            }, i * 500);
                           }
                         }}
                       >
