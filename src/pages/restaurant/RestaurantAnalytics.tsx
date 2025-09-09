@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, TrendingUp, ShoppingBag, DollarSign, Calendar, Users, Filter, Download, X } from 'lucide-react';
+import { BarChart3, TrendingUp, ShoppingBag, DollarSign, Calendar, Users, Filter, Download, X, Search } from 'lucide-react';
 import { Product, Order, Category } from '../../types';
 import { loadFromStorage } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -20,6 +20,7 @@ export const RestaurantAnalytics: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedOrderType, setSelectedOrderType] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     if (restaurant) {
