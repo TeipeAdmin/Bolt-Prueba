@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Phone, Mail, MapPin, Calendar, ShoppingBag, Filter, Search, Star, Edit, ArrowUpDown, Trash2, Info, Download } from 'lucide-react';
+import { User, Phone, Mail, MapPin, Calendar, ShoppingBag, Filter, Search, Star, Edit, ArrowUpDown, Trash2, Info, Download, CheckSquare, Square, Users } from 'lucide-react';
 import { Order, Customer, Subscription } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -35,6 +35,9 @@ export const CustomersManagement: React.FC = () => {
   const [editingCustomer, setEditingCustomer] = useState<CustomerData | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState<CustomerData | null>(null);
+  const [selectedCustomers, setSelectedCustomers] = useState<Set<string>>(new Set());
+  const [showBulkEditModal, setShowBulkEditModal] = useState(false);
+  const [bulkEditAction, setBulkEditAction] = useState<'vip' | 'remove_vip' | 'delete'>('vip');
   const [editForm, setEditForm] = useState({
     name: '',
     phone: '',
@@ -213,6 +216,102 @@ export const CustomersManagement: React.FC = () => {
         : `${customer.name} ahora es un cliente VIP.`,
       4000
     );
+  };
+
+  const toggleCustomerSelection = (customerId: string) => {
+    const newSelected = new Set(selectedCustomers);
+    if (newSelected.has(customerId)) {
+      newSelected.delete(customerId);
+    } else {
+      newSelected.add(customerId);
+    }
+    setSelectedCustomers(newSelected);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedCustomers.size === filteredCustomers.length) {
+      setSelectedCustomers(new Set());
+    } else {
+      setSelectedCustomers(new Set(filteredCustomers.map(c => c.id)));
+    }
+  };
+
+  const handleBulkEdit = () => {
+    if (selectedCustomers.size === 0) {
+      showToast('warning', 'Sin selección', 'Selecciona al menos un cliente para editar.', 4000);
+      return;
+    }
+    setShowBulkEditModal(true);
+  };
+
+  const executeBulkEdit = () => {
+    const selectedCustomersList = customers.filter(c => selectedCustomers.has(c.id));
+    
+    switch (bulkEditAction) {
+      case 'vip':
+        // Agregar VIP a todos los seleccionados
+        const vipCustomers = loadFromStorage('vipCustomers') || [];
+        const newVipCustomers = [...vipCustomers];
+        
+        selectedCustomersList.forEach(customer => {
+          if (!customer.isVip) {
+            newVipCustomers.push({
+              restaurant_id: restaurant?.id,
+              phone: customer.phone,
+              name: customer.name,
+              created_at: new Date().toISOString(),
+            });
+          }
+        });
+        
+        saveToStorage('vipCustomers', newVipCustomers);
+        
+        // Update local state
+        setCustomers(prevCustomers =>
+          prevCustomers.map(c =>
+            selectedCustomers.has(c.id)
+              ? { ...c, isVip: true }
+              : c
+          )
+        );
+        
+        showToast('success', 'VIP Asignado', `${selectedCustomers.size} cliente${selectedCustomers.size !== 1 ? 's' : ''} marcado${selectedCustomers.size !== 1 ? 's' : ''} como VIP.`, 4000);
+        break;
+        
+      case 'remove_vip':
+        // Remover VIP de todos los seleccionados
+        const allVipCustomers = loadFromStorage('vipCustomers') || [];
+        const updatedVipCustomers = allVipCustomers.filter((vip: any) => 
+          !(vip.restaurant_id === restaurant?.id && selectedCustomersList.some(c => c.phone === vip.phone))
+        );
+        saveToStorage('vipCustomers', updatedVipCustomers);
+        
+        // Update local state
+        setCustomers(prevCustomers =>
+          prevCustomers.map(c =>
+            selectedCustomers.has(c.id)
+              ? { ...c, isVip: false }
+              : c
+          )
+        );
+        
+        showToast('info', 'VIP Removido', `${selectedCustomers.size} cliente${selectedCustomers.size !== 1 ? 's' : ''} ya no ${selectedCustomers.size !== 1 ? 'son' : 'es'} VIP.`, 4000);
+        break;
+        
+      case 'delete':
+        // Eliminar todos los seleccionados
+        if (confirm(`¿Estás seguro de que quieres eliminar ${selectedCustomers.size} cliente${selectedCustomers.size !== 1 ? 's' : ''}? Esta acción eliminará también todos sus pedidos y no se puede deshacer.`)) {
+          selectedCustomersList.forEach(customer => {
+            deleteCustomerData(customer);
+          });
+          
+          showToast('info', 'Clientes Eliminados', `${selectedCustomers.size} cliente${selectedCustomers.size !== 1 ? 's' : ''} eliminado${selectedCustomers.size !== 1 ? 's' : ''} exitosamente.`, 5000);
+        }
+        break;
+    }
+    
+    setSelectedCustomers(new Set());
+    setShowBulkEditModal(false);
   };
 
   const handleEditCustomer = (customer: CustomerData) => {
@@ -492,6 +591,17 @@ export const CustomersManagement: React.FC = () => {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">{t('customerManagement')}</h1>
         <div className="flex gap-3">
+          {selectedCustomers.size > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              icon={Users}
+              onClick={handleBulkEdit}
+              className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+            >
+              Editar {selectedCustomers.size} seleccionado{selectedCustomers.size !== 1 ? 's' : ''}
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"
