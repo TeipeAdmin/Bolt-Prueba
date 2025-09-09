@@ -167,7 +167,6 @@ export const RestaurantAnalytics: React.FC = () => {
         </div>
       </div>
 
-      {/* Filter Toggle */}
       {/* Advanced Filters */}
       {showFilters && (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-6">
