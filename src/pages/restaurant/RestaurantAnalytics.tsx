@@ -149,12 +149,16 @@ export const RestaurantAnalytics: React.FC = () => {
         <div className="text-sm text-gray-500">
           Última actualización: {new Date().toLocaleString()}
         </div>
-      </div>
-
-      {/* Filter Toggle */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">Estadísticas del Restaurante</h2>
+        <div className="flex gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            icon={Download}
+            onClick={exportToCSV}
+            className="text-green-600 hover:text-green-700 hover:bg-green-50"
+          >
+            Exportar CSV
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -162,55 +166,124 @@ export const RestaurantAnalytics: React.FC = () => {
             onClick={() => setShowFilters(!showFilters)}
             className={showFilters ? 'bg-blue-50 border-blue-200 text-blue-700' : ''}
           >
-            Filtrar por Fechas
+            Filtros Avanzados
           </Button>
         </div>
-        
-        {/* Collapsible Date Filters */}
-        {showFilters && (
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <div className="flex items-center gap-4 flex-wrap">
-              <div className="flex items-center gap-4">
-                <Input
-                  type="date"
-                  label="Desde"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-auto"
-                />
-                <Input
-                  type="date"
-                  label="Hasta"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="w-auto"
-                />
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setStartDate('');
-                  setEndDate('');
-                }}
-                className="text-blue-600 hover:text-blue-700"
-              >
-                Limpiar Filtros
-              </Button>
-            </div>
-            {(startDate || endDate) && (
-              <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="flex items-center">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
-                  <span className="text-sm font-medium text-blue-800">
-                    Mostrando datos desde {startDate || 'el inicio'} hasta {endDate || 'hoy'}
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
       </div>
+
+      {/* Advanced Filters Panel */}
+      {showFilters && (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Filtros Avanzados</h3>
+          
+          {/* Date Range */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            <Input
+              type="date"
+              label="Desde"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+            <Input
+              type="date"
+              label="Hasta"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">Todas las categorías</option>
+                {categories.map(category => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Pedido</label>
+              <select
+                value={selectedOrderType}
+                onChange={(e) => setSelectedOrderType(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">Todos los tipos</option>
+                <option value="pickup">Recoger</option>
+                <option value="delivery">Delivery</option>
+                <option value="table">Mesa</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+              <select
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">Todos los estados</option>
+                <option value="pending">Pendiente</option>
+                <option value="confirmed">Confirmado</option>
+                <option value="preparing">Preparando</option>
+                <option value="ready">Listo</option>
+                <option value="delivered">Entregado</option>
+                <option value="cancelled">Cancelado</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Active Filters Summary */}
+          {(startDate || endDate || selectedCategory !== 'all' || selectedOrderType !== 'all' || selectedStatus !== 'all') && (
+            <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center flex-wrap gap-2">
+                  <span className="text-sm font-medium text-blue-800">Filtros activos:</span>
+                  {startDate && (
+                    <Badge variant="info">Desde: {startDate}</Badge>
+                  )}
+                  {endDate && (
+                    <Badge variant="info">Hasta: {endDate}</Badge>
+                  )}
+                  {selectedCategory !== 'all' && (
+                    <Badge variant="info">
+                      Categoría: {categories.find(c => c.id === selectedCategory)?.name}
+                    </Badge>
+                  )}
+                  {selectedOrderType !== 'all' && (
+                    <Badge variant="info">Tipo: {selectedOrderType}</Badge>
+                  )}
+                  {selectedStatus !== 'all' && (
+                    <Badge variant="info">Estado: {selectedStatus}</Badge>
+                  )}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setStartDate('');
+                    setEndDate('');
+                    setSelectedCategory('all');
+                    setSelectedOrderType('all');
+                    setSelectedStatus('all');
+                  }}
+                  className="text-blue-600 hover:text-blue-700"
+                >
+                  Limpiar Todos
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Filter Toggle */}
 
       {/* Main Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
