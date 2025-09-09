@@ -313,22 +313,6 @@ export const RestaurantSettings: React.FC = () => {
 
               {formData.settings.delivery.enabled && (
                 <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Input
-                      label={t('minimumOrder')}
-                      type="number"
-                      step="0.01"
-                      value={formData.settings.delivery.min_order_amount}
-                      onChange={(e) => updateFormData('settings.delivery.min_order_amount', parseFloat(e.target.value) || 0)}
-                    />
-                    <Input
-                      label={t('estimatedTime')}
-                      value={formData.settings.delivery.estimated_time}
-                      onChange={(e) => updateFormData('settings.delivery.estimated_time', e.target.value)}
-                      placeholder="30-45 minutos"
-                    />
-                  </div>
-                  
                   <div>
                     <h4 className="text-md font-medium text-gray-900 mb-4">Tarifas de Delivery</h4>
                     <div className="space-y-4">
@@ -355,6 +339,19 @@ export const RestaurantSettings: React.FC = () => {
                               onChange={(e) => {
                                 const newTiers = [...(formData.settings.delivery.pricing_tiers || [])];
                                 newTiers[index] = { ...tier, min_order_amount: parseFloat(e.target.value) || 0 };
+                                updateFormData('settings.delivery.pricing_tiers', newTiers);
+                              }}
+                            />
+                          </div>
+                          <div className="w-32">
+                            <Input
+                              label="Pedido Máximo ($)"
+                              type="number"
+                              step="0.01"
+                              value={tier.max_order_amount || 0}
+                              onChange={(e) => {
+                                const newTiers = [...(formData.settings.delivery.pricing_tiers || [])];
+                                newTiers[index] = { ...tier, max_order_amount: parseFloat(e.target.value) || 0 };
                                 updateFormData('settings.delivery.pricing_tiers', newTiers);
                               }}
                             />
@@ -405,6 +402,7 @@ export const RestaurantSettings: React.FC = () => {
                             id: Date.now().toString(),
                             name: '',
                             min_order_amount: 0,
+                            max_order_amount: 0,
                             cost: 0,
                             estimated_time: ''
                           }];
