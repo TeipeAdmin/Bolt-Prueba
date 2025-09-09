@@ -48,14 +48,14 @@ export const RestaurantDashboard: React.FC = () => {
   // Calculate last month's revenue
   const getLastMonthRevenue = () => {
     const now = new Date();
-    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
     
     return orders.filter(order => {
       const orderDate = new Date(order.created_at);
       return order.status === 'delivered' && 
-             orderDate >= lastMonthStart && 
-             orderDate <= lastMonthEnd;
+             orderDate >= currentMonthStart && 
+             orderDate <= currentMonthEnd;
     }).reduce((sum, order) => sum + order.total, 0);
   };
 
@@ -74,7 +74,7 @@ export const RestaurantDashboard: React.FC = () => {
       const orderDate = new Date(o.created_at).toDateString();
       return today === orderDate;
     }).length,
-    lastMonthRevenue: getLastMonthRevenue(),
+    currentMonthRevenue: getLastMonthRevenue(),
     categories: categories.length,
   };
 
@@ -154,13 +154,13 @@ export const RestaurantDashboard: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">{t('totalSales')}</p>
               <p className="text-2xl font-semibold text-gray-900">
-                ${stats.lastMonthRevenue.toFixed(2)}
+                ${stats.currentMonthRevenue.toFixed(2)}
               </p>
             </div>
           </div>
           <div className="mt-2">
             <span className="text-sm text-purple-600 font-medium">
-              Último mes
+              Mes actual
             </span>
           </div>
         </div>
