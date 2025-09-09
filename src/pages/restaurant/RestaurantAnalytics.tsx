@@ -20,7 +20,6 @@ export const RestaurantAnalytics: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedOrderType, setSelectedOrderType] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
-  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     if (restaurant) {
