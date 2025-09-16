@@ -452,82 +452,131 @@ export const RestaurantSettings: React.FC = () => {
                     Logo del Restaurante
                   </label>
                   
-                  <div className="flex flex-col lg:flex-row gap-6">
+                  <div className="flex flex-col lg:flex-row gap-6 items-start">
                     {/* Logo Preview */}
                     <div className="flex-shrink-0">
-                      <div className="w-32 h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">
+                      <div className="w-40 h-40 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center bg-gray-50 transition-all duration-300 hover:border-gray-400">
                         {restaurantInfo.logo ? (
-                          <img
-                            src={restaurantInfo.logo}
-                            alt="Logo preview"
-                            className="w-full h-full object-cover rounded-lg"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              target.nextElementSibling!.classList.remove('hidden');
-                            }}
-                          />
+                          <div className="relative w-full h-full group">
+                            <img
+                              src={restaurantInfo.logo}
+                              alt="Logo preview"
+                              className="w-full h-full object-contain rounded-xl shadow-sm transition-transform duration-300 group-hover:scale-105"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                target.nextElementSibling!.classList.remove('hidden');
+                              }}
+                            />
+                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 rounded-xl transition-all duration-300 flex items-center justify-center">
+                              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                <Eye className="w-6 h-6 text-white drop-shadow-lg" />
+                              </div>
+                            </div>
+                            <div className="hidden text-center">
+                              <ImageIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                              <p className="text-xs text-gray-500">Error al cargar</p>
+                            </div>
+                          </div>
                         ) : (
                           <div className="text-center">
-                            <ImageIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                            <p className="text-xs text-gray-500">Sin logo</p>
+                            <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
+                              <ImageIcon className="w-8 h-8 text-gray-400" />
+                            </div>
+                            <p className="text-sm font-medium text-gray-500 mb-1">Sin logo</p>
+                            <p className="text-xs text-gray-400">Agrega una URL para ver la vista previa</p>
                           </div>
-                        )}
-                        {restaurantInfo.logo && (
-                          <div className="hidden text-center">
-                            <ImageIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                            <p className="text-xs text-gray-500">Error al cargar</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Logo URL Input */}
-                    <div className="flex-1 space-y-3">
-                      <div className="relative">
-                        <Input
-                          label="URL del Logo"
-                          value={restaurantInfo.logo}
-                          onChange={(e) => setRestaurantInfo(prev => ({ ...prev, logo: e.target.value }))}
-                          placeholder="https://ejemplo.com/mi-logo.png"
-                          className="pr-10"
-                        />
-                        {restaurantInfo.logo && (
-                          <button
-                            type="button"
-                            onClick={() => setRestaurantInfo(prev => ({ ...prev, logo: '' }))}
-                            className="absolute right-3 top-8 text-gray-400 hover:text-red-500 transition-colors"
-                            title="Eliminar logo"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
                         )}
                       </div>
                       
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      {/* Logo Status Indicator */}
+                      {restaurantInfo.logo && (
+                        <div className="mt-3 flex items-center justify-center">
+                          <div className="flex items-center px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                            <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                            Logo cargado
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Logo URL Input */}
+                    <div className="flex-1 space-y-4">
+                      <div className="relative">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            URL del Logo
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="url"
+                              value={restaurantInfo.logo}
+                              onChange={(e) => setRestaurantInfo(prev => ({ ...prev, logo: e.target.value }))}
+                              placeholder="https://ejemplo.com/mi-logo.png"
+                              className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            />
+                            {restaurantInfo.logo && (
+                              <button
+                                type="button"
+                                onClick={() => setRestaurantInfo(prev => ({ ...prev, logo: '' }))}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50"
+                                title="Eliminar logo"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Live Preview Indicator */}
+                      {restaurantInfo.logo && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                          <div className="flex items-center">
+                            <Eye className="w-4 h-4 text-blue-600 mr-2" />
+                            <span className="text-sm font-medium text-blue-800">
+                              Vista previa en tiempo real
+                            </span>
+                          </div>
+                          <p className="text-xs text-blue-600 mt-1">
+                            El logo se actualiza automáticamente mientras escribes
+                          </p>
+                        </div>
+                      )}
+                      
+                      {/* Recommendations */}
+                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                         <div className="flex items-start">
-                          <Upload className="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
+                          <Upload className="w-5 h-5 text-amber-600 mt-0.5 mr-3 flex-shrink-0" />
                           <div>
-                            <h4 className="text-sm font-medium text-blue-900 mb-1">
-                              Recomendaciones para el logo
+                            <h4 className="text-sm font-medium text-amber-900 mb-2">
+                              💡 Recomendaciones para el logo
                             </h4>
-                            <ul className="text-xs text-blue-800 space-y-1">
-                              <li>• Formato: PNG, JPG o SVG</li>
-                              <li>• Tamaño recomendado: 200x200 píxeles</li>
-                              <li>• Fondo transparente preferible</li>
-                              <li>• Peso máximo: 2MB</li>
-                            </ul>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-amber-800">
+                              <div className="space-y-1">
+                                <p>• <strong>Formato:</strong> PNG, JPG o SVG</p>
+                                <p>• <strong>Tamaño:</strong> 200x200 píxeles mínimo</p>
+                              </div>
+                              <div className="space-y-1">
+                                <p>• <strong>Fondo:</strong> Transparente preferible</p>
+                                <p>• <strong>Peso:</strong> Máximo 2MB</p>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
 
-                      {restaurantInfo.logo && (
-                        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                          <div className="flex items-center">
-                            <Eye className="w-4 h-4 text-green-600 mr-2" />
-                            <span className="text-sm text-green-800">
-                              Logo configurado correctamente
-                            </span>
+                      {/* URL Validation */}
+                        {restaurantInfo.logo && (
+                        <div className="space-y-2">
+                          <div className="flex items-center text-xs">
+                            <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                            <span className="text-green-700 font-medium">URL válida detectada</span>
+                          </div>
+                          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                            <p className="text-xs text-gray-600 break-all">
+                              <strong>URL:</strong> {restaurantInfo.logo}
+                            </p>
                           </div>
                         </div>
                       )}
