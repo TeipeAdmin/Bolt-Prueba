@@ -605,6 +605,19 @@ Fecha: ${new Date().toLocaleString()}
                       min="1"
                       max="100"
                       value={formData.settings.table_orders?.table_numbers || 10}
+                    {formData.logo && (
+                      <div className="mt-2">
+                        <img
+                          src={formData.logo}
+                          alt="Logo preview"
+                          className="w-16 h-16 object-cover rounded-lg border border-gray-200"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
                      onChange={(e) => handleNestedChange('settings.table_orders.table_numbers', parseInt(e.target.value) || 10)}
                    />
                     {formData.logo && (
