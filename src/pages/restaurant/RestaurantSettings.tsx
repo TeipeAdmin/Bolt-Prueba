@@ -605,6 +605,8 @@ Fecha: ${new Date().toLocaleString()}
                       min="1"
                       max="100"
                       value={formData.settings.table_orders?.table_numbers || 10}
+                     onChange={(e) => handleNestedChange('settings.table_orders.table_numbers', parseInt(e.target.value) || 10)}
+                   />
                     {formData.logo && (
                       <div className="mt-2">
                         <img
