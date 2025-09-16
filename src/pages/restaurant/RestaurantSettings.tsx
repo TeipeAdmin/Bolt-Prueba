@@ -621,7 +621,6 @@ Fecha: ${new Date().toLocaleString()}
                       </div>
                     )}
                       onChange={(e) => updateFormData('settings.table_orders.table_numbers', parseInt(e.target.value) || 10)}
-                    />
                   </div>
                   
                   <div>
