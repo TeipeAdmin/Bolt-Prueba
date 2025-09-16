@@ -490,14 +490,6 @@ export const RestaurantSettings: React.FC = () => {
                       </div>
                       
                       {/* Logo Status Indicator */}
-                      {restaurantInfo.logo && (
-                        <div className="mt-3 flex items-center justify-center">
-                          <div className="flex items-center px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-                            <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                            Logo cargado
-                          </div>
-                        </div>
-                      )}
                     </div>
 
                     {/* Logo URL Input */}
@@ -529,21 +521,6 @@ export const RestaurantSettings: React.FC = () => {
                         </div>
                       </div>
                       
-                      {/* Live Preview Indicator */}
-                      {restaurantInfo.logo && (
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                          <div className="flex items-center">
-                            <Eye className="w-4 h-4 text-blue-600 mr-2" />
-                            <span className="text-sm font-medium text-blue-800">
-                              Vista previa en tiempo real
-                            </span>
-                          </div>
-                          <p className="text-xs text-blue-600 mt-1">
-                            El logo se actualiza automáticamente mientras escribes
-                          </p>
-                        </div>
-                      )}
-                      
                       {/* Recommendations */}
                       <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                         <div className="flex items-start">
@@ -566,20 +543,6 @@ export const RestaurantSettings: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* URL Validation */}
-                        {restaurantInfo.logo && (
-                        <div className="space-y-2">
-                          <div className="flex items-center text-xs">
-                            <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                            <span className="text-green-700 font-medium">URL válida detectada</span>
-                          </div>
-                          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                            <p className="text-xs text-gray-600 break-all">
-                              <strong>URL:</strong> {restaurantInfo.logo}
-                            </p>
-                          </div>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
