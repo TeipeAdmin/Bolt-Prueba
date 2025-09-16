@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Phone, Mail, MapPin, Calendar, ShoppingBag, Filter, Search, Star, Edit, ArrowUpDown, Trash2, Info, Download, CheckSquare, Square, Users } from 'lucide-react';
+import { User, Phone, Mail, MapPin, Calendar, ShoppingBag, Filter, Search, Star, Edit, ArrowUpDown, Trash2, Info, Download, CheckSquare, Square, Users, Upload } from 'lucide-react';
 import { Order, Customer, Subscription } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -38,6 +38,11 @@ export const CustomersManagement: React.FC = () => {
   const [selectedCustomers, setSelectedCustomers] = useState<Set<string>>(new Set());
   const [showBulkEditModal, setShowBulkEditModal] = useState(false);
   const [bulkEditAction, setBulkEditAction] = useState<'vip' | 'remove_vip' | 'delete'>('vip');
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importPreview, setImportPreview] = useState<any[]>([]);
+  const [importErrors, setImportErrors] = useState<string[]>([]);
+  const [importing, setImporting] = useState(false);
   const [editForm, setEditForm] = useState({
     name: '',
     phone: '',
@@ -579,6 +584,265 @@ export const CustomersManagement: React.FC = () => {
       4000
     );
   };
+
+  const handleImportCSV = () => {
+    setShowImportModal(true);
+    setImportFile(null);
+    setImportPreview([]);
+    setImportErrors([]);
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      showToast(
+        'error',
+        'Formato de archivo inválido',
+        'Por favor selecciona un archivo CSV válido.',
+        4000
+      );
+      return;
+    }
+
+    setImportFile(file);
+    parseCSVFile(file);
+  };
+
+  const parseCSVFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      const lines = text.split('\n').filter(line => line.trim());
+      
+      if (lines.length < 2) {
+        setImportErrors(['El archivo CSV debe contener al menos una fila de encabezados y una fila de datos.']);
+        return;
+      }
+
+      const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
+      const expectedHeaders = [
+        'Nombre',
+        'Teléfono',
+        'Email',
+        'Dirección',
+        'Total Pedidos',
+        'Total Gastado',
+        'Promedio por Pedido',
+        'Tipos de Pedido',
+        'Es VIP',
+        'Segmento',
+        'Último Pedido',
+        'Referencias de Entrega'
+      ];
+
+      // Verificar que los encabezados sean correctos
+      const missingHeaders = expectedHeaders.filter(header => !headers.includes(header));
+      if (missingHeaders.length > 0) {
+        setImportErrors([
+          `Faltan las siguientes columnas requeridas: ${missingHeaders.join(', ')}`,
+          'Por favor usa el formato de exportación como referencia.'
+        ]);
+        return;
+      }
+
+      const preview: any[] = [];
+      const errors: string[] = [];
+
+      for (let i = 1; i < Math.min(lines.length, 6); i++) { // Preview first 5 rows
+        const values = parseCSVLine(lines[i]);
+        if (values.length !== headers.length) {
+          errors.push(`Fila ${i + 1}: Número incorrecto de columnas`);
+          continue;
+        }
+
+        const rowData: any = {};
+        headers.forEach((header, index) => {
+          rowData[header] = values[index];
+        });
+
+        // Validar datos requeridos
+        if (!rowData['Nombre']?.trim()) {
+          errors.push(`Fila ${i + 1}: El nombre es obligatorio`);
+        }
+        if (!rowData['Teléfono']?.trim()) {
+          errors.push(`Fila ${i + 1}: El teléfono es obligatorio`);
+        }
+        if (rowData['Teléfono'] && !/^[\d+\-\s()]+$/.test(rowData['Teléfono'].trim())) {
+          errors.push(`Fila ${i + 1}: El teléfono contiene caracteres inválidos`);
+        }
+
+        preview.push(rowData);
+      }
+
+      setImportPreview(preview);
+      setImportErrors(errors);
+    };
+
+    reader.readAsText(file);
+  };
+
+  const parseCSVLine = (line: string): string[] => {
+    const result: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      
+      if (char === '"') {
+        if (inQuotes && line[i + 1] === '"') {
+          current += '"';
+          i++; // Skip next quote
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === ',' && !inQuotes) {
+        result.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    
+    result.push(current.trim());
+    return result;
+  };
+
+  const executeImport = async () => {
+    if (!importFile) return;
+
+    setImporting(true);
+
+    try {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target?.result as string;
+        const lines = text.split('\n').filter(line => line.trim());
+        const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
+        
+        let importedCount = 0;
+        let skippedCount = 0;
+        const errors: string[] = [];
+
+        for (let i = 1; i < lines.length; i++) {
+          const values = parseCSVLine(lines[i]);
+          if (values.length !== headers.length) {
+            errors.push(`Fila ${i + 1}: Número incorrecto de columnas`);
+            skippedCount++;
+            continue;
+          }
+
+          const rowData: any = {};
+          headers.forEach((header, index) => {
+            rowData[header] = values[index];
+          });
+
+          // Validar datos requeridos
+          if (!rowData['Nombre']?.trim() || !rowData['Teléfono']?.trim()) {
+            errors.push(`Fila ${i + 1}: Faltan datos obligatorios (nombre o teléfono)`);
+            skippedCount++;
+            continue;
+          }
+
+          if (rowData['Teléfono'] && !/^[\d+\-\s()]+$/.test(rowData['Teléfono'].trim())) {
+            errors.push(`Fila ${i + 1}: Teléfono con formato inválido`);
+            skippedCount++;
+            continue;
+          }
+
+          // Verificar si el cliente ya existe (por teléfono)
+          const existingCustomer = customers.find(c => c.phone === rowData['Teléfono'].trim());
+          if (existingCustomer) {
+            skippedCount++;
+            continue; // Skip existing customers
+          }
+
+          // Crear pedido ficticio para el cliente importado
+          const allOrders = loadFromStorage('orders') || [];
+          const newOrder: Order = {
+            id: `imported-order-${Date.now()}-${i}`,
+            restaurant_id: restaurant?.id || '',
+            order_number: `IMP-${Date.now()}-${i}`,
+            customer: {
+              name: rowData['Nombre'].trim(),
+              phone: rowData['Teléfono'].trim(),
+              email: rowData['Email']?.trim() || '',
+              address: rowData['Dirección']?.trim() || '',
+              delivery_instructions: rowData['Referencias de Entrega']?.trim() || '',
+            },
+            items: [], // Empty items for imported customers
+            order_type: 'pickup' as const,
+            subtotal: parseFloat(rowData['Total Gastado']) || 0,
+            total: parseFloat(rowData['Total Gastado']) || 0,
+            status: 'delivered' as const,
+            created_at: rowData['Último Pedido'] ? new Date(rowData['Último Pedido']).toISOString() : new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          };
+
+          allOrders.push(newOrder);
+          saveToStorage('orders', allOrders);
+
+          // Manejar VIP status si está marcado
+          if (rowData['Es VIP']?.toLowerCase() === 'sí' || rowData['Es VIP']?.toLowerCase() === 'yes') {
+            const vipCustomers = loadFromStorage('vipCustomers') || [];
+            vipCustomers.push({
+              restaurant_id: restaurant?.id,
+              phone: rowData['Teléfono'].trim(),
+              name: rowData['Nombre'].trim(),
+              created_at: new Date().toISOString(),
+            });
+            saveToStorage('vipCustomers', vipCustomers);
+          }
+
+          importedCount++;
+        }
+
+        // Recargar datos
+        loadCustomersData();
+
+        // Mostrar resultado
+        if (importedCount > 0) {
+          showToast(
+            'success',
+            'Importación Completada',
+            `Se importaron ${importedCount} cliente${importedCount !== 1 ? 's' : ''} exitosamente.${skippedCount > 0 ? ` ${skippedCount} registro${skippedCount !== 1 ? 's' : ''} omitido${skippedCount !== 1 ? 's' : ''} (duplicados o con errores).` : ''}`,
+            6000
+          );
+        } else {
+          showToast(
+            'warning',
+            'Sin Importaciones',
+            'No se pudo importar ningún cliente. Verifica el formato del archivo.',
+            5000
+          );
+        }
+
+        if (errors.length > 0 && errors.length <= 10) {
+          console.log('Errores de importación:', errors);
+        }
+
+        setShowImportModal(false);
+        setImportFile(null);
+        setImportPreview([]);
+        setImportErrors([]);
+      };
+
+      reader.readAsText(importFile);
+    } catch (error) {
+      console.error('Error importing CSV:', error);
+      showToast(
+        'error',
+        'Error de Importación',
+        'Hubo un problema al importar el archivo. Verifica el formato e intenta de nuevo.',
+        5000
+      );
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const stats = {
     totalCustomers: customers.length,
     vipCustomers: customers.filter(c => c.isVip).length,
@@ -602,6 +866,15 @@ export const CustomersManagement: React.FC = () => {
               Editar {selectedCustomers.size} seleccionado{selectedCustomers.size !== 1 ? 's' : ''}
             </Button>
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            icon={Upload}
+            onClick={handleImportCSV}
+            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+          >
+            Importar CSV
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -1073,6 +1346,162 @@ export const CustomersManagement: React.FC = () => {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* Import CSV Modal */}
+      <Modal
+        isOpen={showImportModal}
+        onClose={() => {
+          setShowImportModal(false);
+          setImportFile(null);
+          setImportPreview([]);
+          setImportErrors([]);
+        }}
+        title="Importar Clientes desde CSV"
+        size="xl"
+      >
+        <div className="space-y-6">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 className="text-blue-800 font-medium mb-2">Instrucciones de Importación</h4>
+            <div className="text-blue-700 text-sm space-y-1">
+              <p>• El archivo debe estar en formato CSV</p>
+              <p>• Usa el mismo formato que el archivo de exportación</p>
+              <p>• Los campos obligatorios son: Nombre y Teléfono</p>
+              <p>• Los clientes duplicados (mismo teléfono) serán omitidos</p>
+              <p>• Se creará un pedido ficticio para cada cliente importado</p>
+            </div>
+          </div>
+
+          {/* File Selection */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Seleccionar Archivo CSV
+            </label>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+              <input
+                type="file"
+                accept=".csv"
+                onChange={handleFileSelect}
+                className="hidden"
+                id="csv-file-input"
+              />
+              <label
+                htmlFor="csv-file-input"
+                className="cursor-pointer flex flex-col items-center"
+              >
+                <Upload className="w-12 h-12 text-gray-400 mb-4" />
+                <span className="text-lg font-medium text-gray-900 mb-2">
+                  Seleccionar archivo CSV
+                </span>
+                <span className="text-sm text-gray-600">
+                  Haz clic aquí o arrastra tu archivo CSV
+                </span>
+              </label>
+            </div>
+            
+            {importFile && (
+              <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center">
+                  <CheckSquare className="w-5 h-5 text-green-600 mr-2" />
+                  <span className="text-green-800 font-medium">{importFile.name}</span>
+                  <span className="text-green-600 text-sm ml-2">
+                    ({(importFile.size / 1024).toFixed(1)} KB)
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Errors */}
+          {importErrors.length > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <h4 className="text-red-800 font-medium mb-2">Errores Encontrados</h4>
+              <div className="text-red-700 text-sm space-y-1 max-h-32 overflow-y-auto">
+                {importErrors.map((error, index) => (
+                  <p key={index}>• {error}</p>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Preview */}
+          {importPreview.length > 0 && (
+            <div>
+              <h4 className="text-lg font-medium text-gray-900 mb-3">
+                Vista Previa ({importPreview.length} de {importFile ? 'total' : '0'} filas)
+              </h4>
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <div className="overflow-x-auto max-h-64">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                          Nombre
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                          Teléfono
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                          Email
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                          Es VIP
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                          Total Gastado
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {importPreview.map((row, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="px-4 py-2 text-sm text-gray-900">
+                            {row['Nombre'] || '-'}
+                          </td>
+                          <td className="px-4 py-2 text-sm text-gray-900">
+                            {row['Teléfono'] || '-'}
+                          </td>
+                          <td className="px-4 py-2 text-sm text-gray-900">
+                            {row['Email'] || '-'}
+                          </td>
+                          <td className="px-4 py-2 text-sm text-gray-900">
+                            {row['Es VIP'] || 'No'}
+                          </td>
+                          <td className="px-4 py-2 text-sm text-gray-900">
+                            {row['Total Gastado'] || '0.00'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setShowImportModal(false);
+                setImportFile(null);
+                setImportPreview([]);
+                setImportErrors([]);
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={executeImport}
+              disabled={!importFile || importErrors.length > 0 || importing}
+              loading={importing}
+              icon={Upload}
+            >
+              {importing ? 'Importando...' : 'Importar Clientes'}
+            </Button>
+          </div>
+        </div>
       </Modal>
 
       {/* Bulk Edit Modal */}
