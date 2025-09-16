@@ -78,13 +78,13 @@ export const CustomersManagement: React.FC = () => {
       const customerKey = order.customer.phone; // Use phone as unique identifier
       
       if (customerMap.has(customerKey)) {
-    const requiredHeaders = ['Nombre'];
+        const existing = customerMap.get(customerKey)!;
         existing.totalOrders += 1;
         existing.totalSpent += order.status === 'delivered' ? order.total : 0;
         existing.lastOrderDate = order.created_at > existing.lastOrderDate ? order.created_at : existing.lastOrderDate;
         if (!existing.orderTypes.includes(order.order_type)) {
           existing.orderTypes.push(order.order_type);
-      errors.push('El archivo debe contener al menos la columna "Nombre".');
+        }
         // Update customer info with most recent data (keep latest information)
         existing.name = order.customer.name;
         existing.email = order.customer.email || existing.email;
@@ -92,26 +92,17 @@ export const CustomersManagement: React.FC = () => {
         existing.delivery_instructions = order.customer.delivery_instructions || existing.delivery_instructions;
       } else {
         const isVip = vipCustomers.some((vip: any) => 
-      // Only validate required field: Nombre
+          vip.restaurant_id === restaurant.id && vip.phone === order.customer.phone
         );
         customerMap.set(customerKey, {
           id: order.customer.phone,
           name: order.customer.name,
-      // Optional phone validation - only if provided
-      if (row['Teléfono'] && row['Teléfono'].toString().trim() !== '') {
-        if (!/^[\d+\-\s()]+$/.test(row['Teléfono'].toString().trim())) {
-          rowErrors.push('Formato de teléfono inválido');
-        }
+          phone: order.customer.phone,
+          email: order.customer.email,
+          address: order.customer.address,
+          delivery_instructions: order.customer.delivery_instructions,
           totalOrders: 1,
           totalSpent: order.status === 'delivered' ? order.total : 0,
-      // Optional email validation - only if provided
-      if (row['Email'] && row['Email'].toString().trim() !== '') {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(row['Email'].toString().trim())) {
-          rowErrors.push('Formato de email inválido');
-        }
-      }
-      
           lastOrderDate: order.created_at,
           orderTypes: [order.order_type],
           isVip: isVip,
@@ -190,26 +181,24 @@ export const CustomersManagement: React.FC = () => {
   };
 
   const toggleVipStatus = (customerId: string) => {
-      .map((c: any) => c.phone)
-      .filter(Boolean); // Filter out empty phones
+    const customer = customers.find(c => c.id === customerId);
     if (!customer) return;
 
     // Update VIP customers in localStorage
     const vipCustomers = loadFromStorage('vipCustomers') || [];
     
-      const phone = row['Teléfono'] ? row['Teléfono'].toString().trim() : '';
+    if (customer.isVip) {
       // Remove from VIP list
-      // Only check for duplicates if phone is provided
-      if (phone && existingPhones.includes(phone)) {
+      const updatedVipCustomers = vipCustomers.filter((vip: any) => 
         !(vip.restaurant_id === restaurant?.id && vip.phone === customer.phone)
       );
       saveToStorage('vipCustomers', updatedVipCustomers);
     } else {
-        phone: phone,
-        email: row['Email'] ? row['Email'].toString().trim() : '',
+      // Add to VIP list
+      const newVipCustomer = {
         restaurant_id: restaurant?.id,
         phone: customer.phone,
-        is_vip: row['Es VIP'] ? ['sí', 'si', 'yes', 'true', '1'].includes(row['Es VIP'].toString().toLowerCase()) : false,
+        name: customer.name,
         created_at: new Date().toISOString(),
       };
       saveToStorage('vipCustomers', [...vipCustomers, newVipCustomer]);
