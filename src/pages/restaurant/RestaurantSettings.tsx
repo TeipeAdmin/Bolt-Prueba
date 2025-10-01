@@ -311,12 +311,48 @@ Fecha: ${new Date().toLocaleString()}
                     value={formData.name}
                     onChange={(e) => updateFormData('name', e.target.value)}
                   />
-                  <Input
-                    label="Logo URL"
-                    value={formData.logo || ''}
-                    onChange={(e) => updateFormData('logo', e.target.value)}
-                    placeholder="https://example.com/logo.jpg"
-                  />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Logo
+                    </label>
+                    <div className="space-y-3">
+                      {formData.logo && (
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={formData.logo}
+                            alt="Logo preview"
+                            className="w-16 h-16 object-cover rounded-lg border border-gray-300"
+                          />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => updateFormData('logo', '')}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            Eliminar
+                          </Button>
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              updateFormData('logo', reader.result as string);
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+                      />
+                      <p className="text-xs text-gray-500">
+                        Formatos: JPG, PNG, GIF. Tamaño recomendado: 200x200px
+                      </p>
+                    </div>
+                  </div>
                   <Input
                     label={t('email')}
                     type="email"
