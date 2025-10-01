@@ -179,6 +179,27 @@ export interface PromoSettings {
   cta_link?: string;
 }
 
+export interface BillingSettings {
+  nombreComercial: string;
+  razonSocial?: string;
+  nit: string;
+  direccion: string;
+  ciudad: string;
+  telefono: string;
+  correo?: string;
+  regimenTributario: 'simple' | 'comun' | 'no_responsable_iva';
+  responsableIVA: boolean;
+  tieneResolucionDIAN: boolean;
+  numeroResolucionDIAN?: string;
+  fechaResolucion?: string;
+  rangoNumeracionDesde?: number;
+  rangoNumeracionHasta?: number;
+  aplicaPropina: boolean;
+  mostrarLogoEnTicket: boolean;
+  logoTicket?: string;
+  mensajeFinalTicket?: string;
+}
+
 export interface RestaurantSettings {
   ui_settings: UISettings;
   theme: Theme;
@@ -188,6 +209,7 @@ export interface RestaurantSettings {
   table_orders: TableOrdersSettings;
   notifications: NotificationSettings;
   promo?: PromoSettings;
+  billing?: BillingSettings;
   currency?: string;
   language?: string;
   timezone?: string;

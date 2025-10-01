@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Globe, Clock, Truck, QrCode, Palette, Bell, MapPin, HelpCircle, Send, Eye, Calendar, Mail, Phone, Building, Store, Megaphone, Upload, Image as ImageIcon } from 'lucide-react';
+import { Save, Globe, Clock, Truck, QrCode, Palette, Bell, MapPin, HelpCircle, Send, Eye, Calendar, Mail, Phone, Building, Store, Megaphone, Upload, Image as ImageIcon, FileText, DollarSign } from 'lucide-react';
+import { colombianCities, validateNIT, formatNIT } from '../../utils/colombianCities';
 import { Restaurant } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -83,6 +84,26 @@ export const RestaurantSettings: React.FC = () => {
             promo_text: '',
             cta_text: 'Ver Ofertas',
             cta_link: '',
+          },
+          billing: restaurant.settings.billing || {
+            nombreComercial: restaurant.name || '',
+            razonSocial: '',
+            nit: '',
+            direccion: restaurant.address || '',
+            ciudad: 'Bogotá D.C.',
+            telefono: restaurant.phone || '',
+            correo: restaurant.email || '',
+            regimenTributario: 'simple' as const,
+            responsableIVA: false,
+            tieneResolucionDIAN: false,
+            numeroResolucionDIAN: '',
+            fechaResolucion: '',
+            rangoNumeracionDesde: undefined,
+            rangoNumeracionHasta: undefined,
+            aplicaPropina: true,
+            mostrarLogoEnTicket: false,
+            logoTicket: '',
+            mensajeFinalTicket: '',
           },
         },
       });
@@ -294,6 +315,7 @@ Fecha: ${new Date().toLocaleString()}
     { id: 'tables', name: 'Pedidos en Mesa', icon: QrCode },
     { id: 'promo', name: 'Promocional', icon: Megaphone },
     { id: 'theme', name: 'Tema', icon: Palette },
+    { id: 'billing', name: 'Facturación', icon: FileText },
     { id: 'notifications', name: 'Notificaciones', icon: Bell },
     { id: 'support', name: 'Soporte', icon: HelpCircle },
   ];
@@ -1416,6 +1438,475 @@ Fecha: ${new Date().toLocaleString()}
                       <li>Puedes previsualizar los cambios guardando la configuración</li>
                       <li>Asegúrate de que los colores tengan buen contraste para legibilidad</li>
                       <li>Los tamaños de fuente aceptan valores CSS (px, rem, em)</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'billing' && (
+            <div className="space-y-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                  <FileText className="w-6 h-6 text-green-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Configuración de Facturación</h3>
+                  <p className="text-sm text-gray-600">
+                    Información legal y fiscal para la generación de tickets de pedido válidos en Colombia
+                  </p>
+                </div>
+              </div>
+
+              {/* Información del Restaurante */}
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border border-green-100">
+                <h4 className="text-md font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <Store className="w-5 h-5 text-green-600" />
+                  Información del Restaurante
+                </h4>
+
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Nombre Comercial *
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.settings.billing?.nombreComercial || ''}
+                        onChange={(e) => updateFormData('settings.billing.nombreComercial', e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        placeholder="Restaurante Orlando"
+                        required
+                      />
+                      <p className="text-xs text-gray-500">El nombre que aparecerá en los tickets</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Razón Social
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.settings.billing?.razonSocial || ''}
+                        onChange={(e) => updateFormData('settings.billing.razonSocial', e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        placeholder="Orlando SAS"
+                      />
+                      <p className="text-xs text-gray-500">Opcional - Nombre legal de la empresa</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        NIT *
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.settings.billing?.nit || ''}
+                        onChange={(e) => {
+                          const formatted = formatNIT(e.target.value);
+                          updateFormData('settings.billing.nit', formatted);
+                        }}
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
+                          formData.settings.billing?.nit && !validateNIT(formData.settings.billing.nit)
+                            ? 'border-red-300 bg-red-50'
+                            : 'border-gray-300'
+                        }`}
+                        placeholder="900123456-7"
+                        maxLength={11}
+                        required
+                      />
+                      <p className="text-xs text-gray-500">
+                        {formData.settings.billing?.nit && !validateNIT(formData.settings.billing.nit)
+                          ? '❌ Formato inválido. Use: 123456789-0'
+                          : 'Formato: 123456789-0'}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Ciudad *
+                      </label>
+                      <select
+                        value={formData.settings.billing?.ciudad || 'Bogotá D.C.'}
+                        onChange={(e) => updateFormData('settings.billing.ciudad', e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        required
+                      >
+                        {colombianCities.map((city) => (
+                          <option key={city} value={city}>
+                            {city}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Dirección *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.settings.billing?.direccion || ''}
+                      onChange={(e) => updateFormData('settings.billing.direccion', e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      placeholder="Calle 123 #45-67"
+                      required
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Teléfono *
+                      </label>
+                      <input
+                        type="tel"
+                        value={formData.settings.billing?.telefono || ''}
+                        onChange={(e) => updateFormData('settings.billing.telefono', e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        placeholder="+57 300 123 4567"
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Correo Electrónico
+                      </label>
+                      <input
+                        type="email"
+                        value={formData.settings.billing?.correo || ''}
+                        onChange={(e) => updateFormData('settings.billing.correo', e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        placeholder="contacto@restaurante.com"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Información Fiscal */}
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+                <h4 className="text-md font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <DollarSign className="w-5 h-5 text-blue-600" />
+                  Información Fiscal
+                </h4>
+
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Régimen Tributario *
+                      </label>
+                      <select
+                        value={formData.settings.billing?.regimenTributario || 'simple'}
+                        onChange={(e) => updateFormData('settings.billing.regimenTributario', e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      >
+                        <option value="simple">Régimen Simple</option>
+                        <option value="comun">Régimen Común</option>
+                        <option value="no_responsable_iva">No responsable de IVA</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        ¿Responsable de IVA? *
+                      </label>
+                      <div className="flex items-center gap-6 h-12">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="responsableIVA"
+                            checked={formData.settings.billing?.responsableIVA === true}
+                            onChange={() => updateFormData('settings.billing.responsableIVA', true)}
+                            className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                          />
+                          <span className="text-sm text-gray-700">Sí</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="responsableIVA"
+                            checked={formData.settings.billing?.responsableIVA === false}
+                            onChange={() => updateFormData('settings.billing.responsableIVA', false)}
+                            className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                          />
+                          <span className="text-sm text-gray-700">No</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      ¿Tiene Resolución DIAN? *
+                    </label>
+                    <div className="flex items-center gap-6">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="tieneResolucionDIAN"
+                          checked={formData.settings.billing?.tieneResolucionDIAN === true}
+                          onChange={() => updateFormData('settings.billing.tieneResolucionDIAN', true)}
+                          className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-gray-700">Sí</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="tieneResolucionDIAN"
+                          checked={formData.settings.billing?.tieneResolucionDIAN === false}
+                          onChange={() => updateFormData('settings.billing.tieneResolucionDIAN', false)}
+                          className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-gray-700">No</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {formData.settings.billing?.tieneResolucionDIAN && (
+                    <div className="bg-white rounded-lg p-4 border border-blue-200 space-y-4">
+                      <h5 className="text-sm font-semibold text-gray-900">Datos de la Resolución DIAN</h5>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-gray-700">
+                            Número de Resolución *
+                          </label>
+                          <input
+                            type="text"
+                            value={formData.settings.billing?.numeroResolucionDIAN || ''}
+                            onChange={(e) => updateFormData('settings.billing.numeroResolucionDIAN', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="18760000001"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-gray-700">
+                            Fecha de Resolución *
+                          </label>
+                          <input
+                            type="date"
+                            value={formData.settings.billing?.fechaResolucion || ''}
+                            onChange={(e) => updateFormData('settings.billing.fechaResolucion', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-gray-700">
+                            Rango de Numeración - Desde *
+                          </label>
+                          <input
+                            type="number"
+                            value={formData.settings.billing?.rangoNumeracionDesde || ''}
+                            onChange={(e) => updateFormData('settings.billing.rangoNumeracionDesde', parseInt(e.target.value) || undefined)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="1000"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-gray-700">
+                            Rango de Numeración - Hasta *
+                          </label>
+                          <input
+                            type="number"
+                            value={formData.settings.billing?.rangoNumeracionHasta || ''}
+                            onChange={(e) => updateFormData('settings.billing.rangoNumeracionHasta', parseInt(e.target.value) || undefined)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="10000"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Propina */}
+              <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-6 border border-yellow-100">
+                <h4 className="text-md font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <DollarSign className="w-5 h-5 text-yellow-600" />
+                  Configuración de Propina
+                </h4>
+
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        ¿Aplicar propina sugerida? *
+                      </label>
+                      <div className="flex items-center gap-6">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="aplicaPropina"
+                            checked={formData.settings.billing?.aplicaPropina === true}
+                            onChange={() => updateFormData('settings.billing.aplicaPropina', true)}
+                            className="w-4 h-4 text-yellow-600 border-gray-300 focus:ring-yellow-500"
+                          />
+                          <span className="text-sm text-gray-700">Sí (10% del subtotal)</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="aplicaPropina"
+                            checked={formData.settings.billing?.aplicaPropina === false}
+                            onChange={() => updateFormData('settings.billing.aplicaPropina', false)}
+                            className="w-4 h-4 text-yellow-600 border-gray-300 focus:ring-yellow-500"
+                          />
+                          <span className="text-sm text-gray-700">No</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {formData.settings.billing?.aplicaPropina && (
+                    <div className="bg-white rounded-lg p-4 border border-yellow-200">
+                      <p className="text-sm text-gray-600">
+                        La propina sugerida se calculará automáticamente como el 10% del subtotal y se mostrará al final del ticket. El cliente puede decidir si desea incluirla o no.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Personalización del Ticket */}
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-100">
+                <h4 className="text-md font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-purple-600" />
+                  Personalización del Ticket
+                </h4>
+
+                <div className="space-y-6">
+                  <div className="space-y-4">
+                    <label className="block text-sm font-medium text-gray-700">
+                      ¿Mostrar logo en el ticket?
+                    </label>
+                    <div className="flex items-center gap-6">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="mostrarLogoEnTicket"
+                          checked={formData.settings.billing?.mostrarLogoEnTicket === true}
+                          onChange={() => updateFormData('settings.billing.mostrarLogoEnTicket', true)}
+                          className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500"
+                        />
+                        <span className="text-sm text-gray-700">Sí</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="mostrarLogoEnTicket"
+                          checked={formData.settings.billing?.mostrarLogoEnTicket === false}
+                          onChange={() => updateFormData('settings.billing.mostrarLogoEnTicket', false)}
+                          className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500"
+                        />
+                        <span className="text-sm text-gray-700">No</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {formData.settings.billing?.mostrarLogoEnTicket && (
+                    <div className="bg-white rounded-lg p-4 border border-purple-200 space-y-3">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Logo para el ticket
+                      </label>
+
+                      {formData.settings.billing?.logoTicket && (
+                        <div className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                          <img
+                            src={formData.settings.billing.logoTicket}
+                            alt="Logo del ticket"
+                            className="w-16 h-16 object-contain rounded"
+                          />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">Logo actual</p>
+                            <p className="text-xs text-gray-500">Click para cambiar</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => updateFormData('settings.billing.logoTicket', '')}
+                            className="text-red-600 hover:text-red-700 text-sm font-medium"
+                          >
+                            Eliminar
+                          </button>
+                        </div>
+                      )}
+
+                      <label className="cursor-pointer block">
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              if (file.size > 1024 * 1024) {
+                                showToast('error', 'Archivo muy grande', 'El tamaño máximo es 1MB', 3000);
+                                return;
+                              }
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                updateFormData('settings.billing.logoTicket', reader.result as string);
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                          className="hidden"
+                        />
+                        <span className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all shadow-sm w-full justify-center">
+                          <Upload className="w-4 h-4 mr-2" />
+                          {formData.settings.billing?.logoTicket ? 'Cambiar logo' : 'Subir logo'}
+                        </span>
+                      </label>
+                      <p className="text-xs text-gray-500">
+                        PNG o JPG. Máximo 1MB. Se recomienda 200x200px
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Mensaje final del ticket (opcional)
+                    </label>
+                    <textarea
+                      value={formData.settings.billing?.mensajeFinalTicket || ''}
+                      onChange={(e) => updateFormData('settings.billing.mensajeFinalTicket', e.target.value)}
+                      rows={3}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none"
+                      placeholder="¡Gracias por tu visita! Esperamos verte pronto."
+                    />
+                    <p className="text-xs text-gray-500">
+                      Este mensaje aparecerá al final de cada ticket
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Información importante */}
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-start gap-2">
+                  <FileText className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-green-800 font-medium">Sobre la configuración de facturación:</p>
+                    <ul className="text-xs text-green-700 mt-2 space-y-1 list-disc list-inside">
+                      <li>Estos datos se utilizarán para generar tickets de pedido legalmente válidos en Colombia</li>
+                      <li>Si eres responsable de IVA, el IVA se calculará y mostrará en cada ticket</li>
+                      <li>La resolución DIAN es requerida para facturación electrónica</li>
+                      <li>La propina es opcional y aparecerá como sugerencia al cliente</li>
+                      <li>Asegúrate de mantener esta información actualizada</li>
                     </ul>
                   </div>
                 </div>
