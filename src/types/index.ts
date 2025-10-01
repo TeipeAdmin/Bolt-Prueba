@@ -19,6 +19,7 @@ export interface ProductVariation {
   id: string;
   name: string;
   price: number;
+  compare_at_price?: number;
 }
 
 export interface ProductIngredient {

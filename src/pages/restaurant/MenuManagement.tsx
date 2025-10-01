@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Eye, Archive, AlertCircle, Search } from 'lucide-react';
+import { Plus, CreditCard as Edit, Trash2, Eye, Archive, AlertCircle, Search, Package, CheckCircle, XCircle } from 'lucide-react';
 import { Category, Product, Restaurant, Subscription } from '../../types';
 import { loadFromStorage, saveToStorage, availablePlans } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -212,7 +212,58 @@ export const MenuManagement: React.FC = () => {
         </Button>
       </div>
 
-      {/* Category Filter */}
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+              <Package className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Total Productos</p>
+              <p className="text-2xl font-bold text-gray-900">{products.length}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-4 border border-green-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+              <CheckCircle className="w-5 h-5 text-green-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Activos</p>
+              <p className="text-2xl font-bold text-gray-900">{products.filter(p => p.status === 'active').length}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-lg p-4 border border-orange-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+              <AlertCircle className="w-5 h-5 text-orange-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Sin Stock</p>
+              <p className="text-2xl font-bold text-gray-900">{products.filter(p => p.status === 'out_of_stock').length}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-gray-50 to-slate-50 rounded-lg p-4 border border-gray-200">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+              <Archive className="w-5 h-5 text-gray-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Archivados</p>
+              <p className="text-2xl font-bold text-gray-900">{products.filter(p => p.status === 'archived').length}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Search and Category Filter */}
       <div className="bg-white rounded-lg shadow p-4 mb-6 space-y-4">
         {/* Search Bar */}
         <div className="relative">
@@ -225,18 +276,18 @@ export const MenuManagement: React.FC = () => {
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
-        
+
         {/* Category Filter */}
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setSelectedCategory('all')}
-            className={`px-4 py-2 rounded-lg transition-colors ${
+            className={`px-4 py-2 rounded-lg transition-all font-medium ${
               selectedCategory === 'all'
-                ? 'bg-blue-100 text-blue-800'
+                ? 'bg-blue-600 text-white shadow-md'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            All categories ({products.filter(p => 
+            Todas ({products.filter(p =>
               p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
               p.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
               (p.sku && p.sku.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -253,13 +304,21 @@ export const MenuManagement: React.FC = () => {
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
-                className={`px-4 py-2 rounded-lg transition-colors ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all font-medium ${
                   selectedCategory === category.id
-                    ? 'bg-blue-100 text-blue-800'
+                    ? 'bg-blue-600 text-white shadow-md'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                {category.name} ({categoryProductCount})
+                {category.icon && <span>{category.icon}</span>}
+                <span>{category.name}</span>
+                <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs ${
+                  selectedCategory === category.id
+                    ? 'bg-white/20 text-white'
+                    : 'bg-gray-200 text-gray-700'
+                }`}>
+                  {categoryProductCount}
+                </span>
               </button>
             );
           })}
@@ -299,24 +358,29 @@ export const MenuManagement: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProducts.map(product => (
-            <div key={product.id} className="bg-white rounded-lg shadow overflow-hidden">
+            <div key={product.id} className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition-all overflow-hidden group">
               {/* Product Image */}
-              <div className="aspect-video bg-gray-200 relative">
+              <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
                 {product.images.length > 0 ? (
                   <img
                     src={product.images[0]}
                     alt={product.name}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-500">
-                    <Eye className="w-8 h-8" />
-                    <span className="ml-2">No image</span>
+                  <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
+                    <Package className="w-12 h-12 mb-2" />
+                    <span className="text-sm">Sin imagen</span>
                   </div>
                 )}
                 <div className="absolute top-2 right-2">
                   {getStatusBadge(product.status)}
                 </div>
+                {product.images.length > 1 && (
+                  <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/60 backdrop-blur-sm text-white text-xs rounded-lg">
+                    +{product.images.length - 1}
+                  </div>
+                )}
               </div>
 
               {/* Product Info */}
@@ -337,12 +401,26 @@ export const MenuManagement: React.FC = () => {
                 {/* Price Range */}
                 <div className="mb-4">
                   {product.variations.length > 0 && (
-                    <div className="text-lg font-bold text-gray-900">
-                      ${Math.min(...product.variations.map(v => v.price)).toFixed(2)}
-                      {product.variations.length > 1 && (
-                        <span className="text-sm font-normal text-gray-600">
-                          {' '}- ${Math.max(...product.variations.map(v => v.price)).toFixed(2)}
+                    <div className="space-y-1">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-2xl font-bold text-gray-900">
+                          ${Math.min(...product.variations.map(v => v.price)).toFixed(2)}
                         </span>
+                        {product.variations.length > 1 && (
+                          <span className="text-sm font-normal text-gray-600">
+                            - ${Math.max(...product.variations.map(v => v.price)).toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+                      {product.variations.some(v => v.compare_at_price && v.compare_at_price > v.price) && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-500 line-through">
+                            ${Math.min(...product.variations.filter(v => v.compare_at_price).map(v => v.compare_at_price!)).toFixed(2)}
+                          </span>
+                          <span className="inline-flex items-center px-2 py-0.5 bg-red-100 text-red-700 rounded text-xs font-medium">
+                            OFERTA
+                          </span>
+                        </div>
                       )}
                     </div>
                   )}
