@@ -9,7 +9,7 @@ import { CartSidebar } from '../../components/public/CartSidebar';
 import { CheckoutModal } from '../../components/public/CheckoutModal';
 
 export const PublicMenu: React.FC = () => {
-  const { restaurantId } = useParams<{ restaurantId: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const { items: cartItems } = useCart();
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -20,15 +20,14 @@ export const PublicMenu: React.FC = () => {
   const [showCart, setShowCart] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
 
-  useEffect(() => {
-    loadMenuData();
-  }, [restaurantId]);
-
   const loadMenuData = () => {
     const restaurants = loadFromStorage('restaurants', []);
-    const restaurantData = restaurants.find((r: Restaurant) => r.slug === restaurantId || r.id === restaurantId);
+    const restaurantData = restaurants.find((r: Restaurant) => r.slug === slug || r.id === slug);
 
-    if (!restaurantData) return;
+    if (!restaurantData) {
+      console.log('Restaurant not found. Slug:', slug, 'Available restaurants:', restaurants.map(r => ({ id: r.id, slug: r.slug })));
+      return;
+    }
 
     setRestaurant(restaurantData);
 
@@ -46,6 +45,12 @@ export const PublicMenu: React.FC = () => {
     setCategories(restaurantCategories);
     setProducts(restaurantProducts);
   };
+
+  useEffect(() => {
+    if (slug) {
+      loadMenuData();
+    }
+  }, [slug]);
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = searchTerm === '' ||
