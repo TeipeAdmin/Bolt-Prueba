@@ -158,6 +158,14 @@ export interface NotificationSettings {
   whatsapp?: string;
 }
 
+export interface PromoSettings {
+  enabled: boolean;
+  banner_image: string;
+  promo_text: string;
+  cta_text: string;
+  cta_link?: string;
+}
+
 export interface RestaurantSettings {
   ui_settings: UISettings;
   theme: Theme;
@@ -166,6 +174,7 @@ export interface RestaurantSettings {
   delivery: DeliverySettings;
   table_orders: TableOrdersSettings;
   notifications: NotificationSettings;
+  promo?: PromoSettings;
   currency?: string;
   language?: string;
   timezone?: string;

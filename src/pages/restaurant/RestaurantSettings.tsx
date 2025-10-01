@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Globe, Clock, Truck, QrCode, Palette, Bell, MapPin, HelpCircle, Send, Eye, Calendar, Mail, Phone, Building, Store } from 'lucide-react';
+import { Save, Globe, Clock, Truck, QrCode, Palette, Bell, MapPin, HelpCircle, Send, Eye, Calendar, Mail, Phone, Building, Store, Megaphone, Upload, Image as ImageIcon } from 'lucide-react';
 import { Restaurant } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -246,6 +246,7 @@ Fecha: ${new Date().toLocaleString()}
     { id: 'social', name: 'Redes Sociales', icon: Globe },
     { id: 'delivery', name: 'Delivery', icon: Truck },
     { id: 'tables', name: 'Pedidos en Mesa', icon: QrCode },
+    { id: 'promo', name: 'Promocional', icon: Megaphone },
     { id: 'theme', name: 'Tema', icon: Palette },
     { id: 'notifications', name: 'Notificaciones', icon: Bell },
     { id: 'support', name: 'Soporte', icon: HelpCircle },
@@ -942,6 +943,193 @@ Fecha: ${new Date().toLocaleString()}
                   </select>
                 </div>
               </div>
+            </div>
+          )}
+
+          {activeTab === 'promo' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
+                    <Megaphone className="w-5 h-5 text-orange-600" />
+                    Banner Promocional
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Destaca ofertas especiales en la parte superior de tu menú público
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.settings.promo?.enabled || false}
+                    onChange={(e) => updateFormData('settings.promo.enabled', e.target.checked)}
+                    className="h-5 w-5 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    Habilitar promocional
+                  </span>
+                </div>
+              </div>
+
+              {formData.settings.promo?.enabled && (
+                <>
+                  {/* Preview Section */}
+                  <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-6 border border-orange-100">
+                    <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                      <Eye className="w-4 h-4" />
+                      Vista Previa
+                    </h4>
+                    <div className="bg-white rounded-lg overflow-hidden shadow-md">
+                      {formData.settings.promo?.banner_image ? (
+                        <div className="relative h-48 bg-gray-100">
+                          <img
+                            src={formData.settings.promo.banner_image}
+                            alt="Banner promocional"
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-6">
+                            {formData.settings.promo?.promo_text && (
+                              <p className="text-white text-lg font-semibold mb-2">
+                                {formData.settings.promo.promo_text}
+                              </p>
+                            )}
+                            {formData.settings.promo?.cta_text && (
+                              <button className="bg-orange-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-orange-700 transition-colors w-fit">
+                                {formData.settings.promo.cta_text}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="h-48 bg-gray-100 flex flex-col items-center justify-center text-gray-400">
+                          <ImageIcon className="w-12 h-12 mb-2" />
+                          <span className="text-sm">Sin imagen de banner</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Banner Image */}
+                  <div className="space-y-3">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Imagen del Banner *
+                    </label>
+                    <div className="space-y-2">
+                      {formData.settings.promo?.banner_image && (
+                        <div className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                          <img
+                            src={formData.settings.promo.banner_image}
+                            alt="Banner"
+                            className="w-20 h-20 object-cover rounded-lg"
+                          />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">Banner actual</p>
+                            <p className="text-xs text-gray-500">Click para cambiar la imagen</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => updateFormData('settings.promo.banner_image', '')}
+                            className="text-red-600 hover:text-red-700 text-sm font-medium"
+                          >
+                            Eliminar
+                          </button>
+                        </div>
+                      )}
+                      <label className="cursor-pointer">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              if (file.size > 5 * 1024 * 1024) {
+                                showToast('error', 'Archivo muy grande', 'El tamaño máximo es 5MB', 3000);
+                                return;
+                              }
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                updateFormData('settings.promo.banner_image', reader.result as string);
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                          className="hidden"
+                        />
+                        <span className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all shadow-sm w-full justify-center">
+                          <Upload className="w-4 h-4 mr-2" />
+                          Subir imagen de banner
+                        </span>
+                      </label>
+                      <p className="text-xs text-gray-500">
+                        Recomendado: 1200x400px. Máximo 5MB. Formatos: JPG, PNG, WebP
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Promo Text */}
+                  <div className="space-y-3">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Texto Promocional *
+                    </label>
+                    <textarea
+                      value={formData.settings.promo?.promo_text || ''}
+                      onChange={(e) => updateFormData('settings.promo.promo_text', e.target.value)}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none"
+                      placeholder="¡Oferta especial! 2x1 en todas las pizzas este fin de semana"
+                    />
+                    <p className="text-xs text-gray-500">
+                      Describe tu oferta de manera atractiva y concisa
+                    </p>
+                  </div>
+
+                  {/* CTA Text */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Texto del Botón *
+                      </label>
+                      <Input
+                        value={formData.settings.promo?.cta_text || ''}
+                        onChange={(e) => updateFormData('settings.promo.cta_text', e.target.value)}
+                        placeholder="Ver Ofertas"
+                      />
+                      <p className="text-xs text-gray-500">
+                        Ej: "Ver Menú", "Pedir Ahora", "Ver Ofertas"
+                      </p>
+                    </div>
+
+                    <div className="space-y-3">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Enlace del Botón (Opcional)
+                      </label>
+                      <Input
+                        value={formData.settings.promo?.cta_link || ''}
+                        onChange={(e) => updateFormData('settings.promo.cta_link', e.target.value)}
+                        placeholder="#promociones"
+                      />
+                      <p className="text-xs text-gray-500">
+                        Deja vacío para desplazar al menú
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-start gap-2">
+                      <Megaphone className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm text-blue-800 font-medium">Consejos para tu banner:</p>
+                        <ul className="text-xs text-blue-700 mt-2 space-y-1 list-disc list-inside">
+                          <li>Usa imágenes atractivas y de alta calidad de tus productos</li>
+                          <li>Destaca descuentos o promociones limitadas en tiempo</li>
+                          <li>Mantén el texto corto y directo</li>
+                          <li>Usa un call-to-action claro y atractivo</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
 
