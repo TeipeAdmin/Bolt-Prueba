@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, Edit, Trash2, Clock, Phone, MapPin, User, Filter, Search, CheckCircle, XCircle, AlertCircle, Package, Plus, MessageSquare } from 'lucide-react';
+import { Eye, CreditCard as Edit, Trash2, Clock, Phone, MapPin, User, Filter, Search, CheckCircle, XCircle, AlertCircle, Package, Plus, MessageSquare, Printer } from 'lucide-react';
 import { Order, Product, Category } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -499,11 +499,328 @@ export const OrdersManagement: React.FC = () => {
   const sendWhatsAppMessage = (order: Order) => {
     const whatsappMessage = generateWhatsAppMessage(order);
     const whatsappNumber = order.customer.phone.replace(/[^\d]/g, '');
-    
+
     if (whatsappNumber) {
       const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`;
       window.open(whatsappUrl, '_blank');
     }
+  };
+
+  const printTicket = (order: Order) => {
+    if (!restaurant) return;
+
+    const billing = restaurant.settings?.billing;
+    const subtotal = order.subtotal;
+    const iva = billing?.responsableIVA ? subtotal * 0.19 : 0;
+    const propina = billing?.aplicaPropina ? subtotal * 0.10 : 0;
+    const total = order.total;
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const ticketHTML = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Ticket - ${order.order_number}</title>
+          <style>
+            @media print {
+              @page {
+                size: 80mm auto;
+                margin: 0;
+              }
+              body {
+                margin: 0;
+                padding: 0;
+              }
+            }
+
+            body {
+              font-family: 'Courier New', monospace;
+              font-size: 12px;
+              line-height: 1.4;
+              max-width: 80mm;
+              margin: 0 auto;
+              padding: 10px;
+              background: white;
+            }
+
+            .ticket-header {
+              text-align: center;
+              border-bottom: 2px dashed #333;
+              padding-bottom: 10px;
+              margin-bottom: 10px;
+            }
+
+            .logo {
+              max-width: 120px;
+              max-height: 80px;
+              margin: 0 auto 10px;
+            }
+
+            .restaurant-name {
+              font-size: 16px;
+              font-weight: bold;
+              text-transform: uppercase;
+              margin-bottom: 5px;
+            }
+
+            .info-line {
+              font-size: 10px;
+              margin: 2px 0;
+            }
+
+            .section {
+              margin: 10px 0;
+              padding: 5px 0;
+            }
+
+            .section-title {
+              font-weight: bold;
+              text-transform: uppercase;
+              border-bottom: 1px solid #333;
+              margin-bottom: 5px;
+            }
+
+            .order-info {
+              margin: 10px 0;
+            }
+
+            .order-info-line {
+              display: flex;
+              justify-content: space-between;
+              margin: 3px 0;
+              font-size: 11px;
+            }
+
+            .items-table {
+              width: 100%;
+              margin: 10px 0;
+            }
+
+            .item-row {
+              display: flex;
+              justify-content: space-between;
+              margin: 5px 0;
+              font-size: 11px;
+            }
+
+            .item-name {
+              flex: 1;
+              padding-right: 10px;
+            }
+
+            .item-qty {
+              width: 30px;
+              text-align: center;
+            }
+
+            .item-price {
+              width: 70px;
+              text-align: right;
+            }
+
+            .item-total {
+              width: 80px;
+              text-align: right;
+              font-weight: bold;
+            }
+
+            .totals {
+              border-top: 1px solid #333;
+              margin-top: 10px;
+              padding-top: 5px;
+            }
+
+            .total-row {
+              display: flex;
+              justify-content: space-between;
+              margin: 3px 0;
+              font-size: 11px;
+            }
+
+            .total-row.final {
+              font-size: 14px;
+              font-weight: bold;
+              border-top: 2px solid #333;
+              padding-top: 5px;
+              margin-top: 5px;
+            }
+
+            .footer {
+              text-align: center;
+              border-top: 2px dashed #333;
+              padding-top: 10px;
+              margin-top: 10px;
+              font-size: 10px;
+            }
+
+            .dian-info {
+              font-size: 9px;
+              text-align: center;
+              margin: 5px 0;
+            }
+
+            .message {
+              font-size: 11px;
+              font-style: italic;
+              margin: 10px 0;
+              text-align: center;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="ticket-header">
+            ${billing?.mostrarLogoEnTicket && billing?.logoTicket ? `
+              <img src="${billing.logoTicket}" alt="Logo" class="logo">
+            ` : ''}
+
+            <div class="restaurant-name">${billing?.nombreComercial || restaurant.name}</div>
+            ${billing?.razonSocial ? `<div class="info-line">${billing.razonSocial}</div>` : ''}
+            ${billing?.nit ? `<div class="info-line">NIT: ${billing.nit}</div>` : ''}
+            ${billing?.direccion ? `<div class="info-line">${billing.direccion}</div>` : ''}
+            ${billing?.ciudad ? `<div class="info-line">${billing.ciudad}</div>` : ''}
+            ${billing?.telefono ? `<div class="info-line">Tel: ${billing.telefono}</div>` : ''}
+            ${billing?.correo ? `<div class="info-line">${billing.correo}</div>` : ''}
+
+            ${billing?.tieneResolucionDIAN && billing?.numeroResolucionDIAN ? `
+              <div class="dian-info">
+                Resolución DIAN N° ${billing.numeroResolucionDIAN}<br>
+                Fecha: ${billing.fechaResolucion ? new Date(billing.fechaResolucion).toLocaleDateString('es-CO') : ''}<br>
+                Rango: ${billing.rangoNumeracionDesde || ''} - ${billing.rangoNumeracionHasta || ''}
+              </div>
+            ` : ''}
+
+            ${billing?.regimenTributario ? `
+              <div class="info-line">
+                ${billing.regimenTributario === 'simple' ? 'Régimen Simple' :
+                  billing.regimenTributario === 'comun' ? 'Régimen Común' :
+                  'No responsable de IVA'}
+              </div>
+            ` : ''}
+          </div>
+
+          <div class="order-info">
+            <div class="order-info-line">
+              <span><strong>Pedido:</strong></span>
+              <span>${order.order_number}</span>
+            </div>
+            <div class="order-info-line">
+              <span><strong>Fecha:</strong></span>
+              <span>${new Date(order.created_at).toLocaleString('es-CO')}</span>
+            </div>
+            <div class="order-info-line">
+              <span><strong>Tipo:</strong></span>
+              <span>${
+                order.order_type === 'delivery' ? 'Domicilio' :
+                order.order_type === 'pickup' ? 'Para llevar' :
+                `Mesa ${order.table_number || ''}`
+              }</span>
+            </div>
+            <div class="order-info-line">
+              <span><strong>Cliente:</strong></span>
+              <span>${order.customer.name}</span>
+            </div>
+            <div class="order-info-line">
+              <span><strong>Teléfono:</strong></span>
+              <span>${order.customer.phone}</span>
+            </div>
+            ${order.delivery_address ? `
+              <div class="order-info-line">
+                <span><strong>Dirección:</strong></span>
+                <span>${order.delivery_address}</span>
+              </div>
+            ` : ''}
+          </div>
+
+          <div class="section">
+            <div class="section-title">Productos</div>
+            <div class="items-table">
+              ${order.items.map(item => `
+                <div class="item-row">
+                  <div class="item-name">
+                    ${item.product.name}<br>
+                    <small style="font-size: 9px; color: #666;">${item.variation.name}</small>
+                    ${item.special_notes ? `<br><small style="font-size: 9px; color: #666;">Nota: ${item.special_notes}</small>` : ''}
+                  </div>
+                  <div class="item-qty">${item.quantity}</div>
+                  <div class="item-price">$${item.unit_price.toFixed(2)}</div>
+                  <div class="item-total">$${item.total_price.toFixed(2)}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          ${order.special_instructions ? `
+            <div class="section">
+              <div class="section-title">Instrucciones Especiales</div>
+              <div style="font-size: 10px; margin-top: 5px;">${order.special_instructions}</div>
+            </div>
+          ` : ''}
+
+          <div class="totals">
+            <div class="total-row">
+              <span>Subtotal:</span>
+              <span>$${subtotal.toFixed(2)}</span>
+            </div>
+
+            ${order.delivery_cost && order.delivery_cost > 0 ? `
+              <div class="total-row">
+                <span>Domicilio:</span>
+                <span>$${order.delivery_cost.toFixed(2)}</span>
+              </div>
+            ` : ''}
+
+            ${billing?.responsableIVA ? `
+              <div class="total-row">
+                <span>IVA (19%):</span>
+                <span>$${iva.toFixed(2)}</span>
+              </div>
+            ` : ''}
+
+            ${billing?.aplicaPropina ? `
+              <div class="total-row">
+                <span>Propina sugerida (10%):</span>
+                <span>$${propina.toFixed(2)}</span>
+              </div>
+            ` : ''}
+
+            <div class="total-row final">
+              <span>TOTAL:</span>
+              <span>$${total.toFixed(2)}</span>
+            </div>
+
+            ${billing?.aplicaPropina ? `
+              <div class="total-row" style="font-size: 10px; color: #666; margin-top: 3px;">
+                <span>Total con propina:</span>
+                <span>$${(total + propina).toFixed(2)}</span>
+              </div>
+            ` : ''}
+          </div>
+
+          ${billing?.mensajeFinalTicket ? `
+            <div class="message">
+              ${billing.mensajeFinalTicket}
+            </div>
+          ` : ''}
+
+          <div class="footer">
+            <div>¡Gracias por su compra!</div>
+            <div style="margin-top: 5px;">${new Date().toLocaleString('es-CO')}</div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(ticketHTML);
+    printWindow.document.close();
+
+    printWindow.onload = () => {
+      setTimeout(() => {
+        printWindow.print();
+      }, 250);
+    };
   };
 
   const handleEditOrder = (order: Order) => {
@@ -982,12 +1299,21 @@ export const OrdersManagement: React.FC = () => {
                           <Button
                             variant="ghost"
                             size="sm"
+                            icon={Printer}
+                            onClick={() => printTicket(order)}
+                            className="text-purple-600 hover:text-purple-700"
+                            title="Imprimir ticket"
+                          />
+
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             icon={MessageSquare}
                             onClick={() => sendWhatsAppMessage(order)}
                             className="text-green-600 hover:text-green-700"
                             title="Enviar por WhatsApp"
                           />
-                          
+
                           {getNextStatus(order.status) && (
                             <Button
                               variant="ghost"
