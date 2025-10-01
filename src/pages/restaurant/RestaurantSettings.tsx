@@ -39,7 +39,53 @@ export const RestaurantSettings: React.FC = () => {
 
   useEffect(() => {
     if (restaurant) {
-      setFormData({ ...restaurant });
+      const defaultTheme = {
+        primary_color: '#dc2626',
+        secondary_color: '#f3f4f6',
+        accent_color: '#16a34a',
+        text_color: '#1f2937',
+        primary_font: 'Inter',
+        secondary_font: 'Poppins',
+        font_sizes: {
+          title: '2rem',
+          subtitle: '1.5rem',
+          normal: '1rem',
+          small: '0.875rem',
+        },
+        font_weights: {
+          light: 300,
+          regular: 400,
+          medium: 500,
+          bold: 700,
+        },
+        button_style: 'rounded' as const,
+      };
+
+      setFormData({
+        ...restaurant,
+        settings: {
+          ...restaurant.settings,
+          theme: {
+            ...defaultTheme,
+            ...restaurant.settings.theme,
+            font_sizes: {
+              ...defaultTheme.font_sizes,
+              ...(restaurant.settings.theme.font_sizes || {}),
+            },
+            font_weights: {
+              ...defaultTheme.font_weights,
+              ...(restaurant.settings.theme.font_weights || {}),
+            },
+          },
+          promo: restaurant.settings.promo || {
+            enabled: false,
+            banner_image: '',
+            promo_text: '',
+            cta_text: 'Ver Ofertas',
+            cta_link: '',
+          },
+        },
+      });
     }
   }, [restaurant]);
 
