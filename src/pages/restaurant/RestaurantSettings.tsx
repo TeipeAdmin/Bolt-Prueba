@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Save, Globe, Clock, Truck, QrCode, Palette, Bell, MapPin, HelpCircle, Send, Eye, Calendar, Mail, Phone, Building, Store, Megaphone, Upload, Image as ImageIcon, FileText, DollarSign } from 'lucide-react';
-import { colombianCities, validateNIT, formatNIT } from '../../utils/colombianCities';
+import { colombianDepartments, colombianCitiesByDepartment, validateNIT, formatNIT } from '../../utils/colombianCities';
 import { Restaurant } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -90,6 +90,7 @@ export const RestaurantSettings: React.FC = () => {
             razonSocial: '',
             nit: '',
             direccion: restaurant.address || '',
+            departamento: 'Cundinamarca',
             ciudad: 'Bogotá D.C.',
             telefono: restaurant.phone || '',
             correo: restaurant.email || '',
@@ -1528,20 +1529,51 @@ Fecha: ${new Date().toLocaleString()}
 
                     <div className="space-y-2">
                       <label className="block text-sm font-medium text-gray-700">
+                        Departamento *
+                      </label>
+                      <select
+                        value={formData.settings.billing?.departamento || 'Cundinamarca'}
+                        onChange={(e) => {
+                          const newDept = e.target.value;
+                          updateFormData('settings.billing.departamento', newDept);
+                          const cities = colombianCitiesByDepartment[newDept];
+                          if (cities && cities.length > 0) {
+                            updateFormData('settings.billing.ciudad', cities[0]);
+                          }
+                        }}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        required
+                      >
+                        {colombianDepartments.map((dept) => (
+                          <option key={dept} value={dept}>
+                            {dept}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">
                         Ciudad *
                       </label>
                       <select
-                        value={formData.settings.billing?.ciudad || 'Bogotá D.C.'}
+                        value={formData.settings.billing?.ciudad || ''}
                         onChange={(e) => updateFormData('settings.billing.ciudad', e.target.value)}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                         required
                       >
-                        {colombianCities.map((city) => (
-                          <option key={city} value={city}>
-                            {city}
-                          </option>
-                        ))}
+                        {formData.settings.billing?.departamento &&
+                          colombianCitiesByDepartment[formData.settings.billing.departamento]?.map((city) => (
+                            <option key={city} value={city}>
+                              {city}
+                            </option>
+                          ))}
                       </select>
+                      <p className="text-xs text-gray-500">
+                        Selecciona primero el departamento
+                      </p>
                     </div>
                   </div>
 

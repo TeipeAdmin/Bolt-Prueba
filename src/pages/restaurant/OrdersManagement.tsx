@@ -680,7 +680,7 @@ export const OrdersManagement: React.FC = () => {
             ${billing?.razonSocial ? `<div class="info-line">${billing.razonSocial}</div>` : ''}
             ${billing?.nit ? `<div class="info-line">NIT: ${billing.nit}</div>` : ''}
             ${billing?.direccion ? `<div class="info-line">${billing.direccion}</div>` : ''}
-            ${billing?.ciudad ? `<div class="info-line">${billing.ciudad}</div>` : ''}
+            ${billing?.ciudad && billing?.departamento ? `<div class="info-line">${billing.ciudad}, ${billing.departamento}</div>` : billing?.ciudad ? `<div class="info-line">${billing.ciudad}</div>` : ''}
             ${billing?.telefono ? `<div class="info-line">Tel: ${billing.telefono}</div>` : ''}
             ${billing?.correo ? `<div class="info-line">${billing.correo}</div>` : ''}
 

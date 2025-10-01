@@ -184,6 +184,7 @@ export interface BillingSettings {
   razonSocial?: string;
   nit: string;
   direccion: string;
+  departamento: string;
   ciudad: string;
   telefono: string;
   correo?: string;
