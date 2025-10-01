@@ -9,6 +9,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
 import { Modal } from '../../components/ui/Modal';
+import { ThemeSettings } from '../../components/restaurant/ThemeSettings';
 
 export const RestaurantSettings: React.FC = () => {
   const { restaurant, user } = useAuth();
@@ -873,77 +874,7 @@ Fecha: ${new Date().toLocaleString()}
           )}
 
           {activeTab === 'theme' && (
-            <div className="space-y-6">
-              <h3 className="text-lg font-medium text-gray-900">{t('themeSettings')}</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Color Primario
-                  </label>
-                  <input
-                    type="color"
-                    value={formData.settings.theme.primary_color}
-                    onChange={(e) => updateFormData('settings.theme.primary_color', e.target.value)}
-                    className="w-full h-10 border border-gray-300 rounded cursor-pointer"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Color Secundario
-                  </label>
-                  <input
-                    type="color"
-                    value={formData.settings.theme.secondary_color}
-                    onChange={(e) => updateFormData('settings.theme.secondary_color', e.target.value)}
-                    className="w-full h-10 border border-gray-300 rounded cursor-pointer"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Color Terciario
-                  </label>
-                  <input
-                    type="color"
-                    value={formData.settings.theme.tertiary_color}
-                    onChange={(e) => updateFormData('settings.theme.tertiary_color', e.target.value)}
-                    className="w-full h-10 border border-gray-300 rounded cursor-pointer"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Fuente
-                  </label>
-                  <select
-                    value={formData.settings.theme.font_family}
-                    onChange={(e) => updateFormData('settings.theme.font_family', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="Inter">Inter</option>
-                    <option value="Roboto">Roboto</option>
-                    <option value="Open Sans">Open Sans</option>
-                    <option value="Lato">Lato</option>
-                    <option value="Poppins">Poppins</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Estilo de Botones
-                  </label>
-                  <select
-                    value={formData.settings.theme.button_style}
-                    onChange={(e) => updateFormData('settings.theme.button_style', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="rounded">Redondeados</option>
-                    <option value="square">Cuadrados</option>
-                    <option value="pill">Píldora</option>
-                  </select>
-                </div>
-              </div>
-            </div>
+            <ThemeSettings formData={formData} updateFormData={updateFormData} />
           )}
 
           {activeTab === 'promo' && (

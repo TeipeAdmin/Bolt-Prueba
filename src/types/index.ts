@@ -107,18 +107,31 @@ export interface CartItem {
 }
 
 export interface UISettings {
-  layout_type: 'cards' | 'grid' | 'list';
+  layout_type: 'list' | 'grid' | 'editorial';
   show_search_bar: boolean;
   info_message: string;
 }
 
 export interface Theme {
-  template: 'modern' | 'elegant' | 'warm' | 'dark' | 'minimal';
   primary_color: string;
   secondary_color: string;
-  tertiary_color: string;
-  font_family: string;
-  button_style: 'rounded' | 'square' | 'pill';
+  accent_color: string;
+  text_color: string;
+  primary_font: string;
+  secondary_font: string;
+  font_sizes: {
+    title: string;
+    subtitle: string;
+    normal: string;
+    small: string;
+  };
+  font_weights: {
+    light: number;
+    regular: number;
+    medium: number;
+    bold: number;
+  };
+  button_style: 'rounded' | 'square';
 }
 
 export interface SocialMedia {
