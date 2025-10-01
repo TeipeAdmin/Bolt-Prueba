@@ -47,10 +47,10 @@ export const RestaurantSettings: React.FC = () => {
         primary_font: 'Inter',
         secondary_font: 'Poppins',
         font_sizes: {
-          title: '2rem',
-          subtitle: '1.5rem',
-          normal: '1rem',
-          small: '0.875rem',
+          title: '32px',
+          subtitle: '24px',
+          normal: '16px',
+          small: '14px',
         },
         font_weights: {
           light: 300,
@@ -1074,47 +1074,67 @@ Fecha: ${new Date().toLocaleString()}
                 </div>
 
                 <div className="mb-6">
-                  <h5 className="text-sm font-medium text-gray-900 mb-3">Tamaños de Fuente</h5>
+                  <h5 className="text-sm font-medium text-gray-900 mb-3">Tamaños de Fuente (en píxeles)</h5>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="space-y-2">
                       <label className="block text-xs font-medium text-gray-600">Títulos</label>
-                      <input
-                        type="text"
-                        value={formData.settings.theme.font_sizes.title}
-                        onChange={(e) => updateFormData('settings.theme.font_sizes.title', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                        placeholder="2rem"
-                      />
+                      <div className="relative">
+                        <input
+                          type="number"
+                          value={parseInt(formData.settings.theme.font_sizes.title) || 32}
+                          onChange={(e) => updateFormData('settings.theme.font_sizes.title', `${e.target.value}px`)}
+                          className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-lg text-sm"
+                          placeholder="32"
+                          min="8"
+                          max="128"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">px</span>
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <label className="block text-xs font-medium text-gray-600">Subtítulos</label>
-                      <input
-                        type="text"
-                        value={formData.settings.theme.font_sizes.subtitle}
-                        onChange={(e) => updateFormData('settings.theme.font_sizes.subtitle', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                        placeholder="1.5rem"
-                      />
+                      <div className="relative">
+                        <input
+                          type="number"
+                          value={parseInt(formData.settings.theme.font_sizes.subtitle) || 24}
+                          onChange={(e) => updateFormData('settings.theme.font_sizes.subtitle', `${e.target.value}px`)}
+                          className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-lg text-sm"
+                          placeholder="24"
+                          min="8"
+                          max="96"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">px</span>
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <label className="block text-xs font-medium text-gray-600">Normal</label>
-                      <input
-                        type="text"
-                        value={formData.settings.theme.font_sizes.normal}
-                        onChange={(e) => updateFormData('settings.theme.font_sizes.normal', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                        placeholder="1rem"
-                      />
+                      <div className="relative">
+                        <input
+                          type="number"
+                          value={parseInt(formData.settings.theme.font_sizes.normal) || 16}
+                          onChange={(e) => updateFormData('settings.theme.font_sizes.normal', `${e.target.value}px`)}
+                          className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-lg text-sm"
+                          placeholder="16"
+                          min="8"
+                          max="64"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">px</span>
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <label className="block text-xs font-medium text-gray-600">Pequeño</label>
-                      <input
-                        type="text"
-                        value={formData.settings.theme.font_sizes.small}
-                        onChange={(e) => updateFormData('settings.theme.font_sizes.small', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                        placeholder="0.875rem"
-                      />
+                      <div className="relative">
+                        <input
+                          type="number"
+                          value={parseInt(formData.settings.theme.font_sizes.small) || 14}
+                          onChange={(e) => updateFormData('settings.theme.font_sizes.small', `${e.target.value}px`)}
+                          className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-lg text-sm"
+                          placeholder="14"
+                          min="8"
+                          max="32"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">px</span>
+                      </div>
                     </div>
                   </div>
                 </div>

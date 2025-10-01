@@ -120,10 +120,10 @@ export const mockRestaurants: Restaurant[] = [
         primary_font: 'Inter',
         secondary_font: 'Poppins',
         font_sizes: {
-          title: '2rem',
-          subtitle: '1.5rem',
-          normal: '1rem',
-          small: '0.875rem',
+          title: '32px',
+          subtitle: '24px',
+          normal: '16px',
+          small: '14px',
         },
         font_weights: {
           light: 300,
