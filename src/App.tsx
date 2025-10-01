@@ -56,30 +56,24 @@ const AppRoutes: React.FC = () => {
 
   return (
     <Routes>
-      <Route 
-        path="/login" 
-        element={isAuthenticated ? <Navigate to="/dashboard" /> : <AuthPage />} 
+      <Route
+        path="/login"
+        element={isAuthenticated ? <Navigate to="/dashboard" /> : <AuthPage />}
       />
-      <Route 
-        path="/dashboard" 
+      <Route
+        path="/dashboard"
         element={
           <PrivateRoute>
             <DashboardPage />
           </PrivateRoute>
-        } 
+        }
       />
-      <Route path="/menu/:slug" element={
-        <CartProvider>
-          <PublicMenu />
-        </CartProvider>
-      } />
       <Route path="/:slug" element={
         <CartProvider>
           <PublicMenu />
         </CartProvider>
       } />
       <Route path="/" element={<Navigate to="/login" />} />
-      <Route path="*" element={<Navigate to="/login" />} />
     </Routes>
   );
 };
