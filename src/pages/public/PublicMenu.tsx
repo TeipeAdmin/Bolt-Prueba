@@ -100,7 +100,7 @@ export const PublicMenu: React.FC = () => {
   const getTodayHours = () => {
     if (!restaurant) return null;
     const now = new Date();
-    const dayName = now.toLocaleDateString('en-US', { weekday: 'lowercase' }) as keyof typeof restaurant.settings.business_hours;
+    const dayName = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase() as keyof typeof restaurant.settings.business_hours;
     return restaurant.settings.business_hours[dayName];
   };
 
