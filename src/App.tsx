@@ -43,36 +43,50 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 const AppRoutes: React.FC = () => {
   const { isAuthenticated, loading } = useAuth();
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando aplicación...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <Routes>
       <Route
         path="/login"
-        element={isAuthenticated ? <Navigate to="/dashboard" /> : <AuthPage />}
+        element={
+          loading ? (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Cargando aplicación...</p>
+              </div>
+            </div>
+          ) : isAuthenticated ? (
+            <Navigate to="/dashboard" />
+          ) : (
+            <AuthPage />
+          )
+        }
       />
       <Route
         path="/dashboard"
         element={
-          <PrivateRoute>
-            <DashboardPage />
-          </PrivateRoute>
+          loading ? (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Cargando aplicación...</p>
+              </div>
+            </div>
+          ) : (
+            <PrivateRoute>
+              <DashboardPage />
+            </PrivateRoute>
+          )
         }
       />
-      <Route path="/:slug" element={
-        <CartProvider>
-          <PublicMenu />
-        </CartProvider>
-      } />
+      <Route
+        path="/:slug"
+        element={
+          <CartProvider>
+            <PublicMenu />
+          </CartProvider>
+        }
+      />
       <Route path="/" element={<Navigate to="/login" />} />
     </Routes>
   );
