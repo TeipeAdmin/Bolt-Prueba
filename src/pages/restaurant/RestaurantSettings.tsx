@@ -302,106 +302,192 @@ Fecha: ${new Date().toLocaleString()}
         {/* Tab Content */}
         <div className="p-6">
           {activeTab === 'general' && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">{t('restaurantInfo')}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Input
-                    label={`${t('restaurantName')}*`}
-                    value={formData.name}
-                    onChange={(e) => updateFormData('name', e.target.value)}
-                  />
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Logo
-                    </label>
-                    <div className="space-y-3">
-                      {formData.logo && (
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={formData.logo}
-                            alt="Logo preview"
-                            className="w-16 h-16 object-cover rounded-lg border border-gray-300"
-                          />
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => updateFormData('logo', '')}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            Eliminar
-                          </Button>
+            <div className="space-y-8">
+              {/* Logo Section */}
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+                <div className="flex items-start gap-6">
+                  <div className="flex-shrink-0">
+                    <div className="w-32 h-32 rounded-xl border-4 border-white shadow-lg bg-white overflow-hidden flex items-center justify-center">
+                      {formData.logo ? (
+                        <img
+                          src={formData.logo}
+                          alt="Logo"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="text-center p-4">
+                          <Store className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                          <p className="text-xs text-gray-400">Sin logo</p>
                         </div>
                       )}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                              updateFormData('logo', reader.result as string);
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }}
-                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
-                      />
-                      <p className="text-xs text-gray-500">
-                        Formatos: JPG, PNG, GIF. Tamaño recomendado: 200x200px
-                      </p>
                     </div>
                   </div>
-                  <Input
-                    label={t('email')}
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => updateFormData('email', e.target.value)}
-                  />
-                  <Input
-                    label={t('phone')}
-                    value={formData.phone || ''}
-                    onChange={(e) => updateFormData('phone', e.target.value)}
-                  />
-                </div>
-                <div className="mt-4">
-                  <Input
-                    label={t('address')}
-                    value={formData.address || ''}
-                    onChange={(e) => updateFormData('address', e.target.value)}
-                  />
-                </div>
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('description')}
-                  </label>
-                  <textarea
-                    value={formData.description || ''}
-                    onChange={(e) => updateFormData('description', e.target.value)}
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Describe tu restaurante..."
-                  />
+
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Logo del Restaurante</h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Sube el logo de tu restaurante para que aparezca en tu menú público y en el panel de administración.
+                    </p>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <label className="relative cursor-pointer">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                if (file.size > 5 * 1024 * 1024) {
+                                  showToast('error', 'Archivo muy grande', 'El tamaño máximo es 5MB', 3000);
+                                  return;
+                                }
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                  updateFormData('logo', reader.result as string);
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                            className="hidden"
+                            id="logo-upload"
+                          />
+                          <span className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all shadow-sm">
+                            <Building className="w-4 h-4 mr-2" />
+                            {formData.logo ? 'Cambiar Logo' : 'Seleccionar Logo'}
+                          </span>
+                        </label>
+
+                        {formData.logo && (
+                          <button
+                            onClick={() => updateFormData('logo', '')}
+                            className="inline-flex items-center px-4 py-2 bg-red-50 border border-red-200 rounded-lg text-sm font-medium text-red-700 hover:bg-red-100 transition-all"
+                          >
+                            Eliminar
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="flex items-start gap-2 text-xs text-gray-500 bg-white/50 p-3 rounded-lg">
+                        <span className="text-blue-500 mt-0.5">ℹ</span>
+                        <div>
+                          <p className="font-medium text-gray-700 mb-1">Recomendaciones:</p>
+                          <ul className="space-y-0.5">
+                            <li>• Formatos: JPG, PNG o GIF</li>
+                            <li>• Tamaño recomendado: 200x200px (mínimo)</li>
+                            <li>• Tamaño máximo del archivo: 5MB</li>
+                            <li>• Usa fondo transparente para mejor resultado</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Dominio</h3>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600 mb-2">Tu menú público está disponible en:</p>
-                  <p className="text-lg font-mono text-blue-600">
-                    {window.location.origin}/{formData.domain}
-                  </p>
-                  <a
-                    href={`${window.location.origin}/${formData.domain}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center text-blue-600 hover:text-blue-700 text-sm mt-2"
-                  >
-                    <Globe className="w-4 h-4 mr-1" />
-                    Ver Menú Público
-                  </a>
+              {/* Restaurant Info Section */}
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <div className="flex items-center gap-2 mb-6">
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Store className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900">{t('restaurantInfo')}</h3>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Input
+                      label={`${t('restaurantName')}*`}
+                      value={formData.name}
+                      onChange={(e) => updateFormData('name', e.target.value)}
+                    />
+                    <Input
+                      label={t('email')}
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => updateFormData('email', e.target.value)}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Input
+                      label={t('phone')}
+                      value={formData.phone || ''}
+                      onChange={(e) => updateFormData('phone', e.target.value)}
+                      placeholder="+1 (555) 123-4567"
+                    />
+                    <Input
+                      label={t('address')}
+                      value={formData.address || ''}
+                      onChange={(e) => updateFormData('address', e.target.value)}
+                      placeholder="123 Main Street, Ciudad"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {t('description')}
+                    </label>
+                    <textarea
+                      value={formData.description || ''}
+                      onChange={(e) => updateFormData('description', e.target.value)}
+                      rows={4}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
+                      placeholder="Describe tu restaurante, tu especialidad, ambiente, horarios especiales, etc..."
+                    />
+                    <p className="text-xs text-gray-500 mt-2">
+                      Esta descripción aparecerá en tu menú público
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Public Menu Section */}
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-100 p-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Globe className="w-6 h-6 text-green-600" />
+                  </div>
+
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Menú Público</h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Comparte este enlace con tus clientes para que puedan ver tu menú y realizar pedidos
+                    </p>
+
+                    <div className="bg-white rounded-lg p-4 border border-green-200">
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-gray-500 mb-1">Tu URL personalizada:</p>
+                          <p className="text-sm font-mono text-gray-900 truncate">
+                            {window.location.origin}/{formData.domain}
+                          </p>
+                        </div>
+
+                        <div className="flex gap-2 flex-shrink-0">
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(`${window.location.origin}/${formData.domain}`);
+                              showToast('success', 'Copiado', 'URL copiada al portapapeles', 2000);
+                            }}
+                            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
+                          >
+                            Copiar
+                          </button>
+
+                          <a
+                            href={`${window.location.origin}/${formData.domain}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
+                          >
+                            <Eye className="w-4 h-4 mr-2" />
+                            Ver Menú
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
