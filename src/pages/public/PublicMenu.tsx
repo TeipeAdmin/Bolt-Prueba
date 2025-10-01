@@ -92,7 +92,7 @@ export const PublicMenu: React.FC = () => {
   const isRestaurantOpen = () => {
     if (!restaurant) return false;
     const now = new Date();
-    const dayName = now.toLocaleDateString('en-US', { weekday: 'lowercase' }) as keyof typeof restaurant.settings.business_hours;
+    const dayName = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase() as keyof typeof restaurant.settings.business_hours;
     const todayHours = restaurant.settings.business_hours[dayName];
     return todayHours?.is_open || false;
   };
