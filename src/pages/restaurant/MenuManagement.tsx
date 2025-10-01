@@ -9,6 +9,7 @@ import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Modal } from '../../components/ui/Modal';
 import { ProductForm } from '../../components/restaurant/ProductForm';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 
 export const MenuManagement: React.FC = () => {
   const { restaurant } = useAuth();
@@ -21,6 +22,11 @@ export const MenuManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; productId: string; productName: string }>({
+    show: false,
+    productId: '',
+    productName: ''
+  });
 
   const handleActivateProduct = (productId: string) => {
     const allProducts = loadFromStorage('products') || [];
@@ -164,19 +170,25 @@ export const MenuManagement: React.FC = () => {
   };
 
   const handleDeleteProduct = (productId: string) => {
-    if (confirm(`${t('confirmDelete')} this product? ${t('actionCannotBeUndone')}`)) {
-      const allProducts = loadFromStorage('products') || [];
-      const updatedProducts = allProducts.filter((p: Product) => p.id !== productId);
-      saveToStorage('products', updatedProducts);
-      loadMenuData();
-      
-      showToast(
-        'info',
-        t('productDeleted'),
-        'The product has been removed from your menu.',
-        4000
-      );
-    }
+    const allProducts = loadFromStorage('products') || [];
+    const updatedProducts = allProducts.filter((p: Product) => p.id !== productId);
+    saveToStorage('products', updatedProducts);
+    loadMenuData();
+
+    showToast(
+      'info',
+      t('productDeleted'),
+      'The product has been removed from your menu.',
+      4000
+    );
+  };
+
+  const openDeleteConfirm = (product: Product) => {
+    setDeleteConfirm({
+      show: true,
+      productId: product.id,
+      productName: product.name
+    });
   };
 
   const handleArchiveProduct = (productId: string) => {
@@ -457,7 +469,7 @@ export const MenuManagement: React.FC = () => {
                       variant="ghost"
                       size="sm"
                       icon={Trash2}
-                      onClick={() => handleDeleteProduct(product.id)}
+                      onClick={() => openDeleteConfirm(product)}
                       className="text-red-600 hover:text-red-700"
                       title="Eliminar producto"
                     />
@@ -492,6 +504,19 @@ export const MenuManagement: React.FC = () => {
           }}
         />
       </Modal>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteConfirm.show}
+        onClose={() => setDeleteConfirm({ show: false, productId: '', productName: '' })}
+        onConfirm={() => handleDeleteProduct(deleteConfirm.productId)}
+        title="¿Eliminar producto?"
+        message="Esta acción eliminará permanentemente el producto de tu menú. Los clientes ya no podrán verlo ni pedirlo."
+        confirmText="Eliminar producto"
+        cancelText="Cancelar"
+        variant="danger"
+        itemName={deleteConfirm.productName}
+      />
     </div>
   );
 };

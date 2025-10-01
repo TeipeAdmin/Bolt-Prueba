@@ -9,6 +9,7 @@ import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 
 export const CategoriesManagement: React.FC = () => {
   const { restaurant } = useAuth();
@@ -24,6 +25,11 @@ export const CategoriesManagement: React.FC = () => {
     description: '',
     icon: '',
     image: '',
+  });
+  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; categoryId: string; categoryName: string }>({
+    show: false,
+    categoryId: '',
+    categoryName: ''
   });
 
   useEffect(() => {
@@ -128,19 +134,25 @@ export const CategoriesManagement: React.FC = () => {
   };
 
   const handleDelete = (categoryId: string) => {
-    if (confirm(`${t('confirmDelete')} this category? ${t('actionCannotBeUndone')}`)) {
-      const allCategories = loadFromStorage('categories') || [];
-      const updatedCategories = allCategories.filter((cat: Category) => cat.id !== categoryId);
-      saveToStorage('categories', updatedCategories);
-      loadCategories();
-      
-      showToast(
-        'info',
-        t('categoryDeleted'),
-        'The category has been removed from your menu.',
-        4000
-      );
-    }
+    const allCategories = loadFromStorage('categories') || [];
+    const updatedCategories = allCategories.filter((cat: Category) => cat.id !== categoryId);
+    saveToStorage('categories', updatedCategories);
+    loadCategories();
+
+    showToast(
+      'info',
+      t('categoryDeleted'),
+      'The category has been removed from your menu.',
+      4000
+    );
+  };
+
+  const openDeleteConfirm = (category: Category) => {
+    setDeleteConfirm({
+      show: true,
+      categoryId: category.id,
+      categoryName: category.name
+    });
   };
 
   const toggleActive = (categoryId: string) => {
@@ -370,7 +382,7 @@ export const CategoriesManagement: React.FC = () => {
                     variant="ghost"
                     size="sm"
                     icon={Trash2}
-                    onClick={() => handleDelete(category.id)}
+                    onClick={() => openDeleteConfirm(category)}
                     className="flex-1 text-red-600 hover:text-red-700"
                   />
                 </div>
@@ -525,6 +537,19 @@ export const CategoriesManagement: React.FC = () => {
           </div>
         </div>
       </Modal>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteConfirm.show}
+        onClose={() => setDeleteConfirm({ show: false, categoryId: '', categoryName: '' })}
+        onConfirm={() => handleDelete(deleteConfirm.categoryId)}
+        title="¿Eliminar categoría?"
+        message="Esta acción eliminará permanentemente la categoría de tu menú. Todos los productos asociados a esta categoría quedarán sin categoría asignada."
+        confirmText="Eliminar categoría"
+        cancelText="Cancelar"
+        variant="danger"
+        itemName={deleteConfirm.categoryName}
+      />
     </div>
   );
 };
