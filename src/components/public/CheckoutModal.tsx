@@ -1,462 +1,569 @@
 import React, { useState } from 'react';
-import { X, MapPin, User, Phone, MessageSquare } from 'lucide-react';
-import { Restaurant, Order, Customer } from '../../types';
+import { X, MapPin, Store, Home, CheckCircle, Clock, Phone } from 'lucide-react';
+import { Restaurant } from '../../types';
 import { useCart } from '../../contexts/CartContext';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
-import { Button } from '../ui/Button';
-import { Input } from '../ui/Input';
-import { Modal } from '../ui/Modal';
 
 interface CheckoutModalProps {
   isOpen: boolean;
   onClose: () => void;
   restaurant: Restaurant;
-  tableNumber?: string | null;
 }
 
-export const CheckoutModal: React.FC<CheckoutModalProps> = ({
-  isOpen,
-  onClose,
-  restaurant,
-  tableNumber,
-}) => {
+type DeliveryMode = 'pickup' | 'dine-in' | 'delivery';
+
+export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, restaurant }) => {
   const { items, getTotal, clearCart } = useCart();
-  const [orderType, setOrderType] = useState<'pickup' | 'delivery' | 'table'>(
-    'pickup'
-  );
-  const [selectedTable, setSelectedTable] = useState<string>(tableNumber || '');
-  const [customer, setCustomer] = useState<Customer>({
+  const [step, setStep] = useState<'delivery' | 'info' | 'confirm' | 'success'>('delivery');
+  const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>('pickup');
+  const [customerInfo, setCustomerInfo] = useState({
     name: '',
-    phone: '',
+    phone: '+57',
     email: '',
     address: '',
-    delivery_instructions: '',
+    city: '',
+    notes: ''
   });
-  const [specialInstructions, setSpecialInstructions] = useState('');
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [submitting, setSubmitting] = useState(false);
-  const [orderConfirmed, setOrderConfirmed] = useState<Order | null>(null);
+  const [orderNumber, setOrderNumber] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const deliveryCost = orderType === 'delivery' && restaurant.settings?.delivery?.zones?.length > 0
-    ? restaurant.settings.delivery.delivery_cost || 0
-    : 0;
+  if (!isOpen) return null;
 
-  const total = getTotal() + deliveryCost;
+  const theme = restaurant.settings.theme;
+
+  const handleDeliverySelect = (mode: DeliveryMode) => {
+    setDeliveryMode(mode);
+    setStep('info');
+  };
 
   const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!customer.name.trim()) {
-      newErrors.name = 'El nombre es obligatorio';
+    if (!customerInfo.name || !customerInfo.phone) {
+      alert('Por favor completa tu nombre y teléfono');
+      return false;
     }
 
-    if (!customer.phone.trim()) {
-      newErrors.phone = 'El teléfono es obligatorio';
-    } else if (!/^[\d+\-\s()]+$/.test(customer.phone.trim())) {
-      newErrors.phone = 'El teléfono solo puede contener números y caracteres de formato';
+    if (deliveryMode === 'delivery' && (!customerInfo.address || !customerInfo.city)) {
+      alert('Por favor completa la dirección de entrega');
+      return false;
     }
 
-    if (orderType === 'delivery') {
-      if (!customer.address?.trim()) {
-        newErrors.address = 'La dirección es obligatoria para delivery';
-      }
-    }
-
-    if (orderType === 'table') {
-      if (!selectedTable.trim()) {
-        newErrors.table = 'Selecciona un número de mesa';
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return true;
   };
 
-  const generateOrderNumber = () => {
-    const orders = loadFromStorage('orders') || [];
-    const restaurantOrders = orders.filter((order: any) => order.restaurant_id === restaurant.id);
-    
-    // Find the highest order number for this restaurant (format: #RES-XXXX)
-    let maxNumber = 1000;
-    restaurantOrders.forEach((order: any) => {
-      // Extract number from format #RES-XXXX
-      const match = order.order_number.match(/#RES-(\d+)/);
-      if (match) {
-        const orderNum = parseInt(match[1]);
-        if (!isNaN(orderNum) && orderNum > maxNumber) {
-          maxNumber = orderNum;
-        }
-      }
-    });
-    
-    return `#RES-${maxNumber + 1}`;
-  };
-
-  const generateWhatsAppMessage = (order: Order) => {
-    const restaurantName = restaurant.name;
-    const orderNumber = order.order_number;
-    const orderDate = new Date(order.created_at).toLocaleString();
-    
-    let message = `*NUEVO PEDIDO - ${restaurantName}*\n`;
-    message += `*Fecha:* ${orderDate}\n`;
-    message += `*Pedido:* ${orderNumber}\n\n`;
-    
-    message += `*CLIENTE:*\n`;
-    message += `- *Nombre:* ${order.customer.name}\n`;
-    message += `- *Telefono:* ${order.customer.phone}\n`;
-    if (order.customer.email) {
-      message += `- *Email:* ${order.customer.email}\n`;
-    }
-    message += `\n`;
-    
-    message += `*TIPO DE ENTREGA:* ${order.order_type === 'delivery' ? 'Delivery' : 'Recoger en restaurante'}\n`;
-    if (order.order_type === 'delivery' && order.delivery_address) {
-      message += `*Direccion:* ${order.delivery_address}\n`;
-      if (order.customer.delivery_instructions) {
-        message += `*Referencias:* ${order.customer.delivery_instructions}\n`;
-      }
-    } else if (order.order_type === 'table' && order.table_number) {
-      message += `*Mesa:* ${order.table_number}\n`;
-    }
-    message += `\n`;
-    
-    message += `*PRODUCTOS:*\n`;
-    order.items.forEach((item, index) => {
-      const itemTotal = (item.variation.price * item.quantity).toFixed(2);
-      message += `${index + 1}. *${item.product.name}*\n`;
-      message += `   - *Tamano:* ${item.variation.name}\n`;
-      message += `   - *Cantidad:* ${item.quantity}\n`;
-      message += `   - *Precio:* $${itemTotal}\n`;
-      if (item.special_notes) {
-        message += `   - *Nota:* ${item.special_notes}\n`;
-      }
-      message += `\n`;
-    });
-    
-    message += `*RESUMEN DEL PEDIDO:*\n`;
-    message += `- *Subtotal:* $${order.subtotal.toFixed(2)}\n`;
-    if (order.delivery_cost && order.delivery_cost > 0) {
-      message += `- *Delivery:* $${order.delivery_cost.toFixed(2)}\n`;
-    }
-    message += `- *TOTAL:* $${order.total.toFixed(2)}\n\n`;
-    
-    message += `*Tiempo estimado:* ${restaurant.settings?.delivery?.estimated_time || '30-45 minutos'}\n\n`;
-    message += `*Gracias por tu pedido!*`;
-
-    return encodeURIComponent(message);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleContinue = () => {
     if (!validateForm()) return;
-    
-    setSubmitting(true);
+    setStep('confirm');
+  };
 
-    try {
-      // Create order
-      const newOrder: Order = {
-        id: `order-${Date.now()}`,
-        restaurant_id: restaurant.id,
-        order_number: generateOrderNumber(),
-        customer,
-        items,
-        order_type: orderType,
-        delivery_address: orderType === 'delivery' ? customer.address : undefined,
-        table_number: orderType === 'table' ? selectedTable : undefined,
-        delivery_cost: deliveryCost,
-        subtotal: getTotal(),
-        total,
-        status: 'pending',
-        estimated_time: restaurant.settings.delivery.estimated_time,
-        special_instructions: specialInstructions,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
+  const handleConfirmOrder = async () => {
+    setLoading(true);
 
-      // Save to storage
-      const orders = loadFromStorage('orders') || [];
-      saveToStorage('orders', [...orders, newOrder]);
+    await new Promise(resolve => setTimeout(resolve, 1500));
 
-      // Generate WhatsApp message
-      const whatsappMessage = generateWhatsAppMessage(newOrder);
-      const whatsappNumber = restaurant.settings?.notifications?.whatsapp;
-      
-      if (whatsappNumber) {
-        const whatsappUrl = `https://wa.me/${whatsappNumber.replace(/[^\d]/g, '')}?text=${whatsappMessage}`;
-        window.open(whatsappUrl, '_blank');
-      }
+    const newOrder = {
+      id: `ord-${Date.now()}`,
+      restaurant_id: restaurant.id,
+      customer_name: customerInfo.name,
+      customer_phone: customerInfo.phone,
+      customer_email: customerInfo.email,
+      delivery_mode: deliveryMode,
+      delivery_address: deliveryMode === 'delivery' ? `${customerInfo.address}, ${customerInfo.city}` : null,
+      items: items.map(item => ({
+        product_id: item.product.id,
+        product_name: item.product.name,
+        variation_id: item.variation.id,
+        variation_name: item.variation.name,
+        quantity: item.quantity,
+        price: item.variation.price,
+        special_notes: item.special_notes,
+        selected_ingredients: item.selected_ingredients
+      })),
+      notes: customerInfo.notes,
+      total: getTotal(),
+      status: 'pending',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
 
-      // Clear cart and show confirmation
-      clearCart();
-      setOrderConfirmed(newOrder);
-      
-    } catch (error) {
-      console.error('Error creating order:', error);
-      setErrors({ general: 'Error al procesar el pedido. Intenta de nuevo.' });
-    } finally {
-      setSubmitting(false);
-    }
+    const orders = loadFromStorage('orders', []);
+    orders.push(newOrder);
+    saveToStorage('orders', orders);
+
+    setOrderNumber(newOrder.id);
+    clearCart();
+    setLoading(false);
+    setStep('success');
   };
 
   const handleClose = () => {
-    setOrderConfirmed(null);
-    setCustomer({
+    setStep('delivery');
+    setDeliveryMode('pickup');
+    setCustomerInfo({
       name: '',
-      phone: '',
+      phone: '+57',
       email: '',
       address: '',
-      delivery_instructions: '',
+      city: '',
+      notes: ''
     });
-    setSelectedTable(tableNumber || '');
-    setSpecialInstructions('');
-    setErrors({});
+    setOrderNumber('');
     onClose();
   };
 
-  if (orderConfirmed) {
-    return (
-      <Modal isOpen={isOpen} onClose={handleClose} size="md" title="¡Pedido Confirmado!">
-        <div className="text-center py-6">
-          <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl">✓</span>
-          </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">
-            ¡Tu pedido ha sido enviado!
-          </h3>
-          <p className="text-gray-600 mb-4">
-            Número de pedido: <strong>{orderConfirmed.order_number}</strong>
-          </p>
-          <p className="text-sm text-gray-600 mb-6">
-            Hemos enviado tu pedido por WhatsApp al restaurante. 
-            Te contactarán pronto para confirmar.
-          </p>
-          <Button onClick={handleClose} className="w-full">
-            Continuar
-          </Button>
-        </div>
-      </Modal>
-    );
-  }
+  const getDeliveryModeLabel = () => {
+    switch (deliveryMode) {
+      case 'pickup':
+        return 'Retiro en Tienda';
+      case 'dine-in':
+        return 'Consumir en Restaurante';
+      case 'delivery':
+        return 'Entrega a Domicilio';
+    }
+  };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="lg" title="Finalizar Pedido">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Order Type */}
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">Tipo de Pedido</h3>
-          <div className={`grid gap-4 ${restaurant.settings?.table_orders?.enabled ? (restaurant.settings?.delivery?.enabled ? 'grid-cols-3' : 'grid-cols-2') : (restaurant.settings?.delivery?.enabled ? 'grid-cols-2' : 'grid-cols-1')}`}>
-            <button
-              type="button"
-              onClick={() => setOrderType('pickup')}
-              className={`p-4 border rounded-lg text-center transition-colors ${
-                orderType === 'pickup'
-                  ? 'border-blue-500 bg-blue-50 text-blue-700'
-                  : 'border-gray-300 hover:border-gray-400'
-              }`}
-            >
-              <User className="w-6 h-6 mx-auto mb-2" />
-              <div className="font-medium">Recoger</div>
-              <div className="text-sm text-gray-600">En el restaurante</div>
-            </button>
-            
-            {restaurant.settings?.table_orders?.enabled && (
-              <button
-                type="button"
-                onClick={() => setOrderType('table')}
-                className={`p-4 border rounded-lg text-center transition-colors ${
-                  orderType === 'table'
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                    : 'border-gray-300 hover:border-gray-400'
-                }`}
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={handleClose}>
+      <div
+        className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+        style={{ borderRadius: theme.button_style === 'rounded' ? '1rem' : '0.25rem' }}
+      >
+        <div className="p-6">
+          {step !== 'success' && (
+            <div className="flex justify-between items-start mb-6">
+              <h2
+                className="font-bold"
+                style={{
+                  fontSize: 'var(--font-size-title)',
+                  fontFamily: 'var(--secondary-font)',
+                  color: 'var(--text-color)'
+                }}
               >
-                <MessageSquare className="w-6 h-6 mx-auto mb-2" />
-                <div className="font-medium">Pedido en Mesa</div>
-                <div className="text-sm text-gray-600">Pedido en mesa</div>
-              </button>
-            )}
-            
-            {restaurant.settings?.delivery?.enabled && (
+                Finalizar Pedido
+              </h2>
               <button
-                type="button"
-                onClick={() => setOrderType('delivery')}
-                className={`p-4 border rounded-lg text-center transition-colors ${
-                  orderType === 'delivery'
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                    : 'border-gray-300 hover:border-gray-400'
-                } ${getTotal() < restaurant.settings.delivery.min_order_amount ? 'opacity-50 cursor-not-allowed' : ''}`}
-                disabled={getTotal() < restaurant.settings.delivery.min_order_amount}
+                onClick={handleClose}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
               >
-                <MapPin className="w-6 h-6 mx-auto mb-2" />
-                <div className="font-medium">Delivery</div>
-                <div className="text-sm text-gray-600">
-                  ${deliveryCost.toFixed(2)} • {restaurant.settings.delivery.estimated_time}
-                </div>
-                {getTotal() < restaurant.settings?.delivery?.min_order_amount && (
-                  <div className="text-xs text-red-600 mt-1">
-                    Mínimo: ${restaurant.settings?.delivery?.min_order_amount.toFixed(2)}
-                  </div>
-                )}
+                <X className="w-6 h-6" />
               </button>
-            )}
-          </div>
-        </div>
-
-        {/* Customer Information */}
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">Información de Contacto</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              label="Nombre Completo*"
-              value={customer.name}
-              onChange={(e) => setCustomer(prev => ({ ...prev, name: e.target.value }))}
-              error={errors.name}
-              placeholder="Tu nombre"
-            />
-            <Input
-              label="Teléfono*"
-              value={customer.phone}
-             onChange={(e) => {
-               const value = e.target.value.replace(/[^0-9+\-\s()]/g, ''); // Only allow numbers and phone formatting characters
-               setCustomer(prev => ({ ...prev, phone: value }));
-             }}
-              error={errors.phone}
-              placeholder="+1 (555) 123-4567"
-             helperText="Solo números y caracteres de formato (+, -, espacios, paréntesis)"
-            />
-          </div>
-          <Input
-            label="Email (opcional)"
-            type="email"
-            value={customer.email || ''}
-            onChange={(e) => setCustomer(prev => ({ ...prev, email: e.target.value }))}
-            placeholder="tu@email.com"
-            className="mt-4"
-          />
-        </div>
-
-        {/* Table Selection */}
-        {orderType === 'table' && (
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">Seleccionar Mesa</h3>
-            <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
-              {Array.from({ length: restaurant.settings?.table_orders?.table_numbers || 10 }, (_, i) => i + 1).map(tableNum => (
-                <button
-                  key={tableNum}
-                  type="button"
-                  onClick={() => setSelectedTable(tableNum.toString())}
-                  className={`p-3 border rounded-lg text-center transition-colors ${
-                    selectedTable === tableNum.toString()
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-300 hover:border-gray-400'
-                  }`}
-                >
-                  <div className="font-medium">Mesa {tableNum}</div>
-                </button>
-              ))}
             </div>
-            {errors.table && (
-              <p className="mt-2 text-sm text-red-600">{errors.table}</p>
-            )}
-          </div>
-        )}
+          )}
 
-        {/* Delivery Address */}
-        {orderType === 'delivery' && (
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">Dirección de Entrega</h3>
-            <Input
-              label="Dirección Completa*"
-              value={customer.address || ''}
-              onChange={(e) => setCustomer(prev => ({ ...prev, address: e.target.value }))}
-              error={errors.address}
-              placeholder="Calle, número, colonia, ciudad"
-              className="mb-4"
-            />
+          {/* STEP 1: DELIVERY MODE */}
+          {step === 'delivery' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Referencias y puntos de ubicación
-              </label>
-              <textarea
-                value={customer.delivery_instructions || ''}
-                onChange={(e) => setCustomer(prev => ({ ...prev, delivery_instructions: e.target.value }))}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Casa blanca con portón negro, frente al parque..."
-              />
+              <p className="text-gray-600 mb-6" style={{ fontSize: 'var(--font-size-normal)' }}>
+                Selecciona cómo deseas recibir tu pedido
+              </p>
+
+              <div className="space-y-4">
+                <button
+                  onClick={() => handleDeliverySelect('pickup')}
+                  className="w-full p-6 border-2 rounded-lg text-left hover:border-current transition-all"
+                  style={{
+                    borderColor: 'var(--secondary-color)',
+                    borderRadius: theme.button_style === 'rounded' ? '0.75rem' : '0.25rem'
+                  }}
+                >
+                  <div className="flex items-start gap-4">
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: 'var(--primary-color)' }}
+                    >
+                      <Store className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h3
+                        className="font-semibold mb-1"
+                        style={{ fontSize: 'var(--font-size-subtitle)' }}
+                      >
+                        Retiro en Tienda
+                      </h3>
+                      <p className="text-gray-600" style={{ fontSize: 'var(--font-size-small)' }}>
+                        Recoge tu pedido en {restaurant.name}
+                      </p>
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => handleDeliverySelect('dine-in')}
+                  className="w-full p-6 border-2 rounded-lg text-left hover:border-current transition-all"
+                  style={{
+                    borderColor: 'var(--secondary-color)',
+                    borderRadius: theme.button_style === 'rounded' ? '0.75rem' : '0.25rem'
+                  }}
+                >
+                  <div className="flex items-start gap-4">
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: 'var(--primary-color)' }}
+                    >
+                      <MapPin className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h3
+                        className="font-semibold mb-1"
+                        style={{ fontSize: 'var(--font-size-subtitle)' }}
+                      >
+                        Consumir en Restaurante
+                      </h3>
+                      <p className="text-gray-600" style={{ fontSize: 'var(--font-size-small)' }}>
+                        Disfruta tu pedido en nuestras instalaciones
+                      </p>
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => handleDeliverySelect('delivery')}
+                  className="w-full p-6 border-2 rounded-lg text-left hover:border-current transition-all"
+                  style={{
+                    borderColor: 'var(--secondary-color)',
+                    borderRadius: theme.button_style === 'rounded' ? '0.75rem' : '0.25rem'
+                  }}
+                >
+                  <div className="flex items-start gap-4">
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: 'var(--primary-color)' }}
+                    >
+                      <Home className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h3
+                        className="font-semibold mb-1"
+                        style={{ fontSize: 'var(--font-size-subtitle)' }}
+                      >
+                        Entrega a Domicilio
+                      </h3>
+                      <p className="text-gray-600" style={{ fontSize: 'var(--font-size-small)' }}>
+                        Te llevamos tu pedido a donde estés
+                      </p>
+                    </div>
+                  </div>
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Special Instructions */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Instrucciones Especiales
-          </label>
-          <textarea
-            value={specialInstructions}
-            onChange={(e) => setSpecialInstructions(e.target.value)}
-            rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Alguna indicación especial para tu pedido..."
-          />
-        </div>
-
-        {/* Order Summary */}
-        <div className="bg-gray-50 rounded-lg p-4">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">Resumen del Pedido</h3>
-          <div className="space-y-2">
-            {items.map((item, index) => (
-              <div key={index} className="flex justify-between text-sm">
-                <span>{item.product.name} ({item.variation.name}) x{item.quantity}</span>
-                <span>${(item.variation.price * item.quantity).toFixed(2)}</span>
-              </div>
-            ))}
-            <div className="border-t border-gray-300 pt-2 mt-2">
-              <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span>${getTotal().toFixed(2)}</span>
-              </div>
-              {deliveryCost > 0 && (
-                <div className="flex justify-between">
-                  <span>Delivery</span>
-                  <span>${deliveryCost.toFixed(2)}</span>
+          {/* STEP 2: CUSTOMER INFO */}
+          {step === 'info' && (
+            <div>
+              <div className="mb-4 p-4 bg-gray-50 rounded-lg flex items-center gap-3"
+                style={{ borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem' }}
+              >
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: 'var(--primary-color)' }}
+                >
+                  {deliveryMode === 'pickup' && <Store className="w-5 h-5 text-white" />}
+                  {deliveryMode === 'dine-in' && <MapPin className="w-5 h-5 text-white" />}
+                  {deliveryMode === 'delivery' && <Home className="w-5 h-5 text-white" />}
                 </div>
-              )}
-              <div className="flex justify-between font-bold text-lg border-t border-gray-300 pt-2 mt-2">
-                <span>Total</span>
-                <span>${total.toFixed(2)}</span>
+                <div>
+                  <p className="text-sm text-gray-600">Modalidad seleccionada</p>
+                  <p className="font-semibold" style={{ fontSize: 'var(--font-size-normal)' }}>
+                    {getDeliveryModeLabel()}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setStep('delivery')}
+                  className="ml-auto text-sm underline"
+                  style={{ color: 'var(--primary-color)' }}
+                >
+                  Cambiar
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block font-medium mb-2" style={{ fontSize: 'var(--font-size-normal)' }}>
+                    Nombre completo *
+                  </label>
+                  <input
+                    type="text"
+                    value={customerInfo.name}
+                    onChange={(e) => setCustomerInfo({ ...customerInfo, name: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
+                    style={{
+                      fontSize: 'var(--font-size-normal)',
+                      borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
+                    }}
+                    placeholder="Juan Pérez"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-medium mb-2" style={{ fontSize: 'var(--font-size-normal)' }}>
+                    Teléfono *
+                  </label>
+                  <input
+                    type="tel"
+                    value={customerInfo.phone}
+                    onChange={(e) => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
+                    style={{
+                      fontSize: 'var(--font-size-normal)',
+                      borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
+                    }}
+                    placeholder="+57 300 123 4567"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-medium mb-2" style={{ fontSize: 'var(--font-size-normal)' }}>
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={customerInfo.email}
+                    onChange={(e) => setCustomerInfo({ ...customerInfo, email: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
+                    style={{
+                      fontSize: 'var(--font-size-normal)',
+                      borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
+                    }}
+                    placeholder="correo@ejemplo.com"
+                  />
+                </div>
+
+                {deliveryMode === 'delivery' && (
+                  <>
+                    <div>
+                      <label className="block font-medium mb-2" style={{ fontSize: 'var(--font-size-normal)' }}>
+                        Dirección *
+                      </label>
+                      <input
+                        type="text"
+                        value={customerInfo.address}
+                        onChange={(e) => setCustomerInfo({ ...customerInfo, address: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
+                        style={{
+                          fontSize: 'var(--font-size-normal)',
+                          borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
+                        }}
+                        placeholder="Calle 123 #45-67"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-medium mb-2" style={{ fontSize: 'var(--font-size-normal)' }}>
+                        Ciudad *
+                      </label>
+                      <input
+                        type="text"
+                        value={customerInfo.city}
+                        onChange={(e) => setCustomerInfo({ ...customerInfo, city: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
+                        style={{
+                          fontSize: 'var(--font-size-normal)',
+                          borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
+                        }}
+                        placeholder="Bogotá"
+                        required
+                      />
+                    </div>
+                  </>
+                )}
+
+                <div>
+                  <label className="block font-medium mb-2" style={{ fontSize: 'var(--font-size-normal)' }}>
+                    Notas adicionales
+                  </label>
+                  <textarea
+                    value={customerInfo.notes}
+                    onChange={(e) => setCustomerInfo({ ...customerInfo, notes: e.target.value })}
+                    rows={3}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
+                    style={{
+                      fontSize: 'var(--font-size-normal)',
+                      borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
+                    }}
+                    placeholder="Indicaciones especiales, referencias, etc."
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => setStep('delivery')}
+                  className="flex-1 px-6 py-3 border-2 rounded-lg font-semibold transition-colors"
+                  style={{
+                    borderColor: 'var(--primary-color)',
+                    color: 'var(--primary-color)',
+                    borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
+                  }}
+                >
+                  Atrás
+                </button>
+                <button
+                  onClick={handleContinue}
+                  className="flex-1 px-6 py-3 text-white font-semibold rounded-lg transition-colors"
+                  style={{
+                    backgroundColor: 'var(--primary-color)',
+                    borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
+                  }}
+                >
+                  Continuar
+                </button>
               </div>
             </div>
-          </div>
-        </div>
+          )}
 
-        {errors.general && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-            {errors.general}
-          </div>
-        )}
+          {/* STEP 3: CONFIRM */}
+          {step === 'confirm' && (
+            <div>
+              <div className="mb-6">
+                <h3 className="font-semibold mb-4" style={{ fontSize: 'var(--font-size-subtitle)' }}>
+                  Resumen del Pedido
+                </h3>
 
-        {/* Submit Button */}
-        <div className="flex gap-3">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={onClose}
-            className="flex-1"
-          >
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            loading={submitting}
-            className="flex-1"
-            disabled={items.length === 0}
-          >
-            Confirmar Pedido
-          </Button>
+                <div className="space-y-3 mb-4">
+                  {items.map((item, index) => (
+                    <div key={index} className="flex justify-between p-3 bg-gray-50 rounded-lg"
+                      style={{ borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem' }}
+                    >
+                      <div className="flex-1">
+                        <p className="font-medium">{item.product.name}</p>
+                        <p className="text-sm text-gray-600">{item.variation.name} x {item.quantity}</p>
+                        {item.special_notes && (
+                          <p className="text-xs text-gray-500 italic mt-1">Nota: {item.special_notes}</p>
+                        )}
+                      </div>
+                      <p className="font-semibold" style={{ color: 'var(--accent-color)' }}>
+                        ${(item.variation.price * item.quantity).toFixed(2)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="border-t pt-4">
+                  <div className="flex justify-between mb-2">
+                    <span>Subtotal:</span>
+                    <span>${getTotal().toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-xl font-bold">
+                    <span>Total:</span>
+                    <span style={{ color: 'var(--accent-color)' }}>${getTotal().toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg"
+                style={{ borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem' }}
+              >
+                <h4 className="font-semibold mb-3" style={{ fontSize: 'var(--font-size-normal)' }}>
+                  Información de Entrega
+                </h4>
+                <div className="space-y-2 text-sm">
+                  <p><strong>Modalidad:</strong> {getDeliveryModeLabel()}</p>
+                  <p><strong>Nombre:</strong> {customerInfo.name}</p>
+                  <p><strong>Teléfono:</strong> {customerInfo.phone}</p>
+                  {customerInfo.email && <p><strong>Email:</strong> {customerInfo.email}</p>}
+                  {deliveryMode === 'delivery' && (
+                    <p><strong>Dirección:</strong> {customerInfo.address}, {customerInfo.city}</p>
+                  )}
+                  {customerInfo.notes && <p><strong>Notas:</strong> {customerInfo.notes}</p>}
+                </div>
+                <button
+                  onClick={() => setStep('info')}
+                  className="mt-3 text-sm underline"
+                  style={{ color: 'var(--primary-color)' }}
+                >
+                  Editar información
+                </button>
+              </div>
+
+              <button
+                onClick={handleConfirmOrder}
+                disabled={loading}
+                className="w-full px-6 py-4 text-white font-bold rounded-lg transition-all text-lg disabled:opacity-50"
+                style={{
+                  backgroundColor: 'var(--primary-color)',
+                  borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
+                }}
+              >
+                {loading ? 'Procesando...' : `Confirmar Pedido - $${getTotal().toFixed(2)}`}
+              </button>
+            </div>
+          )}
+
+          {/* STEP 4: SUCCESS */}
+          {step === 'success' && (
+            <div className="text-center py-8">
+              <div
+                className="w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center"
+                style={{ backgroundColor: 'var(--accent-color)' }}
+              >
+                <CheckCircle className="w-12 h-12 text-white" />
+              </div>
+
+              <h2
+                className="font-bold mb-2"
+                style={{
+                  fontSize: 'var(--font-size-title)',
+                  fontFamily: 'var(--secondary-font)'
+                }}
+              >
+                ¡Pedido Confirmado!
+              </h2>
+
+              <p className="text-gray-600 mb-4" style={{ fontSize: 'var(--font-size-normal)' }}>
+                Tu pedido ha sido recibido exitosamente
+              </p>
+
+              <div className="bg-gray-50 rounded-lg p-6 mb-6"
+                style={{ borderRadius: theme.button_style === 'rounded' ? '0.75rem' : '0.25rem' }}
+              >
+                <p className="text-sm text-gray-600 mb-2">Número de pedido</p>
+                <p className="text-2xl font-bold" style={{ color: 'var(--primary-color)' }}>
+                  #{orderNumber}
+                </p>
+              </div>
+
+              <div className="space-y-3 mb-6 text-left">
+                <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg"
+                  style={{ borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem' }}
+                >
+                  <Clock className="w-6 h-6" style={{ color: 'var(--primary-color)' }} />
+                  <div>
+                    <p className="font-medium">Estado: Recibido</p>
+                    <p className="text-sm text-gray-600">Tu pedido está siendo preparado</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg"
+                  style={{ borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem' }}
+                >
+                  <Phone className="w-6 h-6 text-gray-600" />
+                  <div>
+                    <p className="font-medium">Contacto</p>
+                    <p className="text-sm text-gray-600">
+                      Te contactaremos al {customerInfo.phone}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={handleClose}
+                className="w-full px-6 py-3 text-white font-semibold rounded-lg"
+                style={{
+                  backgroundColor: 'var(--primary-color)',
+                  borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
+                }}
+              >
+                Cerrar
+              </button>
+            </div>
+          )}
         </div>
-      </form>
-    </Modal>
+      </div>
+    </div>
   );
 };
