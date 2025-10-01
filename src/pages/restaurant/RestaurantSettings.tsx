@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Globe, Clock, Truck, QrCode, Palette, Bell, MapPin, HelpCircle, Send, Eye, Calendar, Mail, Phone, Building } from 'lucide-react';
+import { Save, Globe, Clock, Truck, QrCode, Palette, Bell, MapPin, HelpCircle, Send, Eye, Calendar, Mail, Phone, Building, Store } from 'lucide-react';
 import { Restaurant } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
