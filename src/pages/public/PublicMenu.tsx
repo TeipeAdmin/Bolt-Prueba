@@ -19,36 +19,63 @@ export const PublicMenu: React.FC = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showCart, setShowCart] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const loadMenuData = () => {
-    const restaurants = loadFromStorage('restaurants', []);
-    const restaurantData = restaurants.find((r: Restaurant) => r.slug === slug || r.id === slug);
+    try {
+      setLoading(true);
+      setError(null);
 
-    if (!restaurantData) {
-      console.log('Restaurant not found. Slug:', slug, 'Available restaurants:', restaurants.map(r => ({ id: r.id, slug: r.slug })));
-      return;
+      console.log('Loading menu data for slug:', slug);
+
+      const restaurants = loadFromStorage('restaurants', []);
+      console.log('All restaurants:', restaurants);
+
+      const restaurantData = restaurants.find((r: Restaurant) => r.slug === slug || r.id === slug);
+
+      if (!restaurantData) {
+        console.error('Restaurant not found. Slug:', slug, 'Available restaurants:', restaurants.map(r => ({ id: r.id, slug: r.slug })));
+        setError(`Restaurante no encontrado: ${slug}`);
+        setLoading(false);
+        return;
+      }
+
+      console.log('Restaurant found:', restaurantData);
+      setRestaurant(restaurantData);
+
+      const allCategories = loadFromStorage('categories', []);
+      const allProducts = loadFromStorage('products', []);
+
+      const restaurantCategories = allCategories.filter((cat: Category) =>
+        cat.restaurant_id === restaurantData.id && cat.active
+      );
+
+      const restaurantProducts = allProducts.filter((prod: Product) =>
+        prod.restaurant_id === restaurantData.id && prod.status === 'active'
+      );
+
+      console.log('Categories:', restaurantCategories);
+      console.log('Products:', restaurantProducts);
+
+      setCategories(restaurantCategories);
+      setProducts(restaurantProducts);
+      setLoading(false);
+    } catch (err) {
+      console.error('Error loading menu data:', err);
+      setError('Error al cargar el menú');
+      setLoading(false);
     }
-
-    setRestaurant(restaurantData);
-
-    const allCategories = loadFromStorage('categories', []);
-    const allProducts = loadFromStorage('products', []);
-
-    const restaurantCategories = allCategories.filter((cat: Category) =>
-      cat.restaurant_id === restaurantData.id && cat.active
-    );
-
-    const restaurantProducts = allProducts.filter((prod: Product) =>
-      prod.restaurant_id === restaurantData.id && prod.status === 'active'
-    );
-
-    setCategories(restaurantCategories);
-    setProducts(restaurantProducts);
   };
 
   useEffect(() => {
+    console.log('PublicMenu mounted with slug:', slug);
     if (slug) {
       loadMenuData();
+    } else {
+      console.log('No slug provided');
+      setError('No se proporcionó un identificador de restaurante');
+      setLoading(false);
     }
   }, [slug]);
 
@@ -79,12 +106,25 @@ export const PublicMenu: React.FC = () => {
 
   const cartItemsCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-  if (!restaurant) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-lg">Cargando menú...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !restaurant) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+        <div className="text-center max-w-md">
+          <div className="text-6xl mb-4">🍽️</div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Restaurante no encontrado</h2>
-          <p className="text-gray-600">El menú que buscas no está disponible.</p>
+          <p className="text-gray-600 mb-4">{error || 'El menú que buscas no está disponible.'}</p>
+          <p className="text-sm text-gray-500">Slug buscado: {slug}</p>
         </div>
       </div>
     );
