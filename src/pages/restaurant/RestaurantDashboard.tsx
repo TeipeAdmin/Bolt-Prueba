@@ -194,8 +194,16 @@ export const RestaurantDashboard: React.FC = () => {
             </Badge>
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-600">Domain</p>
-            <p className="text-sm text-gray-900">{restaurant?.domain}</p>
+            <p className="text-sm font-medium text-gray-600">URL del Menú</p>
+            <a
+              href={`/${restaurant?.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1"
+            >
+              {window.location.origin}/{restaurant?.slug}
+              <Eye className="w-4 h-4" />
+            </a>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-600">{t('delivery')}</p>
