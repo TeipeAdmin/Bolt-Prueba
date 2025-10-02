@@ -591,14 +591,19 @@ export const OrdersManagement: React.FC = () => {
               }
             }
 
+            html, body {
+              width: 80mm;
+              margin: 0;
+              padding: 0;
+              background: white;
+            }
+
             body {
               font-family: 'Courier New', monospace;
               font-size: 12px;
               line-height: 1.4;
-              max-width: 80mm;
-              margin: 0 auto;
               padding: 10px;
-              background: white;
+              box-sizing: border-box;
             }
 
             .ticket-header {
