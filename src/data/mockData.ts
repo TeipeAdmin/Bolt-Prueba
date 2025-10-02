@@ -249,70 +249,8 @@ export const mockProducts: Product[] = [
   },
 ];
 
-// Mock orders
-export const mockOrders: Order[] = [
-  {
-    id: 'order-1',
-    restaurant_id: 'rest-orlando',
-    order_number: 'ORL-241201-001',
-    customer: {
-      name: 'Juan Pérez',
-      phone: '+1555987654',
-      email: 'juan@email.com',
-      address: '123 Customer Street',
-    },
-    items: [
-      {
-        id: 'item-1',
-        product_id: 'prod-1', 
-        product: {
-          id: 'prod-1',
-          restaurant_id: 'rest-orlando',
-          category_id: 'cat-1',
-          name: 'Pollo a la Plancha',
-          description: 'Pechuga de pollo jugosa a la plancha con especias caseras, acompañada de vegetales frescos',
-          images: ['https://images.pexels.com/photos/106343/pexels-photo-106343.jpeg?auto=compress&cs=tinysrgb&w=500'],
-          variations: [
-            { id: 'var-1', name: 'Porción Regular', price: 15.99 },
-            { id: 'var-2', name: 'Porción Grande', price: 19.99 },
-          ],
-          ingredients: [
-            { id: 'ing-1', name: 'Pechuga de pollo', optional: false },
-            { id: 'ing-2', name: 'Vegetales', optional: false },
-            { id: 'ing-3', name: 'Especias caseras', optional: false },
-            { id: 'ing-4', name: 'Papas fritas extra', optional: true, extra_cost: 3.00 },
-          ],
-          dietary_restrictions: ['sin gluten'],
-          spice_level: 0,
-          preparation_time: '20-25 minutos',
-          status: 'active',
-          sku: 'POLLO-001',
-          is_available: true,
-          is_featured: true,
-          order_index: 1,
-          created_at: '2024-01-15T00:00:00Z',
-          updated_at: '2024-01-15T00:00:00Z',
-        },
-        variation: { id: 'var-1', name: 'Porción Regular', price: 15.99 },
-        quantity: 1,
-        unit_price: 15.99,
-        total_price: 15.99,
-        selected_ingredients: [
-          { id: 'ing-4', name: 'Papas fritas extra', optional: true, extra_cost: 3.00 },
-        ],
-        special_notes: 'Bien cocido por favor',
-      },
-    ],
-    order_type: 'delivery',
-    delivery_address: '123 Customer Street',
-    delivery_cost: 3.50,
-    subtotal: 15.99,
-    total: 19.49,
-    status: 'pending',
-    created_at: '2024-12-01T10:30:00Z',
-    updated_at: '2024-12-01T10:30:00Z',
-  },
-];
+// Mock orders - Empty array, no orders by default
+export const mockOrders: Order[] = [];
 
 // Utility functions for localStorage
 export const loadFromStorage = <T>(key: string, defaultValue?: T): T => {
@@ -365,4 +303,42 @@ export const initializeData = (): void => {
   } else {
     console.log('Data already initialized, skipping...');
   }
+};
+
+// Clean up function - removes last order and last customer data
+export const cleanupLastOrderAndCustomer = (): void => {
+  console.log('=== Starting cleanup of last order and customer ===');
+
+  // Get all orders
+  const allOrders = loadFromStorage('orders') || [];
+  console.log('Total orders before cleanup:', allOrders.length);
+
+  if (allOrders.length > 0) {
+    // Sort by created_at to find the last order
+    const sortedOrders = [...allOrders].sort((a: Order, b: Order) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+
+    const lastOrder = sortedOrders[0];
+    console.log('Last order found:', lastOrder.order_number, 'Customer:', lastOrder.customer.name);
+
+    // Remove the last order
+    const updatedOrders = allOrders.filter((order: Order) => order.id !== lastOrder.id);
+    saveToStorage('orders', updatedOrders);
+    console.log('Orders after removing last one:', updatedOrders.length);
+
+    // Get VIP customers and remove the last customer's VIP status if exists
+    const vipCustomers = loadFromStorage('vipCustomers') || [];
+    const updatedVipCustomers = vipCustomers.filter((vip: any) =>
+      vip.phone !== lastOrder.customer.phone
+    );
+    saveToStorage('vipCustomers', updatedVipCustomers);
+
+    console.log('Cleanup completed. Removed order:', lastOrder.order_number);
+    console.log('Customer removed:', lastOrder.customer.name, lastOrder.customer.phone);
+  } else {
+    console.log('No orders to clean up');
+  }
+
+  console.log('=== Cleanup finished ===');
 };
