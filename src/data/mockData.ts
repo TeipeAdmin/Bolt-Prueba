@@ -365,9 +365,24 @@ export const initializeData = (): void => {
 
     console.log('Data initialized:', {
       users: mockUsers,
-      restaurants: mockRestaurants
+      restaurants: mockRestaurants,
+      subscriptions: mockSubscriptions
     });
   } else {
     console.log('Data already initialized, skipping...');
   }
+};
+
+// Force reinitialize data (useful for development)
+export const resetData = (): void => {
+  console.log('Resetting all data...');
+  localStorage.clear();
+  saveToStorage('users', mockUsers);
+  saveToStorage('restaurants', mockRestaurants);
+  saveToStorage('subscriptions', mockSubscriptions);
+  saveToStorage('categories', mockCategories);
+  saveToStorage('products', mockProducts);
+  saveToStorage('orders', mockOrders);
+  localStorage.setItem('data_initialized', 'true');
+  console.log('Data reset complete');
 };

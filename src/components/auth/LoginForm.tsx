@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, LogIn } from 'lucide-react';
+import { Eye, EyeOff, LogIn, RefreshCw } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
+import { resetData } from '../../data/mockData';
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;
@@ -106,6 +107,20 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
             <p><strong>{t('superadmin')}:</strong> admin@sistema.com / admin123</p>
             <p><strong>{t('restaurant')}:</strong> orlando@gmail.com / orlando123</p>
           </div>
+        </div>
+
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={() => {
+              resetData();
+              window.location.reload();
+            }}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Resetear datos de prueba
+          </button>
         </div>
       </div>
     </div>
