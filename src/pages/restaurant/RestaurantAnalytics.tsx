@@ -148,7 +148,7 @@ export const RestaurantAnalytics: React.FC = () => {
     const rows = filteredOrders.map(order => [
       order.order_number,
       new Date(order.created_at).toLocaleDateString(),
-      order.customer?.name || 'N/A',
+      order.customer.name,
       order.order_type === 'pickup' ? 'Recoger' : 
       order.order_type === 'delivery' ? 'Delivery' : 'Mesa',
       order.status === 'pending' ? 'Pendiente' :
@@ -705,7 +705,7 @@ export const RestaurantAnalytics: React.FC = () => {
                     <div>
                       <p className="text-sm font-medium text-gray-900">{order.order_number}</p>
                       <p className="text-xs text-gray-500">
-                        {new Date(order.created_at).toLocaleDateString()} - {order.customer?.name || 'N/A'}
+                        {new Date(order.created_at).toLocaleDateString()} - {order.customer.name}
                       </p>
                     </div>
                     <div className="text-right">
