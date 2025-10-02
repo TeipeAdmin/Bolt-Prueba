@@ -45,51 +45,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const savedAuth = loadFromStorage('currentAuth', null);
     console.log('Loading saved auth:', savedAuth);
     if (savedAuth) {
+      // Get fresh restaurant data from storage
+      const restaurants = loadFromStorage('restaurants', []) as Restaurant[];
+      const freshRestaurant = restaurants.find((r: Restaurant) => r.id === savedAuth.restaurant?.id);
+
       setUser(savedAuth.user);
-      setRestaurant(savedAuth.restaurant);
+      setRestaurant(freshRestaurant || savedAuth.restaurant);
       setIsAuthenticated(true);
-      console.log('Auth restored from storage:', { user: savedAuth.user, restaurant: savedAuth.restaurant });
+      console.log('Auth restored from storage:', { user: savedAuth.user, restaurant: freshRestaurant || savedAuth.restaurant });
     } else {
       // Only initialize data if no auth is saved (first time)
       initializeData();
     }
-    checkSubscriptionStatus();
     setLoading(false);
   }, []);
 
-  const checkSubscriptionStatus = () => {
-    const subscriptions = loadFromStorage('subscriptions', []) as Subscription[];
-    const restaurants = loadFromStorage('restaurants', []) as Restaurant[];
-    const now = new Date();
-
-    console.log('Checking subscription status:', { subscriptions, restaurants });
-
-    // Check for expired subscriptions
-    const updatedSubscriptions = subscriptions.map((sub: Subscription) => {
-      if (sub.status === 'active' && new Date(sub.end_date) < now && sub.plan_type !== 'free') {
-        console.log('Expiring subscription:', sub);
-        return { ...sub, status: 'expired' as const };
-      }
-      return sub;
-    });
-
-    // Update restaurant status based on subscription
-    const updatedRestaurants = restaurants.map((restaurant: Restaurant) => {
-      const subscription = updatedSubscriptions.find((sub: Subscription) =>
-        sub.restaurant_id === restaurant.id && sub.status === 'active'
-      );
-
-      if (!subscription) {
-        console.log('Restaurant going inactive:', restaurant);
-        return { ...restaurant, is_active: false };
-      }
-
-      return restaurant;
-    });
-
-    saveToStorage('subscriptions', updatedSubscriptions);
-    saveToStorage('restaurants', updatedRestaurants);
-  };
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     const users = loadFromStorage('users', []) as User[];
