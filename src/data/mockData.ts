@@ -249,7 +249,7 @@ export const mockProducts: Product[] = [
   },
 ];
 
-// Mock orders - Empty array, no orders by default
+// Mock orders
 export const mockOrders: Order[] = [];
 
 // Utility functions for localStorage
@@ -303,42 +303,4 @@ export const initializeData = (): void => {
   } else {
     console.log('Data already initialized, skipping...');
   }
-};
-
-// Clean up function - removes last order and last customer data
-export const cleanupLastOrderAndCustomer = (): void => {
-  console.log('=== Starting cleanup of last order and customer ===');
-
-  // Get all orders
-  const allOrders = loadFromStorage('orders') || [];
-  console.log('Total orders before cleanup:', allOrders.length);
-
-  if (allOrders.length > 0) {
-    // Sort by created_at to find the last order
-    const sortedOrders = [...allOrders].sort((a: Order, b: Order) =>
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    );
-
-    const lastOrder = sortedOrders[0];
-    console.log('Last order found:', lastOrder.order_number, 'Customer:', lastOrder.customer.name);
-
-    // Remove the last order
-    const updatedOrders = allOrders.filter((order: Order) => order.id !== lastOrder.id);
-    saveToStorage('orders', updatedOrders);
-    console.log('Orders after removing last one:', updatedOrders.length);
-
-    // Get VIP customers and remove the last customer's VIP status if exists
-    const vipCustomers = loadFromStorage('vipCustomers') || [];
-    const updatedVipCustomers = vipCustomers.filter((vip: any) =>
-      vip.phone !== lastOrder.customer.phone
-    );
-    saveToStorage('vipCustomers', updatedVipCustomers);
-
-    console.log('Cleanup completed. Removed order:', lastOrder.order_number);
-    console.log('Customer removed:', lastOrder.customer.name, lastOrder.customer.phone);
-  } else {
-    console.log('No orders to clean up');
-  }
-
-  console.log('=== Cleanup finished ===');
 };
