@@ -75,15 +75,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     // Update restaurant status based on subscription
     const updatedRestaurants = restaurants.map((restaurant: Restaurant) => {
-      const subscription = updatedSubscriptions.find((sub: Subscription) => 
+      const subscription = updatedSubscriptions.find((sub: Subscription) =>
         sub.restaurant_id === restaurant.id && sub.status === 'active'
       );
-      
+
       if (!subscription) {
         console.log('Restaurant going inactive:', restaurant);
-        return { ...restaurant, status: 'inactive' as const };
+        return { ...restaurant, is_active: false };
       }
-      
+
       return restaurant;
     });
 

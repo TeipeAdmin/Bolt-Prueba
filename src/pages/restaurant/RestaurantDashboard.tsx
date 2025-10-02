@@ -189,8 +189,8 @@ export const RestaurantDashboard: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <p className="text-sm font-medium text-gray-600">{t('status')}</p>
-            <Badge variant={restaurant?.status === 'active' ? 'success' : 'warning'}>
-              {restaurant?.status === 'active' ? t('active') : t('pending')}
+            <Badge variant={restaurant?.is_active ? 'success' : 'warning'}>
+              {restaurant?.is_active ? t('active') : t('pending')}
             </Badge>
           </div>
           <div>
