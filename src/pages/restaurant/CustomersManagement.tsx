@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Phone, Mail, MapPin, Calendar, ShoppingBag, Filter, Search, Star, CreditCard as Edit, ArrowUpDown, Trash2, Info, Download, CheckSquare, Square, Users } from 'lucide-react';
+import { User, Phone, Mail, MapPin, Calendar, ShoppingBag, Filter, Search, Star, Edit, ArrowUpDown, Trash2, Info, Download, CheckSquare, Square, Users } from 'lucide-react';
 import { Order, Customer, Subscription } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -70,10 +70,8 @@ export const CustomersManagement: React.FC = () => {
     const customerMap = new Map<string, CustomerData>();
 
     restaurantOrders.forEach((order: Order) => {
-      if (!order.customer?.phone) return; // Skip orders without customer info
-
       const customerKey = order.customer.phone; // Use phone as unique identifier
-
+      
       if (customerMap.has(customerKey)) {
         const existing = customerMap.get(customerKey)!;
         existing.totalOrders += 1;
@@ -83,7 +81,7 @@ export const CustomersManagement: React.FC = () => {
           existing.orderTypes.push(order.order_type);
         }
         // Update customer info with most recent data (keep latest information)
-        existing.name = order.customer.name || existing.name;
+        existing.name = order.customer.name;
         existing.email = order.customer.email || existing.email;
         existing.address = order.customer.address || existing.address;
         existing.delivery_instructions = order.customer.delivery_instructions || existing.delivery_instructions;
