@@ -497,8 +497,8 @@ export const OrdersManagement: React.FC = () => {
       message += `- *Delivery:* $${order.delivery_cost.toFixed(2)}\n`;
     }
     message += `- *TOTAL:* $${order.total.toFixed(2)}\n\n`;
-    
-    message += `*Tiempo estimado:* ${restaurant?.settings?.delivery?.estimated_time || '30-45 minutos'}\n\n`;
+
+    message += `*Tiempo estimado:* ${restaurant?.settings?.estimated_preparation_time || '30-45 minutos'}\n\n`;
     message += `*Gracias por tu pedido!*`;
 
     return encodeURIComponent(message);
@@ -1013,7 +1013,7 @@ export const OrdersManagement: React.FC = () => {
       delivery_cost: deliveryCost,
       subtotal: subtotal,
       total: total,
-      estimated_time: restaurant.settings?.delivery?.estimated_time || '30-45 minutos',
+      estimated_time: restaurant.settings?.estimated_preparation_time || '30-45 minutos',
       special_instructions: orderForm.special_instructions,
       whatsapp_sent: false,
       created_at: new Date().toISOString(),

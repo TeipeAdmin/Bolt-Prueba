@@ -639,6 +639,35 @@ Fecha: ${new Date().toLocaleString()}
                   </div>
                 </div>
               </div>
+
+              <div className="flex items-center gap-3 mt-8">
+                <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
+                  <Clock className="w-6 h-6 text-amber-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Tiempo de Preparación Estimado</h3>
+                  <p className="text-sm text-gray-600">Configura el tiempo promedio de preparación de tus productos</p>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-100">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tiempo estimado por producto
+                    </label>
+                    <Input
+                      type="text"
+                      value={formData.settings.estimated_preparation_time || '30-45 minutos'}
+                      onChange={(e) => updateFormData('settings.estimated_preparation_time', e.target.value)}
+                      placeholder="30-45 minutos"
+                    />
+                    <p className="text-xs text-gray-500 mt-2">
+                      Este tiempo se mostrará en los pedidos y mensajes de WhatsApp
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
@@ -840,18 +869,6 @@ Fecha: ${new Date().toLocaleString()}
                               }}
                             />
                           </div>
-                          <div className="w-32">
-                            <Input
-                              label="Tiempo Estimado"
-                              value={tier.estimated_time || ''}
-                              onChange={(e) => {
-                                const newTiers = [...(formData.settings.delivery.pricing_tiers || [])];
-                                newTiers[index] = { ...tier, estimated_time: e.target.value };
-                                updateFormData('settings.delivery.pricing_tiers', newTiers);
-                              }}
-                              placeholder="30-45 min"
-                            />
-                          </div>
                           <Button
                             variant="outline"
                             onClick={() => {
@@ -874,8 +891,7 @@ Fecha: ${new Date().toLocaleString()}
                             name: '',
                             min_order_amount: 0,
                             max_order_amount: 0,
-                            cost: 0,
-                            estimated_time: ''
+                            cost: 0
                           }];
                           updateFormData('settings.delivery.pricing_tiers', newTiers);
                         }}
