@@ -62,25 +62,48 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
 
     const newOrder = {
       id: `ord-${Date.now()}`,
+      order_number: `ORD-${Date.now().toString().slice(-6)}`,
       restaurant_id: restaurant.id,
-      customer_name: customerInfo.name,
-      customer_phone: customerInfo.phone,
-      customer_email: customerInfo.email,
-      delivery_mode: deliveryMode,
-      delivery_address: deliveryMode === 'delivery' ? `${customerInfo.address}, ${customerInfo.city}` : null,
+      customer: {
+        name: customerInfo.name,
+        phone: customerInfo.phone,
+        email: customerInfo.email,
+        address: deliveryMode === 'delivery' ? `${customerInfo.address}, ${customerInfo.city}` : '',
+        delivery_instructions: customerInfo.notes
+      },
+      order_type: deliveryMode === 'pickup' ? 'pickup' as const :
+                  deliveryMode === 'dine-in' ? 'table' as const :
+                  'delivery' as const,
+      delivery_address: deliveryMode === 'delivery' ? `${customerInfo.address}, ${customerInfo.city}` : '',
+      table_number: deliveryMode === 'dine-in' ? '' : null,
       items: items.map(item => ({
-        product_id: item.product.id,
-        product_name: item.product.name,
-        variation_id: item.variation.id,
-        variation_name: item.variation.name,
+        id: `item-${Date.now()}-${Math.random()}`,
+        product: {
+          id: item.product.id,
+          name: item.product.name,
+          restaurant_id: restaurant.id,
+          category_id: '',
+          description: '',
+          image: '',
+          status: 'active' as const,
+          created_at: '',
+          updated_at: '',
+          variations: []
+        },
         quantity: item.quantity,
-        price: item.variation.price,
-        special_notes: item.special_notes,
-        selected_ingredients: item.selected_ingredients
+        unit_price: item.variation.price,
+        total_price: item.variation.price * item.quantity,
+        special_instructions: item.special_notes,
+        variation_id: item.variation.id,
+        variation_name: item.variation.name
       })),
-      notes: customerInfo.notes,
+      subtotal: getSubtotal(),
+      delivery_cost: deliveryMode === 'delivery' ? getDeliveryCost() : 0,
       total: getTotal(),
-      status: 'pending',
+      status: 'pending' as const,
+      estimated_time: restaurant.settings?.estimated_preparation_time || '30-45 minutos',
+      special_instructions: customerInfo.notes,
+      whatsapp_sent: false,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
