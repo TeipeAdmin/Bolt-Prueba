@@ -80,6 +80,7 @@ export interface Order {
   status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
   estimated_time?: string;
   special_instructions?: string;
+  whatsapp_sent?: boolean;
   created_at: string;
   updated_at: string;
 }

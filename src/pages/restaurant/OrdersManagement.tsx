@@ -504,8 +504,55 @@ export const OrdersManagement: React.FC = () => {
     return encodeURIComponent(message);
   };
 
+  const generateStatusUpdateMessage = (order: Order): string => {
+    const restaurantName = restaurant?.name || 'Tu Restaurante';
+    const orderNumber = order.order_number;
+
+    const statusMessages: { [key in Order['status']]: string } = {
+      'pending': 'está *PENDIENTE* de confirmación',
+      'confirmed': 'ha sido *CONFIRMADO* y será procesado pronto',
+      'preparing': 'está en *PREPARACIÓN*',
+      'ready': 'está *LISTO* para entrega/recoger',
+      'delivered': 'ha sido *ENTREGADO*',
+      'cancelled': 'ha sido *CANCELADO*'
+    };
+
+    let message = `*ACTUALIZACIÓN DE PEDIDO - ${restaurantName}*\n\n`;
+    message += `*Pedido #:* ${orderNumber}\n`;
+    message += `*Estado:* Tu pedido ${statusMessages[order.status]}\n\n`;
+
+    if (order.status === 'ready') {
+      if (order.order_type === 'pickup') {
+        message += `Tu pedido está listo para recoger. Te esperamos!\n\n`;
+      } else if (order.order_type === 'delivery') {
+        message += `Tu pedido está listo y será entregado pronto.\n\n`;
+      }
+    } else if (order.status === 'preparing') {
+      message += `Estamos preparando tu pedido con mucho cuidado.\n`;
+      message += `*Tiempo estimado:* ${order.estimated_time || '30-45 minutos'}\n\n`;
+    }
+
+    message += `*Gracias por tu preferencia!*`;
+
+    return encodeURIComponent(message);
+  };
+
   const sendWhatsAppMessage = (order: Order) => {
-    const whatsappMessage = generateWhatsAppMessage(order);
+    let whatsappMessage: string;
+
+    if (!order.whatsapp_sent) {
+      whatsappMessage = generateWhatsAppMessage(order);
+
+      const allOrders = loadFromStorage('orders') || [];
+      const updatedOrders = allOrders.map((o: Order) =>
+        o.id === order.id ? { ...o, whatsapp_sent: true } : o
+      );
+      saveToStorage('orders', updatedOrders);
+      loadOrders();
+    } else {
+      whatsappMessage = generateStatusUpdateMessage(order);
+    }
+
     const whatsappNumber = order.customer.phone.replace(/[^\d]/g, '');
 
     if (whatsappNumber) {
@@ -963,6 +1010,7 @@ export const OrdersManagement: React.FC = () => {
       total: total,
       estimated_time: restaurant.settings?.delivery?.estimated_time || '30-45 minutos',
       special_instructions: orderForm.special_instructions,
+      whatsapp_sent: false,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -1915,6 +1963,23 @@ export const OrdersManagement: React.FC = () => {
             onUpdateQuantity={updateItemQuantity}
             onShowToast={showToast}
           />
+
+          {/* Order Status */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Estado del Pedido</label>
+            <select
+              value={orderForm.status}
+              onChange={(e) => setOrderForm(prev => ({ ...prev, status: e.target.value as Order['status'] }))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="pending">Pendiente</option>
+              <option value="confirmed">Confirmado</option>
+              <option value="preparing">Preparando</option>
+              <option value="ready">Listo</option>
+              <option value="delivered">Entregado</option>
+              <option value="cancelled">Cancelado</option>
+            </select>
+          </div>
 
           {/* Special Instructions */}
           <div>
