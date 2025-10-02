@@ -1,5 +1,24 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { AuthContextType, User, Restaurant, RegisterData, Subscription } from '../types';
+import { User, Restaurant, Subscription } from '../types';
+
+export interface RegisterData {
+  email: string;
+  password: string;
+  restaurantName: string;
+  ownerName: string;
+  phone: string;
+  address: string;
+}
+
+export interface AuthContextType {
+  user: User | null;
+  restaurant: Restaurant | null;
+  isAuthenticated: boolean;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  register: (data: RegisterData) => Promise<{ success: boolean; error?: string }>;
+  logout: () => void;
+}
 import { loadFromStorage, saveToStorage, initializeData } from '../data/mockData';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -98,7 +117,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     let userRestaurant = null;
     if (foundUser.role === 'restaurant_owner') {
-      userRestaurant = restaurants.find((r: Restaurant) => r.user_id === foundUser.id);
+      userRestaurant = restaurants.find((r: Restaurant) => r.owner_id === foundUser.id);
       if (!userRestaurant) {
         console.log('Restaurant not found for user');
         return { success: false, error: 'Restaurante no encontrado' };
@@ -150,36 +169,51 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const newUser: User = {
       id: `user-${Date.now()}`,
       email: data.email,
+      password: data.password,
       role: 'restaurant_owner',
       created_at: new Date().toISOString(),
-      email_verified: false,
+      updated_at: new Date().toISOString(),
     };
 
     // Create new restaurant
     const newRestaurant: Restaurant = {
       id: `rest-${Date.now()}`,
-      user_id: newUser.id,
+      owner_id: newUser.id,
       name: data.restaurantName,
       slug: uniqueSlug,
       email: data.email,
       phone: data.phone,
       address: data.address,
       owner_name: data.ownerName,
+      is_active: false,
       settings: {
         currency: 'USD',
         language: 'es',
         timezone: 'America/Mexico_City',
         ui_settings: {
-          layout_type: 'cards',
+          layout_type: 'list',
           show_search_bar: true,
           info_message: 'Agrega los productos que desees al carrito, al finalizar tu pedido lo recibiremos por WhatsApp',
         },
         theme: {
-          template: 'modern',
-          primary_color: '#2563eb', 
-          secondary_color: '#ffffff',
-          tertiary_color: '#1f2937',
-          font_family: 'Inter',
+          primary_color: '#2563eb',
+          secondary_color: '#f3f4f6',
+          accent_color: '#16a34a',
+          text_color: '#1f2937',
+          primary_font: 'Inter',
+          secondary_font: 'Poppins',
+          font_sizes: {
+            title: '32px',
+            subtitle: '24px',
+            normal: '16px',
+            small: '14px',
+          },
+          font_weights: {
+            light: 300,
+            regular: 400,
+            medium: 500,
+            bold: 700,
+          },
           button_style: 'rounded',
         },
         social_media: {
@@ -203,14 +237,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           zones: [],
           min_order_amount: 0,
           estimated_time: '30-45 minutos',
+          delivery_cost: 0,
+        },
+        table_orders: {
+          enabled: false,
+          table_numbers: 10,
+          qr_codes: false,
+          auto_assign: false,
         },
         notifications: {
           email: data.email,
           sound_enabled: true,
         },
       },
-      status: 'pending',
-      domain: uniqueSlug,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
