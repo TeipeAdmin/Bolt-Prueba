@@ -201,7 +201,7 @@ export const RestaurantDashboard: React.FC = () => {
               rel="noopener noreferrer"
               className="text-sm text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1"
             >
-              {window.location.origin}/{restaurant?.slug}
+              /{restaurant?.slug}
               <Eye className="w-4 h-4" />
             </a>
           </div>
