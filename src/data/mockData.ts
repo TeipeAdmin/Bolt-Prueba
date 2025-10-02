@@ -346,24 +346,23 @@ export const saveToStorage = <T>(key: string, data: T): void => {
 
 // Initialize data in localStorage if not present
 export const initializeData = (): void => {
-  // Clear existing data to ensure fresh start
-  localStorage.removeItem('users');
-  localStorage.removeItem('restaurants');
-  localStorage.removeItem('subscriptions');
-  localStorage.removeItem('categories');
-  localStorage.removeItem('products');
-  localStorage.removeItem('orders');
-  
-  // Always initialize with fresh data
-  saveToStorage('users', mockUsers);
-  saveToStorage('restaurants', mockRestaurants);
-  saveToStorage('subscriptions', mockSubscriptions);
-  saveToStorage('categories', mockCategories);
-  saveToStorage('products', mockProducts);
-  saveToStorage('orders', mockOrders);
-  
-  console.log('Data initialized:', {
-    users: mockUsers,
-    restaurants: mockRestaurants
-  });
+  const hasInitialized = localStorage.getItem('data_initialized');
+
+  if (!hasInitialized) {
+    console.log('First time initialization - loading mock data');
+    saveToStorage('users', mockUsers);
+    saveToStorage('restaurants', mockRestaurants);
+    saveToStorage('subscriptions', mockSubscriptions);
+    saveToStorage('categories', mockCategories);
+    saveToStorage('products', mockProducts);
+    saveToStorage('orders', mockOrders);
+    localStorage.setItem('data_initialized', 'true');
+
+    console.log('Data initialized:', {
+      users: mockUsers,
+      restaurants: mockRestaurants
+    });
+  } else {
+    console.log('Data already initialized, skipping...');
+  }
 };
