@@ -243,8 +243,8 @@ export const OrdersManagement: React.FC = () => {
   const filteredOrders = orders.filter(order => {
     const matchesSearch = 
       order.order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customer.phone.includes(searchTerm);
+      order.customer?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.customer?.phone?.includes(searchTerm);
     
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
     const matchesType = typeFilter === 'all' || order.order_type === typeFilter;
@@ -377,8 +377,8 @@ export const OrdersManagement: React.FC = () => {
           </div>
           
           <div class="order-info">
-            <p><strong>Cliente:</strong> ${order.customer.name}</p>
-            <p><strong>Teléfono:</strong> ${order.customer.phone}</p>
+            <p><strong>Cliente:</strong> ${order.customer?.name || 'N/A'}</p>
+            <p><strong>Teléfono:</strong> ${order.customer?.phone || 'N/A'}</p>
             <p><strong>Tipo:</strong> ${order.order_type}</p>
             ${order.delivery_address ? `<p><strong>Dirección:</strong> ${order.delivery_address}</p>` : ''}
             ${order.table_number ? `<p><strong>Mesa:</strong> ${order.table_number}</p>` : ''}
@@ -460,8 +460,8 @@ export const OrdersManagement: React.FC = () => {
     message += `*Pedido #:* ${orderNumber}\n\n`;
     
     message += `*CLIENTE:*\n`;
-    message += `- *Nombre:* ${order.customer.name}\n`;
-    message += `- *Telefono:* ${order.customer.phone}\n`;
+    message += `- *Nombre:* ${order.customer?.name || 'N/A'}\n`;
+    message += `- *Telefono:* ${order.customer?.phone || 'N/A'}\n`;
     if (order.customer.email) {
       message += `- *Email:* ${order.customer.email}\n`;
     }
@@ -553,7 +553,7 @@ export const OrdersManagement: React.FC = () => {
       whatsappMessage = generateStatusUpdateMessage(order);
     }
 
-    const whatsappNumber = order.customer.phone.replace(/[^\d]/g, '');
+    const whatsappNumber = (order.customer?.phone || '').replace(/[^\d]/g, '');
 
     if (whatsappNumber) {
       const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`;
@@ -780,11 +780,11 @@ export const OrdersManagement: React.FC = () => {
             </div>
             <div class="order-info-line">
               <span><strong>Cliente:</strong></span>
-              <span>${order.customer.name}</span>
+              <span>${order.customer?.name || 'N/A'}</span>
             </div>
             <div class="order-info-line">
               <span><strong>Teléfono:</strong></span>
-              <span>${order.customer.phone}</span>
+              <span>${order.customer?.phone || 'N/A'}</span>
             </div>
             ${order.delivery_address ? `
               <div class="order-info-line">
@@ -985,7 +985,7 @@ export const OrdersManagement: React.FC = () => {
   const handleCreateOrder = () => {
     if (!restaurant) return;
 
-    if (!orderForm.customer.name.trim() || !orderForm.customer.phone.trim()) {
+    if (!orderForm.customer?.name?.trim() || !orderForm.customer?.phone?.trim()) {
       showToast('error', 'Error', 'Por favor completa el nombre y teléfono del cliente', 4000);
       return;
     }
@@ -1356,11 +1356,11 @@ export const OrdersManagement: React.FC = () => {
                           <User className="w-8 h-8 text-gray-400 mr-3" />
                           <div>
                             <div className="text-sm font-medium text-gray-900">
-                              {order.customer.name}
+                              {order.customer?.name || 'N/A'}
                             </div>
                             <div className="text-sm text-gray-500 flex items-center">
                               <Phone className="w-3 h-3 mr-1" />
-                              {order.customer.phone}
+                              {order.customer?.phone || 'N/A'}
                             </div>
                           </div>
                         </div>
@@ -1548,13 +1548,13 @@ export const OrdersManagement: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-600">Nombre</p>
-                  <p className="font-medium">{selectedOrder.customer.name}</p>
+                  <p className="font-medium">{selectedOrder.customer?.name || 'N/A'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Teléfono</p>
-                  <p className="font-medium">{selectedOrder.customer.phone}</p>
+                  <p className="font-medium">{selectedOrder.customer?.phone || 'N/A'}</p>
                 </div>
-                {selectedOrder.customer.email && (
+                {selectedOrder.customer?.email && (
                   <div>
                     <p className="text-sm text-gray-600">Email</p>
                     <p className="font-medium">{selectedOrder.customer.email}</p>
