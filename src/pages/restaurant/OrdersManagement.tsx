@@ -9,6 +9,7 @@ import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
+import { OrderProductSelector } from '../../components/restaurant/OrderProductSelector';
 
 export const OrdersManagement: React.FC = () => {
   const { restaurant } = useAuth();
@@ -58,6 +59,8 @@ export const OrdersManagement: React.FC = () => {
   });
   const [filter, setFilter] = useState('all');
   const [categories, setCategories] = useState<Category[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [orderItems, setOrderItems] = useState<Order['items']>([]);
 
   useEffect(() => {
     if (restaurant) {
@@ -87,11 +90,16 @@ export const OrdersManagement: React.FC = () => {
     const allProducts = loadFromStorage('products') || [];
     const allCategories = loadFromStorage('categories') || [];
 
-    const restaurantCategories = allCategories.filter((cat: Category) => 
+    const restaurantCategories = allCategories.filter((cat: Category) =>
       cat.restaurant_id === restaurant.id && cat.active
     );
-    
+
+    const restaurantProducts = allProducts.filter((prod: Product) =>
+      prod.restaurant_id === restaurant.id && prod.is_available
+    );
+
     setCategories(restaurantCategories);
+    setProducts(restaurantProducts);
   };
 
   const calculateStats = () => {
@@ -833,6 +841,7 @@ export const OrdersManagement: React.FC = () => {
       table_number: order.table_number || '',
       special_instructions: order.special_instructions || '',
     });
+    setOrderItems(order.items || []);
     setShowEditOrderModal(true);
   };
 
@@ -845,19 +854,60 @@ export const OrdersManagement: React.FC = () => {
       table_number: '',
       special_instructions: '',
     });
+    setOrderItems([]);
+  };
+
+  const addItemToOrder = (product: Product, variationId: string, quantity: number, specialNotes?: string) => {
+    const variation = product.variations.find(v => v.id === variationId);
+    if (!variation) return;
+
+    const newItem: Order['items'][0] = {
+      id: `item-${Date.now()}-${Math.random()}`,
+      product_id: product.id,
+      product: product,
+      variation: variation,
+      quantity: quantity,
+      unit_price: variation.price,
+      total_price: variation.price * quantity,
+      selected_ingredients: [],
+      special_notes: specialNotes || '',
+    };
+
+    setOrderItems(prev => [...prev, newItem]);
+  };
+
+  const removeItemFromOrder = (itemId: string) => {
+    setOrderItems(prev => prev.filter(item => item.id !== itemId));
+  };
+
+  const updateItemQuantity = (itemId: string, newQuantity: number) => {
+    if (newQuantity < 1) return;
+    setOrderItems(prev => prev.map(item =>
+      item.id === itemId
+        ? { ...item, quantity: newQuantity, total_price: item.unit_price * newQuantity }
+        : item
+    ));
   };
 
   const handleUpdateOrder = () => {
     if (!editingOrder) return;
 
+    const subtotal = orderItems.reduce((sum, item) => sum + item.total_price, 0);
+    const deliveryCost = orderForm.order_type === 'delivery' ? (restaurant?.settings?.delivery?.zones[0]?.cost || 0) : 0;
+    const total = subtotal + deliveryCost;
+
     const allOrders = loadFromStorage('orders') || [];
     const updatedOrder = {
       ...editingOrder,
       customer: orderForm.customer,
+      items: orderItems,
       order_type: orderForm.order_type,
       status: orderForm.status,
       delivery_address: orderForm.delivery_address,
       table_number: orderForm.table_number,
+      delivery_cost: deliveryCost,
+      subtotal: subtotal,
+      total: total,
       special_instructions: orderForm.special_instructions,
       updated_at: new Date().toISOString(),
     };
@@ -865,13 +915,13 @@ export const OrdersManagement: React.FC = () => {
     const updatedOrders = allOrders.map((order: Order) =>
       order.id === editingOrder.id ? updatedOrder : order
     );
-    
+
     saveToStorage('orders', updatedOrders);
     loadOrders();
     setShowEditOrderModal(false);
     setEditingOrder(null);
     resetOrderForm();
-    
+
     showToast(
       'success',
       'Pedido Actualizado',
@@ -882,11 +932,20 @@ export const OrdersManagement: React.FC = () => {
 
   const handleCreateOrder = () => {
     if (!restaurant) return;
-    
+
     if (!orderForm.customer.name.trim() || !orderForm.customer.phone.trim()) {
-      alert('Por favor completa el nombre y teléfono del cliente');
+      showToast('error', 'Error', 'Por favor completa el nombre y teléfono del cliente', 4000);
       return;
     }
+
+    if (orderItems.length === 0) {
+      showToast('error', 'Error', 'Por favor agrega al menos un producto al pedido', 4000);
+      return;
+    }
+
+    const subtotal = orderItems.reduce((sum, item) => sum + item.total_price, 0);
+    const deliveryCost = orderForm.order_type === 'delivery' ? (restaurant.settings?.delivery?.zones[0]?.cost || 0) : 0;
+    const total = subtotal + deliveryCost;
 
     const allOrders = loadFromStorage('orders') || [];
     const newOrder: Order = {
@@ -894,14 +953,14 @@ export const OrdersManagement: React.FC = () => {
       restaurant_id: restaurant.id,
       order_number: generateOrderNumber(),
       customer: orderForm.customer,
-      items: [], // Empty items for manual orders
+      items: orderItems,
       order_type: orderForm.order_type,
       status: orderForm.status,
       delivery_address: orderForm.delivery_address,
       table_number: orderForm.table_number,
-      delivery_cost: 0,
-      subtotal: 0,
-      total: 0,
+      delivery_cost: deliveryCost,
+      subtotal: subtotal,
+      total: total,
       estimated_time: restaurant.settings?.delivery?.estimated_time || '30-45 minutos',
       special_instructions: orderForm.special_instructions,
       created_at: new Date().toISOString(),
@@ -912,7 +971,7 @@ export const OrdersManagement: React.FC = () => {
     loadOrders();
     setShowCreateOrderModal(false);
     resetOrderForm();
-    
+
     showToast(
       'success',
       'Pedido Creado',
@@ -1541,7 +1600,7 @@ export const OrdersManagement: React.FC = () => {
             {/* Actions */}
             <div className="flex gap-3 pt-4 border-t">
               <Button
-                onClick={() => printOrder(selectedOrder)}
+                onClick={() => printTicket(selectedOrder)}
                 variant="outline"
                 className="flex-1"
               >
@@ -1686,22 +1745,15 @@ export const OrdersManagement: React.FC = () => {
             />
           )}
 
-          {/* Order Status */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Estado del Pedido</label>
-            <select
-              value={orderForm.status}
-              onChange={(e) => setOrderForm(prev => ({ ...prev, status: e.target.value as Order['status'] }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="pending">Pendiente</option>
-              <option value="confirmed">Confirmado</option>
-              <option value="preparing">Preparando</option>
-              <option value="ready">Listo</option>
-              <option value="delivered">Entregado</option>
-              <option value="cancelled">Cancelado</option>
-            </select>
-          </div>
+          {/* Products Selection */}
+          <OrderProductSelector
+            products={products}
+            orderItems={orderItems}
+            onAddItem={addItemToOrder}
+            onRemoveItem={removeItemFromOrder}
+            onUpdateQuantity={updateItemQuantity}
+            onShowToast={showToast}
+          />
 
           {/* Special Instructions */}
           <div>
@@ -1854,22 +1906,15 @@ export const OrdersManagement: React.FC = () => {
             />
           )}
 
-          {/* Order Status */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Estado del Pedido</label>
-            <select
-              value={orderForm.status}
-              onChange={(e) => setOrderForm(prev => ({ ...prev, status: e.target.value as Order['status'] }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="pending">Pendiente</option>
-              <option value="confirmed">Confirmado</option>
-              <option value="preparing">Preparando</option>
-              <option value="ready">Listo</option>
-              <option value="delivered">Entregado</option>
-              <option value="cancelled">Cancelado</option>
-            </select>
-          </div>
+          {/* Products Selection */}
+          <OrderProductSelector
+            products={products}
+            orderItems={orderItems}
+            onAddItem={addItemToOrder}
+            onRemoveItem={removeItemFromOrder}
+            onUpdateQuantity={updateItemQuantity}
+            onShowToast={showToast}
+          />
 
           {/* Special Instructions */}
           <div>
