@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { User, Phone, Mail, MapPin, Calendar, ShoppingBag, Filter, Search, Star, CreditCard as Edit, ArrowUpDown, Trash2, Info, Download, CheckSquare, Square, Users, DollarSign, TrendingUp, UserCheck, UserPlus } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { User, Phone, Mail, MapPin, Calendar, ShoppingBag, Filter, Search, Star, CreditCard as Edit, ArrowUpDown, Trash2, Info, Download, CheckSquare, Square, Users, DollarSign, TrendingUp, UserCheck, UserPlus, Upload } from 'lucide-react';
 import { Order, Customer, Subscription } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -38,6 +38,11 @@ export const CustomersManagement: React.FC = () => {
   const [selectedCustomers, setSelectedCustomers] = useState<Set<string>>(new Set());
   const [showBulkEditModal, setShowBulkEditModal] = useState(false);
   const [bulkEditAction, setBulkEditAction] = useState<'vip' | 'remove_vip' | 'delete'>('vip');
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importPreview, setImportPreview] = useState<any[]>([]);
+  const [importErrors, setImportErrors] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [editForm, setEditForm] = useState({
     name: '',
     phone: '',
@@ -582,6 +587,245 @@ export const CustomersManagement: React.FC = () => {
       4000
     );
   };
+
+  const downloadCSVTemplate = () => {
+    const headers = [
+      'Nombre',
+      'Teléfono',
+      'Email',
+      'Dirección',
+      'Referencias de Entrega',
+      'Es VIP'
+    ];
+
+    const exampleRows = [
+      [
+        'Juan Pérez',
+        '+573001234567',
+        'juan.perez@email.com',
+        'Calle 123 #45-67, Bogotá',
+        'Casa de dos pisos, portón azul',
+        'Sí'
+      ],
+      [
+        'María González',
+        '+573009876543',
+        'maria.gonzalez@email.com',
+        'Carrera 45 #12-34, Medellín',
+        'Apartamento 301, edificio blanco',
+        'No'
+      ]
+    ];
+
+    const csvContent = [
+      headers.join(','),
+      ...exampleRows.map(row =>
+        row.map(field =>
+          typeof field === 'string' && (field.includes(',') || field.includes('\n') || field.includes('"'))
+            ? `"${field.replace(/"/g, '""')}"`
+            : field
+        ).join(',')
+      )
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'plantilla_clientes.csv');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    showToast(
+      'success',
+      'Plantilla Descargada',
+      'Usa esta plantilla como guía para importar clientes.',
+      4000
+    );
+  };
+
+  const handleImportFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.csv')) {
+      showToast('error', 'Archivo inválido', 'Por favor selecciona un archivo CSV válido.', 4000);
+      return;
+    }
+
+    setImportFile(file);
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      parseCSV(text);
+    };
+
+    reader.readAsText(file);
+  };
+
+  const parseCSV = (text: string) => {
+    const lines = text.split('\n').filter(line => line.trim());
+
+    if (lines.length < 2) {
+      setImportErrors(['El archivo CSV está vacío o no tiene datos.']);
+      return;
+    }
+
+    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+    const requiredHeaders = ['Nombre', 'Teléfono'];
+    const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+
+    if (missingHeaders.length > 0) {
+      setImportErrors([`Columnas requeridas faltantes: ${missingHeaders.join(', ')}`]);
+      return;
+    }
+
+    const errors: string[] = [];
+    const preview: any[] = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i];
+      const values: string[] = [];
+      let currentValue = '';
+      let insideQuotes = false;
+
+      for (let j = 0; j < line.length; j++) {
+        const char = line[j];
+
+        if (char === '"') {
+          insideQuotes = !insideQuotes;
+        } else if (char === ',' && !insideQuotes) {
+          values.push(currentValue.trim().replace(/^"|"$/g, ''));
+          currentValue = '';
+        } else {
+          currentValue += char;
+        }
+      }
+      values.push(currentValue.trim().replace(/^"|"$/g, ''));
+
+      if (values.length !== headers.length) {
+        errors.push(`Línea ${i + 1}: Número incorrecto de columnas (esperado ${headers.length}, obtenido ${values.length})`);
+        continue;
+      }
+
+      const row: any = {};
+      headers.forEach((header, index) => {
+        row[header] = values[index];
+      });
+
+      if (!row['Nombre'] || !row['Nombre'].trim()) {
+        errors.push(`Línea ${i + 1}: El nombre es requerido`);
+        continue;
+      }
+
+      if (!row['Teléfono'] || !row['Teléfono'].trim()) {
+        errors.push(`Línea ${i + 1}: El teléfono es requerido`);
+        continue;
+      }
+
+      const existingCustomer = customers.find(c => c.phone === row['Teléfono']);
+      if (existingCustomer) {
+        errors.push(`Línea ${i + 1}: El cliente con teléfono ${row['Teléfono']} ya existe`);
+        continue;
+      }
+
+      preview.push({
+        name: row['Nombre'],
+        phone: row['Teléfono'],
+        email: row['Email'] || '',
+        address: row['Dirección'] || '',
+        delivery_instructions: row['Referencias de Entrega'] || '',
+        isVip: row['Es VIP']?.toLowerCase() === 'sí' || row['Es VIP']?.toLowerCase() === 'si' || row['Es VIP']?.toLowerCase() === 'yes',
+        lineNumber: i + 1
+      });
+    }
+
+    setImportErrors(errors);
+    setImportPreview(preview);
+
+    if (preview.length > 0) {
+      setShowImportModal(true);
+    } else {
+      showToast('error', 'Sin datos válidos', 'No se encontraron datos válidos para importar.', 4000);
+    }
+  };
+
+  const executeImport = () => {
+    if (importPreview.length === 0) return;
+
+    const allOrders = loadFromStorage('orders') || [];
+    const vipCustomers = loadFromStorage('vipCustomers') || [];
+
+    importPreview.forEach(customer => {
+      const newOrder: Order = {
+        id: `imported_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        order_number: `IMP-${Date.now()}`,
+        restaurant_id: restaurant?.id || '',
+        customer: {
+          name: customer.name,
+          phone: customer.phone,
+          email: customer.email,
+          address: customer.address,
+          delivery_instructions: customer.delivery_instructions,
+        },
+        items: [],
+        total: 0,
+        status: 'delivered',
+        order_type: 'delivery',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      allOrders.push(newOrder);
+
+      if (customer.isVip) {
+        vipCustomers.push({
+          restaurant_id: restaurant?.id,
+          phone: customer.phone,
+          name: customer.name,
+          created_at: new Date().toISOString(),
+        });
+      }
+    });
+
+    saveToStorage('orders', allOrders);
+    saveToStorage('vipCustomers', vipCustomers);
+
+    loadCustomersData();
+
+    setShowImportModal(false);
+    setImportFile(null);
+    setImportPreview([]);
+    setImportErrors([]);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+
+    showToast(
+      'success',
+      'Importación Exitosa',
+      `Se importaron ${importPreview.length} cliente${importPreview.length !== 1 ? 's' : ''} exitosamente.`,
+      4000
+    );
+  };
+
+  const cancelImport = () => {
+    setShowImportModal(false);
+    setImportFile(null);
+    setImportPreview([]);
+    setImportErrors([]);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
   const stats = {
     totalCustomers: customers.length,
     vipCustomers: customers.filter(c => c.isVip).length,
@@ -627,6 +871,22 @@ export const CustomersManagement: React.FC = () => {
           >
             Exportar CSV
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            icon={Upload}
+            onClick={() => fileInputRef.current?.click()}
+            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+          >
+            Importar CSV
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv"
+            onChange={handleImportFile}
+            className="hidden"
+          />
           <Button
             variant="outline"
             size="sm"
@@ -1213,6 +1473,115 @@ export const CustomersManagement: React.FC = () => {
               {bulkEditAction === 'vip' && 'Marcar como VIP'}
               {bulkEditAction === 'remove_vip' && 'Remover VIP'}
               {bulkEditAction === 'delete' && 'Eliminar Clientes'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Import CSV Modal */}
+      <Modal
+        isOpen={showImportModal}
+        onClose={cancelImport}
+        title="Importar Clientes desde CSV"
+        size="lg"
+      >
+        <div className="space-y-6">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start">
+              <Info className="w-5 h-5 text-blue-600 mr-2 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-blue-800">
+                <p className="font-medium mb-2">Formato del archivo CSV:</p>
+                <ul className="list-disc list-inside space-y-1 text-xs">
+                  <li><strong>Nombre</strong> (requerido): Nombre completo del cliente</li>
+                  <li><strong>Teléfono</strong> (requerido): Número de teléfono único</li>
+                  <li><strong>Email</strong> (opcional): Correo electrónico</li>
+                  <li><strong>Dirección</strong> (opcional): Dirección completa</li>
+                  <li><strong>Referencias de Entrega</strong> (opcional): Indicaciones adicionales</li>
+                  <li><strong>Es VIP</strong> (opcional): "Sí" o "No"</li>
+                </ul>
+                <button
+                  onClick={downloadCSVTemplate}
+                  className="mt-3 text-xs font-medium text-blue-700 hover:text-blue-800 underline"
+                >
+                  Descargar plantilla de ejemplo
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {importErrors.length > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-start">
+                <Info className="w-5 h-5 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-red-800 mb-2">Se encontraron {importErrors.length} error{importErrors.length !== 1 ? 'es' : ''}:</p>
+                  <ul className="text-xs text-red-700 space-y-1 max-h-40 overflow-y-auto">
+                    {importErrors.map((error, index) => (
+                      <li key={index}>• {error}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {importPreview.length > 0 && (
+            <div>
+              <h4 className="text-sm font-medium text-gray-900 mb-3">
+                Vista previa: {importPreview.length} cliente{importPreview.length !== 1 ? 's' : ''} válido{importPreview.length !== 1 ? 's' : ''}
+              </h4>
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 max-h-80 overflow-y-auto">
+                <div className="space-y-3">
+                  {importPreview.map((customer, index) => (
+                    <div key={index} className="bg-white rounded-lg p-3 border border-gray-200">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <User className="w-4 h-4 text-gray-600" />
+                            <span className="font-medium text-gray-900">{customer.name}</span>
+                            {customer.isVip && <Badge variant="success" size="sm">VIP</Badge>}
+                          </div>
+                          <div className="text-xs text-gray-600 space-y-1">
+                            <div className="flex items-center gap-1">
+                              <Phone className="w-3 h-3" />
+                              {customer.phone}
+                            </div>
+                            {customer.email && (
+                              <div className="flex items-center gap-1">
+                                <Mail className="w-3 h-3" />
+                                {customer.email}
+                              </div>
+                            )}
+                            {customer.address && (
+                              <div className="flex items-center gap-1">
+                                <MapPin className="w-3 h-3" />
+                                {customer.address}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <span className="text-xs text-gray-500">Línea {customer.lineNumber}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <Button
+              variant="ghost"
+              onClick={cancelImport}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={executeImport}
+              disabled={importPreview.length === 0}
+              icon={Upload}
+            >
+              Importar {importPreview.length} Cliente{importPreview.length !== 1 ? 's' : ''}
             </Button>
           </div>
         </div>
