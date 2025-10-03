@@ -307,7 +307,7 @@ export const CategoriesManagement: React.FC = () => {
               className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all overflow-hidden"
             >
               {/* Category Image/Icon Header */}
-              <div className="relative h-32 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+              <div className="relative h-60 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
                 {category.image ? (
                   <img
                     src={category.image}
