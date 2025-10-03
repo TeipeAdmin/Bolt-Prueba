@@ -289,7 +289,7 @@ export const SubscriptionsManagement: React.FC = () => {
           <div className="flex flex-col sm:flex-row gap-4 items-end">
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Fecha de lanzamiento (desde)
+                Fecha de vencimiento (desde)
               </label>
               <Input
                 type="date"
@@ -299,7 +299,7 @@ export const SubscriptionsManagement: React.FC = () => {
             </div>
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Fecha de lanzamiento (hasta)
+                Fecha de vencimiento (hasta)
               </label>
               <Input
                 type="date"
@@ -384,9 +384,9 @@ export const SubscriptionsManagement: React.FC = () => {
                   // Filter by status
                   if (filterStatus !== 'all' && subscription.status !== filterStatus) return false;
 
-                  // Filter by date range (using start_date - fecha de lanzamiento)
+                  // Filter by date range (using end_date - fecha de vencimiento)
                   if (startDate || endDate) {
-                    const subDate = new Date(subscription.start_date);
+                    const subDate = new Date(subscription.end_date);
                     if (startDate && subDate < new Date(startDate)) return false;
                     if (endDate) {
                       const end = new Date(endDate);
@@ -399,9 +399,9 @@ export const SubscriptionsManagement: React.FC = () => {
                 })
                 .sort((a, b) => {
                   if (sortBy === 'newest') {
-                    return new Date(b.start_date).getTime() - new Date(a.start_date).getTime();
+                    return new Date(b.end_date).getTime() - new Date(a.end_date).getTime();
                   } else if (sortBy === 'oldest') {
-                    return new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
+                    return new Date(a.end_date).getTime() - new Date(b.end_date).getTime();
                   } else { // expiring
                     return new Date(a.end_date).getTime() - new Date(b.end_date).getTime();
                   }
