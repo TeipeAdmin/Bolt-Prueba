@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, TrendingUp, ShoppingBag, DollarSign, Calendar, Users, Filter, Download, X, Search } from 'lucide-react';
+import { BarChart3, TrendingUp, ShoppingBag, DollarSign, Calendar, Users, Filter, Download, X, Search, Package, Clock, CheckCircle, XCircle, Percent, ArrowUp, ArrowDown } from 'lucide-react';
 import { Product, Order, Category } from '../../types';
 import { loadFromStorage } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -440,70 +440,146 @@ export const RestaurantAnalytics: React.FC = () => {
 
       {/* Main Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <ShoppingBag className="h-8 w-8 text-blue-600" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Pedidos</p>
-              <p className="text-2xl font-semibold text-gray-900">{totalOrders}</p>
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-md border border-blue-200 hover:shadow-lg transition-shadow">
+          <div className="flex items-start justify-between mb-4">
+            <div className="p-3 bg-blue-600 rounded-lg">
+              <ShoppingBag className="h-6 w-6 text-white" />
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-medium text-blue-900 mb-1">Total Pedidos</p>
+              <p className="text-3xl font-bold text-blue-900">{totalOrders}</p>
             </div>
           </div>
-          <div className="mt-2">
-            <span className="text-sm text-green-600 font-medium">
-              {completedOrders} completados
+          <div className="flex items-center justify-between pt-3 border-t border-blue-200">
+            <span className="text-xs text-blue-700 font-medium">Completados</span>
+            <span className="text-sm font-bold text-green-700">
+              {completedOrders}
             </span>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <DollarSign className="h-8 w-8 text-green-600" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Ingresos Totales</p>
-              <p className="text-2xl font-semibold text-gray-900">
+        <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-md border border-green-200 hover:shadow-lg transition-shadow">
+          <div className="flex items-start justify-between mb-4">
+            <div className="p-3 bg-green-600 rounded-lg">
+              <DollarSign className="h-6 w-6 text-white" />
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-medium text-green-900 mb-1">Ingresos</p>
+              <p className="text-3xl font-bold text-green-900">
                 ${totalRevenue.toFixed(2)}
               </p>
             </div>
           </div>
-          <div className="mt-2">
-            <span className="text-sm text-green-600 font-medium">
-              Pedidos entregados
+          <div className="flex items-center justify-between pt-3 border-t border-green-200">
+            <span className="text-xs text-green-700 font-medium">Total generado</span>
+            <span className="text-sm font-bold text-green-800">
+              {completedOrders > 0 ? ((completedOrders / totalOrders) * 100).toFixed(1) : 0}%
             </span>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <TrendingUp className="h-8 w-8 text-purple-600" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Ticket Promedio</p>
-              <p className="text-2xl font-semibold text-gray-900">
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl shadow-md border border-purple-200 hover:shadow-lg transition-shadow">
+          <div className="flex items-start justify-between mb-4">
+            <div className="p-3 bg-purple-600 rounded-lg">
+              <TrendingUp className="h-6 w-6 text-white" />
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-medium text-purple-900 mb-1">Ticket Promedio</p>
+              <p className="text-3xl font-bold text-purple-900">
                 ${averageOrderValue.toFixed(2)}
               </p>
             </div>
           </div>
-          <div className="mt-2">
-            <span className="text-sm text-purple-600 font-medium">
-              Por pedido
+          <div className="flex items-center justify-between pt-3 border-t border-purple-200">
+            <span className="text-xs text-purple-700 font-medium">Por pedido</span>
+            <span className="text-sm font-bold text-purple-800">
+              {completedOrders} ventas
             </span>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <BarChart3 className="h-8 w-8 text-orange-600" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Productos Activos</p>
-              <p className="text-2xl font-semibold text-gray-900">
+        <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl shadow-md border border-orange-200 hover:shadow-lg transition-shadow">
+          <div className="flex items-start justify-between mb-4">
+            <div className="p-3 bg-orange-600 rounded-lg">
+              <Package className="h-6 w-6 text-white" />
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-medium text-orange-900 mb-1">Productos</p>
+              <p className="text-3xl font-bold text-orange-900">
                 {products.filter(p => p.status === 'active').length}
               </p>
             </div>
           </div>
-          <div className="mt-2">
-            <span className="text-sm text-orange-600 font-medium">
-              De {products.length} total
+          <div className="flex items-center justify-between pt-3 border-t border-orange-200">
+            <span className="text-xs text-orange-700 font-medium">Activos</span>
+            <span className="text-sm font-bold text-orange-800">
+              De {products.length}
             </span>
           </div>
+        </div>
+      </div>
+
+      {/* Additional Stats Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center">
+              <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
+              <span className="text-sm font-medium text-gray-700">Tasa de Éxito</span>
+            </div>
+          </div>
+          <p className="text-2xl font-bold text-gray-900">
+            {totalOrders > 0 ? ((completedOrders / totalOrders) * 100).toFixed(1) : 0}%
+          </p>
+          <p className="text-xs text-gray-500 mt-1">
+            {completedOrders} de {totalOrders} pedidos
+          </p>
+        </div>
+
+        <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center">
+              <XCircle className="h-5 w-5 text-red-600 mr-2" />
+              <span className="text-sm font-medium text-gray-700">Cancelados</span>
+            </div>
+          </div>
+          <p className="text-2xl font-bold text-gray-900">{ordersByStatus.cancelled}</p>
+          <p className="text-xs text-gray-500 mt-1">
+            {totalOrders > 0 ? ((ordersByStatus.cancelled / totalOrders) * 100).toFixed(1) : 0}% del total
+          </p>
+        </div>
+
+        <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center">
+              <Clock className="h-5 w-5 text-amber-600 mr-2" />
+              <span className="text-sm font-medium text-gray-700">En Proceso</span>
+            </div>
+          </div>
+          <p className="text-2xl font-bold text-gray-900">
+            {ordersByStatus.confirmed + ordersByStatus.preparing + ordersByStatus.ready + ordersByStatus.pending}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">
+            Requieren atención
+          </p>
+        </div>
+
+        <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center">
+              <Users className="h-5 w-5 text-blue-600 mr-2" />
+              <span className="text-sm font-medium text-gray-700">Clientes Únicos</span>
+            </div>
+          </div>
+          <p className="text-2xl font-bold text-gray-900">
+            {(() => {
+              const uniqueCustomers = new Set(filteredOrders.map(o => o.customer?.phone).filter(Boolean));
+              return uniqueCustomers.size;
+            })()}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">
+            {totalOrders > 0 ? (totalOrders / new Set(filteredOrders.map(o => o.customer?.phone).filter(Boolean)).size).toFixed(1) : 0} pedidos/cliente
+          </p>
         </div>
       </div>
 
