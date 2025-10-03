@@ -626,6 +626,21 @@ Fecha: ${new Date().toLocaleString()}
                 </div>
               </div>
 
+              <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                <h4 className="text-md font-semibold text-gray-900 mb-4">Tiempo de Preparación</h4>
+                <div className="space-y-3">
+                  <Input
+                    label="Tiempo estimado de preparación"
+                    value={formData.settings.preparation_time || '30-45 minutos'}
+                    onChange={(e) => updateFormData('settings.preparation_time', e.target.value)}
+                    placeholder="Ej: 30-45 minutos"
+                  />
+                  <p className="text-xs text-gray-500">
+                    Este es el tiempo que se mostrará a los clientes como estimación de preparación de sus pedidos
+                  </p>
+                </div>
+              </div>
+
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div className="flex items-start gap-2">
                   <Clock className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
@@ -840,18 +855,6 @@ Fecha: ${new Date().toLocaleString()}
                               }}
                             />
                           </div>
-                          <div className="w-32">
-                            <Input
-                              label="Tiempo Estimado"
-                              value={tier.estimated_time || ''}
-                              onChange={(e) => {
-                                const newTiers = [...(formData.settings.delivery.pricing_tiers || [])];
-                                newTiers[index] = { ...tier, estimated_time: e.target.value };
-                                updateFormData('settings.delivery.pricing_tiers', newTiers);
-                              }}
-                              placeholder="30-45 min"
-                            />
-                          </div>
                           <Button
                             variant="outline"
                             onClick={() => {
@@ -874,8 +877,7 @@ Fecha: ${new Date().toLocaleString()}
                             name: '',
                             min_order_amount: 0,
                             max_order_amount: 0,
-                            cost: 0,
-                            estimated_time: ''
+                            cost: 0
                           }];
                           updateFormData('settings.delivery.pricing_tiers', newTiers);
                         }}

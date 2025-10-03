@@ -149,8 +149,8 @@ export const mockRestaurants: Restaurant[] = [
           { id: '2', name: 'Norte', cost: 4.50, area_description: 'Zona norte de la ciudad' },
         ],
         min_order_amount: 15.00,
-        estimated_time: '30-45 minutos',
       },
+      preparation_time: '30-45 minutos',
       notifications: {
         email: 'orders@lapizzeria.com',
         whatsapp: '+1555123456',

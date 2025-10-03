@@ -155,7 +155,6 @@ export interface DeliverySettings {
   enabled: boolean;
   zones: string[];
   min_order_amount: number;
-  estimated_time: string;
   delivery_cost: number;
 }
 
@@ -215,6 +214,7 @@ export interface RestaurantSettings {
   currency?: string;
   language?: string;
   timezone?: string;
+  preparation_time?: string;
 }
 
 export interface Restaurant {
