@@ -81,13 +81,12 @@ export const SuperAdminDashboard: React.FC = () => {
         <h1 className="text-2xl font-bold text-gray-900">Dashboard Principal</h1>
         <div className="flex items-center gap-4">
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             icon={RefreshCw}
             onClick={handleResetData}
-            className="text-gray-600 hover:text-gray-900"
           >
-            Resetear Datos
+            Reiniciar Datos
           </Button>
           <div className="text-sm text-gray-500">
             Última actualización: {new Date().toLocaleString()}
