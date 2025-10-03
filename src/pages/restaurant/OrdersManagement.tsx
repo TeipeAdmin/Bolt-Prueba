@@ -241,10 +241,10 @@ export const OrdersManagement: React.FC = () => {
   };
 
   const filteredOrders = orders.filter(order => {
-    const matchesSearch = 
+    const matchesSearch =
       order.order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customer.phone.includes(searchTerm);
+      (order.customer?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (order.customer?.phone || '').includes(searchTerm);
     
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
     const matchesType = typeFilter === 'all' || order.order_type === typeFilter;
@@ -1356,11 +1356,11 @@ export const OrdersManagement: React.FC = () => {
                           <User className="w-8 h-8 text-gray-400 mr-3" />
                           <div>
                             <div className="text-sm font-medium text-gray-900">
-                              {order.customer.name}
+                              {order.customer?.name || 'N/A'}
                             </div>
                             <div className="text-sm text-gray-500 flex items-center">
                               <Phone className="w-3 h-3 mr-1" />
-                              {order.customer.phone}
+                              {order.customer?.phone || 'N/A'}
                             </div>
                           </div>
                         </div>

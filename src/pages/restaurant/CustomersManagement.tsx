@@ -70,8 +70,10 @@ export const CustomersManagement: React.FC = () => {
     const customerMap = new Map<string, CustomerData>();
 
     restaurantOrders.forEach((order: Order) => {
-      const customerKey = order.customer.phone; // Use phone as unique identifier
-      
+      if (!order.customer || !order.customer.phone) return;
+
+      const customerKey = order.customer.phone;
+
       if (customerMap.has(customerKey)) {
         const existing = customerMap.get(customerKey)!;
         existing.totalOrders += 1;
@@ -80,18 +82,17 @@ export const CustomersManagement: React.FC = () => {
         if (!existing.orderTypes.includes(order.order_type)) {
           existing.orderTypes.push(order.order_type);
         }
-        // Update customer info with most recent data (keep latest information)
-        existing.name = order.customer.name;
+        existing.name = order.customer.name || existing.name;
         existing.email = order.customer.email || existing.email;
         existing.address = order.customer.address || existing.address;
         existing.delivery_instructions = order.customer.delivery_instructions || existing.delivery_instructions;
       } else {
-        const isVip = vipCustomers.some((vip: any) => 
+        const isVip = vipCustomers.some((vip: any) =>
           vip.restaurant_id === restaurant.id && vip.phone === order.customer.phone
         );
         customerMap.set(customerKey, {
           id: order.customer.phone,
-          name: order.customer.name,
+          name: order.customer.name || 'N/A',
           phone: order.customer.phone,
           email: order.customer.email,
           address: order.customer.address,
