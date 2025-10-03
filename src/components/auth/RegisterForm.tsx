@@ -170,7 +170,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
 
           <Input
             name="address"
-            label="Restaurant Address"
+            label="Dirección del restaurante"
             value={formData.address}
             onChange={handleChange}
             placeholder="123 Main Street, City"
