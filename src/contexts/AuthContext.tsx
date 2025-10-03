@@ -174,48 +174,65 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       counter++;
     }
 
+    const restaurantId = `rest-${Date.now()}`;
+    const userId = `user-${Date.now()}`;
+
     // Create new user
     const newUser: User = {
-      id: `user-${Date.now()}`,
+      id: userId,
       email: data.email,
+      password: data.password,
       role: 'restaurant_owner',
+      restaurant_id: restaurantId,
       created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       email_verified: false,
     };
 
-    // Create new restaurant
+    // Create new restaurant - ACTIVE with FREE subscription
     const newRestaurant: Restaurant = {
-      id: `rest-${Date.now()}`,
-      user_id: newUser.id,
+      id: restaurantId,
       name: data.restaurantName,
       slug: uniqueSlug,
       email: data.email,
       phone: data.phone,
       address: data.address,
       owner_name: data.ownerName,
+      owner_id: userId,
       settings: {
         currency: 'USD',
         language: 'es',
-        timezone: 'America/Mexico_City',
+        timezone: 'America/Bogota',
         ui_settings: {
-          layout_type: 'cards',
+          layout_type: 'list',
           show_search_bar: true,
           info_message: 'Agrega los productos que desees al carrito, al finalizar tu pedido lo recibiremos por WhatsApp',
         },
         theme: {
-          template: 'modern',
-          primary_color: '#2563eb', 
-          secondary_color: '#ffffff',
-          tertiary_color: '#1f2937',
-          font_family: 'Inter',
+          primary_color: '#dc2626',
+          secondary_color: '#f3f4f6',
+          accent_color: '#16a34a',
+          text_color: '#1f2937',
+          primary_font: 'Inter',
+          secondary_font: 'Poppins',
+          font_sizes: {
+            title: '32px',
+            subtitle: '24px',
+            normal: '16px',
+            small: '14px',
+          },
+          font_weights: {
+            light: 300,
+            regular: 400,
+            medium: 500,
+            bold: 700,
+          },
           button_style: 'rounded',
         },
         social_media: {
           facebook: '',
           instagram: '',
-          twitter: '',
-          whatsapp: '',
-          website: '',
+          whatsapp: data.phone || '',
         },
         business_hours: {
           monday: { open: '09:00', close: '22:00', is_open: true },
@@ -230,22 +247,46 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           enabled: false,
           zones: [],
           min_order_amount: 0,
-          estimated_time: '30-45 minutos',
+        },
+        table_orders: {
+          enabled: false,
+          table_numbers: 0,
+          qr_codes: false,
+          auto_assign: false,
         },
         notifications: {
           email: data.email,
+          whatsapp: data.phone,
           sound_enabled: true,
         },
       },
-      status: 'pending',
       domain: uniqueSlug,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
 
+    // Create FREE subscription (gratis plan - never expires)
+    const subscriptionId = `sub-${Date.now()}`;
+    const newSubscription: Subscription = {
+      id: subscriptionId,
+      restaurant_id: restaurantId,
+      plan_type: 'gratis',
+      duration: 'monthly',
+      status: 'active',
+      start_date: new Date().toISOString(),
+      end_date: '2099-12-31T23:59:59Z', // Gratis plan never expires
+      auto_renew: false,
+      created_at: new Date().toISOString(),
+    };
+
+    // Link subscription to restaurant
+    newRestaurant.subscription_id = subscriptionId;
+
     // Save to storage
+    const subscriptions = loadFromStorage('subscriptions', []) as Subscription[];
     saveToStorage('users', [...users, newUser]);
     saveToStorage('restaurants', [...restaurants, newRestaurant]);
+    saveToStorage('subscriptions', [...subscriptions, newSubscription]);
 
     return { success: true };
   };

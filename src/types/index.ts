@@ -269,6 +269,15 @@ export interface Plan {
   popular?: boolean;
 }
 
+export interface RegisterData {
+  email: string;
+  password: string;
+  restaurantName: string;
+  ownerName: string;
+  phone: string;
+  address: string;
+}
+
 export interface AuthContextType {
   user: User | null;
   restaurant: Restaurant | null;
