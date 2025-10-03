@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Store, Users, CreditCard, TrendingUp, Calendar } from 'lucide-react';
+import { Store, Users, CreditCard, TrendingUp, Calendar, RefreshCw } from 'lucide-react';
 import { Restaurant, Subscription } from '../../types';
-import { loadFromStorage } from '../../data/mockData';
+import { loadFromStorage, resetAllData } from '../../data/mockData';
 import { Badge } from '../../components/ui/Badge';
+import { Button } from '../../components/ui/Button';
 
 export const SuperAdminDashboard: React.FC = () => {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
@@ -68,12 +69,29 @@ export const SuperAdminDashboard: React.FC = () => {
     return <Badge variant={variant}>{planName}</Badge>;
   };
 
+  const handleResetData = () => {
+    if (confirm('¿Estás seguro de que quieres resetear todos los datos a su estado inicial? Esta acción no se puede deshacer.')) {
+      resetAllData();
+    }
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900">Dashboard Principal</h1>
-        <div className="text-sm text-gray-500">
-          Última actualización: {new Date().toLocaleString()}
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            icon={RefreshCw}
+            onClick={handleResetData}
+            className="text-gray-600 hover:text-gray-900"
+          >
+            Resetear Datos
+          </Button>
+          <div className="text-sm text-gray-500">
+            Última actualización: {new Date().toLocaleString()}
+          </div>
         </div>
       </div>
 

@@ -366,3 +366,17 @@ export const initializeData = (): void => {
     console.log('Data already initialized, skipping...');
   }
 };
+
+// Reset all data to initial mock data
+export const resetAllData = (): void => {
+  console.log('Resetting all data to initial state...');
+  saveToStorage('users', mockUsers);
+  saveToStorage('restaurants', mockRestaurants);
+  saveToStorage('subscriptions', mockSubscriptions);
+  saveToStorage('categories', mockCategories);
+  saveToStorage('products', mockProducts);
+  saveToStorage('orders', mockOrders);
+  localStorage.setItem('data_initialized', 'true');
+  console.log('Data reset complete!');
+  window.location.reload();
+};
