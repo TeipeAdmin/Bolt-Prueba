@@ -1141,6 +1141,98 @@ export const OrdersManagement: React.FC = () => {
         </div>
       </div>
 
+      {/* Detailed Stats Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+          <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center">
+            <ShoppingBag className="w-4 h-4 mr-2" />
+            Estado de Pedidos
+          </h3>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-2 h-2 rounded-full bg-yellow-500 mr-2"></div>
+                <span className="text-sm text-gray-600">Pendientes</span>
+              </div>
+              <span className="text-sm font-bold text-gray-900">{orderStats.pending}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-2 h-2 rounded-full bg-blue-500 mr-2"></div>
+                <span className="text-sm text-gray-600">Confirmados</span>
+              </div>
+              <span className="text-sm font-bold text-gray-900">{orderStats.confirmed}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-2 h-2 rounded-full bg-orange-500 mr-2"></div>
+                <span className="text-sm text-gray-600">Preparando</span>
+              </div>
+              <span className="text-sm font-bold text-gray-900">{orderStats.preparing}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
+                <span className="text-sm text-gray-600">Listos</span>
+              </div>
+              <span className="text-sm font-bold text-gray-900">{orderStats.ready}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+          <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center">
+            <TrendingUp className="w-4 h-4 mr-2" />
+            Resumen de Ventas
+          </h3>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Total Pedidos</span>
+              <span className="text-sm font-bold text-gray-900">{orderStats.total}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Pedidos Hoy</span>
+              <span className="text-sm font-bold text-gray-900">{orderStats.todayOrders}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Ingresos Hoy</span>
+              <span className="text-sm font-bold text-green-600">${orderStats.todayRevenue.toFixed(2)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Ticket Promedio</span>
+              <span className="text-sm font-bold text-blue-600">${orderStats.averageOrderValue.toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+          <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center">
+            <Package className="w-4 h-4 mr-2" />
+            Rendimiento
+          </h3>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Completados</span>
+              <span className="text-sm font-bold text-green-600">{orderStats.delivered}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Cancelados</span>
+              <span className="text-sm font-bold text-red-600">{orderStats.cancelled}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Tasa de éxito</span>
+              <span className="text-sm font-bold text-green-600">{orderStats.completionRate.toFixed(1)}%</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">En proceso</span>
+              <span className="text-sm font-bold text-amber-600">
+                {orderStats.pending + orderStats.confirmed + orderStats.preparing + orderStats.ready}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Bulk Actions */}
       {showBulkActions && selectedOrders.length > 0 && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
