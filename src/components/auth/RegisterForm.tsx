@@ -231,7 +231,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
             className="w-full"
             size="lg"
           >
-            Create Account
+            Crear Cuenta
           </Button>
         </form>
 
