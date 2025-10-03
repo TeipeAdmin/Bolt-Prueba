@@ -152,7 +152,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
             <Input
               name="email"
               type="email"
-              label="Contact Email*"
+              label="Email de Contacto*"
               value={formData.email}
               onChange={handleChange}
               error={errors.email}
@@ -170,7 +170,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
 
           <Input
             name="address"
-            label="Dirección del restaurante"
+            label="Dirección del Restaurante"
             value={formData.address}
             onChange={handleChange}
             placeholder="123 Main Street, City"
