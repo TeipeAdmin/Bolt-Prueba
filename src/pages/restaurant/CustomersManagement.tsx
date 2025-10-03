@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Phone, Mail, MapPin, Calendar, ShoppingBag, Filter, Search, Star, CreditCard as Edit, ArrowUpDown, Trash2, Info, Download, CheckSquare, Square, Users, DollarSign, TrendingUp, UserCheck, UserPlus } from 'lucide-react';
+import { User, Phone, Mail, MapPin, Calendar, ShoppingBag, Filter, Search, Star, CreditCard as Edit, ArrowUpDown, Trash2, Info, Download, CheckSquare, Square, Users } from 'lucide-react';
 import { Order, Customer, Subscription } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -586,22 +586,9 @@ export const CustomersManagement: React.FC = () => {
   };
   const stats = {
     totalCustomers: customers.length,
-    vipCustomers: customers.filter(c => c.isVip || c.totalOrders >= 10).length,
-    frequentCustomers: customers.filter(c => c.totalOrders >= 5 && c.totalOrders < 10).length,
-    regularCustomers: customers.filter(c => c.totalOrders >= 3 && c.totalOrders < 5).length,
-    newCustomers: customers.filter(c => c.totalOrders < 3).length,
-    activeCustomers: customers.filter(c => {
-      const daysSinceLastOrder = Math.ceil((new Date().getTime() - new Date(c.lastOrderDate).getTime()) / (1000 * 60 * 60 * 24));
-      return daysSinceLastOrder <= 30;
-    }).length,
-    inactiveCustomers: customers.filter(c => {
-      const daysSinceLastOrder = Math.ceil((new Date().getTime() - new Date(c.lastOrderDate).getTime()) / (1000 * 60 * 60 * 24));
-      return daysSinceLastOrder > 30;
-    }).length,
-    totalRevenue: customers.reduce((sum, c) => sum + c.totalSpent, 0),
+    vipCustomers: customers.filter(c => c.isVip).length,
+    frequentCustomers: customers.filter(c => c.totalOrders >= 5).length,
     averageSpent: customers.length > 0 ? customers.reduce((sum, c) => sum + c.totalSpent, 0) / customers.length : 0,
-    topCustomerSpent: customers.length > 0 ? Math.max(...customers.map(c => c.totalSpent)) : 0,
-    totalOrders: customers.reduce((sum, c) => sum + c.totalOrders, 0),
   };
 
   return (
@@ -642,167 +629,43 @@ export const CustomersManagement: React.FC = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-md border border-blue-200 hover:shadow-lg transition-shadow">
-          <div className="flex items-start justify-between mb-4">
-            <div className="p-3 bg-blue-600 rounded-lg">
-              <Users className="h-6 w-6 text-white" />
-            </div>
-            <div className="text-right">
-              <p className="text-sm font-medium text-blue-900 mb-1">Total Clientes</p>
-              <p className="text-3xl font-bold text-blue-900">{stats.totalCustomers}</p>
-            </div>
-          </div>
-          <div className="flex items-center justify-between pt-3 border-t border-blue-200">
-            <span className="text-xs text-blue-700 font-medium">Base de clientes</span>
-            <span className="text-sm font-bold text-blue-800">
-              {stats.newCustomers} nuevos
-            </span>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl shadow-md border border-purple-200 hover:shadow-lg transition-shadow">
-          <div className="flex items-start justify-between mb-4">
-            <div className="p-3 bg-purple-600 rounded-lg">
-              <Star className="h-6 w-6 text-white" />
-            </div>
-            <div className="text-right">
-              <p className="text-sm font-medium text-purple-900 mb-1">Clientes VIP</p>
-              <p className="text-3xl font-bold text-purple-900">{stats.vipCustomers}</p>
-            </div>
-          </div>
-          <div className="flex items-center justify-between pt-3 border-t border-purple-200">
-            <span className="text-xs text-purple-700 font-medium">10+ pedidos</span>
-            <span className="text-sm font-bold text-purple-800">
-              {((stats.vipCustomers / stats.totalCustomers) * 100 || 0).toFixed(1)}%
-            </span>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-md border border-green-200 hover:shadow-lg transition-shadow">
-          <div className="flex items-start justify-between mb-4">
-            <div className="p-3 bg-green-600 rounded-lg">
-              <UserCheck className="h-6 w-6 text-white" />
-            </div>
-            <div className="text-right">
-              <p className="text-sm font-medium text-green-900 mb-1">Frecuentes</p>
-              <p className="text-3xl font-bold text-green-900">{stats.frequentCustomers}</p>
-            </div>
-          </div>
-          <div className="flex items-center justify-between pt-3 border-t border-green-200">
-            <span className="text-xs text-green-700 font-medium">5-9 pedidos</span>
-            <span className="text-sm font-bold text-green-800">
-              {((stats.frequentCustomers / stats.totalCustomers) * 100 || 0).toFixed(1)}%
-            </span>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl shadow-md border border-orange-200 hover:shadow-lg transition-shadow">
-          <div className="flex items-start justify-between mb-4">
-            <div className="p-3 bg-orange-600 rounded-lg">
-              <DollarSign className="h-6 w-6 text-white" />
-            </div>
-            <div className="text-right">
-              <p className="text-sm font-medium text-orange-900 mb-1">Gasto Promedio</p>
-              <p className="text-3xl font-bold text-orange-900">${stats.averageSpent.toFixed(2)}</p>
-            </div>
-          </div>
-          <div className="flex items-center justify-between pt-3 border-t border-orange-200">
-            <span className="text-xs text-orange-700 font-medium">Por cliente</span>
-            <span className="text-sm font-bold text-green-700">
-              ${stats.totalRevenue.toFixed(2)}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Additional Stats Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200">
-          <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center">
-            <UserPlus className="w-4 h-4 mr-2" />
-            Segmentación de Clientes
-          </h3>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-2 h-2 rounded-full bg-purple-500 mr-2"></div>
-                <span className="text-sm text-gray-600">VIP (10+ pedidos)</span>
-              </div>
-              <span className="text-sm font-bold text-gray-900">{stats.vipCustomers}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
-                <span className="text-sm text-gray-600">Frecuentes (5-9)</span>
-              </div>
-              <span className="text-sm font-bold text-gray-900">{stats.frequentCustomers}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-2 h-2 rounded-full bg-blue-500 mr-2"></div>
-                <span className="text-sm text-gray-600">Regulares (3-4)</span>
-              </div>
-              <span className="text-sm font-bold text-gray-900">{stats.regularCustomers}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-2 h-2 rounded-full bg-gray-500 mr-2"></div>
-                <span className="text-sm text-gray-600">Nuevos (&lt;3)</span>
-              </div>
-              <span className="text-sm font-bold text-gray-900">{stats.newCustomers}</span>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center">
+            <User className="h-8 w-8 text-blue-600" />
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">{t('totalCustomers')}</p>
+              <p className="text-2xl font-semibold text-gray-900">{stats.totalCustomers}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200">
-          <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center">
-            <TrendingUp className="w-4 h-4 mr-2" />
-            Actividad de Clientes
-          </h3>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Clientes Activos</span>
-              <span className="text-sm font-bold text-green-600">{stats.activeCustomers}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Clientes Inactivos</span>
-              <span className="text-sm font-bold text-red-600">{stats.inactiveCustomers}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Tasa de retención</span>
-              <span className="text-sm font-bold text-blue-600">
-                {((stats.activeCustomers / stats.totalCustomers) * 100 || 0).toFixed(1)}%
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Nuevos este mes</span>
-              <span className="text-sm font-bold text-purple-600">{stats.newCustomers}</span>
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center">
+            <ShoppingBag className="h-8 w-8 text-purple-600" />
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">{t('vipCustomers')}</p>
+              <p className="text-2xl font-semibold text-gray-900">{stats.vipCustomers}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200">
-          <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center">
-            <DollarSign className="w-4 h-4 mr-2" />
-            Métricas de Ingresos
-          </h3>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Ingresos Totales</span>
-              <span className="text-sm font-bold text-green-600">${stats.totalRevenue.toFixed(2)}</span>
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center">
+            <User className="h-8 w-8 text-green-600" />
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">{t('frequentCustomers')}</p>
+              <p className="text-2xl font-semibold text-gray-900">{stats.frequentCustomers}</p>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Gasto Promedio</span>
-              <span className="text-sm font-bold text-blue-600">${stats.averageSpent.toFixed(2)}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Cliente más valioso</span>
-              <span className="text-sm font-bold text-purple-600">${stats.topCustomerSpent.toFixed(2)}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Pedidos totales</span>
-              <span className="text-sm font-bold text-orange-600">{stats.totalOrders}</span>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center">
+            <Calendar className="h-8 w-8 text-orange-600" />
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">{t('averageSpent')}</p>
+              <p className="text-2xl font-semibold text-gray-900">${stats.averageSpent.toFixed(2)}</p>
             </div>
           </div>
         </div>

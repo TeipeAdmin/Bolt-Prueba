@@ -202,21 +202,17 @@ export const MenuManagement: React.FC = () => {
     const currentIndex = restaurantProducts.findIndex((p: Product) => p.id === productId);
     if (currentIndex <= 0) return;
 
-    // Swap products in the array
-    [restaurantProducts[currentIndex], restaurantProducts[currentIndex - 1]] =
-    [restaurantProducts[currentIndex - 1], restaurantProducts[currentIndex]];
+    const currentProduct = restaurantProducts[currentIndex];
+    const previousProduct = restaurantProducts[currentIndex - 1];
 
-    // Re-assign order_index sequentially
-    restaurantProducts.forEach((product, index) => {
-      product.order_index = index;
-      product.updated_at = new Date().toISOString();
-    });
+    const tempIndex = currentProduct.order_index;
 
-    // Update all products
-    const productMap = new Map(restaurantProducts.map(p => [p.id, p]));
     const updatedProducts = allProducts.map((p: Product) => {
-      if (productMap.has(p.id)) {
-        return productMap.get(p.id)!;
+      if (p.id === currentProduct.id) {
+        return { ...p, order_index: previousProduct.order_index, updated_at: new Date().toISOString() };
+      }
+      if (p.id === previousProduct.id) {
+        return { ...p, order_index: tempIndex, updated_at: new Date().toISOString() };
       }
       return p;
     });
@@ -241,21 +237,17 @@ export const MenuManagement: React.FC = () => {
     const currentIndex = restaurantProducts.findIndex((p: Product) => p.id === productId);
     if (currentIndex >= restaurantProducts.length - 1) return;
 
-    // Swap products in the array
-    [restaurantProducts[currentIndex], restaurantProducts[currentIndex + 1]] =
-    [restaurantProducts[currentIndex + 1], restaurantProducts[currentIndex]];
+    const currentProduct = restaurantProducts[currentIndex];
+    const nextProduct = restaurantProducts[currentIndex + 1];
 
-    // Re-assign order_index sequentially
-    restaurantProducts.forEach((product, index) => {
-      product.order_index = index;
-      product.updated_at = new Date().toISOString();
-    });
+    const tempIndex = currentProduct.order_index;
 
-    // Update all products
-    const productMap = new Map(restaurantProducts.map(p => [p.id, p]));
     const updatedProducts = allProducts.map((p: Product) => {
-      if (productMap.has(p.id)) {
-        return productMap.get(p.id)!;
+      if (p.id === currentProduct.id) {
+        return { ...p, order_index: nextProduct.order_index, updated_at: new Date().toISOString() };
+      }
+      if (p.id === nextProduct.id) {
+        return { ...p, order_index: tempIndex, updated_at: new Date().toISOString() };
       }
       return p;
     });
