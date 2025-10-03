@@ -123,17 +123,15 @@ export const CustomersManagement: React.FC = () => {
     // Apply segment filter
     if (filterBy !== 'all') {
       filtered = filtered.filter(customer => {
-        const isVip = customer.isVip || customer.totalOrders >= 10;
-        const isFrequent = customer.totalOrders >= 5 && !isVip;
-        const isNew = customer.totalOrders < 3 && !isFrequent && !isVip;
-
         switch (filterBy) {
           case 'vip':
-            return isVip;
+            return customer.isVip;
           case 'frequent':
-            return isFrequent;
+            return customer.totalOrders >= 5;
+          case 'regular':
+            return customer.totalOrders >= 2 && customer.totalOrders <= 4;
           case 'new':
-            return isNew;
+            return customer.totalOrders === 1;
           default:
             return true;
         }
@@ -586,10 +584,10 @@ export const CustomersManagement: React.FC = () => {
   };
   const stats = {
     totalCustomers: customers.length,
-    vipCustomers: customers.filter(c => c.isVip || c.totalOrders >= 10).length,
-    frequentCustomers: customers.filter(c => c.totalOrders >= 5 && c.totalOrders < 10).length,
-    regularCustomers: customers.filter(c => c.totalOrders >= 3 && c.totalOrders < 5).length,
-    newCustomers: customers.filter(c => c.totalOrders < 3).length,
+    vipCustomers: customers.filter(c => c.isVip).length,
+    frequentCustomers: customers.filter(c => c.totalOrders >= 5).length,
+    regularCustomers: customers.filter(c => c.totalOrders >= 2 && c.totalOrders <= 4).length,
+    newCustomers: customers.filter(c => c.totalOrders === 1).length,
     activeCustomers: customers.filter(c => {
       const daysSinceLastOrder = Math.ceil((new Date().getTime() - new Date(c.lastOrderDate).getTime()) / (1000 * 60 * 60 * 24));
       return daysSinceLastOrder <= 30;
@@ -672,7 +670,7 @@ export const CustomersManagement: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center justify-between pt-3 border-t border-purple-200">
-            <span className="text-xs text-purple-700 font-medium">10+ pedidos</span>
+            <span className="text-xs text-purple-700 font-medium">Asignados manualmente</span>
             <span className="text-sm font-bold text-purple-800">
               {((stats.vipCustomers / stats.totalCustomers) * 100 || 0).toFixed(1)}%
             </span>
@@ -690,7 +688,7 @@ export const CustomersManagement: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center justify-between pt-3 border-t border-green-200">
-            <span className="text-xs text-green-700 font-medium">5-9 pedidos</span>
+            <span className="text-xs text-green-700 font-medium">5+ pedidos</span>
             <span className="text-sm font-bold text-green-800">
               {((stats.frequentCustomers / stats.totalCustomers) * 100 || 0).toFixed(1)}%
             </span>
@@ -757,8 +755,9 @@ export const CustomersManagement: React.FC = () => {
               >
                 <option value="all">Todos los segmentos</option>
                 <option value="vip">Solo VIP</option>
-                <option value="frequent">Solo Frecuentes</option>
-                <option value="new">Solo Nuevos</option>
+                <option value="frequent">Solo Frecuentes (5+)</option>
+                <option value="regular">Solo Regular (2-4)</option>
+                <option value="new">Solo Nuevos (1)</option>
               </select>
             </div>
             
