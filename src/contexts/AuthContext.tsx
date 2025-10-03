@@ -21,6 +21,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [requirePasswordChange, setRequirePasswordChange] = useState(false);
 
   useEffect(() => {
     const savedAuth = loadFromStorage('currentAuth', null);
@@ -98,6 +99,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
 
     console.log('Login successful');
+
+    // Check if password change is required
+    if (foundUser.require_password_change) {
+      setUser(foundUser);
+      setRestaurant(userRestaurant);
+      setRequirePasswordChange(true);
+      setIsAuthenticated(false);
+      return { success: true };
+    }
+
     setUser(foundUser);
     setRestaurant(userRestaurant);
     setIsAuthenticated(true);
@@ -111,6 +122,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     saveToStorage('currentAuth', authData);
 
     return { success: true };
+  };
+
+  const changePassword = (newPassword: string) => {
+    if (!user) return;
+
+    const users = loadFromStorage('users', []) as User[];
+    const updatedUsers = users.map((u: User) =>
+      u.id === user.id
+        ? { ...u, password: newPassword, require_password_change: false, updated_at: new Date().toISOString() }
+        : u
+    );
+
+    saveToStorage('users', updatedUsers);
+
+    const updatedUser = { ...user, password: newPassword, require_password_change: false };
+    setUser(updatedUser);
+    setRequirePasswordChange(false);
+    setIsAuthenticated(true);
+
+    // Save to localStorage
+    const authData = {
+      user: updatedUser,
+      restaurant
+    };
+    saveToStorage('currentAuth', authData);
   };
 
   const register = async (data: RegisterData): Promise<{ success: boolean; error?: string }> => {
@@ -229,6 +265,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     register,
     logout,
     loading,
+    requirePasswordChange,
+    changePassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

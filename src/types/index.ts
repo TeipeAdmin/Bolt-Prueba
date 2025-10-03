@@ -7,6 +7,7 @@ export interface User {
   created_at: string;
   updated_at: string;
   email_verified?: boolean;
+  require_password_change?: boolean;
 }
 
 export interface Customer {
@@ -266,4 +267,16 @@ export interface Plan {
   billing_period: 'monthly' | 'yearly';
   features: PlanFeatures;
   popular?: boolean;
+}
+
+export interface AuthContextType {
+  user: User | null;
+  restaurant: Restaurant | null;
+  isAuthenticated: boolean;
+  loading: boolean;
+  requirePasswordChange?: boolean;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  register: (data: RegisterData) => Promise<{ success: boolean; error?: string }>;
+  logout: () => void;
+  changePassword?: (newPassword: string) => void;
 }

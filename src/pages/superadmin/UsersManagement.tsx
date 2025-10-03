@@ -14,6 +14,8 @@ export const UsersManagement: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showCreateUserModal, setShowCreateUserModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserType | null>(null);
   const [assigningUser, setAssigningUser] = useState<UserType | null>(null);
   const [selectedRestaurantId, setSelectedRestaurantId] = useState('');
   const [filter, setFilter] = useState<string>('all');
@@ -22,6 +24,7 @@ export const UsersManagement: React.FC = () => {
     email: '',
     password: '',
     role: 'restaurant_owner' as UserType['role'],
+    restaurant_id: '',
   });
 
   useEffect(() => {
@@ -126,8 +129,11 @@ export const UsersManagement: React.FC = () => {
       email: newUserForm.email,
       password: newUserForm.password,
       role: newUserForm.role,
+      restaurant_id: newUserForm.restaurant_id || undefined,
       email_verified: true,
+      require_password_change: true,
       created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
 
     const updatedUsers = [...users, newUser];
@@ -139,8 +145,35 @@ export const UsersManagement: React.FC = () => {
       email: '',
       password: '',
       role: 'restaurant_owner',
+      restaurant_id: '',
     });
     setShowCreateUserModal(false);
+  };
+
+  const handleEditUser = (user: UserType) => {
+    setEditingUser(user);
+    setSelectedRestaurantId(user.restaurant_id || '');
+    setShowEditModal(true);
+  };
+
+  const saveUserEdit = () => {
+    if (!editingUser) return;
+
+    const updatedUsers = users.map(user =>
+      user.id === editingUser.id
+        ? {
+            ...user,
+            restaurant_id: selectedRestaurantId || undefined,
+            updated_at: new Date().toISOString()
+          }
+        : user
+    );
+
+    saveToStorage('users', updatedUsers);
+    setUsers(updatedUsers);
+    setShowEditModal(false);
+    setEditingUser(null);
+    setSelectedRestaurantId('');
   };
 
   const filteredUsers = users.filter(user => {
@@ -271,10 +304,8 @@ export const UsersManagement: React.FC = () => {
                           variant="ghost"
                           size="sm"
                           icon={Edit}
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setShowModal(true);
-                          }}
+                          onClick={() => handleEditUser(user)}
+                          title="Editar asignación de restaurante"
                         />
                         
                         {user.role === 'restaurant' && (
@@ -511,6 +542,35 @@ export const UsersManagement: React.FC = () => {
             </p>
           </div>
 
+          {newUserForm.role === 'restaurant_owner' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Restaurante (Opcional)
+              </label>
+              <select
+                value={newUserForm.restaurant_id}
+                onChange={(e) => setNewUserForm(prev => ({ ...prev, restaurant_id: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Sin restaurante asignado</option>
+                {restaurants.map(restaurant => (
+                  <option key={restaurant.id} value={restaurant.id}>
+                    {restaurant.name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Puedes asignar un restaurante ahora o después
+              </p>
+            </div>
+          )}
+
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <p className="text-sm text-amber-800">
+              <strong>Contraseña provisional:</strong> El usuario deberá cambiar su contraseña al iniciar sesión por primera vez.
+            </p>
+          </div>
+
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
             <Button
               variant="ghost"
@@ -520,6 +580,7 @@ export const UsersManagement: React.FC = () => {
                   email: '',
                   password: '',
                   role: 'restaurant_owner',
+                  restaurant_id: '',
                 });
               }}
             >
@@ -534,6 +595,86 @@ export const UsersManagement: React.FC = () => {
             </Button>
           </div>
         </div>
+      </Modal>
+
+      {/* Edit User Modal */}
+      <Modal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setEditingUser(null);
+          setSelectedRestaurantId('');
+        }}
+        title="Editar Usuario"
+        size="md"
+      >
+        {editingUser && (
+          <div className="space-y-6">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-blue-800">
+                <strong>Usuario:</strong> {editingUser.email}
+              </p>
+              <p className="text-sm text-blue-700 mt-1">
+                <strong>Rol:</strong> {editingUser.role === 'super_admin' ? 'Superadministrador' : 'Restaurante'}
+              </p>
+            </div>
+
+            {editingUser.restaurant_id && (
+              <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                <p className="text-sm text-gray-700">
+                  <strong>Restaurante actual:</strong> {getRestaurant(editingUser.id)?.name || 'Sin asignar'}
+                </p>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Asignar Restaurante
+              </label>
+              <select
+                value={selectedRestaurantId}
+                onChange={(e) => setSelectedRestaurantId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Sin restaurante asignado</option>
+                {restaurants.map(restaurant => (
+                  <option key={restaurant.id} value={restaurant.id}>
+                    {restaurant.name} ({restaurant.domain})
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-2">
+                Selecciona un restaurante para asignar o deja en blanco para remover la asignación
+              </p>
+            </div>
+
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <p className="text-sm text-gray-600">
+                <strong>Nota:</strong> Múltiples usuarios pueden estar asignados al mismo restaurante y compartirán el acceso a toda su información.
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingUser(null);
+                  setSelectedRestaurantId('');
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="primary"
+                onClick={saveUserEdit}
+                icon={Edit}
+              >
+                Guardar Cambios
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );
