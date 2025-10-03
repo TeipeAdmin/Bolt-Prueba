@@ -288,4 +288,5 @@ export interface AuthContextType {
   register: (data: RegisterData) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   changePassword?: (newPassword: string) => void;
+  resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
 }

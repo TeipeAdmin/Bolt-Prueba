@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
+import { ForgotPasswordModal } from './ForgotPasswordModal';
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;
@@ -15,8 +16,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
-  const { login } = useAuth();
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+
+  const { login, resetPassword } = useAuth();
   const { t } = useLanguage();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -91,7 +93,16 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
           </Button>
         </form>
 
-        <div className="mt-6 text-center">
+        <div className="mt-4 text-center">
+          <button
+            onClick={() => setShowForgotPassword(true)}
+            className="text-sm text-gray-600 hover:text-gray-800 underline"
+          >
+            ¿Olvidé mi contraseña?
+          </button>
+        </div>
+
+        <div className="mt-4 text-center">
           <button
             onClick={onSwitchToRegister}
             className="text-blue-600 hover:text-blue-700 font-medium"
@@ -108,6 +119,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
           </div>
         </div>
       </div>
+
+      <ForgotPasswordModal
+        isOpen={showForgotPassword}
+        onClose={() => setShowForgotPassword(false)}
+        onResetPassword={resetPassword}
+      />
     </div>
   );
 };

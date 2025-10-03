@@ -291,6 +291,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return { success: true };
   };
 
+  const resetPassword = async (email: string): Promise<{ success: boolean; error?: string }> => {
+    const users = loadFromStorage('users', []) as User[];
+
+    const foundUser = users.find((u: User) => u.email === email);
+
+    if (!foundUser) {
+      return { success: false, error: 'No se encontró una cuenta con ese email' };
+    }
+
+    console.log('Password reset requested for:', email);
+    console.log('In a real application, an email would be sent to:', email);
+
+    return { success: true };
+  };
+
   const logout = () => {
     setUser(null);
     setRestaurant(null);
@@ -308,6 +323,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     loading,
     requirePasswordChange,
     changePassword,
+    resetPassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
