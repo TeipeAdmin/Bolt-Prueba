@@ -281,7 +281,7 @@ export const SubscriptionsManagement: React.FC = () => {
               >
                 <option value="all">Todos los estados</option>
                 <option value="active">Activa</option>
-                <option value="cancelled">Cancelada</option>
+                <option value="expired">Vencida</option>
               </select>
             </div>
           </div>
