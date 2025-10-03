@@ -4,6 +4,7 @@ import { Restaurant, Subscription, User } from '../../types';
 import { loadFromStorage } from '../../data/mockData';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
 
 export const SuperAdminAnalytics: React.FC = () => {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
@@ -11,6 +12,8 @@ export const SuperAdminAnalytics: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [selectedPlanFilter, setSelectedPlanFilter] = useState<string>('all');
   const [selectedPeriodFilter, setSelectedPeriodFilter] = useState<string>('all');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   useEffect(() => {
     const restaurantData = loadFromStorage('restaurants') || [];
@@ -22,16 +25,20 @@ export const SuperAdminAnalytics: React.FC = () => {
     setUsers(userData);
   }, []);
 
-  // Calculate analytics
+  // Filter subscriptions first
+  const filteredSubscriptions = getFilteredSubscriptions();
+
+  // Calculate analytics based on filtered data
   const totalRestaurants = restaurants.length;
   const activeRestaurants = restaurants.filter(r => r.status === 'active').length;
   const pendingRestaurants = restaurants.filter(r => r.status === 'pending').length;
   const totalUsers = users.length;
   const verifiedUsers = users.filter(u => u.email_verified).length;
 
-  const activeSubscriptions = subscriptions.filter(s => s.status === 'active').length;
-  const expiredSubscriptions = subscriptions.filter(s => s.status === 'expired').length;
-  const trialSubscriptions = subscriptions.filter(s => s.status === 'trial').length;
+  // Subscription stats from filtered data
+  const activeSubscriptions = filteredSubscriptions.filter(s => s.status === 'active').length;
+  const expiredSubscriptions = filteredSubscriptions.filter(s => s.status === 'expired').length;
+  const totalFilteredSubscriptions = filteredSubscriptions.length;
 
   // Monthly registrations
   const getMonthlyRegistrations = () => {
@@ -50,12 +57,12 @@ export const SuperAdminAnalytics: React.FC = () => {
 
   const monthlyRegistrations = getMonthlyRegistrations();
 
-  // Plan distribution
+  // Plan distribution from filtered data
   const planDistribution = {
-    gratis: subscriptions.filter(s => s.plan_type === 'gratis').length,
-    basic: subscriptions.filter(s => s.plan_type === 'basic').length,
-    pro: subscriptions.filter(s => s.plan_type === 'pro').length,
-    business: subscriptions.filter(s => s.plan_type === 'business').length,
+    gratis: filteredSubscriptions.filter(s => s.plan_type === 'gratis').length,
+    basic: filteredSubscriptions.filter(s => s.plan_type === 'basic').length,
+    pro: filteredSubscriptions.filter(s => s.plan_type === 'pro').length,
+    business: filteredSubscriptions.filter(s => s.plan_type === 'business').length,
   };
 
   // Plan prices (monthly) - Updated with correct prices
@@ -82,33 +89,45 @@ export const SuperAdminAnalytics: React.FC = () => {
       filtered = filtered.filter(s => s.plan_type === selectedPlanFilter);
     }
 
-    // Filter by period
-    if (selectedPeriodFilter !== 'all') {
+    // Filter by period (only if custom dates are not set)
+    if (selectedPeriodFilter !== 'all' && !startDate && !endDate) {
       const now = new Date();
-      const startDate = new Date();
+      const periodStartDate = new Date();
 
       switch (selectedPeriodFilter) {
         case 'today':
-          startDate.setHours(0, 0, 0, 0);
+          periodStartDate.setHours(0, 0, 0, 0);
           break;
         case 'week':
-          startDate.setDate(now.getDate() - 7);
+          periodStartDate.setDate(now.getDate() - 7);
           break;
         case 'month':
-          startDate.setMonth(now.getMonth() - 1);
+          periodStartDate.setMonth(now.getMonth() - 1);
           break;
         case 'year':
-          startDate.setFullYear(now.getFullYear() - 1);
+          periodStartDate.setFullYear(now.getFullYear() - 1);
           break;
       }
 
-      filtered = filtered.filter(s => new Date(s.created_at) >= startDate);
+      filtered = filtered.filter(s => new Date(s.created_at) >= periodStartDate);
+    }
+
+    // Filter by custom date range
+    if (startDate || endDate) {
+      filtered = filtered.filter(s => {
+        const subDate = new Date(s.created_at);
+        if (startDate && subDate < new Date(startDate)) return false;
+        if (endDate) {
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          if (subDate > end) return false;
+        }
+        return true;
+      });
     }
 
     return filtered;
   };
-
-  const filteredSubscriptions = getFilteredSubscriptions();
 
   // Calculate economic statistics
   const calculateRevenue = (subs: Subscription[]) => {
@@ -165,53 +184,78 @@ export const SuperAdminAnalytics: React.FC = () => {
 
       {/* Filters */}
       <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-        <div className="flex items-center gap-4 flex-wrap">
+        <div className="space-y-4">
           <div className="flex items-center gap-2">
             <Filter className="w-5 h-5 text-gray-600" />
             <span className="text-sm font-medium text-gray-700">Filtros:</span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-600">Plan:</label>
-            <select
-              value={selectedPlanFilter}
-              onChange={(e) => setSelectedPlanFilter(e.target.value)}
-              className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="all">Todos</option>
-              <option value="gratis">Gratis</option>
-              <option value="basic">Basic</option>
-              <option value="pro">Pro</option>
-              <option value="business">Business</option>
-            </select>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Plan</label>
+              <select
+                value={selectedPlanFilter}
+                onChange={(e) => setSelectedPlanFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">Todos los planes</option>
+                <option value="gratis">Gratis</option>
+                <option value="basic">Basic</option>
+                <option value="pro">Pro</option>
+                <option value="business">Business</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Período</label>
+              <select
+                value={selectedPeriodFilter}
+                onChange={(e) => setSelectedPeriodFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                disabled={!!(startDate || endDate)}
+              >
+                <option value="all">Todo el tiempo</option>
+                <option value="today">Hoy</option>
+                <option value="week">Última semana</option>
+                <option value="month">Último mes</option>
+                <option value="year">Último año</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Desde</label>
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Hasta</label>
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-600">Período:</label>
-            <select
-              value={selectedPeriodFilter}
-              onChange={(e) => setSelectedPeriodFilter(e.target.value)}
-              className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="all">Todo el tiempo</option>
-              <option value="today">Hoy</option>
-              <option value="week">Última semana</option>
-              <option value="month">Último mes</option>
-              <option value="year">Último año</option>
-            </select>
-          </div>
-
-          {(selectedPlanFilter !== 'all' || selectedPeriodFilter !== 'all') && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setSelectedPlanFilter('all');
-                setSelectedPeriodFilter('all');
-              }}
-            >
-              Limpiar filtros
-            </Button>
+          {(selectedPlanFilter !== 'all' || selectedPeriodFilter !== 'all' || startDate || endDate) && (
+            <div className="flex justify-end">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSelectedPlanFilter('all');
+                  setSelectedPeriodFilter('all');
+                  setStartDate('');
+                  setEndDate('');
+                }}
+              >
+                Limpiar filtros
+              </Button>
+            </div>
           )}
         </div>
       </div>
@@ -312,11 +356,15 @@ export const SuperAdminAnalytics: React.FC = () => {
           <div className="flex items-center">
             <DollarSign className="h-8 w-8 text-purple-600" />
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Suscripciones Activas</p>
-              <p className="text-2xl font-semibold text-gray-900">{activeSubscriptions}</p>
+              <p className="text-sm font-medium text-gray-600">Suscripciones</p>
+              <p className="text-2xl font-semibold text-gray-900">{totalFilteredSubscriptions}</p>
             </div>
           </div>
           <div className="mt-2">
+            <span className="text-sm text-green-600 font-medium">
+              {activeSubscriptions} activas
+            </span>
+            <span className="text-sm text-gray-400 mx-1">•</span>
             <span className="text-sm text-red-600 font-medium">
               {expiredSubscriptions} vencidas
             </span>
@@ -375,51 +423,51 @@ export const SuperAdminAnalytics: React.FC = () => {
           </h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Básico</span>
+              <span className="text-sm text-gray-600">Gratis</span>
               <div className="flex items-center">
                 <div className="w-32 bg-gray-200 rounded-full h-2 mr-3">
-                  <div 
-                    className="bg-blue-500 h-2 rounded-full" 
-                    style={{ width: `${(planDistribution.basic / subscriptions.length) * 100}%` }}
+                  <div
+                    className="bg-gray-500 h-2 rounded-full"
+                    style={{ width: `${totalFilteredSubscriptions > 0 ? (planDistribution.gratis / totalFilteredSubscriptions) * 100 : 0}%` }}
+                  />
+                </div>
+                <span className="text-sm font-medium text-gray-900">{planDistribution.gratis}</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Basic</span>
+              <div className="flex items-center">
+                <div className="w-32 bg-gray-200 rounded-full h-2 mr-3">
+                  <div
+                    className="bg-blue-500 h-2 rounded-full"
+                    style={{ width: `${totalFilteredSubscriptions > 0 ? (planDistribution.basic / totalFilteredSubscriptions) * 100 : 0}%` }}
                   />
                 </div>
                 <span className="text-sm font-medium text-gray-900">{planDistribution.basic}</span>
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Premium</span>
+              <span className="text-sm text-gray-600">Pro</span>
               <div className="flex items-center">
                 <div className="w-32 bg-gray-200 rounded-full h-2 mr-3">
-                  <div 
-                    className="bg-green-500 h-2 rounded-full" 
-                    style={{ width: `${(planDistribution.premium / subscriptions.length) * 100}%` }}
+                  <div
+                    className="bg-green-500 h-2 rounded-full"
+                    style={{ width: `${totalFilteredSubscriptions > 0 ? (planDistribution.pro / totalFilteredSubscriptions) * 100 : 0}%` }}
                   />
                 </div>
-                <span className="text-sm font-medium text-gray-900">{planDistribution.premium}</span>
+                <span className="text-sm font-medium text-gray-900">{planDistribution.pro}</span>
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Enterprise</span>
+              <span className="text-sm text-gray-600">Business</span>
               <div className="flex items-center">
                 <div className="w-32 bg-gray-200 rounded-full h-2 mr-3">
-                  <div 
-                    className="bg-purple-500 h-2 rounded-full" 
-                    style={{ width: `${(planDistribution.enterprise / subscriptions.length) * 100}%` }}
+                  <div
+                    className="bg-orange-500 h-2 rounded-full"
+                    style={{ width: `${totalFilteredSubscriptions > 0 ? (planDistribution.business / totalFilteredSubscriptions) * 100 : 0}%` }}
                   />
                 </div>
-                <span className="text-sm font-medium text-gray-900">{planDistribution.enterprise}</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Prueba</span>
-              <div className="flex items-center">
-                <div className="w-32 bg-gray-200 rounded-full h-2 mr-3">
-                  <div 
-                    className="bg-yellow-500 h-2 rounded-full" 
-                    style={{ width: `${(planDistribution.trial / subscriptions.length) * 100}%` }}
-                  />
-                </div>
-                <span className="text-sm font-medium text-gray-900">{planDistribution.trial}</span>
+                <span className="text-sm font-medium text-gray-900">{planDistribution.business}</span>
               </div>
             </div>
           </div>
