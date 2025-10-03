@@ -73,7 +73,7 @@ export const mockUsers: User[] = [
     password: 'admin123',
     role: 'super_admin',
     created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
+    email_verified: true,
   },
   {
     id: 'user-orlando',
@@ -81,7 +81,7 @@ export const mockUsers: User[] = [
     password: 'orlando123',
     role: 'restaurant_owner',
     created_at: '2024-01-15T00:00:00Z',
-    updated_at: '2024-01-15T00:00:00Z',
+    email_verified: true,
   },
 ];
 
@@ -89,7 +89,7 @@ export const mockUsers: User[] = [
 export const mockRestaurants: Restaurant[] = [
   {
     id: 'rest-orlando',
-    owner_id: 'user-orlando',
+    user_id: 'user-orlando',
     name: 'Restaurante Orlando',
     slug: 'restaurante-orlando',
     email: 'orlando@gmail.com',
@@ -98,7 +98,6 @@ export const mockRestaurants: Restaurant[] = [
     description: 'Deliciosa comida casera con ingredientes frescos y recetas tradicionales.',
     logo: 'https://images.pexels.com/photos/1566837/pexels-photo-1566837.jpeg?auto=compress&cs=tinysrgb&w=300',
     owner_name: 'Orlando',
-    is_active: true,
     settings: {
       currency: 'USD',
       language: 'es',
@@ -164,13 +163,10 @@ export const mockRestaurants: Restaurant[] = [
         cta_text: 'Ver Ofertas',
         cta_link: '',
       },
-      table_orders: {
-        enabled: true,
-        table_numbers: 10,
-        qr_codes: true,
-        auto_assign: false,
-      },
     },
+    subscription_id: 'sub-orlando',
+    status: 'active',
+    domain: 'restaurante-orlando',
     created_at: '2024-01-15T00:00:00Z',
     updated_at: '2024-12-01T00:00:00Z',
   },
@@ -183,19 +179,18 @@ export const mockSubscriptions: Subscription[] = [
     restaurant_id: 'rest-orlando',
     plan_type: 'free',
     start_date: '2024-01-15T00:00:00Z',
-    end_date: '2099-12-31T23:59:59Z',
+    end_date: '2099-12-31T23:59:59Z', // Free plan never expires
     status: 'active',
     auto_renew: false,
     created_at: '2024-01-15T00:00:00Z',
-    updated_at: '2024-01-15T00:00:00Z',
   },
 ];
 
 // Mock categories
 export const mockCategories: Category[] = [
   // Restaurante Orlando
-  { id: 'cat-1', restaurant_id: 'rest-orlando', name: 'Platos Principales', description: 'Nuestros platos principales', icon: '🍽️', order_position: 1, order_index: 1, is_active: true, active: true, created_at: '2024-01-15T00:00:00Z', updated_at: '2024-01-15T00:00:00Z' },
-  { id: 'cat-2', restaurant_id: 'rest-orlando', name: 'Bebidas', description: 'Bebidas refrescantes', icon: '🥤', order_position: 2, order_index: 2, is_active: true, active: true, created_at: '2024-01-15T00:00:00Z', updated_at: '2024-01-15T00:00:00Z' },
+  { id: 'cat-1', restaurant_id: 'rest-orlando', name: 'Platos Principales', description: 'Nuestros platos principales', icon: '🍽️', order_position: 1, active: true, created_at: '2024-01-15T00:00:00Z' },
+  { id: 'cat-2', restaurant_id: 'rest-orlando', name: 'Bebidas', description: 'Bebidas refrescantes', icon: '🥤', order_position: 2, active: true, created_at: '2024-01-15T00:00:00Z' },
 ];
 
 // Mock products
@@ -365,24 +360,9 @@ export const initializeData = (): void => {
 
     console.log('Data initialized:', {
       users: mockUsers,
-      restaurants: mockRestaurants,
-      subscriptions: mockSubscriptions
+      restaurants: mockRestaurants
     });
   } else {
     console.log('Data already initialized, skipping...');
   }
-};
-
-// Force reinitialize data (useful for development)
-export const resetData = (): void => {
-  console.log('Resetting all data...');
-  localStorage.clear();
-  saveToStorage('users', mockUsers);
-  saveToStorage('restaurants', mockRestaurants);
-  saveToStorage('subscriptions', mockSubscriptions);
-  saveToStorage('categories', mockCategories);
-  saveToStorage('products', mockProducts);
-  saveToStorage('orders', mockOrders);
-  localStorage.setItem('data_initialized', 'true');
-  console.log('Data reset complete');
 };

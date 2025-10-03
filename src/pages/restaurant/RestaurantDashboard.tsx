@@ -189,8 +189,8 @@ export const RestaurantDashboard: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <p className="text-sm font-medium text-gray-600">{t('status')}</p>
-            <Badge variant={restaurant?.is_active ? 'success' : 'warning'}>
-              {restaurant?.is_active ? t('active') : t('pending')}
+            <Badge variant={restaurant?.status === 'active' ? 'success' : 'warning'}>
+              {restaurant?.status === 'active' ? t('active') : t('pending')}
             </Badge>
           </div>
           <div>
@@ -273,8 +273,8 @@ export const RestaurantDashboard: React.FC = () => {
                       {order.order_number}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{order.customer?.name || 'N/A'}</div>
-                      <div className="text-sm text-gray-500">{order.customer?.phone || 'N/A'}</div>
+                      <div className="text-sm text-gray-900">{order.customer.name}</div>
+                      <div className="text-sm text-gray-500">{order.customer.phone}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {order.order_type === 'table' ? (
