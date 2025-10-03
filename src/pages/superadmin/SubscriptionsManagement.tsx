@@ -53,27 +53,43 @@ export const SubscriptionsManagement: React.FC = () => {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (subError) throw subError;
+      if (subError) {
+        console.error('Error loading subscriptions:', subError);
+        throw subError;
+      }
 
       // Load restaurants from Supabase
       const { data: restaurantData, error: restError } = await supabase
         .from('restaurants')
         .select('*');
 
-      if (restError) throw restError;
+      if (restError) {
+        console.error('Error loading restaurants:', restError);
+        throw restError;
+      }
+
+      console.log('Subscriptions loaded:', subscriptionData);
+      console.log('Restaurants loaded:', restaurantData);
 
       // Map the data to match the expected types
-      const mappedSubscriptions: Subscription[] = (subscriptionData || []).map(sub => ({
-        id: sub.id,
-        restaurant_id: sub.restaurant_id,
-        plan_type: sub.plan_type as Subscription['plan_type'],
-        status: sub.status as Subscription['status'],
-        duration: 'monthly' as Subscription['duration'], // Default to monthly
-        start_date: sub.start_date,
-        end_date: sub.end_date,
-        auto_renew: sub.auto_renew,
-        created_at: sub.created_at,
-      }));
+      const mappedSubscriptions: Subscription[] = (subscriptionData || []).map(sub => {
+        // Map 'free' to 'gratis' for display consistency
+        const planType = sub.plan_type === 'free' ? 'gratis' : sub.plan_type;
+
+        return {
+          id: sub.id,
+          restaurant_id: sub.restaurant_id,
+          plan_type: planType as Subscription['plan_type'],
+          status: sub.status as Subscription['status'],
+          duration: 'monthly' as Subscription['duration'],
+          start_date: sub.start_date,
+          end_date: sub.end_date,
+          auto_renew: sub.auto_renew || false,
+          created_at: sub.created_at,
+        };
+      });
+
+      console.log('Mapped subscriptions:', mappedSubscriptions);
 
       setSubscriptions(mappedSubscriptions);
       setRestaurants(restaurantData || []);
@@ -180,6 +196,7 @@ export const SubscriptionsManagement: React.FC = () => {
 
   const getPlanBadge = (planType: Subscription['plan_type']) => {
     switch (planType) {
+      case 'free':
       case 'gratis':
         return <Badge variant="gray">Gratis</Badge>;
       case 'basic':
@@ -199,7 +216,10 @@ export const SubscriptionsManagement: React.FC = () => {
     }
   };
 
-  const isExpiringSoon = (endDate: string) => {
+  const isExpiringSoon = (endDate: string, planType: Subscription['plan_type']) => {
+    // Free/gratis plans don't expire in the traditional sense
+    if (planType === 'free' || planType === 'gratis') return false;
+
     const end = new Date(endDate);
     const now = new Date();
     const daysUntilExpiry = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
@@ -248,7 +268,7 @@ export const SubscriptionsManagement: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Por Vencer (7 días)</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {subscriptions.filter(s => isExpiringSoon(s.end_date) && s.plan_type !== 'gratis').length}
+                {subscriptions.filter(s => isExpiringSoon(s.end_date, s.plan_type)).length}
               </p>
             </div>
           </div>
@@ -434,7 +454,7 @@ export const SubscriptionsManagement: React.FC = () => {
                 })
                 .map((subscription) => {
                 const restaurant = getRestaurant(subscription.restaurant_id);
-                const expiringSoon = isExpiringSoon(subscription.end_date);
+                const expiringSoon = isExpiringSoon(subscription.end_date, subscription.plan_type);
                 const expired = isExpired(subscription.end_date);
                 
                 return (
