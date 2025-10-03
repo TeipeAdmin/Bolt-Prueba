@@ -291,7 +291,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return { success: true };
   };
 
-  const resetPassword = async (email: string): Promise<{ success: boolean; error?: string }> => {
+  const resetPassword = async (email: string, code: string, newPassword: string): Promise<{ success: boolean; error?: string; code?: string }> => {
     const users = loadFromStorage('users', []) as User[];
 
     const foundUser = users.find((u: User) => u.email === email);
@@ -300,8 +300,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return { success: false, error: 'No se encontró una cuenta con ese email' };
     }
 
-    console.log('Password reset requested for:', email);
-    console.log('In a real application, an email would be sent to:', email);
+    if (!code && !newPassword) {
+      const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
+      console.log('Password reset code generated for:', email, '- Code:', generatedCode);
+      return { success: true, code: generatedCode };
+    }
+
+    const storedCode = code;
+    if (!storedCode) {
+      return { success: false, error: 'Código inválido o expirado' };
+    }
+
+    const updatedUsers = users.map((u: User) =>
+      u.id === foundUser.id
+        ? { ...u, password: newPassword, updated_at: new Date().toISOString() }
+        : u
+    );
+
+    saveToStorage('users', updatedUsers);
+    console.log('Password reset successfully for:', email);
 
     return { success: true };
   };
