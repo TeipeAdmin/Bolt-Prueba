@@ -359,7 +359,6 @@ export const initializeData = (): void => {
     saveToStorage('categories', mockCategories);
     saveToStorage('products', mockProducts);
     saveToStorage('orders', mockOrders);
-    saveToStorage('supportTickets', []);
     localStorage.setItem('data_initialized', 'true');
 
     console.log('Data initialized:', {
@@ -380,7 +379,6 @@ export const resetAllData = (): void => {
   saveToStorage('categories', mockCategories);
   saveToStorage('products', mockProducts);
   saveToStorage('orders', mockOrders);
-  saveToStorage('supportTickets', []);
   localStorage.setItem('data_initialized', 'true');
   console.log('Data reset complete!');
   window.location.reload();

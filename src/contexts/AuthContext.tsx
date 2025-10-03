@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { AuthContextType, User, Restaurant, RegisterData, Subscription, SupportTicket } from '../types';
+import { AuthContextType, User, Restaurant, RegisterData, Subscription } from '../types';
 import { loadFromStorage, saveToStorage, initializeData } from '../data/mockData';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -291,9 +291,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return { success: true };
   };
 
-  const requestPasswordReset = async (email: string): Promise<{ success: boolean; error?: string }> => {
+  const resetPassword = async (email: string, code: string, newPassword: string): Promise<{ success: boolean; error?: string; code?: string }> => {
     const users = loadFromStorage('users', []) as User[];
-    const restaurants = loadFromStorage('restaurants', []) as Restaurant[];
 
     const foundUser = users.find((u: User) => u.email === email);
 
@@ -301,28 +300,53 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return { success: false, error: 'No se encontró una cuenta con ese email' };
     }
 
-    const userRestaurant = restaurants.find((r: Restaurant) => r.owner_id === foundUser.id);
+    if (!code && !newPassword) {
+      const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
 
-    const ticketId = `ticket-${Date.now()}`;
-    const now = new Date().toISOString();
+      const resetCodes = loadFromStorage('passwordResetCodes', {});
+      resetCodes[email] = {
+        code: generatedCode,
+        expiresAt: expiresAt,
+      };
+      saveToStorage('passwordResetCodes', resetCodes);
 
-    const newTicket: SupportTicket = {
-      id: ticketId,
-      type: 'password_reset',
-      email: email,
-      restaurant_id: userRestaurant?.id,
-      subject: 'Solicitud de recuperación de contraseña',
-      description: `El usuario con email ${email} ha solicitado recuperar su contraseña.`,
-      status: 'open',
-      priority: 'high',
-      created_at: now,
-      updated_at: now,
-    };
+      console.log('Password reset code would be sent to:', email);
+      console.log('In production, this code would be sent via email (not shown to user)');
+      console.log('For testing purposes - Code:', generatedCode);
 
-    const tickets = loadFromStorage('supportTickets', []) as SupportTicket[];
-    saveToStorage('supportTickets', [...tickets, newTicket]);
+      return { success: true, code: generatedCode };
+    }
 
-    console.log('Password reset request created as support ticket:', ticketId);
+    const resetCodes = loadFromStorage('passwordResetCodes', {});
+    const resetData = resetCodes[email];
+
+    if (!resetData) {
+      return { success: false, error: 'No se ha solicitado un código de recuperación para este email' };
+    }
+
+    if (new Date(resetData.expiresAt) < new Date()) {
+      delete resetCodes[email];
+      saveToStorage('passwordResetCodes', resetCodes);
+      return { success: false, error: 'El código ha expirado. Por favor solicita uno nuevo' };
+    }
+
+    if (resetData.code !== code) {
+      return { success: false, error: 'El código ingresado es incorrecto' };
+    }
+
+    const updatedUsers = users.map((u: User) =>
+      u.id === foundUser.id
+        ? { ...u, password: newPassword, updated_at: new Date().toISOString() }
+        : u
+    );
+
+    saveToStorage('users', updatedUsers);
+
+    delete resetCodes[email];
+    saveToStorage('passwordResetCodes', resetCodes);
+
+    console.log('Password reset successfully for:', email);
 
     return { success: true };
   };
@@ -344,7 +368,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     loading,
     requirePasswordChange,
     changePassword,
-    requestPasswordReset,
+    resetPassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

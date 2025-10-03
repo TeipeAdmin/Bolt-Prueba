@@ -250,22 +250,6 @@ export interface Subscription {
   auto_renew: boolean;
   created_at: string;
 }
-
-export interface SupportTicket {
-  id: string;
-  type: 'password_reset' | 'technical' | 'billing' | 'general';
-  email: string;
-  restaurant_id?: string;
-  subject: string;
-  description: string;
-  status: 'open' | 'in_progress' | 'resolved' | 'closed';
-  priority: 'low' | 'medium' | 'high';
-  created_at: string;
-  updated_at: string;
-  resolved_at?: string;
-  resolved_by?: string;
-  notes?: string;
-}
 export interface PlanFeatures {
   max_products: number;
   max_categories: number;
@@ -304,5 +288,5 @@ export interface AuthContextType {
   register: (data: RegisterData) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   changePassword?: (newPassword: string) => void;
-  requestPasswordReset: (email: string) => Promise<{ success: boolean; error?: string }>;
+  resetPassword: (email: string, code: string, newPassword: string) => Promise<{ success: boolean; error?: string; code?: string }>;
 }
