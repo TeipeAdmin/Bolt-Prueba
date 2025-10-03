@@ -46,13 +46,42 @@ export const SubscriptionsManagement: React.FC = () => {
       return acc;
     }, []);
 
-    setSubscriptions(uniqueSubscriptions);
-    setRestaurants(restaurantData);
+    // Auto-expire subscriptions and set restaurant status to inactive
+    const now = new Date();
+    const updatedSubscriptions = uniqueSubscriptions.map(sub => {
+      const endDate = new Date(sub.end_date);
 
-    // Save the deduplicated list back to storage
-    if (uniqueSubscriptions.length !== subscriptionData.length) {
-      saveToStorage('subscriptions', uniqueSubscriptions);
-    }
+      // If subscription is expired and not 'gratis' plan, mark as expired
+      if (endDate < now && sub.plan_type !== 'gratis' && sub.status === 'active') {
+        return { ...sub, status: 'expired' as const };
+      }
+      return sub;
+    });
+
+    // Update restaurant status based on subscription status
+    const updatedRestaurants = restaurantData.map((restaurant: any) => {
+      const subscription = updatedSubscriptions.find(sub => sub.restaurant_id === restaurant.id);
+
+      if (subscription) {
+        // If subscription is expired (and not gratis), set restaurant to inactive
+        if (subscription.status === 'expired' && subscription.plan_type !== 'gratis') {
+          return { ...restaurant, status: 'inactive' };
+        }
+        // If subscription is active, set restaurant to active
+        if (subscription.status === 'active') {
+          return { ...restaurant, status: 'active' };
+        }
+      }
+
+      return restaurant;
+    });
+
+    setSubscriptions(updatedSubscriptions);
+    setRestaurants(updatedRestaurants);
+
+    // Save the updated data back to storage
+    saveToStorage('subscriptions', updatedSubscriptions);
+    saveToStorage('restaurants', updatedRestaurants);
   };
 
   const getRestaurant = (restaurantId: string) => {
@@ -129,10 +158,6 @@ export const SubscriptionsManagement: React.FC = () => {
         return <Badge variant="success">Activa</Badge>;
       case 'expired':
         return <Badge variant="error">Vencida</Badge>;
-      case 'trial':
-        return <Badge variant="info">Prueba</Badge>;
-      case 'suspended':
-        return <Badge variant="warning">Suspendida</Badge>;
       default:
         return <Badge variant="gray">Desconocido</Badge>;
     }
@@ -206,9 +231,9 @@ export const SubscriptionsManagement: React.FC = () => {
           <div className="flex items-center">
             <AlertCircle className="h-8 w-8 text-yellow-600" />
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Por Vencer</p>
+              <p className="text-sm font-medium text-gray-600">Por Vencer (7 días)</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {subscriptions.filter(s => isExpiringSoon(s.end_date)).length}
+                {subscriptions.filter(s => isExpiringSoon(s.end_date) && s.plan_type !== 'gratis').length}
               </p>
             </div>
           </div>
@@ -216,11 +241,11 @@ export const SubscriptionsManagement: React.FC = () => {
 
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <div className="flex items-center">
-            <CreditCard className="h-8 w-8 text-blue-600" />
+            <CreditCard className="h-8 w-8 text-gray-600" />
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Pruebas</p>
+              <p className="text-sm font-medium text-gray-600">Plan Gratis</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {subscriptions.filter(s => s.status === 'trial').length}
+                {subscriptions.filter(s => s.plan_type === 'gratis').length}
               </p>
             </div>
           </div>
@@ -484,10 +509,8 @@ export const SubscriptionsManagement: React.FC = () => {
                 onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as Subscription['status'] }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="trial">Prueba</option>
                 <option value="active">Activa</option>
                 <option value="expired">Vencida</option>
-                <option value="suspended">Suspendida</option>
               </select>
             </div>
 

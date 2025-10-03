@@ -18,10 +18,13 @@ export const SuperAdminDashboard: React.FC = () => {
   const stats = {
     totalRestaurants: restaurants.length,
     activeRestaurants: restaurants.filter(r => r.status === 'active').length,
-    pendingApproval: restaurants.filter(r => r.status === 'pending').length,
+    inactiveRestaurants: restaurants.filter(r => r.status === 'inactive').length,
+    gratisPlan: subscriptions.filter(s => s.plan_type === 'gratis').length,
+    basicPlan: subscriptions.filter(s => s.plan_type === 'basic').length,
+    proPlan: subscriptions.filter(s => s.plan_type === 'pro').length,
+    businessPlan: subscriptions.filter(s => s.plan_type === 'business').length,
     activeSubscriptions: subscriptions.filter(s => s.status === 'active').length,
     expiredSubscriptions: subscriptions.filter(s => s.status === 'expired').length,
-    trialSubscriptions: subscriptions.filter(s => s.status === 'trial').length,
   };
 
   const recentRestaurants = restaurants
@@ -32,12 +35,8 @@ export const SuperAdminDashboard: React.FC = () => {
     switch (status) {
       case 'active':
         return <Badge variant="success">Activo</Badge>;
-      case 'pending':
-        return <Badge variant="warning">Pendiente</Badge>;
       case 'inactive':
-        return <Badge variant="gray">Inactivo</Badge>;
-      case 'suspended':
-        return <Badge variant="error">Suspendido</Badge>;
+        return <Badge variant="error">Inactivo</Badge>;
       default:
         return <Badge variant="gray">Desconocido</Badge>;
     }
@@ -45,19 +44,19 @@ export const SuperAdminDashboard: React.FC = () => {
 
   const getSubscriptionBadge = (subscription: Subscription | undefined) => {
     if (!subscription) return <Badge variant="gray">Sin suscripción</Badge>;
-    
-    switch (subscription.status) {
-      case 'active':
-        return <Badge variant="success">{subscription.plan_type}</Badge>;
-      case 'expired':
-        return <Badge variant="error">Vencida</Badge>;
-      case 'trial':
-        return <Badge variant="info">Prueba</Badge>;
-      case 'suspended':
-        return <Badge variant="warning">Suspendida</Badge>;
-      default:
-        return <Badge variant="gray">Desconocido</Badge>;
-    }
+
+    const planName = subscription.plan_type === 'gratis' ? 'Gratis' :
+                     subscription.plan_type === 'basic' ? 'Basic' :
+                     subscription.plan_type === 'pro' ? 'Pro' :
+                     subscription.plan_type === 'business' ? 'Business' :
+                     subscription.plan_type.toUpperCase();
+
+    const variant = subscription.plan_type === 'gratis' ? 'gray' :
+                   subscription.plan_type === 'basic' ? 'info' :
+                   subscription.plan_type === 'pro' ? 'success' :
+                   'error';
+
+    return <Badge variant={variant}>{planName}</Badge>;
   };
 
   return (
@@ -81,9 +80,12 @@ export const SuperAdminDashboard: React.FC = () => {
               <p className="text-2xl font-semibold text-gray-900">{stats.totalRestaurants}</p>
             </div>
           </div>
-          <div className="mt-2">
+          <div className="mt-2 flex gap-3">
             <span className="text-sm text-green-600 font-medium">
               {stats.activeRestaurants} activos
+            </span>
+            <span className="text-sm text-red-600 font-medium">
+              {stats.inactiveRestaurants} inactivos
             </span>
           </div>
         </div>
@@ -91,16 +93,33 @@ export const SuperAdminDashboard: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <Users className="h-8 w-8 text-yellow-600" />
+              <CreditCard className="h-8 w-8 text-gray-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Pendientes</p>
-              <p className="text-2xl font-semibold text-gray-900">{stats.pendingApproval}</p>
+              <p className="text-sm font-medium text-gray-600">Plan Gratis</p>
+              <p className="text-2xl font-semibold text-gray-900">{stats.gratisPlan}</p>
             </div>
           </div>
           <div className="mt-2">
-            <span className="text-sm text-yellow-600 font-medium">
-              Esperando aprobación
+            <span className="text-sm text-gray-600 font-medium">
+              Sin costo mensual
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <CreditCard className="h-8 w-8 text-blue-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Plan Basic</p>
+              <p className="text-2xl font-semibold text-gray-900">{stats.basicPlan}</p>
+            </div>
+          </div>
+          <div className="mt-2">
+            <span className="text-sm text-blue-600 font-medium">
+              $15/mes
             </span>
           </div>
         </div>
@@ -111,13 +130,13 @@ export const SuperAdminDashboard: React.FC = () => {
               <CreditCard className="h-8 w-8 text-green-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Suscripciones Activas</p>
-              <p className="text-2xl font-semibold text-gray-900">{stats.activeSubscriptions}</p>
+              <p className="text-sm font-medium text-gray-600">Plan Pro</p>
+              <p className="text-2xl font-semibold text-gray-900">{stats.proPlan}</p>
             </div>
           </div>
           <div className="mt-2">
-            <span className="text-sm text-red-600 font-medium">
-              {stats.expiredSubscriptions} vencidas
+            <span className="text-sm text-green-600 font-medium">
+              $35/mes
             </span>
           </div>
         </div>
@@ -125,16 +144,33 @@ export const SuperAdminDashboard: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <TrendingUp className="h-8 w-8 text-purple-600" />
+              <CreditCard className="h-8 w-8 text-purple-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Cuentas Trial</p>
-              <p className="text-2xl font-semibold text-gray-900">{stats.trialSubscriptions}</p>
+              <p className="text-sm font-medium text-gray-600">Plan Business</p>
+              <p className="text-2xl font-semibold text-gray-900">{stats.businessPlan}</p>
             </div>
           </div>
           <div className="mt-2">
             <span className="text-sm text-purple-600 font-medium">
-              En período de prueba
+              $75/mes
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <TrendingUp className="h-8 w-8 text-green-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Suscripciones Activas</p>
+              <p className="text-2xl font-semibold text-gray-900">{stats.activeSubscriptions}</p>
+            </div>
+          </div>
+          <div className="mt-2">
+            <span className="text-sm text-red-600 font-medium">
+              {stats.expiredSubscriptions} vencidas
             </span>
           </div>
         </div>

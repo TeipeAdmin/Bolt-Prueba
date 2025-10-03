@@ -528,14 +528,14 @@ export const RestaurantsManagement: React.FC = () => {
                   </label>
                   <select
                     value={subscriptionForm.status}
-                    onChange={(e) => setSubscriptionForm(prev => ({ 
-                      ...prev, 
-                      status: e.target.value as Subscription['status'] 
+                    onChange={(e) => setSubscriptionForm(prev => ({
+                      ...prev,
+                      status: e.target.value as Subscription['status']
                     }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="active">Activa</option>
-                    <option value="inactive">Inactiva</option>
+                    <option value="expired">Vencida</option>
                   </select>
                 </div>
               </div>
