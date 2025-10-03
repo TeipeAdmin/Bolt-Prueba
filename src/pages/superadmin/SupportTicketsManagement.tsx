@@ -34,6 +34,9 @@ export const SupportTicketsManagement: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [dateFromFilter, setDateFromFilter] = useState('');
+  const [dateToFilter, setDateToFilter] = useState('');
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [responseText, setResponseText] = useState('');
   const [adminNotes, setAdminNotes] = useState('');
 
@@ -43,7 +46,7 @@ export const SupportTicketsManagement: React.FC = () => {
 
   useEffect(() => {
     filterTickets();
-  }, [tickets, searchTerm, statusFilter, priorityFilter, categoryFilter]);
+  }, [tickets, searchTerm, statusFilter, priorityFilter, categoryFilter, dateFromFilter, dateToFilter, sortOrder]);
 
   const loadTickets = () => {
     const supportTickets = loadFromStorage('supportTickets', []);
@@ -52,7 +55,7 @@ export const SupportTicketsManagement: React.FC = () => {
 
   const filterTickets = () => {
     let filtered = tickets.filter(ticket => {
-      const matchesSearch = 
+      const matchesSearch =
         ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
         ticket.restaurantName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         ticket.contactEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -62,7 +65,12 @@ export const SupportTicketsManagement: React.FC = () => {
       const matchesPriority = priorityFilter === 'all' || ticket.priority === priorityFilter;
       const matchesCategory = categoryFilter === 'all' || ticket.category === categoryFilter;
 
-      return matchesSearch && matchesStatus && matchesPriority && matchesCategory;
+      // Date filtering
+      const ticketDate = new Date(ticket.createdAt);
+      const matchesDateFrom = !dateFromFilter || ticketDate >= new Date(dateFromFilter + 'T00:00:00');
+      const matchesDateTo = !dateToFilter || ticketDate <= new Date(dateToFilter + 'T23:59:59');
+
+      return matchesSearch && matchesStatus && matchesPriority && matchesCategory && matchesDateFrom && matchesDateTo;
     });
 
     // Sort by priority and date
@@ -70,12 +78,15 @@ export const SupportTicketsManagement: React.FC = () => {
       const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
       const aPriority = priorityOrder[a.priority as keyof typeof priorityOrder] || 1;
       const bPriority = priorityOrder[b.priority as keyof typeof priorityOrder] || 1;
-      
+
       if (aPriority !== bPriority) {
         return bPriority - aPriority; // Higher priority first
       }
-      
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(); // Newer first
+
+      // Apply sort order based on user selection
+      const aTime = new Date(a.createdAt).getTime();
+      const bTime = new Date(b.createdAt).getTime();
+      return sortOrder === 'newest' ? bTime - aTime : aTime - bTime;
     });
 
     setFilteredTickets(filtered);
@@ -260,13 +271,13 @@ export const SupportTicketsManagement: React.FC = () => {
           />
         </div>
         
-        <div className="flex flex-wrap gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-gray-500" />
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">Todos los estados</option>
               <option value="pending">Pendientes</option>
@@ -275,7 +286,7 @@ export const SupportTicketsManagement: React.FC = () => {
               <option value="closed">Cerrados</option>
             </select>
           </div>
-          
+
           <select
             value={priorityFilter}
             onChange={(e) => setPriorityFilter(e.target.value)}
@@ -287,7 +298,7 @@ export const SupportTicketsManagement: React.FC = () => {
             <option value="medium">Media</option>
             <option value="low">Baja</option>
           </select>
-          
+
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
@@ -301,7 +312,57 @@ export const SupportTicketsManagement: React.FC = () => {
             <option value="account">Cuenta y Configuración</option>
             <option value="other">Otro</option>
           </select>
+
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-gray-500" />
+            <input
+              type="date"
+              value={dateFromFilter}
+              onChange={(e) => setDateFromFilter(e.target.value)}
+              placeholder="Desde"
+              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-gray-500" />
+            <input
+              type="date"
+              value={dateToFilter}
+              onChange={(e) => setDateToFilter(e.target.value)}
+              placeholder="Hasta"
+              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          <select
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value as 'newest' | 'oldest')}
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="newest">Más nuevos primero</option>
+            <option value="oldest">Más antiguos primero</option>
+          </select>
         </div>
+
+        {(dateFromFilter || dateToFilter || statusFilter !== 'all' || priorityFilter !== 'all' || categoryFilter !== 'all' || searchTerm) && (
+          <div className="flex justify-end">
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setStatusFilter('all');
+                setPriorityFilter('all');
+                setCategoryFilter('all');
+                setDateFromFilter('');
+                setDateToFilter('');
+                setSortOrder('newest');
+              }}
+              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+            >
+              Limpiar filtros
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Tickets Table */}
