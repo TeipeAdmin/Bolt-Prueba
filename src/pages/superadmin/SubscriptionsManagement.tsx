@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { CreditCard, Calendar, AlertCircle, CheckCircle, XCircle, Plus, CreditCard as Edit } from 'lucide-react';
 import { Subscription, Restaurant } from '../../types';
-import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
+import { supabase } from '../../lib/supabase';
 
 export const SubscriptionsManagement: React.FC = () => {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
@@ -31,45 +31,54 @@ export const SubscriptionsManagement: React.FC = () => {
 
   useEffect(() => {
     loadData();
+
+    // Subscribe to realtime updates
+    const subscription = supabase
+      .channel('subscriptions_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'subscriptions' }, () => {
+        loadData();
+      })
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const loadData = () => {
-    const subscriptionData = loadFromStorage('subscriptions') || [];
-    const restaurantData = loadFromStorage('restaurants') || [];
+  const loadData = async () => {
+    try {
+      // Load subscriptions from Supabase
+      const { data: subscriptionData, error: subError } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-    // Remove duplicate subscriptions based on restaurant_id
-    const uniqueSubscriptions = subscriptionData.reduce((acc: Subscription[], current: Subscription) => {
-      const duplicate = acc.find(sub => sub.restaurant_id === current.restaurant_id);
-      if (!duplicate) {
-        acc.push(current);
-      } else {
-        // Keep the most recent one
-        const existingIndex = acc.findIndex(sub => sub.restaurant_id === current.restaurant_id);
-        if (new Date(current.created_at) > new Date(acc[existingIndex].created_at)) {
-          acc[existingIndex] = current;
-        }
-      }
-      return acc;
-    }, []);
+      if (subError) throw subError;
 
-    // Auto-expire subscriptions based on end date
-    const now = new Date();
-    const updatedSubscriptions = uniqueSubscriptions.map(sub => {
-      const endDate = new Date(sub.end_date);
+      // Load restaurants from Supabase
+      const { data: restaurantData, error: restError } = await supabase
+        .from('restaurants')
+        .select('*');
 
-      // If subscription is expired and not 'gratis' plan, mark as expired
-      if (endDate < now && sub.plan_type !== 'gratis' && sub.status === 'active') {
-        return { ...sub, status: 'expired' as const };
-      }
-      return sub;
-    });
+      if (restError) throw restError;
 
-    setSubscriptions(updatedSubscriptions);
-    setRestaurants(restaurantData);
+      // Map the data to match the expected types
+      const mappedSubscriptions: Subscription[] = (subscriptionData || []).map(sub => ({
+        id: sub.id,
+        restaurant_id: sub.restaurant_id,
+        plan_type: sub.plan_type as Subscription['plan_type'],
+        status: sub.status as Subscription['status'],
+        duration: 'monthly' as Subscription['duration'], // Default to monthly
+        start_date: sub.start_date,
+        end_date: sub.end_date,
+        auto_renew: sub.auto_renew,
+        created_at: sub.created_at,
+      }));
 
-    // Save the updated subscriptions back to storage
-    if (JSON.stringify(updatedSubscriptions) !== JSON.stringify(uniqueSubscriptions)) {
-      saveToStorage('subscriptions', updatedSubscriptions);
+      setSubscriptions(mappedSubscriptions);
+      setRestaurants(restaurantData || []);
+    } catch (error) {
+      console.error('Error loading data:', error);
     }
   };
 
@@ -77,15 +86,19 @@ export const SubscriptionsManagement: React.FC = () => {
     return restaurants.find(restaurant => restaurant.id === restaurantId);
   };
 
-  const updateSubscriptionStatus = (subscriptionId: string, newStatus: Subscription['status']) => {
-    const updatedSubscriptions = subscriptions.map(sub => 
-      sub.id === subscriptionId 
-        ? { ...sub, status: newStatus }
-        : sub
-    );
-    
-    setSubscriptions(updatedSubscriptions);
-    saveToStorage('subscriptions', updatedSubscriptions);
+  const updateSubscriptionStatus = async (subscriptionId: string, newStatus: Subscription['status']) => {
+    try {
+      const { error } = await supabase
+        .from('subscriptions')
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .eq('id', subscriptionId);
+
+      if (error) throw error;
+
+      await loadData();
+    } catch (error) {
+      console.error('Error updating subscription status:', error);
+    }
   };
 
   const handleEditSubscription = (subscription: Subscription) => {
@@ -101,44 +114,57 @@ export const SubscriptionsManagement: React.FC = () => {
     setShowEditModal(true);
   };
 
-  const handleSaveSubscription = () => {
+  const handleSaveSubscription = async () => {
     if (!editingSubscription) return;
 
-    const updatedSubscriptions = subscriptions.map(sub =>
-      sub.id === editingSubscription.id
-        ? {
-            ...sub,
-            ...formData,
-            start_date: new Date(formData.start_date).toISOString(),
-            end_date: new Date(formData.end_date).toISOString(),
-          }
-        : sub
-    );
+    try {
+      const { error } = await supabase
+        .from('subscriptions')
+        .update({
+          plan_type: formData.plan_type,
+          status: formData.status,
+          start_date: new Date(formData.start_date).toISOString(),
+          end_date: new Date(formData.end_date).toISOString(),
+          auto_renew: formData.auto_renew,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', editingSubscription.id);
 
-    setSubscriptions(updatedSubscriptions);
-    saveToStorage('subscriptions', updatedSubscriptions);
-    setShowEditModal(false);
-    setEditingSubscription(null);
+      if (error) throw error;
+
+      await loadData();
+      setShowEditModal(false);
+      setEditingSubscription(null);
+    } catch (error) {
+      console.error('Error updating subscription:', error);
+    }
   };
 
-  const extendSubscription = (subscriptionId: string, months: number) => {
-    const updatedSubscriptions = subscriptions.map(sub => {
-      if (sub.id === subscriptionId) {
-        const currentEndDate = new Date(sub.end_date);
-        const newEndDate = new Date(currentEndDate);
-        newEndDate.setMonth(newEndDate.getMonth() + months);
-        
-        return {
-          ...sub,
+  const extendSubscription = async (subscriptionId: string, months: number) => {
+    try {
+      const subscription = subscriptions.find(sub => sub.id === subscriptionId);
+      if (!subscription) return;
+
+      const currentEndDate = new Date(subscription.end_date);
+      const newEndDate = new Date(currentEndDate);
+      newEndDate.setMonth(newEndDate.getMonth() + months);
+
+      const { error } = await supabase
+        .from('subscriptions')
+        .update({
           end_date: newEndDate.toISOString(),
-          status: 'active' as const
-        };
-      }
-      return sub;
-    });
-    
-    setSubscriptions(updatedSubscriptions);
-    saveToStorage('subscriptions', updatedSubscriptions);
+          status: 'active',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', subscriptionId);
+
+      if (error) throw error;
+
+      await loadData();
+      setShowModal(false);
+    } catch (error) {
+      console.error('Error extending subscription:', error);
+    }
   };
 
   const getStatusBadge = (status: Subscription['status']) => {
