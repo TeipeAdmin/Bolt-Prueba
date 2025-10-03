@@ -79,15 +79,17 @@ export const PublicMenu: React.FC = () => {
     }
   }, [slug]);
 
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = searchTerm === '' ||
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredProducts = products
+    .filter(product => {
+      const matchesSearch = searchTerm === '' ||
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.description.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesCategory = selectedCategory === 'all' || product.category_id === selectedCategory;
+      const matchesCategory = selectedCategory === 'all' || product.category_id === selectedCategory;
 
-    return matchesSearch && matchesCategory;
-  });
+      return matchesSearch && matchesCategory;
+    })
+    .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
 
   const isRestaurantOpen = () => {
     if (!restaurant) return false;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, CreditCard as Edit, Trash2, Eye, Archive, AlertCircle, Search, Package, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, CreditCard as Edit, Trash2, Eye, Archive, AlertCircle, Search, Package, CheckCircle, XCircle, ArrowUp, ArrowDown } from 'lucide-react';
 import { Category, Product, Restaurant, Subscription } from '../../types';
 import { loadFromStorage, saveToStorage, availablePlans } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -79,15 +79,17 @@ export const MenuManagement: React.FC = () => {
     setProducts(restaurantProducts);
   };
 
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (product.sku && product.sku.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesCategory = selectedCategory === 'all' || product.category_id === selectedCategory;
-    
-    return matchesSearch && matchesCategory;
-  });
+  const filteredProducts = products
+    .filter(product => {
+      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           (product.sku && product.sku.toLowerCase().includes(searchTerm.toLowerCase()));
+
+      const matchesCategory = selectedCategory === 'all' || product.category_id === selectedCategory;
+
+      return matchesSearch && matchesCategory;
+    })
+    .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
 
   const getStatusBadge = (status: Product['status']) => {
     switch (status) {
@@ -191,16 +193,64 @@ export const MenuManagement: React.FC = () => {
     });
   };
 
+  const moveProductUp = (productId: string) => {
+    const allProducts = loadFromStorage('products') || [];
+    const restaurantProducts = allProducts.filter((p: Product) => p.restaurant_id === restaurant?.id);
+
+    const currentIndex = restaurantProducts.findIndex((p: Product) => p.id === productId);
+    if (currentIndex <= 0) return;
+
+    const currentProduct = restaurantProducts[currentIndex];
+    const previousProduct = restaurantProducts[currentIndex - 1];
+
+    const updatedProducts = allProducts.map((p: Product) => {
+      if (p.id === currentProduct.id) {
+        return { ...p, order_index: previousProduct.order_index, updated_at: new Date().toISOString() };
+      }
+      if (p.id === previousProduct.id) {
+        return { ...p, order_index: currentProduct.order_index, updated_at: new Date().toISOString() };
+      }
+      return p;
+    });
+
+    saveToStorage('products', updatedProducts);
+    loadMenuData();
+  };
+
+  const moveProductDown = (productId: string) => {
+    const allProducts = loadFromStorage('products') || [];
+    const restaurantProducts = allProducts.filter((p: Product) => p.restaurant_id === restaurant?.id);
+
+    const currentIndex = restaurantProducts.findIndex((p: Product) => p.id === productId);
+    if (currentIndex >= restaurantProducts.length - 1) return;
+
+    const currentProduct = restaurantProducts[currentIndex];
+    const nextProduct = restaurantProducts[currentIndex + 1];
+
+    const updatedProducts = allProducts.map((p: Product) => {
+      if (p.id === currentProduct.id) {
+        return { ...p, order_index: nextProduct.order_index, updated_at: new Date().toISOString() };
+      }
+      if (p.id === nextProduct.id) {
+        return { ...p, order_index: currentProduct.order_index, updated_at: new Date().toISOString() };
+      }
+      return p;
+    });
+
+    saveToStorage('products', updatedProducts);
+    loadMenuData();
+  };
+
   const handleArchiveProduct = (productId: string) => {
     const allProducts = loadFromStorage('products') || [];
     const updatedProducts = allProducts.map((p: Product) =>
-      p.id === productId 
+      p.id === productId
         ? { ...p, status: 'archived' as const, updated_at: new Date().toISOString() }
         : p
     );
     saveToStorage('products', updatedProducts);
     loadMenuData();
-    
+
     showToast(
       'info',
       t('productArchived'),
@@ -441,6 +491,24 @@ export const MenuManagement: React.FC = () => {
                 {/* Actions */}
                 <div className="flex justify-between items-center">
                   <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      icon={ArrowUp}
+                      onClick={() => moveProductUp(product.id)}
+                      className="text-blue-600 hover:text-blue-700"
+                      title="Mover arriba"
+                      disabled={filteredProducts[0]?.id === product.id}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      icon={ArrowDown}
+                      onClick={() => moveProductDown(product.id)}
+                      className="text-blue-600 hover:text-blue-700"
+                      title="Mover abajo"
+                      disabled={filteredProducts[filteredProducts.length - 1]?.id === product.id}
+                    />
                     <Button
                       variant="ghost"
                       size="sm"
