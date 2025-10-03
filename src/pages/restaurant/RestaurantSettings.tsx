@@ -36,7 +36,16 @@ export const RestaurantSettings: React.FC = () => {
     // Cargar tickets existentes
     const existingTickets = loadFromStorage('supportTickets', []);
     setSupportTickets(existingTickets);
-  }, []);
+
+    // Inicializar los campos de contacto con los datos del restaurante
+    if (restaurant) {
+      setSupportForm(prev => ({
+        ...prev,
+        contactEmail: restaurant.email || '',
+        contactPhone: restaurant.phone || ''
+      }));
+    }
+  }, [restaurant]);
 
   useEffect(() => {
     if (restaurant) {
