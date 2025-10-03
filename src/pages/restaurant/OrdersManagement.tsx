@@ -36,6 +36,8 @@ export const OrdersManagement: React.FC = () => {
   const [showCreateOrderModal, setShowCreateOrderModal] = useState(false);
   const [showEditOrderModal, setShowEditOrderModal] = useState(false);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
   const [orderForm, setOrderForm] = useState({
     customer: { name: '', phone: '', email: '', address: '', delivery_instructions: '' },
     order_type: 'pickup' as Order['order_type'],
@@ -945,6 +947,30 @@ export const OrdersManagement: React.FC = () => {
     ));
   };
 
+  const handleDeleteOrder = (order: Order) => {
+    setOrderToDelete(order);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteOrder = () => {
+    if (!orderToDelete) return;
+
+    const allOrders = loadFromStorage('orders') || [];
+    const updatedOrders = allOrders.filter((order: Order) => order.id !== orderToDelete.id);
+
+    saveToStorage('orders', updatedOrders);
+    loadOrders();
+    setShowDeleteModal(false);
+    setOrderToDelete(null);
+
+    showToast(
+      'success',
+      'Pedido Eliminado',
+      `El pedido ${orderToDelete.order_number} ha sido eliminado exitosamente.`,
+      4000
+    );
+  };
+
   const handleUpdateOrder = () => {
     if (!editingOrder) return;
 
@@ -1419,7 +1445,16 @@ export const OrdersManagement: React.FC = () => {
                             onClick={() => handleEditOrder(order)}
                             className="text-blue-600 hover:text-blue-700"
                           />
-                          
+
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            icon={Trash2}
+                            onClick={() => handleDeleteOrder(order)}
+                            className="text-red-600 hover:text-red-700"
+                            title="Eliminar pedido"
+                          />
+
                           <Button
                             variant="ghost"
                             size="sm"
@@ -1852,6 +1887,66 @@ export const OrdersManagement: React.FC = () => {
             </Button>
           </div>
         </div>
+      </Modal>
+
+      {/* Delete Order Modal */}
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setOrderToDelete(null);
+        }}
+        title="Confirmar Eliminación"
+        size="md"
+      >
+        {orderToDelete && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-center mb-6">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 className="w-8 h-8 text-red-600" />
+              </div>
+            </div>
+
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                ¿Eliminar pedido {orderToDelete.order_number}?
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Esta acción eliminará permanentemente:
+              </p>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                <ul className="text-sm text-red-800 space-y-1">
+                  <li>• Cliente: {orderToDelete.customer.name}</li>
+                  <li>• Total: ${orderToDelete.total.toFixed(2)}</li>
+                  <li>• {orderToDelete.items.length} producto{orderToDelete.items.length !== 1 ? 's' : ''}</li>
+                  <li>• Estado: {orderToDelete.status}</li>
+                </ul>
+              </div>
+              <p className="text-sm text-gray-500">
+                <strong>Esta acción no se puede deshacer.</strong>
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setOrderToDelete(null);
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="danger"
+                onClick={confirmDeleteOrder}
+                icon={Trash2}
+              >
+                Eliminar Pedido
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
 
       {/* Edit Order Modal */}
