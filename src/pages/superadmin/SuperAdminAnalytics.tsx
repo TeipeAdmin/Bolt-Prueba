@@ -25,61 +25,6 @@ export const SuperAdminAnalytics: React.FC = () => {
     setUsers(userData);
   }, []);
 
-  // Filter subscriptions first
-  const filteredSubscriptions = getFilteredSubscriptions();
-
-  // Calculate analytics based on filtered data
-  const totalRestaurants = restaurants.length;
-  const activeRestaurants = restaurants.filter(r => r.status === 'active').length;
-  const pendingRestaurants = restaurants.filter(r => r.status === 'pending').length;
-  const totalUsers = users.length;
-  const verifiedUsers = users.filter(u => u.email_verified).length;
-
-  // Subscription stats from filtered data
-  const activeSubscriptions = filteredSubscriptions.filter(s => s.status === 'active').length;
-  const expiredSubscriptions = filteredSubscriptions.filter(s => s.status === 'expired').length;
-  const totalFilteredSubscriptions = filteredSubscriptions.length;
-
-  // Monthly registrations
-  const getMonthlyRegistrations = () => {
-    const monthlyData: { [key: string]: number } = {};
-    
-    restaurants.forEach(restaurant => {
-      const date = new Date(restaurant.created_at);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      monthlyData[monthKey] = (monthlyData[monthKey] || 0) + 1;
-    });
-
-    return Object.entries(monthlyData)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .slice(-6); // Last 6 months
-  };
-
-  const monthlyRegistrations = getMonthlyRegistrations();
-
-  // Plan distribution from filtered data
-  const planDistribution = {
-    gratis: filteredSubscriptions.filter(s => s.plan_type === 'gratis').length,
-    basic: filteredSubscriptions.filter(s => s.plan_type === 'basic').length,
-    pro: filteredSubscriptions.filter(s => s.plan_type === 'pro').length,
-    business: filteredSubscriptions.filter(s => s.plan_type === 'business').length,
-  };
-
-  // Plan prices (monthly) - Updated with correct prices
-  const planPrices: Record<string, number> = {
-    gratis: 0,
-    basic: 15,
-    pro: 35,
-    business: 75,
-  };
-
-  // Duration multipliers
-  const durationMultipliers: Record<string, number> = {
-    monthly: 1,
-    quarterly: 3,
-    annual: 12,
-  };
-
   // Filter subscriptions based on selected filters
   const getFilteredSubscriptions = () => {
     let filtered = [...subscriptions];
@@ -127,6 +72,61 @@ export const SuperAdminAnalytics: React.FC = () => {
     }
 
     return filtered;
+  };
+
+  // Filter subscriptions first
+  const filteredSubscriptions = getFilteredSubscriptions();
+
+  // Calculate analytics based on filtered data
+  const totalRestaurants = restaurants.length;
+  const activeRestaurants = restaurants.filter(r => r.status === 'active').length;
+  const pendingRestaurants = restaurants.filter(r => r.status === 'pending').length;
+  const totalUsers = users.length;
+  const verifiedUsers = users.filter(u => u.email_verified).length;
+
+  // Subscription stats from filtered data
+  const activeSubscriptions = filteredSubscriptions.filter(s => s.status === 'active').length;
+  const expiredSubscriptions = filteredSubscriptions.filter(s => s.status === 'expired').length;
+  const totalFilteredSubscriptions = filteredSubscriptions.length;
+
+  // Monthly registrations
+  const getMonthlyRegistrations = () => {
+    const monthlyData: { [key: string]: number } = {};
+
+    restaurants.forEach(restaurant => {
+      const date = new Date(restaurant.created_at);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      monthlyData[monthKey] = (monthlyData[monthKey] || 0) + 1;
+    });
+
+    return Object.entries(monthlyData)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(-6); // Last 6 months
+  };
+
+  const monthlyRegistrations = getMonthlyRegistrations();
+
+  // Plan distribution from filtered data
+  const planDistribution = {
+    gratis: filteredSubscriptions.filter(s => s.plan_type === 'gratis').length,
+    basic: filteredSubscriptions.filter(s => s.plan_type === 'basic').length,
+    pro: filteredSubscriptions.filter(s => s.plan_type === 'pro').length,
+    business: filteredSubscriptions.filter(s => s.plan_type === 'business').length,
+  };
+
+  // Plan prices (monthly) - Updated with correct prices
+  const planPrices: Record<string, number> = {
+    gratis: 0,
+    basic: 15,
+    pro: 35,
+    business: 75,
+  };
+
+  // Duration multipliers
+  const durationMultipliers: Record<string, number> = {
+    monthly: 1,
+    quarterly: 3,
+    annual: 12,
   };
 
   // Calculate economic statistics
