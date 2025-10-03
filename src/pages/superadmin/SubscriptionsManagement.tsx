@@ -173,18 +173,8 @@ export const SubscriptionsManagement: React.FC = () => {
     }
   };
 
-  const isExpiringSoon = (subscription: Subscription) => {
-    // Excluir planes gratuitos
-    if (subscription.plan_type === 'gratis' || subscription.plan_type === 'free') {
-      return false;
-    }
-
-    // Solo contar suscripciones activas
-    if (subscription.status !== 'active') {
-      return false;
-    }
-
-    const end = new Date(subscription.end_date);
+  const isExpiringSoon = (endDate: string) => {
+    const end = new Date(endDate);
     const now = new Date();
     const daysUntilExpiry = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     return daysUntilExpiry <= 7 && daysUntilExpiry > 0;
@@ -232,7 +222,7 @@ export const SubscriptionsManagement: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Por Vencer (7 días)</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {subscriptions.filter(s => isExpiringSoon(s)).length}
+                {subscriptions.filter(s => isExpiringSoon(s.end_date) && s.plan_type !== 'gratis').length}
               </p>
             </div>
           </div>
@@ -244,7 +234,7 @@ export const SubscriptionsManagement: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Plan Gratis</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {subscriptions.filter(s => s.plan_type === 'gratis' || s.plan_type === 'free').length}
+                {subscriptions.filter(s => s.plan_type === 'gratis').length}
               </p>
             </div>
           </div>
@@ -418,7 +408,7 @@ export const SubscriptionsManagement: React.FC = () => {
                 })
                 .map((subscription) => {
                 const restaurant = getRestaurant(subscription.restaurant_id);
-                const expiringSoon = isExpiringSoon(subscription);
+                const expiringSoon = isExpiringSoon(subscription.end_date);
                 const expired = isExpired(subscription.end_date);
                 
                 return (
