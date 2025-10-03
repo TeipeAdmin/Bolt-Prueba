@@ -18,7 +18,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
   const [loading, setLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
 
-  const { login, resetPassword } = useAuth();
+  const { login, requestPasswordReset } = useAuth();
   const { t } = useLanguage();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -123,7 +123,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
       <ForgotPasswordModal
         isOpen={showForgotPassword}
         onClose={() => setShowForgotPassword(false)}
-        onResetPassword={resetPassword}
+        onSubmitRequest={requestPasswordReset}
       />
     </div>
   );
