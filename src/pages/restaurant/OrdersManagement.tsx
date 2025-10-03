@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, CreditCard as Edit, Trash2, Clock, Phone, MapPin, User, Filter, Search, CheckCircle, XCircle, AlertCircle, Package, Plus, MessageSquare, Printer } from 'lucide-react';
+import { Eye, CreditCard as Edit, Trash2, Clock, Phone, MapPin, User, Filter, Search, CheckCircle, XCircle, AlertCircle, Package, Plus, MessageSquare, Printer, DollarSign, TrendingUp, Calendar, ShoppingBag } from 'lucide-react';
 import { Order, Product, Category } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -1068,67 +1068,75 @@ export const OrdersManagement: React.FC = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <Package className="h-8 w-8 text-blue-600" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Pedidos Hoy</p>
-              <p className="text-2xl font-semibold text-gray-900">{orderStats.todayOrders}</p>
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-md border border-blue-200 hover:shadow-lg transition-shadow">
+          <div className="flex items-start justify-between mb-4">
+            <div className="p-3 bg-blue-600 rounded-lg">
+              <Calendar className="h-6 w-6 text-white" />
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-medium text-blue-900 mb-1">Pedidos Hoy</p>
+              <p className="text-3xl font-bold text-blue-900">{orderStats.todayOrders}</p>
             </div>
           </div>
-          <div className="mt-2">
-            <span className="text-sm text-green-600 font-medium">
-              ${orderStats.todayRevenue.toFixed(2)} en ventas
+          <div className="flex items-center justify-between pt-3 border-t border-blue-200">
+            <span className="text-xs text-blue-700 font-medium">Ventas del día</span>
+            <span className="text-sm font-bold text-green-700">
+              ${orderStats.todayRevenue.toFixed(2)}
             </span>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <Clock className="h-8 w-8 text-yellow-600" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">En Preparación</p>
-              <p className="text-2xl font-semibold text-gray-900">
+        <div className="bg-gradient-to-br from-amber-50 to-amber-100 p-6 rounded-xl shadow-md border border-amber-200 hover:shadow-lg transition-shadow">
+          <div className="flex items-start justify-between mb-4">
+            <div className="p-3 bg-amber-600 rounded-lg">
+              <Clock className="h-6 w-6 text-white" />
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-medium text-amber-900 mb-1">En Proceso</p>
+              <p className="text-3xl font-bold text-amber-900">
                 {orderStats.pending + orderStats.confirmed + orderStats.preparing + orderStats.ready}
               </p>
             </div>
           </div>
-          <div className="mt-2">
-            <span className="text-sm text-yellow-600 font-medium">
-              Requieren atención
-            </span>
+          <div className="flex items-center justify-between pt-3 border-t border-amber-200">
+            <span className="text-xs text-amber-700 font-medium">Pendiente</span>
+            <span className="text-sm font-bold text-amber-800">{orderStats.pending}</span>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <CheckCircle className="h-8 w-8 text-green-600" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Completados</p>
-              <p className="text-2xl font-semibold text-gray-900">{orderStats.delivered}</p>
+        <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-md border border-green-200 hover:shadow-lg transition-shadow">
+          <div className="flex items-start justify-between mb-4">
+            <div className="p-3 bg-green-600 rounded-lg">
+              <CheckCircle className="h-6 w-6 text-white" />
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-medium text-green-900 mb-1">Completados</p>
+              <p className="text-3xl font-bold text-green-900">{orderStats.delivered}</p>
             </div>
           </div>
-          <div className="mt-2">
-            <span className="text-sm text-green-600 font-medium">
-              {orderStats.completionRate.toFixed(1)}% tasa de éxito
+          <div className="flex items-center justify-between pt-3 border-t border-green-200">
+            <span className="text-xs text-green-700 font-medium">Tasa de éxito</span>
+            <span className="text-sm font-bold text-green-800">
+              {orderStats.completionRate.toFixed(1)}%
             </span>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <XCircle className="h-8 w-8 text-red-600" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Ticket Promedio</p>
-              <p className="text-2xl font-semibold text-gray-900">
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl shadow-md border border-purple-200 hover:shadow-lg transition-shadow">
+          <div className="flex items-start justify-between mb-4">
+            <div className="p-3 bg-purple-600 rounded-lg">
+              <DollarSign className="h-6 w-6 text-white" />
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-medium text-purple-900 mb-1">Ticket Promedio</p>
+              <p className="text-3xl font-bold text-purple-900">
                 ${orderStats.averageOrderValue.toFixed(2)}
               </p>
             </div>
           </div>
-          <div className="mt-2">
-            <span className="text-sm text-red-600 font-medium">
-              {orderStats.cancelled} cancelados
-            </span>
+          <div className="flex items-center justify-between pt-3 border-t border-purple-200">
+            <span className="text-xs text-purple-700 font-medium">Cancelados</span>
+            <span className="text-sm font-bold text-red-700">{orderStats.cancelled}</span>
           </div>
         </div>
       </div>
