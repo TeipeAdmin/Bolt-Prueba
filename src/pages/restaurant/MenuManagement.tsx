@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, CreditCard as Edit, Trash2, Eye, Archive, AlertCircle, Search, Package, CheckCircle, XCircle, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, CreditCard as Edit, Trash2, Eye, Archive, AlertCircle, Search, Package, CheckCircle, XCircle, ArrowUp, ArrowDown, Copy } from 'lucide-react';
 import { Category, Product, Restaurant, Subscription } from '../../types';
 import { loadFromStorage, saveToStorage, availablePlans } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -239,6 +239,51 @@ export const MenuManagement: React.FC = () => {
 
     saveToStorage('products', updatedProducts);
     loadMenuData();
+  };
+
+  const handleDuplicateProduct = (productId: string) => {
+    if (!restaurant) return;
+
+    // Check product limit
+    if (currentSubscription) {
+      const currentPlan = availablePlans.find(p => p.id === currentSubscription.plan_type);
+      if (currentPlan && currentPlan.features.max_products !== -1) {
+        if (products.length >= currentPlan.features.max_products) {
+          showToast(
+            'error',
+            'Límite de productos alcanzado',
+            `Tu plan actual solo permite ${currentPlan.features.max_products} productos. Actualiza tu plan para agregar más.`,
+            5000
+          );
+          return;
+        }
+      }
+    }
+
+    const allProducts = loadFromStorage('products') || [];
+    const productToDuplicate = allProducts.find((p: Product) => p.id === productId);
+
+    if (!productToDuplicate) return;
+
+    const newProduct: Product = {
+      ...productToDuplicate,
+      id: `product-${Date.now()}`,
+      name: `${productToDuplicate.name} (Copia)`,
+      order_index: products.length,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    const updatedProducts = [...allProducts, newProduct];
+    saveToStorage('products', updatedProducts);
+    loadMenuData();
+
+    showToast(
+      'success',
+      'Producto Duplicado',
+      `Se ha creado una copia de "${productToDuplicate.name}".`,
+      4000
+    );
   };
 
   const handleArchiveProduct = (productId: string) => {
@@ -514,6 +559,15 @@ export const MenuManagement: React.FC = () => {
                       size="sm"
                       icon={Edit}
                       onClick={() => handleEditProduct(product)}
+                      title="Editar producto"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      icon={Copy}
+                      onClick={() => handleDuplicateProduct(product.id)}
+                      className="text-purple-600 hover:text-purple-700"
+                      title="Duplicar producto"
                     />
                     {product.status !== 'active' && (
                       <Button
