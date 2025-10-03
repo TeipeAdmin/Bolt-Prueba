@@ -36,9 +36,15 @@ export const RestaurantDashboard: React.FC = () => {
     const allOrders = loadFromStorage('orders') || [];
     const allCategories = loadFromStorage('categories') || [];
 
-    const restaurantProducts = allProducts.filter((p: Product) => p.restaurant_id === restaurant.id);
-    const restaurantOrders = allOrders.filter((o: Order) => o.restaurant_id === restaurant.id);
-    const restaurantCategories = allCategories.filter((c: Category) => c.restaurant_id === restaurant.id && c.active);
+    const restaurantProducts = allProducts.filter((p: Product) => p && p.restaurant_id === restaurant.id);
+    const restaurantOrders = allOrders.filter((o: Order) =>
+      o &&
+      o.restaurant_id === restaurant.id &&
+      o.order_number &&
+      o.status &&
+      o.items
+    );
+    const restaurantCategories = allCategories.filter((c: Category) => c && c.restaurant_id === restaurant.id && c.active);
 
     setProducts(restaurantProducts);
     setOrders(restaurantOrders);

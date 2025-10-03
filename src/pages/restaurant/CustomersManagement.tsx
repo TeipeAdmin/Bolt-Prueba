@@ -62,8 +62,12 @@ export const CustomersManagement: React.FC = () => {
 
     const allOrders = loadFromStorage('orders') || [];
     const vipCustomers = loadFromStorage('vipCustomers') || [];
-    const restaurantOrders = allOrders.filter((order: Order) => 
-      order.restaurant_id === restaurant.id
+    const restaurantOrders = allOrders.filter((order: Order) =>
+      order &&
+      order.restaurant_id === restaurant.id &&
+      order.order_number &&
+      order.status &&
+      order.items
     );
 
     // Group orders by customer phone (unique identifier) to avoid duplicates

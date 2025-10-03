@@ -77,10 +77,14 @@ export const OrdersManagement: React.FC = () => {
     if (!restaurant) return;
 
     const allOrders = loadFromStorage('orders') || [];
-    const restaurantOrders = allOrders.filter((order: Order) => 
-      order.restaurant_id === restaurant.id
+    const restaurantOrders = allOrders.filter((order: Order) =>
+      order &&
+      order.restaurant_id === restaurant.id &&
+      order.order_number &&
+      order.status &&
+      order.items
     );
-    
+
     setOrders(restaurantOrders);
   };
 
@@ -242,7 +246,7 @@ export const OrdersManagement: React.FC = () => {
 
   const filteredOrders = orders.filter(order => {
     const matchesSearch =
-      order.order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (order.order_number || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (order.customer?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (order.customer?.phone || '').includes(searchTerm);
     
