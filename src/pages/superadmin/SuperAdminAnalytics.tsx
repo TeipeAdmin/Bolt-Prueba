@@ -161,12 +161,7 @@ export const SuperAdminAnalytics: React.FC = () => {
     business: calculateRevenue(filteredSubscriptions.filter(s => s.plan_type === 'business')),
   };
 
-  // Recent activity
-  const recentRestaurants = restaurants
-    .filter(r => r.status === 'active')
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .slice(0, 5);
-
+  // Expiring subscriptions alert
   const expiringSoon = subscriptions.filter(sub => {
     const endDate = new Date(sub.end_date);
     const now = new Date();
@@ -462,35 +457,56 @@ export const SuperAdminAnalytics: React.FC = () => {
 
       {/* Recent Activity and Alerts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Restaurants */}
+        {/* Plan Performance Metrics */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">Restaurantes Recientes</h3>
+            <h3 className="text-lg font-medium text-gray-900">Rendimiento por Plan</h3>
           </div>
           <div className="p-6">
             <div className="space-y-4">
-              {recentRestaurants.map(restaurant => (
-                <div key={restaurant.id} className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    {restaurant.logo && (
-                      <img
-                        src={restaurant.logo}
-                        alt={restaurant.name}
-                        className="w-8 h-8 rounded-full object-cover mr-3"
-                      />
-                    )}
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{restaurant.name}</p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(restaurant.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                  <Badge variant="success">
-                    Activo
-                  </Badge>
+              {/* Gratis Plan */}
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-700">Plan Gratis</span>
+                  <Badge variant="default">{planDistribution.gratis} suscripciones</Badge>
                 </div>
-              ))}
+                <div className="text-xs text-gray-600">
+                  Ingreso: $0.00/mes
+                </div>
+              </div>
+
+              {/* Basic Plan */}
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-blue-700">Plan Basic</span>
+                  <Badge variant="info">{planDistribution.basic} suscripciones</Badge>
+                </div>
+                <div className="text-xs text-blue-600">
+                  Ingreso: ${(planDistribution.basic * planPrices.basic).toFixed(2)}/mes
+                </div>
+              </div>
+
+              {/* Pro Plan */}
+              <div className="p-3 bg-green-50 rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-green-700">Plan Pro</span>
+                  <Badge variant="success">{planDistribution.pro} suscripciones</Badge>
+                </div>
+                <div className="text-xs text-green-600">
+                  Ingreso: ${(planDistribution.pro * planPrices.pro).toFixed(2)}/mes
+                </div>
+              </div>
+
+              {/* Business Plan */}
+              <div className="p-3 bg-orange-50 rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-orange-700">Plan Business</span>
+                  <Badge variant="warning">{planDistribution.business} suscripciones</Badge>
+                </div>
+                <div className="text-xs text-orange-600">
+                  Ingreso: ${(planDistribution.business * planPrices.business).toFixed(2)}/mes
+                </div>
+              </div>
             </div>
           </div>
         </div>
