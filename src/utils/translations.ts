@@ -371,7 +371,7 @@ export const translations: Record<Language, Translations> = {
     confirmPassword: 'Confirmar Contraseña',
     restaurantName: 'Nombre del Restaurante',
     ownerName: 'Nombre del Propietario',
-    acceptTerms: 'Acepto los términos y condiciones',
+    acceptTerms: 'Acepto los ',
     backToLogin: 'Volver al Login',
     demoAccounts: 'Cuentas de demostración:',
     superadmin: 'Superadmin',
