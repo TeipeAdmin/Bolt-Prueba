@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CreditCard, Calendar, AlertCircle, CheckCircle, XCircle, Plus, Edit } from 'lucide-react';
+import { CreditCard, Calendar, AlertCircle, CheckCircle, XCircle, Plus, CreditCard as Edit } from 'lucide-react';
 import { Subscription, Restaurant } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { Button } from '../../components/ui/Button';
@@ -30,8 +30,29 @@ export const SubscriptionsManagement: React.FC = () => {
   const loadData = () => {
     const subscriptionData = loadFromStorage('subscriptions') || [];
     const restaurantData = loadFromStorage('restaurants') || [];
-    setSubscriptions(subscriptionData);
+
+    // Remove duplicate subscriptions based on restaurant_id
+    const uniqueSubscriptions = subscriptionData.reduce((acc: Subscription[], current: Subscription) => {
+      const duplicate = acc.find(sub => sub.restaurant_id === current.restaurant_id);
+      if (!duplicate) {
+        acc.push(current);
+      } else {
+        // Keep the most recent one
+        const existingIndex = acc.findIndex(sub => sub.restaurant_id === current.restaurant_id);
+        if (new Date(current.created_at) > new Date(acc[existingIndex].created_at)) {
+          acc[existingIndex] = current;
+        }
+      }
+      return acc;
+    }, []);
+
+    setSubscriptions(uniqueSubscriptions);
     setRestaurants(restaurantData);
+
+    // Save the deduplicated list back to storage
+    if (uniqueSubscriptions.length !== subscriptionData.length) {
+      saveToStorage('subscriptions', uniqueSubscriptions);
+    }
   };
 
   const getRestaurant = (restaurantId: string) => {
