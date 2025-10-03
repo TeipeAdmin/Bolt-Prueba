@@ -565,8 +565,8 @@ Fecha: ${new Date().toLocaleString()}
           {activeTab === 'hours' && (
             <div className="space-y-6">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
-                  <Clock className="w-6 h-6 text-gray-700" />
+                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                  <Clock className="w-6 h-6 text-blue-600" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">{t('businessHours')}</h3>
@@ -574,9 +574,9 @@ Fecha: ${new Date().toLocaleString()}
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+              <div className="bg-gradient-to-br from-blue-50 to-white rounded-xl p-6 border border-blue-100 shadow-sm">
                 <h4 className="text-md font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-gray-600" />
+                  <Clock className="w-5 h-5 text-blue-600" />
                   Tiempo de Preparación
                 </h4>
                 <div className="space-y-3">
@@ -592,21 +592,21 @@ Fecha: ${new Date().toLocaleString()}
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+              <div className="bg-gradient-to-br from-blue-50 to-white rounded-xl p-6 border border-blue-100 shadow-sm">
                 <h4 className="text-md font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-gray-600" />
+                  <Calendar className="w-5 h-5 text-blue-600" />
                   Horarios de Atención
                 </h4>
                 <div className="space-y-3">
                   {Object.entries(formData.settings.business_hours).map(([day, hours]) => (
-                    <div key={day} className="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:border-gray-300 transition-all">
+                    <div key={day} className="bg-white rounded-lg p-4 border border-blue-200 hover:border-blue-300 transition-all">
                       <div className="flex flex-col md:flex-row md:items-center gap-4">
                         <div className="flex items-center gap-3 md:w-40">
                           <input
                             type="checkbox"
                             checked={hours.is_open}
                             onChange={(e) => updateFormData(`settings.business_hours.${day}.is_open`, e.target.checked)}
-                            className="h-5 w-5 text-gray-700 border-gray-300 rounded focus:ring-gray-500"
+                            className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                             id={`${day}-checkbox`}
                           />
                           <label htmlFor={`${day}-checkbox`} className="text-sm font-semibold text-gray-900 capitalize cursor-pointer">
@@ -622,7 +622,7 @@ Fecha: ${new Date().toLocaleString()}
                                 type="time"
                                 value={hours.open}
                                 onChange={(e) => updateFormData(`settings.business_hours.${day}.open`, e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 text-sm"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                               />
                             </div>
                             <div className="text-gray-400 mt-5">—</div>
@@ -632,7 +632,7 @@ Fecha: ${new Date().toLocaleString()}
                                 type="time"
                                 value={hours.close}
                                 onChange={(e) => updateFormData(`settings.business_hours.${day}.close`, e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 text-sm"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                               />
                             </div>
                           </div>
@@ -647,12 +647,12 @@ Fecha: ${new Date().toLocaleString()}
                 </div>
               </div>
 
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div className="flex items-start gap-2">
-                  <Clock className="w-5 h-5 text-gray-600 flex-shrink-0 mt-0.5" />
+                  <Clock className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm text-gray-800 font-medium">Información importante:</p>
-                    <ul className="text-xs text-gray-600 mt-2 space-y-1 list-disc list-inside">
+                    <p className="text-sm text-blue-800 font-medium">Información importante:</p>
+                    <ul className="text-xs text-blue-700 mt-2 space-y-1 list-disc list-inside">
                       <li>Los horarios se muestran en tu menú público</li>
                       <li>Los clientes verán si estás abierto o cerrado</li>
                       <li>Puedes configurar diferentes horarios para cada día</li>
