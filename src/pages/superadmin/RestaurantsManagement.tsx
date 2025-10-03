@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, Edit, Trash2, CheckCircle, XCircle, Filter, ExternalLink, Settings } from 'lucide-react';
+import { Eye, CreditCard as Edit, Trash2, CheckCircle, XCircle, Filter, ExternalLink, Settings } from 'lucide-react';
 import { Restaurant, Subscription } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { Button } from '../../components/ui/Button';
