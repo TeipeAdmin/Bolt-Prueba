@@ -222,7 +222,7 @@ export const SubscriptionsManagement: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Por Vencer (7 días)</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {subscriptions.filter(s => isExpiringSoon(s.end_date) && s.plan_type !== 'gratis').length}
+                {subscriptions.filter(s => isExpiringSoon(s.end_date)).length}
               </p>
             </div>
           </div>
