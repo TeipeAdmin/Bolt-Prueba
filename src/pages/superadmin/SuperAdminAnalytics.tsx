@@ -58,12 +58,12 @@ export const SuperAdminAnalytics: React.FC = () => {
     business: subscriptions.filter(s => s.plan_type === 'business').length,
   };
 
-  // Plan prices (monthly)
+  // Plan prices (monthly) - Updated with correct prices
   const planPrices: Record<string, number> = {
     gratis: 0,
-    basic: 9.99,
-    pro: 29.99,
-    business: 79.99,
+    basic: 15,
+    pro: 35,
+    business: 75,
   };
 
   // Duration multipliers

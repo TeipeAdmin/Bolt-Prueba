@@ -22,6 +22,11 @@ export const SubscriptionsManagement: React.FC = () => {
     status: 'active' as Subscription['status'],
     auto_renew: true,
   });
+  const [filterPlan, setFilterPlan] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'expiring'>('newest');
 
   useEffect(() => {
     loadData();
@@ -235,6 +240,97 @@ export const SubscriptionsManagement: React.FC = () => {
         </div>
       </div>
 
+      {/* Filters */}
+      <div className="bg-white rounded-lg shadow p-4 mb-6">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Plan
+              </label>
+              <select
+                value={filterPlan}
+                onChange={(e) => setFilterPlan(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">Todos los planes</option>
+                <option value="gratis">Gratis</option>
+                <option value="basic">Basic</option>
+                <option value="pro">Pro</option>
+                <option value="business">Business</option>
+              </select>
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Estado
+              </label>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">Todos los estados</option>
+                <option value="active">Activa</option>
+                <option value="expired">Expirada</option>
+                <option value="cancelled">Cancelada</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 items-end">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Fecha inicio
+              </label>
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Fecha fin
+              </label>
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Ordenar por
+              </label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as 'newest' | 'oldest' | 'expiring')}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="newest">Más reciente</option>
+                <option value="oldest">Más antiguo</option>
+                <option value="expiring">Próximo a expirar</option>
+              </select>
+            </div>
+            {(filterPlan !== 'all' || filterStatus !== 'all' || startDate || endDate || sortBy !== 'newest') && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setFilterPlan('all');
+                  setFilterStatus('all');
+                  setStartDate('');
+                  setEndDate('');
+                  setSortBy('newest');
+                }}
+              >
+                Limpiar
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Subscriptions Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
@@ -262,7 +358,37 @@ export const SubscriptionsManagement: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {subscriptions.map((subscription) => {
+              {subscriptions
+                .filter(subscription => {
+                  // Filter by plan
+                  if (filterPlan !== 'all' && subscription.plan_type !== filterPlan) return false;
+
+                  // Filter by status
+                  if (filterStatus !== 'all' && subscription.status !== filterStatus) return false;
+
+                  // Filter by date range
+                  if (startDate || endDate) {
+                    const subDate = new Date(subscription.created_at);
+                    if (startDate && subDate < new Date(startDate)) return false;
+                    if (endDate) {
+                      const end = new Date(endDate);
+                      end.setHours(23, 59, 59, 999);
+                      if (subDate > end) return false;
+                    }
+                  }
+
+                  return true;
+                })
+                .sort((a, b) => {
+                  if (sortBy === 'newest') {
+                    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+                  } else if (sortBy === 'oldest') {
+                    return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+                  } else { // expiring
+                    return new Date(a.end_date).getTime() - new Date(b.end_date).getTime();
+                  }
+                })
+                .map((subscription) => {
                 const restaurant = getRestaurant(subscription.restaurant_id);
                 const expiringSoon = isExpiringSoon(subscription.end_date);
                 const expired = isExpired(subscription.end_date);

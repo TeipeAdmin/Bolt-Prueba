@@ -23,6 +23,9 @@ export const UsersManagement: React.FC = () => {
   const [selectedRestaurantId, setSelectedRestaurantId] = useState('');
   const [filter, setFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'email'>('newest');
   const [newUserForm, setNewUserForm] = useState({
     email: '',
     password: '',
@@ -219,12 +222,33 @@ export const UsersManagement: React.FC = () => {
     setProvisionalPassword('');
   };
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    if (filter === 'all') return matchesSearch;
-    return matchesSearch && user.role === filter;
-  });
+  const filteredUsers = users
+    .filter(user => {
+      const matchesSearch = user.email.toLowerCase().includes(searchTerm.toLowerCase());
+
+      // Filter by date range
+      if (startDate || endDate) {
+        const userDate = new Date(user.created_at);
+        if (startDate && userDate < new Date(startDate)) return false;
+        if (endDate) {
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          if (userDate > end) return false;
+        }
+      }
+
+      if (filter === 'all') return matchesSearch;
+      return matchesSearch && user.role === filter;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'newest') {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      } else if (sortBy === 'oldest') {
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      } else {
+        return a.email.localeCompare(b.email);
+      }
+    });
 
   const getRoleBadge = (role: UserType['role']) => {
     switch (role) {
@@ -258,25 +282,77 @@ export const UsersManagement: React.FC = () => {
 
       {/* Filters and Search */}
       <div className="bg-white rounded-lg shadow p-4 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <Input
-              placeholder="Buscar por email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <Input
+                placeholder="Buscar por email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-gray-500" />
+              <select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">Todos los roles</option>
+                <option value="super_admin">Superadministradores</option>
+                <option value="restaurant_owner">Restaurantes</option>
+              </select>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-gray-500" />
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="all">Todos los roles</option>
-              <option value="super_admin">Superadministradores</option>
-              <option value="restaurant_owner">Restaurantes</option>
-            </select>
+
+          <div className="flex flex-col sm:flex-row gap-4 items-end">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Fecha inicio
+              </label>
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Fecha fin
+              </label>
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Ordenar por
+              </label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as 'newest' | 'oldest' | 'email')}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="newest">Más reciente</option>
+                <option value="oldest">Más antiguo</option>
+                <option value="email">Email A-Z</option>
+              </select>
+            </div>
+            {(startDate || endDate || sortBy !== 'newest') && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setStartDate('');
+                  setEndDate('');
+                  setSortBy('newest');
+                }}
+              >
+                Limpiar
+              </Button>
+            )}
           </div>
         </div>
       </div>
