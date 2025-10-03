@@ -166,7 +166,7 @@ export const SuperAdminAnalytics: React.FC = () => {
     const endDate = new Date(sub.end_date);
     const now = new Date();
     const daysUntilExpiry = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    return daysUntilExpiry <= 7 && daysUntilExpiry > 0;
+    return daysUntilExpiry <= 7 && daysUntilExpiry > 0 && sub.plan_type !== 'gratis';
   });
 
   return (
