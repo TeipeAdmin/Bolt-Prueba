@@ -73,20 +73,17 @@ export const SupportTicketsManagement: React.FC = () => {
       return matchesSearch && matchesStatus && matchesPriority && matchesCategory && matchesDateFrom && matchesDateTo;
     });
 
-    // Sort by priority and date
+    // Sort based on user selection
     filtered.sort((a, b) => {
-      const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
-      const aPriority = priorityOrder[a.priority as keyof typeof priorityOrder] || 1;
-      const bPriority = priorityOrder[b.priority as keyof typeof priorityOrder] || 1;
-
-      if (aPriority !== bPriority) {
-        return bPriority - aPriority; // Higher priority first
-      }
-
       // Apply sort order based on user selection
       const aTime = new Date(a.createdAt).getTime();
       const bTime = new Date(b.createdAt).getTime();
-      return sortOrder === 'newest' ? bTime - aTime : aTime - bTime;
+
+      if (sortOrder === 'newest') {
+        return bTime - aTime; // Newer first
+      } else {
+        return aTime - bTime; // Older first
+      }
     });
 
     setFilteredTickets(filtered);
