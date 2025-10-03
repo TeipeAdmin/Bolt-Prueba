@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart3, TrendingUp, Users, Store, Calendar, DollarSign, Filter } from 'lucide-react';
 import { Restaurant, Subscription, User } from '../../types';
+import { loadFromStorage } from '../../data/mockData';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { supabase } from '../../lib/supabase';
 
 export const SuperAdminAnalytics: React.FC = () => {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
@@ -16,60 +16,14 @@ export const SuperAdminAnalytics: React.FC = () => {
   const [endDate, setEndDate] = useState('');
 
   useEffect(() => {
-    loadData();
-
-    // Subscribe to realtime updates
-    const subscription = supabase
-      .channel('analytics_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'subscriptions' }, () => {
-        loadData();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'restaurants' }, () => {
-        loadData();
-      })
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
+    const restaurantData = loadFromStorage('restaurants') || [];
+    const subscriptionData = loadFromStorage('subscriptions') || [];
+    const userData = loadFromStorage('users') || [];
+    
+    setRestaurants(restaurantData);
+    setSubscriptions(subscriptionData);
+    setUsers(userData);
   }, []);
-
-  const loadData = async () => {
-    try {
-      // Load restaurants
-      const { data: restaurantData, error: restError } = await supabase
-        .from('restaurants')
-        .select('*');
-
-      if (restError) throw restError;
-
-      // Load subscriptions
-      const { data: subscriptionData, error: subError } = await supabase
-        .from('subscriptions')
-        .select('*');
-
-      if (subError) throw subError;
-
-      // Map subscriptions to match expected types
-      const mappedSubscriptions: Subscription[] = (subscriptionData || []).map(sub => ({
-        id: sub.id,
-        restaurant_id: sub.restaurant_id,
-        plan_type: sub.plan_type as Subscription['plan_type'],
-        status: sub.status as Subscription['status'],
-        duration: 'monthly' as Subscription['duration'],
-        start_date: sub.start_date,
-        end_date: sub.end_date,
-        auto_renew: sub.auto_renew,
-        created_at: sub.created_at,
-      }));
-
-      setRestaurants(restaurantData || []);
-      setSubscriptions(mappedSubscriptions);
-      setUsers([]);
-    } catch (error) {
-      console.error('Error loading analytics data:', error);
-    }
-  };
 
   // Filter subscriptions based on selected filters
   const getFilteredSubscriptions = () => {

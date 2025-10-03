@@ -242,9 +242,9 @@ export interface Restaurant {
 export interface Subscription {
   id: string;
   restaurant_id: string;
-  plan_type: 'free' | 'gratis' | 'basic' | 'pro' | 'business' | 'premium' | 'enterprise' | 'trial';
+  plan_type: 'gratis' | 'basic' | 'pro' | 'business';
   duration: 'monthly' | 'quarterly' | 'annual';
-  status: 'active' | 'expired' | 'inactive' | 'cancelled';
+  status: 'active' | 'expired';
   start_date: string;
   end_date: string;
   auto_renew: boolean;
