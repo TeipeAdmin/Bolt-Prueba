@@ -144,12 +144,14 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
         </form>
       ) : (
         <form onSubmit={handleResetPassword} className="space-y-6">
-          <div className="flex items-start space-x-3 p-4 bg-green-50 rounded-lg border border-green-200">
-            <Key className="w-5 h-5 text-green-600 mt-0.5" />
-            <div className="text-sm text-green-900">
-              <p className="mb-2">Se ha enviado un código a <strong>{email}</strong></p>
-              <p className="font-mono bg-white px-3 py-2 rounded border border-green-300">
-                Tu código es: <strong className="text-green-700">{generatedCode}</strong>
+          <div className="flex items-start space-x-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <Mail className="w-5 h-5 text-blue-600 mt-0.5" />
+            <div className="text-sm text-blue-900">
+              <p className="mb-2">
+                Hemos enviado un código de verificación a <strong>{email}</strong>
+              </p>
+              <p className="text-xs text-blue-700 mt-2">
+                Por favor revisa tu bandeja de entrada y la carpeta de spam. El código expirará en 15 minutos.
               </p>
             </div>
           </div>
@@ -159,7 +161,8 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
             label="Código de Recuperación"
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            placeholder="Ingresa el código"
+            placeholder="Ingresa el código de 6 dígitos"
+            maxLength={6}
             required
           />
 

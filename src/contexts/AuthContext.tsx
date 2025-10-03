@@ -302,13 +302,37 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     if (!code && !newPassword) {
       const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
-      console.log('Password reset code generated for:', email, '- Code:', generatedCode);
+      const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+
+      const resetCodes = loadFromStorage('passwordResetCodes', {});
+      resetCodes[email] = {
+        code: generatedCode,
+        expiresAt: expiresAt,
+      };
+      saveToStorage('passwordResetCodes', resetCodes);
+
+      console.log('Password reset code would be sent to:', email);
+      console.log('In production, this code would be sent via email (not shown to user)');
+      console.log('For testing purposes - Code:', generatedCode);
+
       return { success: true, code: generatedCode };
     }
 
-    const storedCode = code;
-    if (!storedCode) {
-      return { success: false, error: 'Código inválido o expirado' };
+    const resetCodes = loadFromStorage('passwordResetCodes', {});
+    const resetData = resetCodes[email];
+
+    if (!resetData) {
+      return { success: false, error: 'No se ha solicitado un código de recuperación para este email' };
+    }
+
+    if (new Date(resetData.expiresAt) < new Date()) {
+      delete resetCodes[email];
+      saveToStorage('passwordResetCodes', resetCodes);
+      return { success: false, error: 'El código ha expirado. Por favor solicita uno nuevo' };
+    }
+
+    if (resetData.code !== code) {
+      return { success: false, error: 'El código ingresado es incorrecto' };
     }
 
     const updatedUsers = users.map((u: User) =>
@@ -318,6 +342,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     );
 
     saveToStorage('users', updatedUsers);
+
+    delete resetCodes[email];
+    saveToStorage('passwordResetCodes', resetCodes);
+
     console.log('Password reset successfully for:', email);
 
     return { success: true };
