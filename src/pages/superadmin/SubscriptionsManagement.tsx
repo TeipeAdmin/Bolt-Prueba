@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { CreditCard, Calendar, AlertCircle, CheckCircle, XCircle, Plus, CreditCard as Edit } from 'lucide-react';
 import { Subscription, Restaurant } from '../../types';
+import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
-import { supabase } from '../../lib/supabase';
 
 export const SubscriptionsManagement: React.FC = () => {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
@@ -16,6 +16,7 @@ export const SubscriptionsManagement: React.FC = () => {
   const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null);
   const [formData, setFormData] = useState({
     plan_type: 'basic' as Subscription['plan_type'],
+    duration: 'monthly' as Subscription['duration'],
     start_date: '',
     end_date: '',
     status: 'active' as Subscription['status'],
@@ -32,27 +33,43 @@ export const SubscriptionsManagement: React.FC = () => {
     loadData();
   }, []);
 
-  const loadData = async () => {
-    try {
-      // Fetch subscriptions from Supabase
-      const { data: subscriptionData, error: subError } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .order('created_at', { ascending: false });
+  const loadData = () => {
+    const subscriptionData = loadFromStorage('subscriptions') || [];
+    const restaurantData = loadFromStorage('restaurants') || [];
 
-      if (subError) throw subError;
+    // Remove duplicate subscriptions based on restaurant_id
+    const uniqueSubscriptions = subscriptionData.reduce((acc: Subscription[], current: Subscription) => {
+      const duplicate = acc.find(sub => sub.restaurant_id === current.restaurant_id);
+      if (!duplicate) {
+        acc.push(current);
+      } else {
+        // Keep the most recent one
+        const existingIndex = acc.findIndex(sub => sub.restaurant_id === current.restaurant_id);
+        if (new Date(current.created_at) > new Date(acc[existingIndex].created_at)) {
+          acc[existingIndex] = current;
+        }
+      }
+      return acc;
+    }, []);
 
-      // Fetch restaurants from Supabase
-      const { data: restaurantData, error: restError } = await supabase
-        .from('restaurants')
-        .select('*');
+    // Auto-expire subscriptions based on end date
+    const now = new Date();
+    const updatedSubscriptions = uniqueSubscriptions.map(sub => {
+      const endDate = new Date(sub.end_date);
 
-      if (restError) throw restError;
+      // If subscription is expired and not 'gratis' plan, mark as expired
+      if (endDate < now && sub.plan_type !== 'gratis' && sub.status === 'active') {
+        return { ...sub, status: 'expired' as const };
+      }
+      return sub;
+    });
 
-      setSubscriptions(subscriptionData || []);
-      setRestaurants(restaurantData || []);
-    } catch (error) {
-      console.error('Error loading data:', error);
+    setSubscriptions(updatedSubscriptions);
+    setRestaurants(restaurantData);
+
+    // Save the updated subscriptions back to storage
+    if (JSON.stringify(updatedSubscriptions) !== JSON.stringify(uniqueSubscriptions)) {
+      saveToStorage('subscriptions', updatedSubscriptions);
     }
   };
 
@@ -60,31 +77,22 @@ export const SubscriptionsManagement: React.FC = () => {
     return restaurants.find(restaurant => restaurant.id === restaurantId);
   };
 
-  const updateSubscriptionStatus = async (subscriptionId: string, newStatus: Subscription['status']) => {
-    try {
-      const { error } = await supabase
-        .from('subscriptions')
-        .update({ status: newStatus, updated_at: new Date().toISOString() })
-        .eq('id', subscriptionId);
-
-      if (error) throw error;
-
-      const updatedSubscriptions = subscriptions.map(sub =>
-        sub.id === subscriptionId
-          ? { ...sub, status: newStatus }
-          : sub
-      );
-
-      setSubscriptions(updatedSubscriptions);
-    } catch (error) {
-      console.error('Error updating subscription status:', error);
-    }
+  const updateSubscriptionStatus = (subscriptionId: string, newStatus: Subscription['status']) => {
+    const updatedSubscriptions = subscriptions.map(sub => 
+      sub.id === subscriptionId 
+        ? { ...sub, status: newStatus }
+        : sub
+    );
+    
+    setSubscriptions(updatedSubscriptions);
+    saveToStorage('subscriptions', updatedSubscriptions);
   };
 
   const handleEditSubscription = (subscription: Subscription) => {
     setEditingSubscription(subscription);
     setFormData({
       plan_type: subscription.plan_type,
+      duration: subscription.duration,
       start_date: subscription.start_date.split('T')[0],
       end_date: subscription.end_date.split('T')[0],
       status: subscription.status,
@@ -93,79 +101,44 @@ export const SubscriptionsManagement: React.FC = () => {
     setShowEditModal(true);
   };
 
-  const handleSaveSubscription = async () => {
+  const handleSaveSubscription = () => {
     if (!editingSubscription) return;
 
-    try {
-      const { error } = await supabase
-        .from('subscriptions')
-        .update({
-          plan_type: formData.plan_type,
-          status: formData.status,
-          start_date: new Date(formData.start_date).toISOString(),
-          end_date: new Date(formData.end_date).toISOString(),
-          auto_renew: formData.auto_renew,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', editingSubscription.id);
+    const updatedSubscriptions = subscriptions.map(sub =>
+      sub.id === editingSubscription.id
+        ? {
+            ...sub,
+            ...formData,
+            start_date: new Date(formData.start_date).toISOString(),
+            end_date: new Date(formData.end_date).toISOString(),
+          }
+        : sub
+    );
 
-      if (error) throw error;
-
-      const updatedSubscriptions = subscriptions.map(sub =>
-        sub.id === editingSubscription.id
-          ? {
-              ...sub,
-              ...formData,
-              start_date: new Date(formData.start_date).toISOString(),
-              end_date: new Date(formData.end_date).toISOString(),
-            }
-          : sub
-      );
-
-      setSubscriptions(updatedSubscriptions);
-      setShowEditModal(false);
-      setEditingSubscription(null);
-    } catch (error) {
-      console.error('Error saving subscription:', error);
-    }
+    setSubscriptions(updatedSubscriptions);
+    saveToStorage('subscriptions', updatedSubscriptions);
+    setShowEditModal(false);
+    setEditingSubscription(null);
   };
 
-  const extendSubscription = async (subscriptionId: string, months: number) => {
-    try {
-      const subscription = subscriptions.find(sub => sub.id === subscriptionId);
-      if (!subscription) return;
-
-      const currentEndDate = new Date(subscription.end_date);
-      const newEndDate = new Date(currentEndDate);
-      newEndDate.setMonth(newEndDate.getMonth() + months);
-
-      const { error } = await supabase
-        .from('subscriptions')
-        .update({
+  const extendSubscription = (subscriptionId: string, months: number) => {
+    const updatedSubscriptions = subscriptions.map(sub => {
+      if (sub.id === subscriptionId) {
+        const currentEndDate = new Date(sub.end_date);
+        const newEndDate = new Date(currentEndDate);
+        newEndDate.setMonth(newEndDate.getMonth() + months);
+        
+        return {
+          ...sub,
           end_date: newEndDate.toISOString(),
-          status: 'active',
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', subscriptionId);
-
-      if (error) throw error;
-
-      const updatedSubscriptions = subscriptions.map(sub => {
-        if (sub.id === subscriptionId) {
-          return {
-            ...sub,
-            end_date: newEndDate.toISOString(),
-            status: 'active' as const
-          };
-        }
-        return sub;
-      });
-
-      setSubscriptions(updatedSubscriptions);
-      setShowModal(false);
-    } catch (error) {
-      console.error('Error extending subscription:', error);
-    }
+          status: 'active' as const
+        };
+      }
+      return sub;
+    });
+    
+    setSubscriptions(updatedSubscriptions);
+    saveToStorage('subscriptions', updatedSubscriptions);
   };
 
   const getStatusBadge = (status: Subscription['status']) => {
@@ -181,7 +154,7 @@ export const SubscriptionsManagement: React.FC = () => {
 
   const getPlanBadge = (planType: Subscription['plan_type']) => {
     switch (planType) {
-      case 'free':
+      case 'gratis':
         return <Badge variant="gray">Gratis</Badge>;
       case 'basic':
         return <Badge variant="info">Basic</Badge>;
@@ -189,6 +162,12 @@ export const SubscriptionsManagement: React.FC = () => {
         return <Badge variant="success">Pro</Badge>;
       case 'business':
         return <Badge variant="error">Business</Badge>;
+      case 'premium':
+        return <Badge variant="success">Premium</Badge>;
+      case 'enterprise':
+        return <Badge variant="error">Enterprise</Badge>;
+      case 'trial':
+        return <Badge variant="warning">Prueba</Badge>;
       default:
         return <Badge variant="gray">Desconocido</Badge>;
     }
@@ -243,7 +222,7 @@ export const SubscriptionsManagement: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Por Vencer (7 días)</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {subscriptions.filter(s => isExpiringSoon(s.end_date) && s.plan_type !== 'free').length}
+                {subscriptions.filter(s => isExpiringSoon(s.end_date) && s.plan_type !== 'gratis').length}
               </p>
             </div>
           </div>
@@ -255,7 +234,7 @@ export const SubscriptionsManagement: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Plan Gratis</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {subscriptions.filter(s => s.plan_type === 'free').length}
+                {subscriptions.filter(s => s.plan_type === 'gratis').length}
               </p>
             </div>
           </div>
@@ -285,7 +264,7 @@ export const SubscriptionsManagement: React.FC = () => {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="all">Todos los planes</option>
-                <option value="free">Gratis</option>
+                <option value="gratis">Gratis</option>
                 <option value="basic">Basic</option>
                 <option value="pro">Pro</option>
                 <option value="business">Business</option>
@@ -302,9 +281,7 @@ export const SubscriptionsManagement: React.FC = () => {
               >
                 <option value="all">Todos los estados</option>
                 <option value="active">Activa</option>
-                <option value="inactive">Inactiva</option>
                 <option value="expired">Vencida</option>
-                <option value="cancelled">Cancelada</option>
               </select>
             </div>
           </div>
@@ -380,7 +357,7 @@ export const SubscriptionsManagement: React.FC = () => {
                   Estado
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Fecha Inicio
+                  Duración
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Vencimiento
@@ -455,7 +432,9 @@ export const SubscriptionsManagement: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {new Date(subscription.start_date).toLocaleDateString()}
+                      {subscription.duration === 'monthly' && 'Mensual'}
+                      {subscription.duration === 'quarterly' && 'Trimestral'}
+                      {subscription.duration === 'annual' && 'Anual'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {new Date(subscription.end_date).toLocaleDateString()}
@@ -524,6 +503,14 @@ export const SubscriptionsManagement: React.FC = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700">Estado</label>
                 {getStatusBadge(selectedSubscription.status)}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Duración</label>
+                <p className="text-sm text-gray-900">
+                  {selectedSubscription.duration === 'monthly' && 'Mensual'}
+                  {selectedSubscription.duration === 'quarterly' && 'Trimestral'}
+                  {selectedSubscription.duration === 'annual' && 'Anual'}
+                </p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Fecha de Inicio</label>
@@ -596,10 +583,25 @@ export const SubscriptionsManagement: React.FC = () => {
                 onChange={(e) => setFormData(prev => ({ ...prev, plan_type: e.target.value as Subscription['plan_type'] }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="free">Gratis</option>
+                <option value="gratis">Gratis</option>
                 <option value="basic">Basic</option>
                 <option value="pro">Pro</option>
                 <option value="business">Business</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Duración
+              </label>
+              <select
+                value={formData.duration}
+                onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value as Subscription['duration'] }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="monthly">Mensual</option>
+                <option value="quarterly">Trimestral</option>
+                <option value="annual">Anual</option>
               </select>
             </div>
 
@@ -613,9 +615,7 @@ export const SubscriptionsManagement: React.FC = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="active">Activa</option>
-                <option value="inactive">Inactiva</option>
                 <option value="expired">Vencida</option>
-                <option value="cancelled">Cancelada</option>
               </select>
             </div>
 
