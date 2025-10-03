@@ -314,29 +314,7 @@ export const SubscriptionsManagement: React.FC = () => {
                         >
                           Ver
                         </Button>
-                        
-                        {subscription.status === 'expired' && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => updateSubscriptionStatus(subscription.id, 'active')}
-                            className="text-green-600 hover:text-green-700"
-                          >
-                            Reactivar
-                          </Button>
-                        )}
-                        
-                        {subscription.status === 'active' && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => updateSubscriptionStatus(subscription.id, 'suspended')}
-                            className="text-orange-600 hover:text-orange-700"
-                          >
-                            Suspender
-                          </Button>
-                        )}
-                        
+
                         <Button
                           variant="ghost"
                           size="sm"
