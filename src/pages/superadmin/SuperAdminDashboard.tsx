@@ -15,10 +15,19 @@ export const SuperAdminDashboard: React.FC = () => {
     setSubscriptions(subscriptionData);
   }, []);
 
+  const getRestaurantSubscription = (restaurantId: string) => {
+    return subscriptions.find(s => s.restaurant_id === restaurantId);
+  };
+
+  const isRestaurantActive = (restaurantId: string) => {
+    const subscription = getRestaurantSubscription(restaurantId);
+    return subscription?.status === 'active';
+  };
+
   const stats = {
     totalRestaurants: restaurants.length,
-    activeRestaurants: restaurants.filter(r => r.status === 'active').length,
-    inactiveRestaurants: restaurants.filter(r => r.status === 'inactive').length,
+    activeRestaurants: restaurants.filter(r => isRestaurantActive(r.id)).length,
+    inactiveRestaurants: restaurants.filter(r => !isRestaurantActive(r.id)).length,
     gratisPlan: subscriptions.filter(s => s.plan_type === 'gratis').length,
     basicPlan: subscriptions.filter(s => s.plan_type === 'basic').length,
     proPlan: subscriptions.filter(s => s.plan_type === 'pro').length,
@@ -31,15 +40,15 @@ export const SuperAdminDashboard: React.FC = () => {
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 5);
 
-  const getStatusBadge = (status: Restaurant['status']) => {
-    switch (status) {
-      case 'active':
-        return <Badge variant="success">Activo</Badge>;
-      case 'inactive':
-        return <Badge variant="error">Inactivo</Badge>;
-      default:
-        return <Badge variant="gray">Desconocido</Badge>;
+  const getRestaurantStatusBadge = (restaurantId: string) => {
+    const subscription = getRestaurantSubscription(restaurantId);
+    if (!subscription) {
+      return <Badge variant="gray">Sin suscripción</Badge>;
     }
+
+    return subscription.status === 'active'
+      ? <Badge variant="success">Activo</Badge>
+      : <Badge variant="error">Inactivo</Badge>;
   };
 
   const getSubscriptionBadge = (subscription: Subscription | undefined) => {
@@ -228,7 +237,7 @@ export const SuperAdminDashboard: React.FC = () => {
                       {restaurant.email}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(restaurant.status)}
+                      {getRestaurantStatusBadge(restaurant.id)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getSubscriptionBadge(subscription)}

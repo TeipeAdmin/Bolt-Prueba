@@ -165,7 +165,6 @@ export const mockRestaurants: Restaurant[] = [
       },
     },
     subscription_id: 'sub-orlando',
-    status: 'active',
     domain: 'restaurante-orlando',
     created_at: '2024-01-15T00:00:00Z',
     updated_at: '2024-12-01T00:00:00Z',

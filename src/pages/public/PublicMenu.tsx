@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Search, Clock, MapPin, Phone, Mail, Instagram, Facebook, ChevronRight, Plus, Minus, X } from 'lucide-react';
 import { useParams } from 'react-router-dom';
-import { Category, Product, Restaurant } from '../../types';
+import { Category, Product, Restaurant, Subscription } from '../../types';
 import { loadFromStorage } from '../../data/mockData';
 import { useCart } from '../../contexts/CartContext';
 import { ProductDetail } from '../../components/public/ProductDetail';
@@ -32,7 +32,7 @@ export const PublicMenu: React.FC = () => {
       const restaurants = loadFromStorage('restaurants', []);
       console.log('All restaurants:', restaurants);
 
-      const restaurantData = restaurants.find((r: Restaurant) => r.slug === slug || r.id === slug);
+      const restaurantData = restaurants.find((r: Restaurant) => r.slug === slug || r.id === slug || r.domain === slug);
 
       if (!restaurantData) {
         console.error('Restaurant not found. Slug:', slug, 'Available restaurants:', restaurants.map(r => ({ id: r.id, slug: r.slug })));
@@ -41,7 +41,18 @@ export const PublicMenu: React.FC = () => {
         return;
       }
 
-      console.log('Restaurant found:', restaurantData);
+      // Check subscription status
+      const subscriptions = loadFromStorage('subscriptions', []);
+      const subscription = subscriptions.find((s: Subscription) => s.restaurant_id === restaurantData.id);
+
+      if (!subscription || subscription.status !== 'active') {
+        console.error('Restaurant subscription is not active');
+        setError('Este restaurante no está disponible en este momento. Suscripción inactiva o vencida.');
+        setLoading(false);
+        return;
+      }
+
+      console.log('Restaurant found and active:', restaurantData);
       setRestaurant(restaurantData);
 
       const allCategories = loadFromStorage('categories', []);

@@ -228,7 +228,9 @@ export interface Restaurant {
   logo?: string;
   owner_name?: string;
   owner_id: string;
-  is_active: boolean;
+  user_id?: string;
+  subscription_id?: string;
+  domain?: string;
   settings: RestaurantSettings;
   created_at: string;
   updated_at: string;
@@ -237,13 +239,13 @@ export interface Restaurant {
 export interface Subscription {
   id: string;
   restaurant_id: string;
-  plan_type: 'free' | 'basic' | 'pro' | 'business';
-  status: 'active' | 'inactive' | 'cancelled' | 'expired';
+  plan_type: 'gratis' | 'basic' | 'pro' | 'business';
+  duration: 'monthly' | 'quarterly' | 'annual';
+  status: 'active' | 'expired';
   start_date: string;
   end_date: string;
   auto_renew: boolean;
   created_at: string;
-  updated_at: string;
 }
 export interface PlanFeatures {
   max_products: number;

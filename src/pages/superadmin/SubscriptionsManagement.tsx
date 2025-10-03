@@ -46,7 +46,7 @@ export const SubscriptionsManagement: React.FC = () => {
       return acc;
     }, []);
 
-    // Auto-expire subscriptions and set restaurant status to inactive
+    // Auto-expire subscriptions based on end date
     const now = new Date();
     const updatedSubscriptions = uniqueSubscriptions.map(sub => {
       const endDate = new Date(sub.end_date);
@@ -58,30 +58,13 @@ export const SubscriptionsManagement: React.FC = () => {
       return sub;
     });
 
-    // Update restaurant status based on subscription status
-    const updatedRestaurants = restaurantData.map((restaurant: any) => {
-      const subscription = updatedSubscriptions.find(sub => sub.restaurant_id === restaurant.id);
-
-      if (subscription) {
-        // If subscription is expired (and not gratis), set restaurant to inactive
-        if (subscription.status === 'expired' && subscription.plan_type !== 'gratis') {
-          return { ...restaurant, status: 'inactive' };
-        }
-        // If subscription is active, set restaurant to active
-        if (subscription.status === 'active') {
-          return { ...restaurant, status: 'active' };
-        }
-      }
-
-      return restaurant;
-    });
-
     setSubscriptions(updatedSubscriptions);
-    setRestaurants(updatedRestaurants);
+    setRestaurants(restaurantData);
 
-    // Save the updated data back to storage
-    saveToStorage('subscriptions', updatedSubscriptions);
-    saveToStorage('restaurants', updatedRestaurants);
+    // Save the updated subscriptions back to storage
+    if (JSON.stringify(updatedSubscriptions) !== JSON.stringify(uniqueSubscriptions)) {
+      saveToStorage('subscriptions', updatedSubscriptions);
+    }
   };
 
   const getRestaurant = (restaurantId: string) => {

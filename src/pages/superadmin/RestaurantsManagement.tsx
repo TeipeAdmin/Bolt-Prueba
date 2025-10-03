@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, CreditCard as Edit, Trash2, CheckCircle, XCircle, Filter, ExternalLink, Settings } from 'lucide-react';
+import { Eye, Trash2, Filter, ExternalLink, Settings } from 'lucide-react';
 import { Restaurant, Subscription } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { Button } from '../../components/ui/Button';
@@ -39,19 +39,9 @@ export const RestaurantsManagement: React.FC = () => {
     return subscriptions.find(sub => sub.restaurant_id === restaurantId);
   };
 
-  const toggleRestaurantStatus = (restaurantId: string) => {
-    const restaurant = restaurants.find(r => r.id === restaurantId);
-    if (!restaurant) return;
-    
-    const newStatus = restaurant.status === 'active' ? 'inactive' : 'active';
-    const updatedRestaurants = restaurants.map(restaurant => 
-      restaurant.id === restaurantId 
-        ? { ...restaurant, status: newStatus, updated_at: new Date().toISOString() }
-        : restaurant
-    );
-    
-    setRestaurants(updatedRestaurants);
-    saveToStorage('restaurants', updatedRestaurants);
+  const isRestaurantActive = (restaurantId: string) => {
+    const subscription = getSubscription(restaurantId);
+    return subscription?.status === 'active';
   };
 
   const handleEditSubscription = (restaurant: Restaurant) => {
@@ -107,18 +97,17 @@ export const RestaurantsManagement: React.FC = () => {
       saveToStorage('subscriptions', [...allSubscriptions, newSubscription]);
     }
 
-    // Update restaurant status based on subscription
+    // Update restaurant subscription_id if needed
     const updatedRestaurants = restaurants.map(restaurant =>
       restaurant.id === editingRestaurant.id
-        ? { 
-            ...restaurant, 
-            status: subscriptionForm.status === 'active' ? 'active' : 'inactive',
+        ? {
+            ...restaurant,
             subscription_id: existingSubscription?.id || `sub-${Date.now()}`,
             updated_at: new Date().toISOString()
           }
         : restaurant
     );
-    
+
     setRestaurants(updatedRestaurants);
     saveToStorage('restaurants', updatedRestaurants);
     
@@ -146,20 +135,25 @@ export const RestaurantsManagement: React.FC = () => {
   const filteredRestaurants = restaurants.filter(restaurant => {
     const matchesSearch = restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          restaurant.email.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     if (filter === 'all') return matchesSearch;
-    return matchesSearch && restaurant.status === filter;
+
+    const isActive = isRestaurantActive(restaurant.id);
+    if (filter === 'active') return matchesSearch && isActive;
+    if (filter === 'inactive') return matchesSearch && !isActive;
+
+    return matchesSearch;
   });
 
-  const getStatusBadge = (status: Restaurant['status']) => {
-    switch (status) {
-      case 'active':
-        return <Badge variant="success">Activo</Badge>;
-      case 'inactive':
-        return <Badge variant="error">Inactivo</Badge>;
-      default:
-        return <Badge variant="gray">Inactivo</Badge>;
+  const getRestaurantStatusBadge = (restaurantId: string) => {
+    const subscription = getSubscription(restaurantId);
+    if (!subscription) {
+      return <Badge variant="gray">Sin suscripción</Badge>;
     }
+
+    return subscription.status === 'active'
+      ? <Badge variant="success">Activo</Badge>
+      : <Badge variant="error">Inactivo</Badge>;
   };
 
   const getSubscriptionBadge = (subscription: Subscription | undefined) => {
@@ -171,14 +165,12 @@ export const RestaurantsManagement: React.FC = () => {
                      subscription.plan_type === 'business' ? 'Business' :
                      subscription.plan_type.toUpperCase();
 
-    switch (subscription.status) {
-      case 'active':
-        return <Badge variant="success">{planName}</Badge>;
-      case 'inactive':
-        return <Badge variant="error">Inactiva</Badge>;
-      default:
-        return <Badge variant="gray">Inactiva</Badge>;
-    }
+    const variant = subscription.plan_type === 'gratis' ? 'gray' :
+                   subscription.plan_type === 'basic' ? 'info' :
+                   subscription.plan_type === 'pro' ? 'success' :
+                   'error';
+
+    return <Badge variant={variant}>{planName}</Badge>;
   };
 
   const handleDeleteRestaurant = (restaurant: Restaurant) => {
@@ -310,7 +302,7 @@ export const RestaurantsManagement: React.FC = () => {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(restaurant.status)}
+                      {getRestaurantStatusBadge(restaurant.id)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getSubscriptionBadge(subscription)}
@@ -339,18 +331,6 @@ export const RestaurantsManagement: React.FC = () => {
                             setSelectedRestaurant(restaurant);
                             setShowModal(true);
                           }}
-                        />
-                        
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          icon={restaurant.status === 'active' ? XCircle : CheckCircle}
-                          onClick={() => toggleRestaurantStatus(restaurant.id)}
-                          className={restaurant.status === 'active' 
-                            ? "text-red-600 hover:text-red-700" 
-                            : "text-green-600 hover:text-green-700"
-                          }
-                          title={restaurant.status === 'active' ? 'Desactivar' : 'Activar'}
                         />
                         
                         <Button
@@ -442,7 +422,7 @@ export const RestaurantsManagement: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Estado</label>
-                {getStatusBadge(selectedRestaurant.status)}
+                {getRestaurantStatusBadge(selectedRestaurant.id)}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Suscripción</label>
