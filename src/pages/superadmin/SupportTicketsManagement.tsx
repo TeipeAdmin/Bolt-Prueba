@@ -1,28 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { HelpCircle, MessageSquare, Clock, AlertTriangle, CheckCircle, Eye, Trash2, Filter, Search, Mail, Phone, Calendar, User, Building } from 'lucide-react';
+import { HelpCircle, MessageSquare, Clock, AlertTriangle, CheckCircle, Eye, Trash2, Filter, Search, Mail, Phone, Calendar, User, Building, Key } from 'lucide-react';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
+import { SupportTicket } from '../../types';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
-
-interface SupportTicket {
-  id: string;
-  restaurantId: string;
-  restaurantName: string;
-  subject: string;
-  category: string;
-  priority: string;
-  message: string;
-  contactEmail: string;
-  contactPhone: string;
-  status: 'pending' | 'in_progress' | 'resolved' | 'closed';
-  createdAt: string;
-  updatedAt: string;
-  response?: string;
-  responseDate?: string;
-  adminNotes?: string;
-}
 
 export const SupportTicketsManagement: React.FC = () => {
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
@@ -52,30 +35,29 @@ export const SupportTicketsManagement: React.FC = () => {
 
   const filterTickets = () => {
     let filtered = tickets.filter(ticket => {
-      const matchesSearch = 
+      const matchesSearch =
         ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ticket.restaurantName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ticket.contactEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ticket.message.toLowerCase().includes(searchTerm.toLowerCase());
+        ticket.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ticket.description.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesStatus = statusFilter === 'all' || ticket.status === statusFilter;
       const matchesPriority = priorityFilter === 'all' || ticket.priority === priorityFilter;
-      const matchesCategory = categoryFilter === 'all' || ticket.category === categoryFilter;
+      const matchesCategory = categoryFilter === 'all' || ticket.type === categoryFilter;
 
       return matchesSearch && matchesStatus && matchesPriority && matchesCategory;
     });
 
     // Sort by priority and date
     filtered.sort((a, b) => {
-      const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
+      const priorityOrder = { high: 3, medium: 2, low: 1 };
       const aPriority = priorityOrder[a.priority as keyof typeof priorityOrder] || 1;
       const bPriority = priorityOrder[b.priority as keyof typeof priorityOrder] || 1;
-      
+
       if (aPriority !== bPriority) {
-        return bPriority - aPriority; // Higher priority first
+        return bPriority - aPriority;
       }
-      
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(); // Newer first
+
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
 
     setFilteredTickets(filtered);
@@ -84,7 +66,7 @@ export const SupportTicketsManagement: React.FC = () => {
   const updateTicketStatus = (ticketId: string, newStatus: SupportTicket['status']) => {
     const updatedTickets = tickets.map(ticket =>
       ticket.id === ticketId
-        ? { ...ticket, status: newStatus, updatedAt: new Date().toISOString() }
+        ? { ...ticket, status: newStatus, updated_at: new Date().toISOString() }
         : ticket
     );
     setTickets(updatedTickets);
@@ -98,8 +80,8 @@ export const SupportTicketsManagement: React.FC = () => {
 
   const handleRespondToTicket = (ticket: SupportTicket) => {
     setSelectedTicket(ticket);
-    setResponseText(ticket.response || '');
-    setAdminNotes(ticket.adminNotes || '');
+    setResponseText('');
+    setAdminNotes(ticket.notes || '');
     setShowResponseModal(true);
   };
 
@@ -110,11 +92,11 @@ export const SupportTicketsManagement: React.FC = () => {
       ticket.id === selectedTicket.id
         ? {
             ...ticket,
-            response: responseText,
-            responseDate: new Date().toISOString(),
-            adminNotes: adminNotes,
+            notes: adminNotes,
             status: 'resolved' as const,
-            updatedAt: new Date().toISOString()
+            resolved_at: new Date().toISOString(),
+            resolved_by: 'super_admin',
+            updated_at: new Date().toISOString()
           }
         : ticket
     );
@@ -137,8 +119,8 @@ export const SupportTicketsManagement: React.FC = () => {
 
   const getStatusBadge = (status: SupportTicket['status']) => {
     switch (status) {
-      case 'pending':
-        return <Badge variant="warning">Pendiente</Badge>;
+      case 'open':
+        return <Badge variant="warning">Abierto</Badge>;
       case 'in_progress':
         return <Badge variant="info">En Progreso</Badge>;
       case 'resolved':
@@ -152,12 +134,10 @@ export const SupportTicketsManagement: React.FC = () => {
 
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
-      case 'urgent':
-        return <Badge variant="error">Urgente</Badge>;
       case 'high':
-        return <Badge variant="warning">Alta</Badge>;
+        return <Badge variant="error">Alta</Badge>;
       case 'medium':
-        return <Badge variant="info">Media</Badge>;
+        return <Badge variant="warning">Media</Badge>;
       case 'low':
         return <Badge variant="gray">Baja</Badge>;
       default:
@@ -167,22 +147,27 @@ export const SupportTicketsManagement: React.FC = () => {
 
   const getCategoryName = (category: string) => {
     const categories: { [key: string]: string } = {
-      general: 'Consulta General',
+      password_reset: 'Recuperación de Contraseña',
       technical: 'Problema Técnico',
       billing: 'Facturación',
-      feature: 'Solicitud de Función',
-      account: 'Cuenta y Configuración',
-      other: 'Otro'
+      general: 'Consulta General'
     };
     return categories[category] || category;
   };
 
+  const getRestaurantName = (restaurantId?: string) => {
+    if (!restaurantId) return 'N/A';
+    const restaurants = loadFromStorage('restaurants', []);
+    const restaurant = restaurants.find((r: any) => r.id === restaurantId);
+    return restaurant?.name || 'N/A';
+  };
+
   const stats = {
     total: tickets.length,
-    pending: tickets.filter(t => t.status === 'pending').length,
+    open: tickets.filter(t => t.status === 'open').length,
     inProgress: tickets.filter(t => t.status === 'in_progress').length,
     resolved: tickets.filter(t => t.status === 'resolved').length,
-    urgent: tickets.filter(t => t.priority === 'urgent').length,
+    high: tickets.filter(t => t.priority === 'high').length,
   };
 
   return (
@@ -210,8 +195,8 @@ export const SupportTicketsManagement: React.FC = () => {
           <div className="flex items-center">
             <Clock className="h-8 w-8 text-yellow-600" />
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Pendientes</p>
-              <p className="text-2xl font-semibold text-gray-900">{stats.pending}</p>
+              <p className="text-sm font-medium text-gray-600">Abiertos</p>
+              <p className="text-2xl font-semibold text-gray-900">{stats.open}</p>
             </div>
           </div>
         </div>
@@ -240,8 +225,8 @@ export const SupportTicketsManagement: React.FC = () => {
           <div className="flex items-center">
             <AlertTriangle className="h-8 w-8 text-red-600" />
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Urgentes</p>
-              <p className="text-2xl font-semibold text-gray-900">{stats.urgent}</p>
+              <p className="text-sm font-medium text-gray-600">Prioridad Alta</p>
+              <p className="text-2xl font-semibold text-gray-900">{stats.high}</p>
             </div>
           </div>
         </div>
@@ -269,7 +254,7 @@ export const SupportTicketsManagement: React.FC = () => {
               className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">Todos los estados</option>
-              <option value="pending">Pendientes</option>
+              <option value="open">Abiertos</option>
               <option value="in_progress">En Progreso</option>
               <option value="resolved">Resueltos</option>
               <option value="closed">Cerrados</option>
@@ -282,24 +267,21 @@ export const SupportTicketsManagement: React.FC = () => {
             className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="all">Todas las prioridades</option>
-            <option value="urgent">Urgente</option>
             <option value="high">Alta</option>
             <option value="medium">Media</option>
             <option value="low">Baja</option>
           </select>
-          
+
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
             className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="all">Todas las categorías</option>
-            <option value="general">Consulta General</option>
+            <option value="password_reset">Recuperación de Contraseña</option>
             <option value="technical">Problema Técnico</option>
             <option value="billing">Facturación</option>
-            <option value="feature">Solicitud de Función</option>
-            <option value="account">Cuenta y Configuración</option>
-            <option value="other">Otro</option>
+            <option value="general">Consulta General</option>
           </select>
         </div>
       </div>
@@ -353,37 +335,36 @@ export const SupportTicketsManagement: React.FC = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredTickets.map((ticket) => (
                   <tr key={ticket.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900 max-w-xs truncate">
-                          {ticket.subject}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          ID: {ticket.id.slice(-8)}
+                    <td className="px-6 py-4">
+                      <div className="flex items-start gap-2">
+                        {ticket.type === 'password_reset' && (
+                          <Key className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                        )}
+                        <div>
+                          <div className="text-sm font-medium text-gray-900 max-w-xs">
+                            {ticket.subject}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            ID: {ticket.id.slice(-8)}
+                          </div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <Building className="w-4 h-4 text-gray-400 mr-2" />
-                        <div className="text-sm text-gray-900">{ticket.restaurantName}</div>
+                        <div className="text-sm text-gray-900">{getRestaurantName(ticket.restaurant_id)}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900 flex items-center">
                         <Mail className="w-3 h-3 mr-1" />
-                        {ticket.contactEmail}
+                        {ticket.email}
                       </div>
-                      {ticket.contactPhone && (
-                        <div className="text-sm text-gray-500 flex items-center">
-                          <Phone className="w-3 h-3 mr-1" />
-                          {ticket.contactPhone}
-                        </div>
-                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        {getCategoryName(ticket.category)}
+                        {getCategoryName(ticket.type)}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -395,10 +376,10 @@ export const SupportTicketsManagement: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <div className="flex items-center">
                         <Calendar className="w-3 h-3 mr-1" />
-                        {new Date(ticket.createdAt).toLocaleDateString()}
+                        {new Date(ticket.created_at).toLocaleDateString()}
                       </div>
                       <div className="text-xs text-gray-400">
-                        {new Date(ticket.createdAt).toLocaleTimeString()}
+                        {new Date(ticket.created_at).toLocaleTimeString()}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -410,8 +391,8 @@ export const SupportTicketsManagement: React.FC = () => {
                           onClick={() => handleViewTicket(ticket)}
                           title="Ver detalles"
                         />
-                        
-                        {ticket.status === 'pending' && (
+
+                        {ticket.status === 'open' && (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -422,8 +403,8 @@ export const SupportTicketsManagement: React.FC = () => {
                             Tomar
                           </Button>
                         )}
-                        
-                        {(ticket.status === 'pending' || ticket.status === 'in_progress') && (
+
+                        {(ticket.status === 'open' || ticket.status === 'in_progress') && (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -431,10 +412,10 @@ export const SupportTicketsManagement: React.FC = () => {
                             className="text-green-600 hover:text-green-700"
                             title="Responder"
                           >
-                            Responder
+                            Resolver
                           </Button>
                         )}
-                        
+
                         <Button
                           variant="ghost"
                           size="sm"
@@ -475,7 +456,7 @@ export const SupportTicketsManagement: React.FC = () => {
                 </div>
               </div>
               <div className="text-sm text-gray-600">
-                Ticket ID: {selectedTicket.id} • {new Date(selectedTicket.createdAt).toLocaleString()}
+                Ticket ID: {selectedTicket.id} • {new Date(selectedTicket.created_at).toLocaleString()}
               </div>
             </div>
 
@@ -486,67 +467,51 @@ export const SupportTicketsManagement: React.FC = () => {
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center">
                     <Building className="w-4 h-4 text-gray-400 mr-2" />
-                    <span className="font-medium">{selectedTicket.restaurantName}</span>
+                    <span className="font-medium">{getRestaurantName(selectedTicket.restaurant_id)}</span>
                   </div>
                   <div>
-                    <span className="text-gray-600">Categoría:</span> {getCategoryName(selectedTicket.category)}
+                    <span className="text-gray-600">Tipo:</span> {getCategoryName(selectedTicket.type)}
                   </div>
                 </div>
               </div>
-              
+
               <div>
                 <h4 className="text-md font-medium text-gray-900 mb-3">Información de Contacto</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center">
                     <Mail className="w-4 h-4 text-gray-400 mr-2" />
-                    <span>{selectedTicket.contactEmail}</span>
+                    <span>{selectedTicket.email}</span>
                   </div>
-                  {selectedTicket.contactPhone && (
-                    <div className="flex items-center">
-                      <Phone className="w-4 h-4 text-gray-400 mr-2" />
-                      <span>{selectedTicket.contactPhone}</span>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
 
-            {/* Message */}
+            {/* Description */}
             <div>
-              <h4 className="text-md font-medium text-gray-900 mb-3">Mensaje</h4>
+              <h4 className="text-md font-medium text-gray-900 mb-3">Descripción</h4>
               <div className="bg-gray-50 rounded-lg p-4">
-                <p className="text-sm text-gray-700 whitespace-pre-wrap">{selectedTicket.message}</p>
+                <p className="text-sm text-gray-700 whitespace-pre-wrap">{selectedTicket.description}</p>
               </div>
             </div>
-
-            {/* Response */}
-            {selectedTicket.response && (
-              <div>
-                <h4 className="text-md font-medium text-gray-900 mb-3">Respuesta del Administrador</h4>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <p className="text-sm text-blue-800 whitespace-pre-wrap">{selectedTicket.response}</p>
-                  {selectedTicket.responseDate && (
-                    <div className="text-xs text-blue-600 mt-2">
-                      Respondido el: {new Date(selectedTicket.responseDate).toLocaleString()}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
 
             {/* Admin Notes */}
-            {selectedTicket.adminNotes && (
+            {selectedTicket.notes && (
               <div>
-                <h4 className="text-md font-medium text-gray-900 mb-3">Notas Internas</h4>
+                <h4 className="text-md font-medium text-gray-900 mb-3">Notas del Administrador</h4>
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <p className="text-sm text-yellow-800 whitespace-pre-wrap">{selectedTicket.adminNotes}</p>
+                  <p className="text-sm text-yellow-800 whitespace-pre-wrap">{selectedTicket.notes}</p>
+                  {selectedTicket.resolved_at && (
+                    <div className="text-xs text-yellow-600 mt-2">
+                      Resuelto el: {new Date(selectedTicket.resolved_at).toLocaleString()}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
 
             {/* Actions */}
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-              {selectedTicket.status === 'pending' && (
+              {selectedTicket.status === 'open' && (
                 <Button
                   onClick={() => {
                     updateTicketStatus(selectedTicket.id, 'in_progress');
@@ -557,18 +522,18 @@ export const SupportTicketsManagement: React.FC = () => {
                   Marcar en Progreso
                 </Button>
               )}
-              
-              {(selectedTicket.status === 'pending' || selectedTicket.status === 'in_progress') && (
+
+              {(selectedTicket.status === 'open' || selectedTicket.status === 'in_progress') && (
                 <Button
                   onClick={() => {
                     setShowDetailModal(false);
                     handleRespondToTicket(selectedTicket);
                   }}
                 >
-                  Responder
+                  Resolver
                 </Button>
               )}
-              
+
               {selectedTicket.status === 'resolved' && (
                 <Button
                   onClick={() => {
@@ -602,45 +567,30 @@ export const SupportTicketsManagement: React.FC = () => {
             <div className="bg-gray-50 rounded-lg p-4">
               <h3 className="font-medium text-gray-900">{selectedTicket.subject}</h3>
               <p className="text-sm text-gray-600">
-                {selectedTicket.restaurantName} • {selectedTicket.contactEmail}
+                {getRestaurantName(selectedTicket.restaurant_id)} • {selectedTicket.email}
               </p>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Respuesta al Cliente *
-              </label>
-              <textarea
-                value={responseText}
-                onChange={(e) => setResponseText(e.target.value)}
-                rows={6}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Escribe tu respuesta al cliente aquí..."
-                required
-              />
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h4 className="text-blue-800 font-medium mb-2">Descripción del ticket:</h4>
+              <div className="text-blue-700 text-sm">
+                <p className="bg-white p-3 rounded border text-gray-700">
+                  {selectedTicket.description}
+                </p>
+              </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Notas Internas (Opcional)
+                Notas de Resolución
               </label>
               <textarea
                 value={adminNotes}
                 onChange={(e) => setAdminNotes(e.target.value)}
-                rows={3}
+                rows={6}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Notas internas para el equipo de soporte..."
+                placeholder="Describe cómo se resolvió el ticket y cualquier acción tomada..."
               />
-            </div>
-
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="text-blue-800 font-medium mb-2">Información del ticket:</h4>
-              <div className="text-blue-700 text-sm space-y-1">
-                <p><strong>Mensaje original:</strong></p>
-                <p className="bg-white p-2 rounded border text-gray-700 text-xs max-h-20 overflow-y-auto">
-                  {selectedTicket.message}
-                </p>
-              </div>
             </div>
 
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
@@ -657,9 +607,8 @@ export const SupportTicketsManagement: React.FC = () => {
               </Button>
               <Button
                 onClick={saveResponse}
-                disabled={!responseText.trim()}
               >
-                Enviar Respuesta
+                Marcar como Resuelto
               </Button>
             </div>
           </div>
