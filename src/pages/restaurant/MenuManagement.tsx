@@ -195,7 +195,9 @@ export const MenuManagement: React.FC = () => {
 
   const moveProductUp = (productId: string) => {
     const allProducts = loadFromStorage('products') || [];
-    const restaurantProducts = allProducts.filter((p: Product) => p.restaurant_id === restaurant?.id);
+    const restaurantProducts = allProducts
+      .filter((p: Product) => p.restaurant_id === restaurant?.id)
+      .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
 
     const currentIndex = restaurantProducts.findIndex((p: Product) => p.id === productId);
     if (currentIndex <= 0) return;
@@ -203,23 +205,34 @@ export const MenuManagement: React.FC = () => {
     const currentProduct = restaurantProducts[currentIndex];
     const previousProduct = restaurantProducts[currentIndex - 1];
 
+    const tempIndex = currentProduct.order_index;
+
     const updatedProducts = allProducts.map((p: Product) => {
       if (p.id === currentProduct.id) {
         return { ...p, order_index: previousProduct.order_index, updated_at: new Date().toISOString() };
       }
       if (p.id === previousProduct.id) {
-        return { ...p, order_index: currentProduct.order_index, updated_at: new Date().toISOString() };
+        return { ...p, order_index: tempIndex, updated_at: new Date().toISOString() };
       }
       return p;
     });
 
     saveToStorage('products', updatedProducts);
     loadMenuData();
+
+    showToast(
+      'success',
+      'Orden Actualizado',
+      'La posición del producto ha sido actualizada.',
+      2000
+    );
   };
 
   const moveProductDown = (productId: string) => {
     const allProducts = loadFromStorage('products') || [];
-    const restaurantProducts = allProducts.filter((p: Product) => p.restaurant_id === restaurant?.id);
+    const restaurantProducts = allProducts
+      .filter((p: Product) => p.restaurant_id === restaurant?.id)
+      .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
 
     const currentIndex = restaurantProducts.findIndex((p: Product) => p.id === productId);
     if (currentIndex >= restaurantProducts.length - 1) return;
@@ -227,18 +240,27 @@ export const MenuManagement: React.FC = () => {
     const currentProduct = restaurantProducts[currentIndex];
     const nextProduct = restaurantProducts[currentIndex + 1];
 
+    const tempIndex = currentProduct.order_index;
+
     const updatedProducts = allProducts.map((p: Product) => {
       if (p.id === currentProduct.id) {
         return { ...p, order_index: nextProduct.order_index, updated_at: new Date().toISOString() };
       }
       if (p.id === nextProduct.id) {
-        return { ...p, order_index: currentProduct.order_index, updated_at: new Date().toISOString() };
+        return { ...p, order_index: tempIndex, updated_at: new Date().toISOString() };
       }
       return p;
     });
 
     saveToStorage('products', updatedProducts);
     loadMenuData();
+
+    showToast(
+      'success',
+      'Orden Actualizado',
+      'La posición del producto ha sido actualizada.',
+      2000
+    );
   };
 
   const handleDuplicateProduct = (productId: string) => {
