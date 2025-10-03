@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, CreditCard as Edit, Trash2, Shield, UserCheck, UserX, Filter, Building, UserPlus } from 'lucide-react';
+import { User, CreditCard as Edit, Trash2, Shield, UserCheck, UserX, Filter, Building, UserPlus, Lock, Copy } from 'lucide-react';
 import { User as UserType, Restaurant } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { Button } from '../../components/ui/Button';
@@ -15,8 +15,11 @@ export const UsersManagement: React.FC = () => {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showCreateUserModal, setShowCreateUserModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
   const [editingUser, setEditingUser] = useState<UserType | null>(null);
   const [assigningUser, setAssigningUser] = useState<UserType | null>(null);
+  const [userForPasswordReset, setUserForPasswordReset] = useState<UserType | null>(null);
+  const [provisionalPassword, setProvisionalPassword] = useState('');
   const [selectedRestaurantId, setSelectedRestaurantId] = useState('');
   const [filter, setFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -174,6 +177,46 @@ export const UsersManagement: React.FC = () => {
     setShowEditModal(false);
     setEditingUser(null);
     setSelectedRestaurantId('');
+  };
+
+  const generateProvisionalPassword = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    let password = '';
+    for (let i = 0; i < 8; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+  };
+
+  const handleResetPassword = (user: UserType) => {
+    const newPassword = generateProvisionalPassword();
+    setUserForPasswordReset(user);
+    setProvisionalPassword(newPassword);
+    setShowResetPasswordModal(true);
+  };
+
+  const confirmResetPassword = () => {
+    if (!userForPasswordReset || !provisionalPassword) return;
+
+    const updatedUsers = users.map(user =>
+      user.id === userForPasswordReset.id
+        ? {
+            ...user,
+            password: provisionalPassword,
+            require_password_change: true,
+            updated_at: new Date().toISOString()
+          }
+        : user
+    );
+
+    saveToStorage('users', updatedUsers);
+    setUsers(updatedUsers);
+  };
+
+  const closeResetPasswordModal = () => {
+    setShowResetPasswordModal(false);
+    setUserForPasswordReset(null);
+    setProvisionalPassword('');
   };
 
   const filteredUsers = users.filter(user => {
@@ -654,6 +697,25 @@ export const UsersManagement: React.FC = () => {
               </p>
             </div>
 
+            <div className="border-t border-gray-200 pt-4">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <p className="text-sm font-medium text-amber-800 mb-2">
+                  Restablecer Contraseña
+                </p>
+                <p className="text-sm text-amber-700 mb-3">
+                  Si el usuario olvidó su contraseña, puedes asignarle una contraseña provisional. El usuario deberá cambiarla al iniciar sesión.
+                </p>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  icon={Lock}
+                  onClick={() => handleResetPassword(editingUser)}
+                >
+                  Generar Contraseña Provisional
+                </Button>
+              </div>
+            </div>
+
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
               <Button
                 variant="ghost"
@@ -671,6 +733,84 @@ export const UsersManagement: React.FC = () => {
                 icon={Edit}
               >
                 Guardar Cambios
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Reset Password Modal */}
+      <Modal
+        isOpen={showResetPasswordModal}
+        onClose={closeResetPasswordModal}
+        title="Contraseña Provisional Generada"
+        size="md"
+      >
+        {userForPasswordReset && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-center mb-6">
+              <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center">
+                <Lock className="w-8 h-8 text-amber-600" />
+              </div>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-blue-800">
+                <strong>Usuario:</strong> {userForPasswordReset.email}
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Contraseña Provisional
+              </label>
+              <div className="flex gap-2">
+                <Input
+                  value={provisionalPassword}
+                  readOnly
+                  className="font-mono text-lg"
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  icon={Copy}
+                  onClick={() => {
+                    navigator.clipboard.writeText(provisionalPassword);
+                    alert('Contraseña copiada al portapapeles');
+                  }}
+                  title="Copiar contraseña"
+                />
+              </div>
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <p className="text-sm text-amber-800">
+                <strong>Importante:</strong> Guarda esta contraseña en un lugar seguro o compártela con el usuario de forma segura.
+              </p>
+              <ul className="text-sm text-amber-700 mt-2 space-y-1">
+                <li>• Esta contraseña es provisional y debe cambiarse</li>
+                <li>• El usuario deberá cambiarla al iniciar sesión</li>
+                <li>• No podrás recuperar esta contraseña después de cerrar este modal</li>
+              </ul>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+              <Button
+                variant="ghost"
+                onClick={closeResetPasswordModal}
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  confirmResetPassword();
+                  alert(`Contraseña provisional asignada a ${userForPasswordReset.email}\n\nContraseña: ${provisionalPassword}\n\nEl usuario deberá cambiarla al iniciar sesión.`);
+                  closeResetPasswordModal();
+                }}
+                icon={Lock}
+              >
+                Confirmar y Aplicar
               </Button>
             </div>
           </div>
