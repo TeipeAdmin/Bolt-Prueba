@@ -273,8 +273,8 @@ export const RestaurantDashboard: React.FC = () => {
                       {order.order_number}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{order.customer.name}</div>
-                      <div className="text-sm text-gray-500">{order.customer.phone}</div>
+                      <div className="text-sm text-gray-900">{order.customer?.name || 'N/A'}</div>
+                      <div className="text-sm text-gray-500">{order.customer?.phone || 'N/A'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {order.order_type === 'table' ? (
