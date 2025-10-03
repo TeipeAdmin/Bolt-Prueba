@@ -210,9 +210,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
             <label htmlFor="acceptTerms" className="ml-2 text-sm text-gray-600">
               {t('acceptTerms')}{' '}
               <a href="#" className="text-blue-600 hover:text-blue-700">
-                terms and conditions
+                términos y condiciones
               </a>{' '}
-              of service
+              del servicio
             </label>
           </div>
           {errors.acceptTerms && (
