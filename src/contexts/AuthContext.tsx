@@ -303,23 +303,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const userRestaurant = restaurants.find((r: Restaurant) => r.owner_id === foundUser.id);
 
-    const ticketId = `ticket-${Date.now()}`;
+    const ticketId = `ticket-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const now = new Date().toISOString();
 
-    const newTicket: SupportTicket = {
+    const newTicket = {
       id: ticketId,
-      type: 'password_reset',
-      email: email,
-      restaurant_id: userRestaurant?.id,
+      restaurantId: userRestaurant?.id || 'N/A',
+      restaurantName: userRestaurant?.name || 'Usuario sin restaurante',
       subject: 'Solicitud de recuperación de contraseña',
-      description: `El usuario con email ${email} ha solicitado recuperar su contraseña.`,
-      status: 'open',
+      category: 'account',
       priority: 'high',
-      created_at: now,
-      updated_at: now,
+      message: `El usuario ${foundUser.name || 'Sin nombre'} con email ${email} ha solicitado recuperar su contraseña.\n\nRol del usuario: ${foundUser.role}\nFecha de solicitud: ${new Date(now).toLocaleString('es-CO')}`,
+      contactEmail: email,
+      contactPhone: userRestaurant?.phone || 'No disponible',
+      status: 'pending' as const,
+      createdAt: now,
+      updatedAt: now,
     };
 
-    const tickets = loadFromStorage('supportTickets', []) as SupportTicket[];
+    const tickets = loadFromStorage('supportTickets', []);
     saveToStorage('supportTickets', [...tickets, newTicket]);
 
     console.log('Password reset request created as support ticket:', ticketId);

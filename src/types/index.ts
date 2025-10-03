@@ -253,18 +253,20 @@ export interface Subscription {
 
 export interface SupportTicket {
   id: string;
-  type: 'password_reset' | 'technical' | 'billing' | 'general';
-  email: string;
-  restaurant_id?: string;
+  restaurantId: string;
+  restaurantName: string;
   subject: string;
-  description: string;
-  status: 'open' | 'in_progress' | 'resolved' | 'closed';
-  priority: 'low' | 'medium' | 'high';
-  created_at: string;
-  updated_at: string;
-  resolved_at?: string;
-  resolved_by?: string;
-  notes?: string;
+  category: string;
+  priority: string;
+  message: string;
+  contactEmail: string;
+  contactPhone: string;
+  status: 'pending' | 'in_progress' | 'resolved' | 'closed';
+  createdAt: string;
+  updatedAt: string;
+  response?: string;
+  responseDate?: string;
+  adminNotes?: string;
 }
 export interface PlanFeatures {
   max_products: number;
