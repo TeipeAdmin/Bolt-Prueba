@@ -3,8 +3,10 @@ export interface User {
   email: string;
   password: string;
   role: 'restaurant_owner' | 'super_admin';
+  restaurant_id?: string;
   created_at: string;
   updated_at: string;
+  email_verified?: boolean;
 }
 
 export interface Customer {

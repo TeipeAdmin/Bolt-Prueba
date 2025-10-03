@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Edit, Trash2, Shield, UserCheck, UserX, Filter, Building, UserPlus } from 'lucide-react';
+import { User, CreditCard as Edit, Trash2, Shield, UserCheck, UserX, Filter, Building, UserPlus } from 'lucide-react';
 import { User as UserType, Restaurant } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { Button } from '../../components/ui/Button';
@@ -36,45 +36,40 @@ export const UsersManagement: React.FC = () => {
   };
 
   const getRestaurant = (userId: string) => {
-    return restaurants.find(restaurant => restaurant.user_id === userId);
+    const user = users.find(u => u.id === userId);
+    if (!user?.restaurant_id) return null;
+    return restaurants.find(restaurant => restaurant.id === user.restaurant_id);
   };
 
-  const getUnassignedRestaurants = () => {
-    const assignedRestaurantIds = users
-      .filter(user => user.role === 'restaurant')
-      .map(user => getRestaurant(user.id)?.id)
-      .filter(Boolean);
-    
-    return restaurants.filter(restaurant => !assignedRestaurantIds.includes(restaurant.id));
+  const getUsersByRestaurant = (restaurantId: string) => {
+    return users.filter(user => user.restaurant_id === restaurantId);
   };
 
   const handleAssignRestaurant = (user: UserType) => {
     setAssigningUser(user);
-    setSelectedRestaurantId('');
+    setSelectedRestaurantId(user.restaurant_id || '');
     setShowAssignModal(true);
   };
 
   const saveRestaurantAssignment = () => {
-    if (!assigningUser || !selectedRestaurantId) return;
+    if (!assigningUser) return;
 
-    const updatedRestaurants = restaurants.map(restaurant =>
-      restaurant.id === selectedRestaurantId
-        ? { ...restaurant, user_id: assigningUser.id }
-        : restaurant
-    );
-
+    // Allow empty selection to unassign restaurant
     const updatedUsers = users.map(user =>
       user.id === assigningUser.id
-        ? { ...user, role: 'restaurant' as const }
+        ? {
+            ...user,
+            restaurant_id: selectedRestaurantId || undefined,
+            updated_at: new Date().toISOString()
+          }
         : user
     );
 
-    saveToStorage('restaurants', updatedRestaurants);
     saveToStorage('users', updatedUsers);
-    
+
     // Reload data to reflect changes
     loadData();
-    
+
     setShowAssignModal(false);
     setAssigningUser(null);
     setSelectedRestaurantId('');
@@ -404,9 +399,17 @@ export const UsersManagement: React.FC = () => {
           <div className="space-y-6">
             <div>
               <p className="text-sm text-gray-600 mb-4">
-                Asignar restaurante al usuario: <strong>{assigningUser.email}</strong>
+                Gestionar restaurante del usuario: <strong>{assigningUser.email}</strong>
               </p>
-              
+
+              {assigningUser.restaurant_id && (
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    <strong>Restaurante actual:</strong> {getRestaurant(assigningUser.id)?.name}
+                  </p>
+                </div>
+              )}
+
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Seleccionar Restaurante
               </label>
@@ -415,19 +418,19 @@ export const UsersManagement: React.FC = () => {
                 onChange={(e) => setSelectedRestaurantId(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="">Selecciona un restaurante...</option>
-                {getUnassignedRestaurants().map(restaurant => (
+                <option value="">Sin restaurante asignado</option>
+                {restaurants.map(restaurant => (
                   <option key={restaurant.id} value={restaurant.id}>
                     {restaurant.name} ({restaurant.domain})
                   </option>
                 ))}
               </select>
-              
-              {getUnassignedRestaurants().length === 0 && (
-                <p className="text-sm text-gray-500 mt-2">
-                  No hay restaurantes disponibles para asignar
+
+              <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600">
+                  <strong>Nota:</strong> Múltiples usuarios pueden estar asignados al mismo restaurante y verán la misma información.
                 </p>
-              )}
+              </div>
             </div>
 
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">

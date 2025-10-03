@@ -40,36 +40,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const checkSubscriptionStatus = () => {
     const subscriptions = loadFromStorage('subscriptions', []) as Subscription[];
-    const restaurants = loadFromStorage('restaurants', []) as Restaurant[];
     const now = new Date();
 
-    console.log('Checking subscription status:', { subscriptions, restaurants });
+    console.log('Checking subscription status:', { subscriptions });
 
     // Check for expired subscriptions
     const updatedSubscriptions = subscriptions.map((sub: Subscription) => {
-      if (sub.status === 'active' && new Date(sub.end_date) < now && sub.plan_type !== 'free') {
+      if (sub.status === 'active' && new Date(sub.end_date) < now && sub.plan_type !== 'gratis') {
         console.log('Expiring subscription:', sub);
         return { ...sub, status: 'expired' as const };
       }
       return sub;
     });
 
-    // Update restaurant status based on subscription
-    const updatedRestaurants = restaurants.map((restaurant: Restaurant) => {
-      const subscription = updatedSubscriptions.find((sub: Subscription) => 
-        sub.restaurant_id === restaurant.id && sub.status === 'active'
-      );
-      
-      if (!subscription) {
-        console.log('Restaurant going inactive:', restaurant);
-        return { ...restaurant, status: 'inactive' as const };
-      }
-      
-      return restaurant;
-    });
-
-    saveToStorage('subscriptions', updatedSubscriptions);
-    saveToStorage('restaurants', updatedRestaurants);
+    // Save updated subscriptions if any changed
+    if (JSON.stringify(updatedSubscriptions) !== JSON.stringify(subscriptions)) {
+      saveToStorage('subscriptions', updatedSubscriptions);
+    }
   };
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
@@ -98,10 +85,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     let userRestaurant = null;
     if (foundUser.role === 'restaurant_owner') {
-      userRestaurant = restaurants.find((r: Restaurant) => r.user_id === foundUser.id);
-      if (!userRestaurant) {
-        console.log('Restaurant not found for user');
-        return { success: false, error: 'Restaurante no encontrado' };
+      if (foundUser.restaurant_id) {
+        userRestaurant = restaurants.find((r: Restaurant) => r.id === foundUser.restaurant_id);
+        if (!userRestaurant) {
+          console.log('Restaurant not found for user');
+          return { success: false, error: 'Restaurante no encontrado para este usuario' };
+        }
+      } else {
+        console.log('User has no restaurant assigned');
+        return { success: false, error: 'No tienes un restaurante asignado. Contacta al administrador.' };
       }
     }
 

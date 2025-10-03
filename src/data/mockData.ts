@@ -73,6 +73,7 @@ export const mockUsers: User[] = [
     password: 'admin123',
     role: 'super_admin',
     created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
     email_verified: true,
   },
   {
@@ -80,7 +81,9 @@ export const mockUsers: User[] = [
     email: 'orlando@gmail.com',
     password: 'orlando123',
     role: 'restaurant_owner',
+    restaurant_id: 'rest-orlando',
     created_at: '2024-01-15T00:00:00Z',
+    updated_at: '2024-01-15T00:00:00Z',
     email_verified: true,
   },
 ];

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, Trash2, Filter, ExternalLink, Settings } from 'lucide-react';
+import { Eye, Trash2, Filter, ExternalLink, Settings, Plus } from 'lucide-react';
 import { Restaurant, Subscription } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { Button } from '../../components/ui/Button';
@@ -14,12 +14,20 @@ export const RestaurantsManagement: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [restaurantToDelete, setRestaurantToDelete] = useState<Restaurant | null>(null);
   const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(null);
   const [subscriptionForm, setSubscriptionForm] = useState({
     plan_type: 'gratis' as Subscription['plan_type'],
     duration: 'monthly' as Subscription['duration'],
     status: 'active' as Subscription['status'],
+  });
+  const [newRestaurantForm, setNewRestaurantForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    description: '',
   });
   const [filter, setFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -173,6 +181,130 @@ export const RestaurantsManagement: React.FC = () => {
     return <Badge variant={variant}>{planName}</Badge>;
   };
 
+  const handleCreateRestaurant = () => {
+    if (!newRestaurantForm.name || !newRestaurantForm.email) {
+      alert('Por favor completa al menos el nombre y email del restaurante');
+      return;
+    }
+
+    const restaurantId = `rest-${Date.now()}`;
+    const slug = newRestaurantForm.name
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+
+    const newRestaurant: Restaurant = {
+      id: restaurantId,
+      name: newRestaurantForm.name,
+      slug: slug,
+      email: newRestaurantForm.email,
+      phone: newRestaurantForm.phone,
+      address: newRestaurantForm.address,
+      description: newRestaurantForm.description,
+      owner_id: '',
+      owner_name: '',
+      domain: slug,
+      settings: {
+        currency: 'USD',
+        language: 'es',
+        timezone: 'America/Bogota',
+        social_media: {
+          facebook: '',
+          instagram: '',
+          whatsapp: newRestaurantForm.phone || '',
+        },
+        ui_settings: {
+          show_search_bar: true,
+          info_message: 'Agrega los productos que desees al carrito',
+          layout_type: 'list',
+        },
+        theme: {
+          primary_color: '#dc2626',
+          secondary_color: '#f3f4f6',
+          accent_color: '#16a34a',
+          text_color: '#1f2937',
+          primary_font: 'Inter',
+          secondary_font: 'Poppins',
+          font_sizes: {
+            title: '32px',
+            subtitle: '24px',
+            normal: '16px',
+            small: '14px',
+          },
+          font_weights: {
+            light: 300,
+            regular: 400,
+            medium: 500,
+            bold: 700,
+          },
+          button_style: 'rounded',
+        },
+        business_hours: {
+          monday: { open: '09:00', close: '18:00', is_open: true },
+          tuesday: { open: '09:00', close: '18:00', is_open: true },
+          wednesday: { open: '09:00', close: '18:00', is_open: true },
+          thursday: { open: '09:00', close: '18:00', is_open: true },
+          friday: { open: '09:00', close: '18:00', is_open: true },
+          saturday: { open: '09:00', close: '18:00', is_open: true },
+          sunday: { open: '09:00', close: '18:00', is_open: false },
+        },
+        delivery: {
+          enabled: false,
+          zones: [],
+          min_order_amount: 0,
+        },
+        table_orders: {
+          enabled: false,
+          table_numbers: 0,
+          qr_codes: false,
+          auto_assign: false,
+        },
+        notifications: {
+          email: newRestaurantForm.email,
+          whatsapp: newRestaurantForm.phone,
+          sound_enabled: true,
+        },
+      },
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    // Create subscription
+    const subscriptionId = `sub-${Date.now()}`;
+    const newSubscription: Subscription = {
+      id: subscriptionId,
+      restaurant_id: restaurantId,
+      plan_type: 'gratis',
+      duration: 'monthly',
+      status: 'active',
+      start_date: new Date().toISOString(),
+      end_date: '2099-12-31T23:59:59Z',
+      auto_renew: false,
+      created_at: new Date().toISOString(),
+    };
+
+    newRestaurant.subscription_id = subscriptionId;
+
+    const updatedRestaurants = [...restaurants, newRestaurant];
+    const allSubscriptions = loadFromStorage('subscriptions') || [];
+    const updatedSubscriptions = [...allSubscriptions, newSubscription];
+
+    saveToStorage('restaurants', updatedRestaurants);
+    saveToStorage('subscriptions', updatedSubscriptions);
+
+    setNewRestaurantForm({
+      name: '',
+      email: '',
+      phone: '',
+      address: '',
+      description: '',
+    });
+    setShowCreateModal(false);
+    loadData();
+  };
+
   const handleDeleteRestaurant = (restaurant: Restaurant) => {
     setRestaurantToDelete(restaurant);
     setShowDeleteModal(true);
@@ -215,6 +347,13 @@ export const RestaurantsManagement: React.FC = () => {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Gestión de Restaurantes</h1>
+        <Button
+          variant="primary"
+          icon={Plus}
+          onClick={() => setShowCreateModal(true)}
+        >
+          Crear Restaurante
+        </Button>
       </div>
 
       {/* Filters and Search */}
@@ -598,6 +737,122 @@ export const RestaurantsManagement: React.FC = () => {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* Create Restaurant Modal */}
+      <Modal
+        isOpen={showCreateModal}
+        onClose={() => {
+          setShowCreateModal(false);
+          setNewRestaurantForm({
+            name: '',
+            email: '',
+            phone: '',
+            address: '',
+            description: '',
+          });
+        }}
+        title="Crear Nuevo Restaurante"
+        size="lg"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nombre del Restaurante *
+            </label>
+            <Input
+              value={newRestaurantForm.name}
+              onChange={(e) => setNewRestaurantForm({ ...newRestaurantForm, name: e.target.value })}
+              placeholder="Ej: Restaurante Mi Sabor"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Email *
+            </label>
+            <Input
+              type="email"
+              value={newRestaurantForm.email}
+              onChange={(e) => setNewRestaurantForm({ ...newRestaurantForm, email: e.target.value })}
+              placeholder="contacto@restaurante.com"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Teléfono
+            </label>
+            <Input
+              type="tel"
+              value={newRestaurantForm.phone}
+              onChange={(e) => setNewRestaurantForm({ ...newRestaurantForm, phone: e.target.value })}
+              placeholder="+57 300 123 4567"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Dirección
+            </label>
+            <Input
+              value={newRestaurantForm.address}
+              onChange={(e) => setNewRestaurantForm({ ...newRestaurantForm, address: e.target.value })}
+              placeholder="Calle 123 #45-67"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Descripción
+            </label>
+            <textarea
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              rows={3}
+              value={newRestaurantForm.description}
+              onChange={(e) => setNewRestaurantForm({ ...newRestaurantForm, description: e.target.value })}
+              placeholder="Breve descripción del restaurante..."
+            />
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-sm text-blue-800">
+              <strong>Nota:</strong> El restaurante se creará con:
+            </p>
+            <ul className="text-sm text-blue-700 mt-2 space-y-1">
+              <li>• Plan Gratis activo</li>
+              <li>• Configuración predeterminada</li>
+              <li>• Sin usuarios asignados (asignar desde Gestión de Usuarios)</li>
+            </ul>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setShowCreateModal(false);
+                setNewRestaurantForm({
+                  name: '',
+                  email: '',
+                  phone: '',
+                  address: '',
+                  description: '',
+                });
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleCreateRestaurant}
+              icon={Plus}
+            >
+              Crear Restaurante
+            </Button>
+          </div>
+        </div>
       </Modal>
     </div>
   );
