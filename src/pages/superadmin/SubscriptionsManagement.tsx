@@ -140,8 +140,14 @@ export const SubscriptionsManagement: React.FC = () => {
 
   const getPlanBadge = (planType: Subscription['plan_type']) => {
     switch (planType) {
+      case 'gratis':
+        return <Badge variant="gray">Gratis</Badge>;
       case 'basic':
-        return <Badge variant="info">Básico</Badge>;
+        return <Badge variant="info">Basic</Badge>;
+      case 'pro':
+        return <Badge variant="success">Pro</Badge>;
+      case 'business':
+        return <Badge variant="error">Business</Badge>;
       case 'premium':
         return <Badge variant="success">Premium</Badge>;
       case 'enterprise':
@@ -447,10 +453,10 @@ export const SubscriptionsManagement: React.FC = () => {
                 onChange={(e) => setFormData(prev => ({ ...prev, plan_type: e.target.value as Subscription['plan_type'] }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="trial">Prueba</option>
-                <option value="basic">Básico</option>
-                <option value="premium">Premium</option>
-                <option value="enterprise">Enterprise</option>
+                <option value="gratis">Gratis</option>
+                <option value="basic">Basic</option>
+                <option value="pro">Pro</option>
+                <option value="business">Business</option>
               </select>
             </div>
 

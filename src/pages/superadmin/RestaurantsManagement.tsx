@@ -13,9 +13,11 @@ export const RestaurantsManagement: React.FC = () => {
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [restaurantToDelete, setRestaurantToDelete] = useState<Restaurant | null>(null);
   const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(null);
   const [subscriptionForm, setSubscriptionForm] = useState({
-    plan_type: 'basic' as Subscription['plan_type'],
+    plan_type: 'gratis' as Subscription['plan_type'],
     duration: 'monthly' as Subscription['duration'],
     status: 'active' as Subscription['status'],
   });
@@ -64,7 +66,7 @@ export const RestaurantsManagement: React.FC = () => {
       });
     } else {
       setSubscriptionForm({
-        plan_type: 'basic',
+        plan_type: 'gratis',
         duration: 'monthly',
         status: 'active',
       });
@@ -162,15 +164,56 @@ export const RestaurantsManagement: React.FC = () => {
 
   const getSubscriptionBadge = (subscription: Subscription | undefined) => {
     if (!subscription) return <Badge variant="gray">Sin suscripción</Badge>;
-    
+
+    const planName = subscription.plan_type === 'gratis' ? 'Gratis' :
+                     subscription.plan_type === 'basic' ? 'Basic' :
+                     subscription.plan_type === 'pro' ? 'Pro' :
+                     subscription.plan_type === 'business' ? 'Business' :
+                     subscription.plan_type.toUpperCase();
+
     switch (subscription.status) {
       case 'active':
-        return <Badge variant="success">{subscription.plan_type.toUpperCase()}</Badge>;
+        return <Badge variant="success">{planName}</Badge>;
       case 'inactive':
         return <Badge variant="error">Inactiva</Badge>;
       default:
         return <Badge variant="gray">Inactiva</Badge>;
     }
+  };
+
+  const handleDeleteRestaurant = (restaurant: Restaurant) => {
+    setRestaurantToDelete(restaurant);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteRestaurant = () => {
+    if (!restaurantToDelete) return;
+
+    // Delete restaurant
+    const updatedRestaurants = restaurants.filter(r => r.id !== restaurantToDelete.id);
+    saveToStorage('restaurants', updatedRestaurants);
+
+    // Delete associated subscription
+    const allSubscriptions = loadFromStorage('subscriptions') || [];
+    const updatedSubscriptions = allSubscriptions.filter((sub: Subscription) => sub.restaurant_id !== restaurantToDelete.id);
+    saveToStorage('subscriptions', updatedSubscriptions);
+
+    // Delete associated data (categories, products, orders)
+    const allCategories = loadFromStorage('categories') || [];
+    const updatedCategories = allCategories.filter((cat: any) => cat.restaurant_id !== restaurantToDelete.id);
+    saveToStorage('categories', updatedCategories);
+
+    const allProducts = loadFromStorage('products') || [];
+    const updatedProducts = allProducts.filter((prod: any) => prod.restaurant_id !== restaurantToDelete.id);
+    saveToStorage('products', updatedProducts);
+
+    const allOrders = loadFromStorage('orders') || [];
+    const updatedOrders = allOrders.filter((order: any) => order.restaurant_id !== restaurantToDelete.id);
+    saveToStorage('orders', updatedOrders);
+
+    loadData();
+    setShowDeleteModal(false);
+    setRestaurantToDelete(null);
   };
 
   const getPublicMenuUrl = (restaurant: Restaurant) => {
@@ -318,6 +361,15 @@ export const RestaurantsManagement: React.FC = () => {
                           className="text-blue-600 hover:text-blue-700"
                           title="Gestionar Suscripción"
                         />
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          icon={Trash2}
+                          onClick={() => handleDeleteRestaurant(restaurant)}
+                          className="text-red-600 hover:text-red-700"
+                          title="Eliminar Restaurante"
+                        />
                       </div>
                     </td>
                   </tr>
@@ -441,15 +493,16 @@ export const RestaurantsManagement: React.FC = () => {
                   </label>
                   <select
                     value={subscriptionForm.plan_type}
-                    onChange={(e) => setSubscriptionForm(prev => ({ 
-                      ...prev, 
-                      plan_type: e.target.value as Subscription['plan_type'] 
+                    onChange={(e) => setSubscriptionForm(prev => ({
+                      ...prev,
+                      plan_type: e.target.value as Subscription['plan_type']
                     }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="basic">Básico</option>
-                    <option value="premium">Premium</option>
-                    <option value="enterprise">Enterprise</option>
+                    <option value="gratis">Gratis</option>
+                    <option value="basic">Basic</option>
+                    <option value="pro">Pro</option>
+                    <option value="business">Business</option>
                   </select>
                 </div>
 
@@ -500,6 +553,67 @@ export const RestaurantsManagement: React.FC = () => {
               </Button>
               <Button onClick={saveSubscription}>
                 Guardar Suscripción
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Delete Restaurant Confirmation Modal */}
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setRestaurantToDelete(null);
+        }}
+        title="Confirmar Eliminación"
+        size="md"
+      >
+        {restaurantToDelete && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-center mb-6">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 className="w-8 h-8 text-red-600" />
+              </div>
+            </div>
+
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                ¿Eliminar restaurante "{restaurantToDelete.name}"?
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Esta acción eliminará permanentemente:
+              </p>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                <ul className="text-sm text-red-800 space-y-1 text-left">
+                  <li>• Toda la información del restaurante</li>
+                  <li>• Suscripción activa</li>
+                  <li>• Categorías y productos</li>
+                  <li>• Historial de pedidos</li>
+                  <li>• Configuraciones personalizadas</li>
+                </ul>
+              </div>
+              <p className="text-sm text-gray-500">
+                <strong>Esta acción no se puede deshacer.</strong>
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setRestaurantToDelete(null);
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="danger"
+                onClick={confirmDeleteRestaurant}
+                icon={Trash2}
+              >
+                Eliminar Restaurante
               </Button>
             </div>
           </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Edit, Trash2, Shield, UserCheck, UserX, Filter, Building } from 'lucide-react';
+import { User, Edit, Trash2, Shield, UserCheck, UserX, Filter, Building, UserPlus } from 'lucide-react';
 import { User as UserType, Restaurant } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { Button } from '../../components/ui/Button';
@@ -13,10 +13,16 @@ export const UsersManagement: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showCreateUserModal, setShowCreateUserModal] = useState(false);
   const [assigningUser, setAssigningUser] = useState<UserType | null>(null);
   const [selectedRestaurantId, setSelectedRestaurantId] = useState('');
   const [filter, setFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [newUserForm, setNewUserForm] = useState({
+    email: '',
+    password: '',
+    role: 'restaurant_owner' as UserType['role'],
+  });
 
   useEffect(() => {
     loadData();
@@ -99,12 +105,47 @@ export const UsersManagement: React.FC = () => {
     if (confirm('¿Estás seguro de que quieres eliminar este usuario? Esta acción no se puede deshacer.')) {
       const updatedUsers = users.filter(user => user.id !== userId);
       const updatedRestaurants = restaurants.filter(restaurant => restaurant.user_id !== userId);
-      
+
       setUsers(updatedUsers);
       setRestaurants(updatedRestaurants);
       saveToStorage('users', updatedUsers);
       saveToStorage('restaurants', updatedRestaurants);
     }
+  };
+
+  const handleCreateUser = () => {
+    if (!newUserForm.email || !newUserForm.password) {
+      alert('Por favor completa todos los campos requeridos.');
+      return;
+    }
+
+    // Check if email already exists
+    const emailExists = users.some(user => user.email.toLowerCase() === newUserForm.email.toLowerCase());
+    if (emailExists) {
+      alert('Este email ya está registrado.');
+      return;
+    }
+
+    const newUser: UserType = {
+      id: `user-${Date.now()}`,
+      email: newUserForm.email,
+      password: newUserForm.password,
+      role: newUserForm.role,
+      email_verified: true,
+      created_at: new Date().toISOString(),
+    };
+
+    const updatedUsers = [...users, newUser];
+    saveToStorage('users', updatedUsers);
+    setUsers(updatedUsers);
+
+    // Reset form and close modal
+    setNewUserForm({
+      email: '',
+      password: '',
+      role: 'restaurant_owner',
+    });
+    setShowCreateUserModal(false);
   };
 
   const filteredUsers = users.filter(user => {
@@ -116,9 +157,9 @@ export const UsersManagement: React.FC = () => {
 
   const getRoleBadge = (role: UserType['role']) => {
     switch (role) {
-      case 'superadmin':
+      case 'super_admin':
         return <Badge variant="error">Superadmin</Badge>;
-      case 'restaurant':
+      case 'restaurant_owner':
         return <Badge variant="info">Restaurante</Badge>;
       default:
         return <Badge variant="gray">Desconocido</Badge>;
@@ -135,6 +176,13 @@ export const UsersManagement: React.FC = () => {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Gestión de Usuarios</h1>
+        <Button
+          icon={UserPlus}
+          onClick={() => setShowCreateUserModal(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white"
+        >
+          Crear Usuario
+        </Button>
       </div>
 
       {/* Filters and Search */}
@@ -155,8 +203,8 @@ export const UsersManagement: React.FC = () => {
               className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">Todos los roles</option>
-              <option value="superadmin">Superadministradores</option>
-              <option value="restaurant">Restaurantes</option>
+              <option value="super_admin">Superadministradores</option>
+              <option value="restaurant_owner">Restaurantes</option>
             </select>
           </div>
         </div>
@@ -402,6 +450,87 @@ export const UsersManagement: React.FC = () => {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* Create User Modal */}
+      <Modal
+        isOpen={showCreateUserModal}
+        onClose={() => {
+          setShowCreateUserModal(false);
+          setNewUserForm({
+            email: '',
+            password: '',
+            role: 'restaurant_owner',
+          });
+        }}
+        title="Crear Nuevo Usuario"
+        size="md"
+      >
+        <div className="space-y-6">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-sm text-blue-800">
+              Crea usuarios para administradores del sistema o dueños de restaurantes.
+            </p>
+          </div>
+
+          <Input
+            label="Email*"
+            type="email"
+            value={newUserForm.email}
+            onChange={(e) => setNewUserForm(prev => ({ ...prev, email: e.target.value }))}
+            placeholder="usuario@ejemplo.com"
+          />
+
+          <Input
+            label="Contraseña*"
+            type="password"
+            value={newUserForm.password}
+            onChange={(e) => setNewUserForm(prev => ({ ...prev, password: e.target.value }))}
+            placeholder="Mínimo 6 caracteres"
+          />
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Tipo de Usuario*
+            </label>
+            <select
+              value={newUserForm.role}
+              onChange={(e) => setNewUserForm(prev => ({ ...prev, role: e.target.value as UserType['role'] }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="restaurant_owner">Restaurante</option>
+              <option value="super_admin">Superadministrador</option>
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              {newUserForm.role === 'super_admin'
+                ? 'Tendrá acceso completo al panel de administración'
+                : 'Podrá gestionar su restaurante'}
+            </p>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setShowCreateUserModal(false);
+                setNewUserForm({
+                  email: '',
+                  password: '',
+                  role: 'restaurant_owner',
+                });
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleCreateUser}
+              disabled={!newUserForm.email || !newUserForm.password}
+              icon={UserPlus}
+            >
+              Crear Usuario
+            </Button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

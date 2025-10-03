@@ -1,16 +1,16 @@
 import { User, Restaurant, Subscription, Category, Product, Order } from '../types';
 
-// Available plans
+// Available plans - Updated system
 export const availablePlans = [
   {
-    id: 'free',
+    id: 'gratis',
     name: 'Gratis',
     price: 0,
     currency: 'USD',
     billing_period: 'monthly' as const,
     features: {
-      max_products: 5,
-      max_categories: 3,
+      max_products: 10,
+      max_categories: 5,
       analytics: false,
       custom_domain: false,
       priority_support: false,
@@ -20,12 +20,12 @@ export const availablePlans = [
   {
     id: 'basic',
     name: 'Basic',
-    price: 7,
+    price: 15,
     currency: 'USD',
     billing_period: 'monthly' as const,
     features: {
       max_products: 50,
-      max_categories: 10,
+      max_categories: 15,
       analytics: true,
       custom_domain: false,
       priority_support: false,
@@ -35,13 +35,13 @@ export const availablePlans = [
   {
     id: 'pro',
     name: 'Pro',
-    price: 18,
+    price: 35,
     currency: 'USD',
     billing_period: 'monthly' as const,
     popular: true,
     features: {
       max_products: 200,
-      max_categories: 25,
+      max_categories: 50,
       analytics: true,
       custom_domain: true,
       priority_support: true,
@@ -51,7 +51,7 @@ export const availablePlans = [
   {
     id: 'business',
     name: 'Business',
-    price: 42,
+    price: 75,
     currency: 'USD',
     billing_period: 'monthly' as const,
     features: {
@@ -177,9 +177,10 @@ export const mockSubscriptions: Subscription[] = [
   {
     id: 'sub-orlando',
     restaurant_id: 'rest-orlando',
-    plan_type: 'free',
+    plan_type: 'gratis',
+    duration: 'monthly',
     start_date: '2024-01-15T00:00:00Z',
-    end_date: '2099-12-31T23:59:59Z', // Free plan never expires
+    end_date: '2099-12-31T23:59:59Z', // Gratis plan never expires
     status: 'active',
     auto_renew: false,
     created_at: '2024-01-15T00:00:00Z',
