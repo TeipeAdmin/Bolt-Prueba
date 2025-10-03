@@ -163,6 +163,7 @@ export const SuperAdminAnalytics: React.FC = () => {
 
   // Recent activity
   const recentRestaurants = restaurants
+    .filter(r => r.status === 'active')
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 5);
 
@@ -321,22 +322,7 @@ export const SuperAdminAnalytics: React.FC = () => {
       </div>
 
       {/* Main Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <Store className="h-8 w-8 text-blue-600" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Restaurantes</p>
-              <p className="text-2xl font-semibold text-gray-900">{totalRestaurants}</p>
-            </div>
-          </div>
-          <div className="mt-2">
-            <span className="text-sm text-green-600 font-medium">
-              {activeRestaurants} activos
-            </span>
-          </div>
-        </div>
-
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <div className="flex items-center">
             <Users className="h-8 w-8 text-green-600" />
@@ -500,8 +486,8 @@ export const SuperAdminAnalytics: React.FC = () => {
                       </p>
                     </div>
                   </div>
-                  <Badge variant={restaurant.status === 'active' ? 'success' : 'warning'}>
-                    {restaurant.status === 'active' ? 'Activo' : 'Pendiente'}
+                  <Badge variant="success">
+                    Activo
                   </Badge>
                 </div>
               ))}
