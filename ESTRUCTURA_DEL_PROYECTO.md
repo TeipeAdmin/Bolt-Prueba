@@ -1,16 +1,217 @@
 # Documentación Técnica - Sistema de Gestión de Restaurantes
 
 ## Índice
-1. [Descripción General](#descripción-general)
-2. [Arquitectura de la Aplicación](#arquitectura-de-la-aplicación)
-3. [Estructura de Carpetas](#estructura-de-carpetas)
-4. [Sistema de Datos](#sistema-de-datos)
-5. [Contextos y Estado Global](#contextos-y-estado-global)
-6. [Rutas y Navegación](#rutas-y-navegación)
-7. [Componentes Principales](#componentes-principales)
-8. [Tipos de Datos](#tipos-de-datos)
-9. [Guía de Edición](#guía-de-edición)
-10. [Flujos de Usuario](#flujos-de-usuario)
+1. [¿Qué es esta Aplicación?](#qué-es-esta-aplicación)
+2. [Descripción General](#descripción-general)
+3. [Arquitectura de la Aplicación](#arquitectura-de-la-aplicación)
+4. [Estructura de Carpetas](#estructura-de-carpetas)
+5. [Sistema de Datos](#sistema-de-datos)
+6. [Contextos y Estado Global](#contextos-y-estado-global)
+7. [Rutas y Navegación](#rutas-y-navegación)
+8. [Componentes Principales](#componentes-principales)
+9. [Tipos de Datos](#tipos-de-datos)
+10. [Guía de Edición](#guía-de-edición)
+11. [Flujos de Usuario](#flujos-de-usuario)
+
+---
+
+## ¿Qué es esta Aplicación?
+
+**Sistema de Gestión de Restaurantes** es una plataforma SaaS (Software as a Service) que permite a restaurantes crear y gestionar menús digitales accesibles mediante enlaces únicos. Es una solución completa que elimina la necesidad de menús físicos, permitiendo a los clientes ver el catálogo, agregar productos al carrito y realizar pedidos directamente desde su dispositivo móvil.
+
+### ¿Qué Incluye?
+
+#### Para Restaurantes (Restaurant Owners):
+
+**Gestión de Menú Digital**
+- Crear y organizar productos en categorías personalizadas
+- Agregar múltiples imágenes por producto
+- Definir variaciones de productos (tamaños, opciones, precios diferentes)
+- Configurar ingredientes opcionales con cargos adicionales
+- Marcar restricciones dietéticas y nivel de picante
+- Activar/desactivar productos según disponibilidad
+- Destacar productos especiales en el menú
+
+**Gestión de Categorías**
+- Crear categorías ilimitadas para organizar el menú
+- Ordenar categorías con drag & drop o controles de orden
+- Activar/desactivar categorías completas
+- Agregar descripciones a cada categoría
+
+**Gestión de Pedidos**
+- Recibir y visualizar pedidos en tiempo real
+- Cambiar estados de pedidos (pendiente, confirmado, preparando, listo, entregado)
+- Ver detalles completos de cada pedido (productos, variaciones, notas)
+- Filtrar pedidos por estado, fecha y tipo
+- Información completa del cliente (nombre, teléfono, dirección)
+- Integración con WhatsApp para comunicación directa
+
+**Gestión de Clientes**
+- Base de datos de clientes automática
+- Historial completo de pedidos por cliente
+- Información de contacto y direcciones
+- Estadísticas de frecuencia de pedidos
+- Búsqueda y filtrado de clientes
+
+**Panel de Analíticas** (Planes de Pago)
+- Estadísticas de ventas en tiempo real
+- Productos más vendidos
+- Ingresos totales y tendencias
+- Análisis por categoría
+- Gráficos interactivos de rendimiento
+- Comparativas por períodos
+
+**Configuración del Restaurante**
+- Personalizar información básica (nombre, descripción, contacto)
+- Subir logo del restaurante
+- Configurar URL única del menú (slug)
+- Elegir tema de colores (claro/oscuro)
+- Seleccionar idioma (español/inglés)
+- Configurar horarios de atención
+- Definir métodos de pedido (recogida, delivery, mesa)
+- Establecer costos de delivery por zona
+
+**Gestión de Suscripciones**
+- Ver plan actual y features disponibles
+- Comparar planes disponibles (Free, Basic, Pro, Business)
+- Upgrade/downgrade de planes
+- Historial de suscripciones
+- Límites claros por plan (productos, categorías, analytics)
+
+#### Para Clientes (Menú Público):
+
+**Experiencia de Compra**
+- Acceso al menú mediante URL única (dominio.com/nombre-restaurante)
+- Navegación intuitiva por categorías
+- Búsqueda de productos por nombre
+- Ver imágenes y descripciones detalladas de productos
+- Información nutricional y de ingredientes
+- Agregar productos al carrito con variaciones
+- Seleccionar ingredientes opcionales
+- Agregar notas especiales a cada producto
+- Ver carrito en tiempo real
+- Calcular total automáticamente
+
+**Proceso de Checkout**
+- Formulario simple de datos del cliente
+- Seleccionar tipo de pedido (recogida, delivery, mesa)
+- Agregar dirección de entrega para delivery
+- Calcular costo de delivery automáticamente
+- Agregar instrucciones especiales
+- Enviar pedido directamente por WhatsApp al restaurante
+- Confirmación inmediata del pedido
+
+**Experiencia Responsive**
+- Diseño optimizado para móviles
+- Interfaz táctil y fácil de usar
+- Carga rápida de imágenes
+- Navegación fluida entre categorías
+
+#### Para Super Administradores:
+
+**Gestión de Restaurantes**
+- Ver todos los restaurantes registrados
+- Activar/desactivar restaurantes
+- Editar información de cualquier restaurante
+- Ver estadísticas generales por restaurante
+- Eliminar restaurantes si es necesario
+
+**Gestión de Usuarios**
+- Lista completa de usuarios registrados
+- Ver rol y restaurante asociado
+- Editar información de usuarios
+- Desactivar/activar cuentas
+- Resetear contraseñas
+
+**Gestión de Suscripciones**
+- Ver todas las suscripciones activas
+- Cambiar planes manualmente
+- Extender o cancelar suscripciones
+- Ver historial de pagos (simulado)
+- Generar reportes de ingresos
+
+**Sistema de Soporte**
+- Recibir tickets de soporte de restaurantes
+- Clasificar por prioridad (baja, media, alta, urgente)
+- Filtrar por estado, categoría y fechas
+- Responder a tickets
+- Agregar notas internas
+- Cambiar estados (pendiente, en progreso, resuelto, cerrado)
+- Ordenar por fecha (más nuevos/antiguos primero)
+
+**Analíticas Globales**
+- Estadísticas del sistema completo
+- Número de restaurantes activos
+- Total de usuarios registrados
+- Ingresos por suscripciones
+- Tendencias de crecimiento
+- Restaurantes más exitosos
+
+### ¿Qué se Puede Hacer?
+
+#### Como Restaurante:
+
+1. **Crear tu presencia digital** - Registrarte, configurar tu perfil y obtener tu URL única
+2. **Digitalizar tu menú** - Subir todos tus productos con fotos, descripciones y precios
+3. **Organizar tu catálogo** - Crear categorías lógicas (Entradas, Platos Fuertes, Postres, Bebidas, etc.)
+4. **Gestionar disponibilidad** - Activar/desactivar productos según inventario
+5. **Recibir pedidos** - Los clientes pueden hacer pedidos directamente desde el menú digital
+6. **Comunicarte con clientes** - Integración con WhatsApp para confirmaciones y consultas
+7. **Hacer seguimiento** - Ver todos los pedidos y su estado en tiempo real
+8. **Analizar tu negocio** - Con planes de pago, accede a analytics detalladas
+9. **Personalizar experiencia** - Elige colores, idiomas y configura tu marca
+10. **Escalar tu negocio** - Upgrade de plan cuando necesites más productos o features
+
+#### Como Cliente:
+
+1. **Explorar el menú** - Ver todos los productos disponibles con fotos
+2. **Buscar productos** - Encontrar rápidamente lo que quieres
+3. **Personalizar pedidos** - Elegir variaciones y agregar notas especiales
+4. **Armar tu orden** - Agregar múltiples productos al carrito
+5. **Hacer checkout** - Completar pedido con tus datos
+6. **Recibir confirmación** - Confirmación inmediata por WhatsApp
+7. **Seguimiento** - Saber el estado de tu pedido
+
+#### Como Super Admin:
+
+1. **Administrar plataforma** - Control total sobre restaurantes y usuarios
+2. **Dar soporte** - Atender tickets y resolver problemas
+3. **Gestionar suscripciones** - Actualizar planes y pagos
+4. **Monitorear sistema** - Ver estadísticas globales y rendimiento
+5. **Asegurar calidad** - Activar/desactivar restaurantes según necesidad
+
+### Planes de Suscripción
+
+**Free Plan** (Gratis)
+- Hasta 10 productos
+- Hasta 3 categorías
+- Menú público básico
+- Gestión de pedidos
+- Soporte por email
+
+**Basic Plan** ($9/mes)
+- Hasta 50 productos
+- Hasta 10 categorías
+- Todo de Free +
+- Personalización de temas
+- Soporte prioritario
+
+**Pro Plan** ($19/mes)
+- Hasta 200 productos
+- Hasta 20 categorías
+- Todo de Basic +
+- Analytics avanzadas
+- Múltiples ubicaciones
+- Soporte 24/7
+
+**Business Plan** ($39/mes)
+- Productos ilimitados
+- Categorías ilimitadas
+- Todo de Pro +
+- API access
+- White label
+- Soporte dedicado
+- Personalización completa
 
 ---
 
