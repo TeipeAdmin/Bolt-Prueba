@@ -407,7 +407,8 @@ export const PublicMenu: React.FC = () => {
                   color: selectedCategory === category.id ? textColor : '#000',
                   border: `2px solid ${selectedCategory === category.id ? 'white' : 'transparent'}`,
                   borderRadius: theme.button_style === 'rounded' ?  '0.5rem' : '0.25rem' ,
-                  fontFamily: theme.primary_font || 'Inter'
+                  fontFamily: theme.primary_font || 'Inter',
+                  border: primaryColor
                 }}
               >
                 {category.name}
