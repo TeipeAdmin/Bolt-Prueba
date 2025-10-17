@@ -25,15 +25,6 @@ export const PublicMenu: React.FC = () => {
   const [featuredSlideIndex, setFeaturedSlideIndex] = useState(0);
   const [viewMode, setViewMode] = useState<'list' | 'grid' | 'editorial'>('list');
   const [showHoursModal, setShowHoursModal] = useState(false);
-  const [headerBg, setHeaderBg] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setHeaderBg(window.scrollY > 50);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   const loadMenuData = () => {
     try {
@@ -188,7 +179,7 @@ export const PublicMenu: React.FC = () => {
       />
 
       {/* HEADER */}
-      <header className={`sticky top-0 z-50 relative transition-all duration-300 ${headerBg ? 'bg-white/95 backdrop-blur-md shadow-sm' : 'bg-transparent'}`}>
+      <header className="sticky top-0 z-50 relative bg-white/30 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between gap-4">
             {/* Search Bar */}
