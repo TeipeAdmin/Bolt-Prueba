@@ -80,13 +80,15 @@ export const PublicMenu: React.FC = () => {
 
   const filteredProducts = products
     .filter(product => {
-      const matchesSearch = searchTerm === '' ||
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchTerm.toLowerCase());
-
       const matchesCategory = selectedCategory === 'all' || product.category_id === selectedCategory;
 
-      return matchesSearch && matchesCategory;
+      if (!matchesCategory) return false;
+
+      if (searchTerm === '') return true;
+
+      const searchLower = searchTerm.toLowerCase();
+      return product.name.toLowerCase().includes(searchLower) ||
+        (product.description && product.description.toLowerCase().includes(searchLower));
     })
     .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
 
@@ -254,8 +256,8 @@ export const PublicMenu: React.FC = () => {
 
       {/* FEATURED SECTION SLIDER */}
       {featuredProducts.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 py-12 relative z-10">
-          <div className="text-center mb-8">
+        <section className="max-w-7xl mx-auto px-4 py-16 relative z-10">
+          <div className="text-center mb-12">
             <p
               className="text-sm mb-2 opacity-70"
               style={{
@@ -281,49 +283,52 @@ export const PublicMenu: React.FC = () => {
             </div>
           </div>
 
-          <div className="relative">
-            <div className="flex items-center justify-center gap-8 overflow-hidden">
-              {featuredProducts.map((product, index) => {
-                const offset = index - featuredSlideIndex;
-                const isCenter = offset === 0;
-                const isVisible = Math.abs(offset) <= 1;
+          <div className="relative h-[450px]">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="relative w-full max-w-4xl h-full flex items-center justify-center">
+                {featuredProducts.map((product, index) => {
+                  const offset = index - featuredSlideIndex;
+                  const isCenter = offset === 0;
+                  const isVisible = Math.abs(offset) <= 1;
 
-                if (!isVisible) return null;
+                  if (!isVisible) return null;
 
-                return (
-                  <div
-                    key={product.id}
-                    className="cursor-pointer transition-all duration-500"
-                    style={{
-                      transform: `translateX(${offset * 100}%) scale(${isCenter ? 1.15 : 0.85})`,
-                      opacity: isCenter ? 1 : 0.5,
-                      zIndex: isCenter ? 10 : 1,
-                    }}
-                    onClick={() => setSelectedProduct(product)}
-                  >
-                    <div className="relative">
-                      <img
-                        src={product.images[0]}
-                        alt={product.name}
-                        className="w-64 h-64 object-cover rounded-full shadow-2xl"
-                      />
-                      {isCenter && (
-                        <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg px-6 py-3 whitespace-nowrap">
-                          <p
-                            className="font-bold text-center"
-                            style={{
-                              color: textColor,
-                              fontFamily: theme.secondary_font || 'Poppins'
-                            }}
-                          >
-                            <span style={{ color: accentColor }}>Letal</span> {product.name}
-                          </p>
-                        </div>
-                      )}
+                  return (
+                    <div
+                      key={product.id}
+                      className="absolute cursor-pointer transition-all duration-700 ease-in-out"
+                      style={{
+                        transform: `translateX(${offset * 350}px) scale(${isCenter ? 1.2 : 0.75})`,
+                        opacity: isCenter ? 1 : 0.4,
+                        zIndex: isCenter ? 20 : 10 - Math.abs(offset),
+                        pointerEvents: isCenter ? 'auto' : 'none',
+                      }}
+                      onClick={() => isCenter && setSelectedProduct(product)}
+                    >
+                      <div className="relative flex flex-col items-center">
+                        <img
+                          src={product.images[0]}
+                          alt={product.name}
+                          className="w-80 h-80 object-cover rounded-full shadow-2xl"
+                        />
+                        {isCenter && (
+                          <div className="mt-6 bg-white rounded-lg shadow-xl px-8 py-4 max-w-xs">
+                            <p
+                              className="font-bold text-center text-lg"
+                              style={{
+                                color: textColor,
+                                fontFamily: theme.secondary_font || 'Poppins'
+                              }}
+                            >
+                              <span style={{ color: accentColor }}>Letal</span> {product.name}
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
 
             {featuredProducts.length > 1 && (
@@ -347,7 +352,7 @@ export const PublicMenu: React.FC = () => {
                   <ChevronRight className="w-6 h-6" style={{ color: textColor }} />
                 </button>
 
-                <div className="flex justify-center gap-2 mt-12">
+                <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-2">
                   {featuredProducts.map((_, index) => (
                     <button
                       key={index}
@@ -367,11 +372,8 @@ export const PublicMenu: React.FC = () => {
       )}
 
       {/* CATEGORIES TABS - CENTERED */}
-      <div className="relative z-40">
-        <div
-          className="absolute inset-0 opacity-90"
-          style={{ backgroundColor: primaryColor }}
-        />
+      <div className="relative z-40" style={{ backgroundColor: primaryColor }}>
+        <div className="absolute inset-0" />
         <div className="max-w-7xl mx-auto px-4 py-4 relative">
           <div className="flex gap-3 overflow-x-auto scrollbar-hide justify-center">
             <button
