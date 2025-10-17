@@ -403,7 +403,7 @@ export const PublicMenu: React.FC = () => {
                 onClick={() => setSelectedCategory(category.id)}
                 className="px-6 py-2.5 whitespace-nowrap transition-all font-medium text-sm"
                 style={{
-                  backgroundColor: selectedCategory === category.id ? 'white' : 'transparent',
+                  backgroundColor: selectedCategory === category.id ? primaryColor : 'transparent',
                   color: selectedCategory === category.id ? textColor : '#000',
                   border: `2px solid ${selectedCategory === category.id ? 'white' : 'transparent'}`,
                   borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
