@@ -388,9 +388,9 @@ export const PublicMenu: React.FC = () => {
               onClick={() => setSelectedCategory('all')}
               className="px-6 py-2.5 whitespace-nowrap transition-all font-medium text-sm"
               style={{
-                backgroundColor: selectedCategory === 'all' ? 'primaryColor' : 'transparent',
+                backgroundColor: selectedCategory === 'all' ? primaryColor : 'transparent',
                 color: selectedCategory === 'all' ? textColor : '#000',
-                border: `2px solid ${selectedCategory === 'all' ? 'primaryColor' : 'transparent'}`,
+                border: `2px solid ${selectedCategory === 'all' ? primaryColor : 'transparent'}`,
                 borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
                 fontFamily: theme.primary_font || 'Inter'
               }}
