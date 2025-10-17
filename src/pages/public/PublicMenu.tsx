@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Search, Gift, Star, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ShoppingCart, Search, Gift, Star, X, ChevronLeft, ChevronRight, Grid3x3, List, Clock, MapPin, Facebook, Instagram, Phone } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { Category, Product, Restaurant, Subscription } from '../../types';
 import { loadFromStorage } from '../../data/mockData';
@@ -23,6 +23,8 @@ export const PublicMenu: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showPromoModal, setShowPromoModal] = useState(false);
   const [featuredSlideIndex, setFeaturedSlideIndex] = useState(0);
+  const [viewMode, setViewMode] = useState<'list' | 'grid' | 'editorial'>('list');
+  const [showHoursModal, setShowHoursModal] = useState(false);
 
   const loadMenuData = () => {
     try {
@@ -188,7 +190,14 @@ export const PublicMenu: React.FC = () => {
                   type="text"
                   placeholder="Buscar..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    if (e.target.value) {
+                      setTimeout(() => {
+                        document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }, 100);
+                    }
+                  }}
                   className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:outline-none bg-gray-50"
                   style={{
                     borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
@@ -320,7 +329,7 @@ export const PublicMenu: React.FC = () => {
                                 fontFamily: theme.secondary_font || 'Poppins'
                               }}
                             >
-                              <span style={{ color: accentColor }}>Letal</span> {product.name}
+                              {product.name}
                             </p>
                           </div>
                         )}
@@ -352,7 +361,7 @@ export const PublicMenu: React.FC = () => {
                   <ChevronRight className="w-6 h-6" style={{ color: textColor }} />
                 </button>
 
-                <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-2">
+                <div className="absolute -bottom-8 left-0 right-0 flex justify-center gap-2">
                   {featuredProducts.map((_, index) => (
                     <button
                       key={index}
@@ -410,7 +419,32 @@ export const PublicMenu: React.FC = () => {
       </div>
 
       {/* PRODUCTS LIST */}
-      <main className="max-w-7xl mx-auto px-4 py-8 relative z-10">
+      <main className="max-w-7xl mx-auto px-4 py-8 pb-24 relative z-10" id="products-section">
+        {/* View Mode Selector */}
+        <div className="flex justify-end mb-6 gap-2">
+          <button
+            onClick={() => setViewMode('list')}
+            className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white shadow-md' : 'bg-white/50'}`}
+            style={{ borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem' }}
+          >
+            <List className="w-5 h-5" style={{ color: viewMode === 'list' ? accentColor : textColor }} />
+          </button>
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white shadow-md' : 'bg-white/50'}`}
+            style={{ borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem' }}
+          >
+            <Grid3x3 className="w-5 h-5" style={{ color: viewMode === 'grid' ? accentColor : textColor }} />
+          </button>
+          <button
+            onClick={() => setViewMode('editorial')}
+            className={`p-2 px-4 rounded-lg transition-all flex items-center gap-2 ${viewMode === 'editorial' ? 'bg-white shadow-md' : 'bg-white/50'}`}
+            style={{ borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem' }}
+          >
+            <span className="text-sm font-medium" style={{ color: viewMode === 'editorial' ? accentColor : textColor }}>Editorial</span>
+          </button>
+        </div>
+
         {filteredProducts.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-600" style={{ fontFamily: theme.primary_font || 'Inter' }}>
@@ -418,11 +452,103 @@ export const PublicMenu: React.FC = () => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className={
+            viewMode === 'list' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' :
+            viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4' :
+            'space-y-6'
+          }>
             {filteredProducts.map((product) => {
               const minPrice = product.variations.length > 0
                 ? Math.min(...product.variations.map(v => v.price))
                 : 0;
+
+              if (viewMode === 'editorial') {
+                return (
+                  <div
+                    key={product.id}
+                    className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all cursor-pointer overflow-hidden"
+                    onClick={() => setSelectedProduct(product)}
+                    style={{ borderRadius: theme.button_style === 'rounded' ? '0.75rem' : '0.25rem' }}
+                  >
+                    <div className="flex flex-col md:flex-row gap-6 p-6">
+                      {product.images[0] && (
+                        <img
+                          src={product.images[0]}
+                          alt={product.name}
+                          className="w-full md:w-64 h-64 object-cover rounded-lg flex-shrink-0"
+                          style={{ borderRadius: theme.button_style === 'rounded' ? '0.75rem' : '0.25rem' }}
+                        />
+                      )}
+                      <div className="flex-1 flex flex-col justify-center">
+                        <h3
+                          className="font-bold mb-3 text-2xl"
+                          style={{
+                            fontFamily: theme.secondary_font || 'Poppins',
+                            color: textColor
+                          }}
+                        >
+                          {product.name}
+                        </h3>
+                        <p
+                          className="text-gray-600 mb-4 text-base leading-relaxed"
+                          style={{ fontFamily: theme.primary_font || 'Inter' }}
+                        >
+                          {product.description}
+                        </p>
+                        <span
+                          className="font-bold text-2xl"
+                          style={{
+                            color: accentColor,
+                            fontFamily: theme.secondary_font || 'Poppins'
+                          }}
+                        >
+                          Desde ${minPrice.toLocaleString('es-CO')}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
+              if (viewMode === 'grid') {
+                return (
+                  <div
+                    key={product.id}
+                    className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden"
+                    onClick={() => setSelectedProduct(product)}
+                    style={{ borderRadius: theme.button_style === 'rounded' ? '0.75rem' : '0.25rem' }}
+                  >
+                    {product.images[0] && (
+                      <img
+                        src={product.images[0]}
+                        alt={product.name}
+                        className="w-full h-40 object-cover"
+                      />
+                    )}
+                    <div className="p-4">
+                      <h3
+                        className="font-bold mb-2 line-clamp-1"
+                        style={{
+                          fontSize: '16px',
+                          fontFamily: theme.secondary_font || 'Poppins',
+                          color: textColor
+                        }}
+                      >
+                        {product.name}
+                      </h3>
+                      <span
+                        className="font-bold text-lg"
+                        style={{
+                          color: accentColor,
+                          fontFamily: theme.secondary_font || 'Poppins'
+                        }}
+                      >
+                        ${minPrice.toLocaleString('es-CO')}
+                      </span>
+                    </div>
+                  </div>
+                );
+              }
 
               return (
                 <div
@@ -527,6 +653,162 @@ export const PublicMenu: React.FC = () => {
         onClose={() => setShowCheckout(false)}
         restaurant={restaurant}
       />
+
+      {/* HOURS MODAL */}
+      {showHoursModal && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4"
+          onClick={() => setShowHoursModal(false)}
+        >
+          <div
+            className="relative max-w-md w-full bg-white rounded-lg overflow-hidden p-6"
+            onClick={(e) => e.stopPropagation()}
+            style={{ borderRadius: theme.button_style === 'rounded' ? '1rem' : '0.5rem' }}
+          >
+            <button
+              onClick={() => setShowHoursModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h3 className="text-xl font-bold mb-4" style={{ color: textColor, fontFamily: theme.secondary_font || 'Poppins' }}>
+              Horarios de Atención
+            </h3>
+            <div className="space-y-3">
+              {restaurant.business_hours && Object.entries(restaurant.business_hours).map(([day, hours]: [string, any]) => {
+                const dayNames: Record<string, string> = {
+                  monday: 'Lunes',
+                  tuesday: 'Martes',
+                  wednesday: 'Miércoles',
+                  thursday: 'Jueves',
+                  friday: 'Viernes',
+                  saturday: 'Sábado',
+                  sunday: 'Domingo'
+                };
+                return (
+                  <div key={day} className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="font-medium" style={{ color: textColor, fontFamily: theme.primary_font || 'Inter' }}>
+                      {dayNames[day]}
+                    </span>
+                    <span className="text-gray-600" style={{ fontFamily: theme.primary_font || 'Inter' }}>
+                      {hours.is_open ? `${hours.open} - ${hours.close}` : 'Cerrado'}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* OPEN/CLOSED STATUS BUTTON */}
+      <button
+        onClick={() => setShowHoursModal(true)}
+        className="fixed right-6 top-1/2 transform -translate-y-1/2 bg-white shadow-lg px-4 py-3 z-40 transition-all hover:shadow-xl"
+        style={{
+          borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
+          borderLeft: `4px solid ${(() => {
+            const now = new Date();
+            const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+            const currentDay = dayNames[now.getDay()];
+            const hours = restaurant.business_hours?.[currentDay];
+            if (!hours?.is_open) return '#ef4444';
+            const currentTime = now.getHours() * 60 + now.getMinutes();
+            const [openH, openM] = hours.open.split(':').map(Number);
+            const [closeH, closeM] = hours.close.split(':').map(Number);
+            const openTime = openH * 60 + openM;
+            const closeTime = closeH * 60 + closeM;
+            return currentTime >= openTime && currentTime <= closeTime ? '#10b981' : '#ef4444';
+          })()}`
+        }}
+      >
+        <div className="flex items-center gap-2">
+          <Clock className="w-5 h-5" style={{ color: textColor }} />
+          <div className="text-left">
+            <p className="text-xs text-gray-600" style={{ fontFamily: theme.primary_font || 'Inter' }}>Estado</p>
+            <p className="font-bold text-sm" style={{
+              color: (() => {
+                const now = new Date();
+                const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+                const currentDay = dayNames[now.getDay()];
+                const hours = restaurant.business_hours?.[currentDay];
+                if (!hours?.is_open) return '#ef4444';
+                const currentTime = now.getHours() * 60 + now.getMinutes();
+                const [openH, openM] = hours.open.split(':').map(Number);
+                const [closeH, closeM] = hours.close.split(':').map(Number);
+                const openTime = openH * 60 + openM;
+                const closeTime = closeH * 60 + closeM;
+                return currentTime >= openTime && currentTime <= closeTime ? '#10b981' : '#ef4444';
+              })(),
+              fontFamily: theme.secondary_font || 'Poppins'
+            }}>
+              {(() => {
+                const now = new Date();
+                const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+                const currentDay = dayNames[now.getDay()];
+                const hours = restaurant.business_hours?.[currentDay];
+                if (!hours?.is_open) return 'Cerrado';
+                const currentTime = now.getHours() * 60 + now.getMinutes();
+                const [openH, openM] = hours.open.split(':').map(Number);
+                const [closeH, closeM] = hours.close.split(':').map(Number);
+                const openTime = openH * 60 + openM;
+                const closeTime = closeH * 60 + closeM;
+                return currentTime >= openTime && currentTime <= closeTime ? 'Abierto' : 'Cerrado';
+              })()}
+            </p>
+          </div>
+        </div>
+      </button>
+
+      {/* FLOATING FOOTER BAR */}
+      <div
+        className="fixed bottom-0 left-0 right-0 shadow-lg z-40"
+        style={{ backgroundColor: primaryColor }}
+      >
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-2 text-sm">
+              <MapPin className="w-4 h-4 text-gray-800" />
+              <span className="font-medium text-gray-800" style={{ fontFamily: theme.primary_font || 'Inter' }}>
+                {restaurant.address}
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              {restaurant.social_media?.facebook && (
+                <a
+                  href={restaurant.social_media.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+                  style={{ borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem' }}
+                >
+                  <Facebook className="w-5 h-5 text-gray-800" />
+                </a>
+              )}
+              {restaurant.social_media?.instagram && (
+                <a
+                  href={restaurant.social_media.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+                  style={{ borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem' }}
+                >
+                  <Instagram className="w-5 h-5 text-gray-800" />
+                </a>
+              )}
+              {restaurant.phone && (
+                <a
+                  href={`tel:${restaurant.phone}`}
+                  className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+                  style={{ borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem' }}
+                >
+                  <Phone className="w-5 h-5 text-gray-800" />
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
