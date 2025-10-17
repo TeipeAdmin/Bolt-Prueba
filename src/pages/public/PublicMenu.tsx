@@ -25,6 +25,15 @@ export const PublicMenu: React.FC = () => {
   const [featuredSlideIndex, setFeaturedSlideIndex] = useState(0);
   const [viewMode, setViewMode] = useState<'list' | 'grid' | 'editorial'>('list');
   const [showHoursModal, setShowHoursModal] = useState(false);
+  const [headerBg, setHeaderBg] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setHeaderBg(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const loadMenuData = () => {
     try {
@@ -179,7 +188,7 @@ export const PublicMenu: React.FC = () => {
       />
 
       {/* HEADER */}
-      <header className="bg-white/95 backdrop-blur-md shadow-sm sticky top-0 z-50 relative">
+      <header className={`sticky top-0 z-50 relative transition-all duration-300 ${headerBg ? 'bg-white/95 backdrop-blur-md shadow-sm' : 'bg-transparent'}`}>
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between gap-4">
             {/* Search Bar */}
@@ -265,7 +274,7 @@ export const PublicMenu: React.FC = () => {
 
       {/* FEATURED SECTION SLIDER */}
       {featuredProducts.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 py-16 relative z-10">
+        <section className="max-w-7xl mx-auto px-4 py-16 relative z-30">
           <div className="text-center mb-12">
             <p
               className="text-sm mb-2 opacity-70"
@@ -381,8 +390,7 @@ export const PublicMenu: React.FC = () => {
       )}
 
       {/* CATEGORIES TABS - CENTERED */}
-      <div className="relative z-40" >
-        <div className="absolute inset-0" />
+      <div className="relative z-20" >
         <div className="max-w-7xl mx-auto px-4 py-4 relative">
           <div className="flex gap-3 overflow-x-auto scrollbar-hide justify-center">
             <button
@@ -675,7 +683,7 @@ export const PublicMenu: React.FC = () => {
               Horarios de Atención
             </h3>
             <div className="space-y-3">
-              {restaurant.business_hours && Object.entries(restaurant.business_hours).map(([day, hours]: [string, any]) => {
+              {restaurant.settings.business_hours && Object.entries(restaurant.settings.business_hours).map(([day, hours]: [string, any]) => {
                 const dayNames: Record<string, string> = {
                   monday: 'Lunes',
                   tuesday: 'Martes',
@@ -711,7 +719,7 @@ export const PublicMenu: React.FC = () => {
             const now = new Date();
             const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
             const currentDay = dayNames[now.getDay()];
-            const hours = restaurant.business_hours?.[currentDay];
+            const hours = restaurant.settings.business_hours?.[currentDay];
             if (!hours?.is_open) return '#ef4444';
             const currentTime = now.getHours() * 60 + now.getMinutes();
             const [openH, openM] = hours.open.split(':').map(Number);
@@ -731,7 +739,7 @@ export const PublicMenu: React.FC = () => {
                 const now = new Date();
                 const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
                 const currentDay = dayNames[now.getDay()];
-                const hours = restaurant.business_hours?.[currentDay];
+                const hours = restaurant.settings.business_hours?.[currentDay];
                 if (!hours?.is_open) return '#ef4444';
                 const currentTime = now.getHours() * 60 + now.getMinutes();
                 const [openH, openM] = hours.open.split(':').map(Number);
@@ -746,7 +754,7 @@ export const PublicMenu: React.FC = () => {
                 const now = new Date();
                 const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
                 const currentDay = dayNames[now.getDay()];
-                const hours = restaurant.business_hours?.[currentDay];
+                const hours = restaurant.settings.business_hours?.[currentDay];
                 if (!hours?.is_open) return 'Cerrado';
                 const currentTime = now.getHours() * 60 + now.getMinutes();
                 const [openH, openM] = hours.open.split(':').map(Number);
@@ -774,9 +782,9 @@ export const PublicMenu: React.FC = () => {
               </span>
             </div>
             <div className="flex items-center gap-3">
-              {restaurant.social_media?.facebook && (
+              {restaurant.settings.social_media?.facebook && (
                 <a
-                  href={restaurant.social_media.facebook}
+                  href={restaurant.settings.social_media.facebook}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
@@ -785,9 +793,9 @@ export const PublicMenu: React.FC = () => {
                   <Facebook className="w-5 h-5 text-gray-800" />
                 </a>
               )}
-              {restaurant.social_media?.instagram && (
+              {restaurant.settings.social_media?.instagram && (
                 <a
-                  href={restaurant.social_media.instagram}
+                  href={restaurant.settings.social_media.instagram}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
