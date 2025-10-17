@@ -406,7 +406,7 @@ export const PublicMenu: React.FC = () => {
                   backgroundColor: selectedCategory === category.id ? primaryColor : 'transparent',
                   color: selectedCategory === category.id ? textColor : '#000',
                   border: `2px solid ${selectedCategory === category.id ? 'white' : 'transparent'}`,
-                  borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
+                  borderRadius: theme.button_style === 'rounded' ?  '0.5rem' : '0.25rem' primaryColor,
                   fontFamily: theme.primary_font || 'Inter'
                 }}
               >
