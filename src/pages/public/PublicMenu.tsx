@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Search, Clock, MapPin, Phone, Mail, Instagram, Facebook, ChevronRight, Plus, Minus, X } from 'lucide-react';
+import { ShoppingCart, Search, Heart, Star } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { Category, Product, Restaurant, Subscription } from '../../types';
 import { loadFromStorage } from '../../data/mockData';
@@ -27,32 +27,24 @@ export const PublicMenu: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      console.log('Loading menu data for slug:', slug);
-
       const restaurants = loadFromStorage('restaurants', []);
-      console.log('All restaurants:', restaurants);
-
       const restaurantData = restaurants.find((r: Restaurant) => r.slug === slug || r.id === slug || r.domain === slug);
 
       if (!restaurantData) {
-        console.error('Restaurant not found. Slug:', slug, 'Available restaurants:', restaurants.map(r => ({ id: r.id, slug: r.slug })));
         setError(`Restaurante no encontrado: ${slug}`);
         setLoading(false);
         return;
       }
 
-      // Check subscription status
       const subscriptions = loadFromStorage('subscriptions', []);
       const subscription = subscriptions.find((s: Subscription) => s.restaurant_id === restaurantData.id);
 
       if (!subscription || subscription.status !== 'active') {
-        console.error('Restaurant subscription is not active');
         setError('Este restaurante no está disponible en este momento. Suscripción inactiva o vencida.');
         setLoading(false);
         return;
       }
 
-      console.log('Restaurant found and active:', restaurantData);
       setRestaurant(restaurantData);
 
       const allCategories = loadFromStorage('categories', []);
@@ -66,25 +58,19 @@ export const PublicMenu: React.FC = () => {
         prod.restaurant_id === restaurantData.id && prod.status === 'active'
       );
 
-      console.log('Categories:', restaurantCategories);
-      console.log('Products:', restaurantProducts);
-
       setCategories(restaurantCategories);
       setProducts(restaurantProducts);
       setLoading(false);
     } catch (err) {
-      console.error('Error loading menu data:', err);
       setError('Error al cargar el menú');
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    console.log('PublicMenu mounted with slug:', slug);
     if (slug) {
       loadMenuData();
     } else {
-      console.log('No slug provided');
       setError('No se proporcionó un identificador de restaurante');
       setLoading(false);
     }
@@ -102,21 +88,7 @@ export const PublicMenu: React.FC = () => {
     })
     .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
 
-  const isRestaurantOpen = () => {
-    if (!restaurant) return false;
-    const now = new Date();
-    const dayName = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase() as keyof typeof restaurant.settings.business_hours;
-    const todayHours = restaurant.settings.business_hours[dayName];
-    return todayHours?.is_open || false;
-  };
-
-  const getTodayHours = () => {
-    if (!restaurant) return null;
-    const now = new Date();
-    const dayName = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase() as keyof typeof restaurant.settings.business_hours;
-    return restaurant.settings.business_hours[dayName];
-  };
-
+  const featuredProducts = products.filter(p => p.is_featured).slice(0, 3);
   const cartItemsCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   if (loading) {
@@ -137,185 +109,204 @@ export const PublicMenu: React.FC = () => {
           <div className="text-6xl mb-4">🍽️</div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Restaurante no encontrado</h2>
           <p className="text-gray-600 mb-4">{error || 'El menú que buscas no está disponible.'}</p>
-          <p className="text-sm text-gray-500">Slug buscado: {slug}</p>
         </div>
       </div>
     );
   }
 
   const theme = restaurant.settings.theme;
-  const layoutType = restaurant.settings.ui_settings.layout_type;
-  const todayHours = getTodayHours();
+  const primaryColor = theme.primary_color || '#FFC700';
+  const secondaryColor = theme.secondary_color || '#f3f4f6';
+  const accentColor = theme.accent_color || '#FFC700';
+  const textColor = theme.text_color || '#1f2937';
 
   return (
     <div
-      className="min-h-screen bg-gray-50"
+      className="min-h-screen bg-gray-50 relative overflow-hidden"
       style={{
-        '--primary-color': theme.primary_color,
-        '--secondary-color': theme.secondary_color,
-        '--accent-color': theme.accent_color,
-        '--text-color': theme.text_color,
-        '--primary-font': theme.primary_font,
-        '--secondary-font': theme.secondary_font,
-        '--font-size-title': theme.font_sizes.title,
-        '--font-size-subtitle': theme.font_sizes.subtitle,
-        '--font-size-normal': theme.font_sizes.normal,
-        '--font-size-small': theme.font_sizes.small,
-        '--font-weight-light': theme.font_weights.light,
-        '--font-weight-regular': theme.font_weights.regular,
-        '--font-weight-medium': theme.font_weights.medium,
-        '--font-weight-bold': theme.font_weights.bold,
+        '--primary-color': primaryColor,
+        '--secondary-color': secondaryColor,
+        '--accent-color': accentColor,
+        '--text-color': textColor,
+        '--primary-font': theme.primary_font || 'Inter',
+        '--secondary-font': theme.secondary_font || 'Poppins',
       } as React.CSSProperties}
     >
+      {/* DECORATIVE ORGANIC SHAPES */}
+      <div
+        className="absolute top-0 left-0 w-96 h-96 rounded-full opacity-90 -translate-x-1/2 -translate-y-1/2"
+        style={{ backgroundColor: primaryColor, filter: 'blur(100px)' }}
+      />
+      <div
+        className="absolute bottom-0 right-0 w-96 h-96 rounded-full opacity-90 translate-x-1/2 translate-y-1/2"
+        style={{ backgroundColor: primaryColor, filter: 'blur(100px)' }}
+      />
+
       {/* HEADER */}
-      <header className="bg-white shadow-md sticky top-0 z-40">
+      <header className="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1
-                className="font-bold text-gray-900"
-                style={{
-                  fontSize: 'var(--font-size-title)',
-                  fontFamily: 'var(--secondary-font)',
-                  fontWeight: 'var(--font-weight-bold)'
-                }}
-              >
-                {restaurant.name}
-              </h1>
-              <div className="flex items-center gap-4 mt-2">
-                <div className="flex items-center gap-1 text-sm text-gray-600">
-                  <Clock className="w-4 h-4" />
-                  {todayHours && (
-                    <span>
-                      {todayHours.is_open ? `${todayHours.open} - ${todayHours.close}` : 'Cerrado'}
-                    </span>
-                  )}
-                </div>
-                <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  isRestaurantOpen()
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {isRestaurantOpen() ? 'Abierto' : 'Cerrado'}
-                </div>
+          <div className="flex items-center justify-between gap-4">
+            {/* Search Bar */}
+            <div className="flex-1 max-w-xs">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:outline-none bg-gray-50"
+                  style={{
+                    borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
+                  }}
+                />
               </div>
             </div>
 
-            {/* Social Media Icons */}
-            <div className="flex items-center gap-3">
-              {restaurant.social_media?.instagram && (
-                <a
-                  href={restaurant.social_media.instagram}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-600 hover:text-pink-600 transition-colors"
+            {/* Logo */}
+            <div className="flex-shrink-0 text-center">
+              {restaurant.logo ? (
+                <img
+                  src={restaurant.logo}
+                  alt={restaurant.name}
+                  className="h-16 mx-auto"
+                />
+              ) : (
+                <div
+                  className="text-3xl font-bold"
+                  style={{
+                    color: primaryColor,
+                    fontFamily: theme.secondary_font || 'Poppins'
+                  }}
                 >
-                  <Instagram className="w-5 h-5" />
-                </a>
-              )}
-              {restaurant.social_media?.facebook && (
-                <a
-                  href={restaurant.social_media.facebook}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-600 hover:text-blue-600 transition-colors"
-                >
-                  <Facebook className="w-5 h-5" />
-                </a>
+                  {restaurant.name.substring(0, 2).toUpperCase()}
+                </div>
               )}
             </div>
-          </div>
 
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Buscar..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:outline-none"
-              style={{
-                borderColor: 'var(--secondary-color)',
-                fontSize: 'var(--font-size-normal)'
-              }}
-            />
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2 flex-1 justify-end max-w-xs">
+              <button className="p-3 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 transition-colors relative">
+                <Heart className="w-5 h-5 text-gray-600" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              </button>
+              <button
+                onClick={() => setShowCart(true)}
+                className="p-3 rounded-lg border border-gray-200 hover:opacity-90 transition-colors relative"
+                style={{
+                  backgroundColor: 'white',
+                  borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
+                }}
+              >
+                <ShoppingCart className="w-5 h-5 text-gray-600" />
+                {cartItemsCount > 0 && (
+                  <span
+                    className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    {cartItemsCount}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
-      {/* PROMOTIONAL SECTION */}
-      {restaurant.settings.promo?.enabled && (
-        <div className="relative bg-gradient-to-r from-orange-500 to-red-600 overflow-hidden">
-          <div className="max-w-7xl mx-auto px-4 py-12">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-              <div className="flex-1 text-white">
-                <div
-                  className="font-bold mb-2"
-                  style={{
-                    fontSize: 'calc(var(--font-size-title) * 1.5)',
-                    fontFamily: 'var(--secondary-font)'
-                  }}
-                >
-                  {restaurant.settings.promo.promo_text || '60% Off'}
-                </div>
-                <p
-                  className="mb-6 opacity-90"
-                  style={{ fontSize: 'var(--font-size-subtitle)' }}
-                >
-                  ¡Ofertas especiales por tiempo limitado!
-                </p>
-                <button
-                  onClick={() => setSelectedCategory('all')}
-                  className="px-8 py-3 bg-white text-red-600 font-semibold rounded-lg hover:bg-gray-100 transition-colors"
-                  style={{
-                    fontSize: 'var(--font-size-normal)',
-                    borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
-                  }}
-                >
-                  {restaurant.settings.promo.cta_text || 'Ordenar Ahora'}
-                </button>
-              </div>
-              {restaurant.settings.promo.banner_image && (
-                <div className="flex-1">
-                  <img
-                    src={restaurant.settings.promo.banner_image}
-                    alt="Promoción"
-                    className="w-full h-64 object-cover rounded-lg shadow-2xl"
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* CATEGORIES NAVIGATION */}
-      <div className="bg-white border-b sticky top-[120px] z-30">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
-            <button
-              onClick={() => setSelectedCategory('all')}
-              className="px-4 py-2 rounded-lg whitespace-nowrap transition-all font-medium"
+      {/* FEATURED SECTION */}
+      {featuredProducts.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 py-12 relative">
+          <div className="text-center mb-8">
+            <p
+              className="text-sm mb-2 opacity-70"
               style={{
-                backgroundColor: selectedCategory === 'all' ? 'var(--primary-color)' : 'var(--secondary-color)',
-                color: selectedCategory === 'all' ? 'white' : 'var(--text-color)',
-                fontSize: 'var(--font-size-normal)',
-                borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
+                color: textColor,
+                fontFamily: theme.primary_font || 'Inter'
               }}
             >
-              Todos
+              Te presentamos nuestros
+            </p>
+            <h2
+              className="text-5xl font-bold mb-2"
+              style={{
+                color: textColor,
+                fontFamily: theme.secondary_font || 'Poppins'
+              }}
+            >
+              destacados
+            </h2>
+            <div className="flex items-center justify-center gap-1">
+              {[1,2,3,4,5].map(i => (
+                <Star key={i} className="w-5 h-5 fill-current" style={{ color: accentColor }} />
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-center gap-8 flex-wrap">
+            {featuredProducts.map((product, index) => (
+              <div
+                key={product.id}
+                className={`cursor-pointer transition-transform hover:scale-105 ${
+                  index === 1 ? 'scale-110 z-10' : ''
+                }`}
+                onClick={() => setSelectedProduct(product)}
+              >
+                <div className="relative">
+                  <img
+                    src={product.images[0]}
+                    alt={product.name}
+                    className={`w-64 h-64 object-cover rounded-full shadow-2xl ${
+                      index === 1 ? 'w-80 h-80' : ''
+                    }`}
+                  />
+                  {index === 1 && (
+                    <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg px-6 py-3">
+                      <p
+                        className="font-bold text-center whitespace-nowrap"
+                        style={{
+                          color: textColor,
+                          fontFamily: theme.secondary_font || 'Poppins'
+                        }}
+                      >
+                        <span style={{ color: accentColor }}>Letal</span> {product.name}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* CATEGORIES TABS */}
+      <div className="sticky top-[88px] z-40 bg-white/90 backdrop-blur-md border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide">
+            <button
+              onClick={() => setSelectedCategory('all')}
+              className="px-6 py-2.5 whitespace-nowrap transition-all font-medium text-sm"
+              style={{
+                backgroundColor: selectedCategory === 'all' ? primaryColor : 'white',
+                color: selectedCategory === 'all' ? '#000' : textColor,
+                border: `2px solid ${selectedCategory === 'all' ? primaryColor : '#e5e7eb'}`,
+                borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
+                fontFamily: theme.primary_font || 'Inter'
+              }}
+            >
+              Hamburguesas
             </button>
             {categories.map((category) => (
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
-                className="px-4 py-2 rounded-lg whitespace-nowrap transition-all font-medium"
+                className="px-6 py-2.5 whitespace-nowrap transition-all font-medium text-sm"
                 style={{
-                  backgroundColor: selectedCategory === category.id ? 'var(--primary-color)' : 'var(--secondary-color)',
-                  color: selectedCategory === category.id ? 'white' : 'var(--text-color)',
-                  fontSize: 'var(--font-size-normal)',
-                  borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
+                  backgroundColor: selectedCategory === category.id ? primaryColor : 'white',
+                  color: selectedCategory === category.id ? '#000' : textColor,
+                  border: `2px solid ${selectedCategory === category.id ? primaryColor : '#e5e7eb'}`,
+                  borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
+                  fontFamily: theme.primary_font || 'Inter'
                 }}
               >
                 {category.name}
@@ -325,142 +316,25 @@ export const PublicMenu: React.FC = () => {
         </div>
       </div>
 
-      {/* PRODUCTS GRID */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      {/* PRODUCTS LIST */}
+      <main className="max-w-7xl mx-auto px-4 py-8 relative z-10">
         {filteredProducts.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-600" style={{ fontSize: 'var(--font-size-normal)' }}>
+            <p className="text-gray-600" style={{ fontFamily: theme.primary_font || 'Inter' }}>
               No se encontraron productos
             </p>
           </div>
         ) : (
-          <div className={`
-            ${layoutType === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : ''}
-            ${layoutType === 'list' ? 'space-y-4' : ''}
-            ${layoutType === 'editorial' ? 'space-y-8' : ''}
-          `}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredProducts.map((product) => {
               const minPrice = product.variations.length > 0
                 ? Math.min(...product.variations.map(v => v.price))
                 : 0;
 
-              if (layoutType === 'list') {
-                return (
-                  <div
-                    key={product.id}
-                    className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer overflow-hidden flex"
-                    onClick={() => setSelectedProduct(product)}
-                    style={{ borderRadius: theme.button_style === 'rounded' ? '0.75rem' : '0.25rem' }}
-                  >
-                    {product.images[0] && (
-                      <img
-                        src={product.images[0]}
-                        alt={product.name}
-                        className="w-32 h-32 object-cover"
-                      />
-                    )}
-                    <div className="flex-1 p-4">
-                      <h3
-                        className="font-semibold mb-1"
-                        style={{
-                          fontSize: 'var(--font-size-subtitle)',
-                          fontFamily: 'var(--secondary-font)',
-                          color: 'var(--text-color)'
-                        }}
-                      >
-                        {product.name}
-                      </h3>
-                      <p
-                        className="text-gray-600 text-sm mb-2 line-clamp-2"
-                        style={{ fontSize: 'var(--font-size-small)' }}
-                      >
-                        {product.description}
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <span
-                          className="font-bold"
-                          style={{
-                            fontSize: 'var(--font-size-subtitle)',
-                            color: 'var(--accent-color)'
-                          }}
-                        >
-                          ${minPrice.toFixed(2)}
-                        </span>
-                        {product.preparation_time && (
-                          <div className="flex items-center gap-1 text-gray-500">
-                            <Clock className="w-4 h-4" />
-                            <span style={{ fontSize: 'var(--font-size-small)' }}>
-                              {product.preparation_time} min
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-
-              if (layoutType === 'editorial') {
-                return (
-                  <div
-                    key={product.id}
-                    className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer overflow-hidden"
-                    onClick={() => setSelectedProduct(product)}
-                    style={{ borderRadius: theme.button_style === 'rounded' ? '1rem' : '0.25rem' }}
-                  >
-                    {product.images[0] && (
-                      <img
-                        src={product.images[0]}
-                        alt={product.name}
-                        className="w-full h-96 object-cover"
-                      />
-                    )}
-                    <div className="p-6">
-                      <h3
-                        className="font-bold mb-2"
-                        style={{
-                          fontSize: 'calc(var(--font-size-title) * 0.8)',
-                          fontFamily: 'var(--secondary-font)',
-                          color: 'var(--text-color)'
-                        }}
-                      >
-                        {product.name}
-                      </h3>
-                      <p
-                        className="text-gray-600 mb-4"
-                        style={{ fontSize: 'var(--font-size-normal)' }}
-                      >
-                        {product.description}
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <span
-                          className="font-bold"
-                          style={{
-                            fontSize: 'var(--font-size-title)',
-                            color: 'var(--accent-color)'
-                          }}
-                        >
-                          ${minPrice.toFixed(2)}
-                        </span>
-                        {product.preparation_time && (
-                          <div className="flex items-center gap-1 text-gray-500">
-                            <Clock className="w-4 h-4" />
-                            <span style={{ fontSize: 'var(--font-size-normal)' }}>
-                              {product.preparation_time} min
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-
-              // Grid layout (default)
               return (
                 <div
                   key={product.id}
-                  className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer overflow-hidden"
+                  className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden flex items-center gap-4 p-4"
                   onClick={() => setSelectedProduct(product)}
                   style={{ borderRadius: theme.button_style === 'rounded' ? '0.75rem' : '0.25rem' }}
                 >
@@ -468,44 +342,36 @@ export const PublicMenu: React.FC = () => {
                     <img
                       src={product.images[0]}
                       alt={product.name}
-                      className="w-full h-48 object-cover"
+                      className="w-24 h-24 object-cover rounded-full flex-shrink-0"
                     />
                   )}
-                  <div className="p-4">
+                  <div className="flex-1 min-w-0">
                     <h3
-                      className="font-semibold mb-1"
+                      className="font-bold mb-1 truncate"
                       style={{
-                        fontSize: 'var(--font-size-subtitle)',
-                        fontFamily: 'var(--secondary-font)',
-                        color: 'var(--text-color)'
+                        fontSize: '18px',
+                        fontFamily: theme.secondary_font || 'Poppins',
+                        color: textColor
                       }}
                     >
                       {product.name}
                     </h3>
                     <p
-                      className="text-gray-600 text-sm mb-3 line-clamp-2"
-                      style={{ fontSize: 'var(--font-size-small)' }}
+                      className="text-gray-600 text-sm mb-2 line-clamp-2"
+                      style={{ fontFamily: theme.primary_font || 'Inter' }}
                     >
                       {product.description}
                     </p>
                     <div className="flex items-center justify-between">
                       <span
-                        className="font-bold"
+                        className="font-bold text-lg"
                         style={{
-                          fontSize: 'var(--font-size-subtitle)',
-                          color: 'var(--accent-color)'
+                          color: accentColor,
+                          fontFamily: theme.secondary_font || 'Poppins'
                         }}
                       >
-                        ${minPrice.toFixed(2)}
+                        ${minPrice.toLocaleString('es-CO')}
                       </span>
-                      {product.preparation_time && (
-                        <div className="flex items-center gap-1 text-gray-500">
-                          <Clock className="w-4 h-4" />
-                          <span style={{ fontSize: 'var(--font-size-small)' }}>
-                            {product.preparation_time} min
-                          </span>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -514,26 +380,6 @@ export const PublicMenu: React.FC = () => {
           </div>
         )}
       </main>
-
-      {/* FLOATING CART BUTTON */}
-      {cartItemsCount > 0 && (
-        <button
-          onClick={() => setShowCart(true)}
-          className="fixed bottom-6 right-6 shadow-2xl rounded-full p-4 text-white flex items-center gap-2 hover:scale-110 transition-transform z-50"
-          style={{
-            backgroundColor: 'var(--primary-color)',
-            borderRadius: theme.button_style === 'rounded' ? '9999px' : '0.5rem'
-          }}
-        >
-          <ShoppingCart className="w-6 h-6" />
-          <span
-            className="bg-white rounded-full w-6 h-6 flex items-center justify-center font-bold text-sm"
-            style={{ color: 'var(--primary-color)' }}
-          >
-            {cartItemsCount}
-          </span>
-        </button>
-      )}
 
       {/* PRODUCT DETAIL MODAL */}
       {selectedProduct && (
