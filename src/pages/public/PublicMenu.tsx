@@ -405,13 +405,14 @@ export const PublicMenu: React.FC = () => {
                 style={{
                   backgroundColor: selectedCategory === category.id ? primaryColor : 'transparent',
                   color: selectedCategory === category.id ? textColor : '#000',
-                  border: `2px solid ${selectedCategory === category.id ? primaryColor : 'transparent' }`,
-                  borderRadius: theme.button_style === 'rounded' ?  '0.5rem' : '0.25rem' ,
+                  border: `2px solid ${primaryColor}`,
+                  borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
                   fontFamily: theme.primary_font || 'Inter'
                 }}
               >
                 {category.name}
               </button>
+
             ))}
           </div>
         </div>
