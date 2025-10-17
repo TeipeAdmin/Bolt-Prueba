@@ -390,7 +390,7 @@ export const PublicMenu: React.FC = () => {
               style={{
                 backgroundColor: selectedCategory === 'all' ? primaryColor : 'transparent',
                 color: selectedCategory === 'all' ? textColor : '#000',
-                border: `2px solid ${selectedCategory === 'all' ? primaryColor : 'transparent'}`,
+                border: `1px solid ${primaryColor}`,
                 borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
                 fontFamily: theme.primary_font || 'Inter'
               }}
@@ -405,7 +405,7 @@ export const PublicMenu: React.FC = () => {
                 style={{
                   backgroundColor: selectedCategory === category.id ? primaryColor : 'transparent',
                   color: selectedCategory === category.id ? textColor : '#000',
-                  border: `2px solid ${primaryColor}`,
+                  border: `1px solid ${primaryColor}`,
                   borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
                   fontFamily: theme.primary_font || 'Inter'
                 }}
