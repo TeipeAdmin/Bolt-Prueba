@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Search, Heart, Star } from 'lucide-react';
+import { ShoppingCart, Search, Gift, Star, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { Category, Product, Restaurant, Subscription } from '../../types';
 import { loadFromStorage } from '../../data/mockData';
@@ -21,6 +21,8 @@ export const PublicMenu: React.FC = () => {
   const [showCheckout, setShowCheckout] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showPromoModal, setShowPromoModal] = useState(false);
+  const [featuredSlideIndex, setFeaturedSlideIndex] = useState(0);
 
   const loadMenuData = () => {
     try {
@@ -88,8 +90,27 @@ export const PublicMenu: React.FC = () => {
     })
     .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
 
-  const featuredProducts = products.filter(p => p.is_featured).slice(0, 3);
+  const getFeaturedProducts = () => {
+    if (!restaurant?.settings.promo?.featured_product_ids?.length) {
+      return products.filter(p => p.is_featured).slice(0, 5);
+    }
+
+    const featuredIds = restaurant.settings.promo.featured_product_ids;
+    return products
+      .filter(p => featuredIds.includes(p.id))
+      .slice(0, 5);
+  };
+
+  const featuredProducts = getFeaturedProducts();
   const cartItemsCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
+  const nextSlide = () => {
+    setFeaturedSlideIndex((prev) => (prev + 1) % Math.max(1, featuredProducts.length));
+  };
+
+  const prevSlide = () => {
+    setFeaturedSlideIndex((prev) => (prev - 1 + featuredProducts.length) % Math.max(1, featuredProducts.length));
+  };
 
   if (loading) {
     return (
@@ -119,6 +140,7 @@ export const PublicMenu: React.FC = () => {
   const secondaryColor = theme.secondary_color || '#f3f4f6';
   const accentColor = theme.accent_color || '#FFC700';
   const textColor = theme.text_color || '#1f2937';
+  const hasPromo = restaurant.settings.promo?.enabled && restaurant.settings.promo?.vertical_promo_image;
 
   return (
     <div
@@ -132,18 +154,28 @@ export const PublicMenu: React.FC = () => {
         '--secondary-font': theme.secondary_font || 'Poppins',
       } as React.CSSProperties}
     >
-      {/* DECORATIVE ORGANIC SHAPES */}
+      {/* DECORATIVE ORGANIC SHAPES - MATCHING REFERENCE */}
       <div
-        className="absolute top-0 left-0 w-96 h-96 rounded-full opacity-90 -translate-x-1/2 -translate-y-1/2"
-        style={{ backgroundColor: primaryColor, filter: 'blur(100px)' }}
+        className="absolute top-0 left-0 w-[500px] h-[500px] opacity-80 pointer-events-none"
+        style={{
+          background: primaryColor,
+          borderBottomRightRadius: '50% 40%',
+          borderTopRightRadius: '0% 0%',
+          transform: 'translate(-20%, -20%)',
+        }}
       />
       <div
-        className="absolute bottom-0 right-0 w-96 h-96 rounded-full opacity-90 translate-x-1/2 translate-y-1/2"
-        style={{ backgroundColor: primaryColor, filter: 'blur(100px)' }}
+        className="absolute bottom-0 right-0 w-[600px] h-[600px] opacity-80 pointer-events-none"
+        style={{
+          background: primaryColor,
+          borderTopLeftRadius: '60% 50%',
+          borderBottomLeftRadius: '0% 0%',
+          transform: 'translate(25%, 25%)',
+        }}
       />
 
       {/* HEADER */}
-      <header className="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-50">
+      <header className="bg-white/95 backdrop-blur-md shadow-sm sticky top-0 z-50 relative">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between gap-4">
             {/* Search Bar */}
@@ -186,10 +218,17 @@ export const PublicMenu: React.FC = () => {
 
             {/* Action Buttons */}
             <div className="flex items-center gap-2 flex-1 justify-end max-w-xs">
-              <button className="p-3 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 transition-colors relative">
-                <Heart className="w-5 h-5 text-gray-600" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-              </button>
+              {hasPromo && (
+                <button
+                  onClick={() => setShowPromoModal(true)}
+                  className="p-3 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 transition-colors"
+                  style={{
+                    borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
+                  }}
+                >
+                  <Gift className="w-5 h-5 text-gray-600" />
+                </button>
+              )}
               <button
                 onClick={() => setShowCart(true)}
                 className="p-3 rounded-lg border border-gray-200 hover:opacity-90 transition-colors relative"
@@ -213,9 +252,9 @@ export const PublicMenu: React.FC = () => {
         </div>
       </header>
 
-      {/* FEATURED SECTION */}
+      {/* FEATURED SECTION SLIDER */}
       {featuredProducts.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 py-12 relative">
+        <section className="max-w-7xl mx-auto px-4 py-12 relative z-10">
           <div className="text-center mb-8">
             <p
               className="text-sm mb-2 opacity-70"
@@ -242,59 +281,111 @@ export const PublicMenu: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center justify-center gap-8 flex-wrap">
-            {featuredProducts.map((product, index) => (
-              <div
-                key={product.id}
-                className={`cursor-pointer transition-transform hover:scale-105 ${
-                  index === 1 ? 'scale-110 z-10' : ''
-                }`}
-                onClick={() => setSelectedProduct(product)}
-              >
-                <div className="relative">
-                  <img
-                    src={product.images[0]}
-                    alt={product.name}
-                    className={`w-64 h-64 object-cover rounded-full shadow-2xl ${
-                      index === 1 ? 'w-80 h-80' : ''
-                    }`}
-                  />
-                  {index === 1 && (
-                    <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg px-6 py-3">
-                      <p
-                        className="font-bold text-center whitespace-nowrap"
-                        style={{
-                          color: textColor,
-                          fontFamily: theme.secondary_font || 'Poppins'
-                        }}
-                      >
-                        <span style={{ color: accentColor }}>Letal</span> {product.name}
-                      </p>
+          <div className="relative">
+            <div className="flex items-center justify-center gap-8 overflow-hidden">
+              {featuredProducts.map((product, index) => {
+                const offset = index - featuredSlideIndex;
+                const isCenter = offset === 0;
+                const isVisible = Math.abs(offset) <= 1;
+
+                if (!isVisible) return null;
+
+                return (
+                  <div
+                    key={product.id}
+                    className="cursor-pointer transition-all duration-500"
+                    style={{
+                      transform: `translateX(${offset * 100}%) scale(${isCenter ? 1.15 : 0.85})`,
+                      opacity: isCenter ? 1 : 0.5,
+                      zIndex: isCenter ? 10 : 1,
+                    }}
+                    onClick={() => setSelectedProduct(product)}
+                  >
+                    <div className="relative">
+                      <img
+                        src={product.images[0]}
+                        alt={product.name}
+                        className="w-64 h-64 object-cover rounded-full shadow-2xl"
+                      />
+                      {isCenter && (
+                        <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg px-6 py-3 whitespace-nowrap">
+                          <p
+                            className="font-bold text-center"
+                            style={{
+                              color: textColor,
+                              fontFamily: theme.secondary_font || 'Poppins'
+                            }}
+                          >
+                            <span style={{ color: accentColor }}>Letal</span> {product.name}
+                          </p>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {featuredProducts.length > 1 && (
+              <>
+                <button
+                  onClick={prevSlide}
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-3 shadow-lg hover:bg-gray-50 transition-colors z-20"
+                  style={{
+                    borderRadius: theme.button_style === 'rounded' ? '9999px' : '0.5rem'
+                  }}
+                >
+                  <ChevronLeft className="w-6 h-6" style={{ color: textColor }} />
+                </button>
+                <button
+                  onClick={nextSlide}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-3 shadow-lg hover:bg-gray-50 transition-colors z-20"
+                  style={{
+                    borderRadius: theme.button_style === 'rounded' ? '9999px' : '0.5rem'
+                  }}
+                >
+                  <ChevronRight className="w-6 h-6" style={{ color: textColor }} />
+                </button>
+
+                <div className="flex justify-center gap-2 mt-12">
+                  {featuredProducts.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setFeaturedSlideIndex(index)}
+                      className="w-2 h-2 rounded-full transition-all"
+                      style={{
+                        backgroundColor: index === featuredSlideIndex ? accentColor : '#d1d5db',
+                        width: index === featuredSlideIndex ? '24px' : '8px',
+                      }}
+                    />
+                  ))}
                 </div>
-              </div>
-            ))}
+              </>
+            )}
           </div>
         </section>
       )}
 
-      {/* CATEGORIES TABS */}
-      <div className="sticky top-[88px] z-40 bg-white/90 backdrop-blur-md border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex gap-3 overflow-x-auto scrollbar-hide">
+      {/* CATEGORIES TABS - CENTERED */}
+      <div className="relative z-40">
+        <div
+          className="absolute inset-0 opacity-90"
+          style={{ backgroundColor: primaryColor }}
+        />
+        <div className="max-w-7xl mx-auto px-4 py-4 relative">
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide justify-center">
             <button
               onClick={() => setSelectedCategory('all')}
               className="px-6 py-2.5 whitespace-nowrap transition-all font-medium text-sm"
               style={{
-                backgroundColor: selectedCategory === 'all' ? primaryColor : 'white',
-                color: selectedCategory === 'all' ? '#000' : textColor,
-                border: `2px solid ${selectedCategory === 'all' ? primaryColor : '#e5e7eb'}`,
+                backgroundColor: selectedCategory === 'all' ? 'white' : 'transparent',
+                color: selectedCategory === 'all' ? textColor : '#000',
+                border: `2px solid ${selectedCategory === 'all' ? 'white' : 'transparent'}`,
                 borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
                 fontFamily: theme.primary_font || 'Inter'
               }}
             >
-              Hamburguesas
+              Todos
             </button>
             {categories.map((category) => (
               <button
@@ -302,9 +393,9 @@ export const PublicMenu: React.FC = () => {
                 onClick={() => setSelectedCategory(category.id)}
                 className="px-6 py-2.5 whitespace-nowrap transition-all font-medium text-sm"
                 style={{
-                  backgroundColor: selectedCategory === category.id ? primaryColor : 'white',
-                  color: selectedCategory === category.id ? '#000' : textColor,
-                  border: `2px solid ${selectedCategory === category.id ? primaryColor : '#e5e7eb'}`,
+                  backgroundColor: selectedCategory === category.id ? 'white' : 'transparent',
+                  color: selectedCategory === category.id ? textColor : '#000',
+                  border: `2px solid ${selectedCategory === category.id ? 'white' : 'transparent'}`,
                   borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
                   fontFamily: theme.primary_font || 'Inter'
                 }}
@@ -380,6 +471,33 @@ export const PublicMenu: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* PROMOTIONAL MODAL */}
+      {showPromoModal && hasPromo && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4"
+          onClick={() => setShowPromoModal(false)}
+        >
+          <div
+            className="relative max-w-2xl max-h-[90vh] bg-white rounded-lg overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+            style={{ borderRadius: theme.button_style === 'rounded' ? '1rem' : '0.5rem' }}
+          >
+            <button
+              onClick={() => setShowPromoModal(false)}
+              className="absolute top-4 right-4 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 z-10"
+              style={{ borderRadius: theme.button_style === 'rounded' ? '9999px' : '0.5rem' }}
+            >
+              <X className="w-6 h-6 text-gray-600" />
+            </button>
+            <img
+              src={restaurant.settings.promo.vertical_promo_image}
+              alt="Promoción"
+              className="w-full h-auto object-contain"
+            />
+          </div>
+        </div>
+      )}
 
       {/* PRODUCT DETAIL MODAL */}
       {selectedProduct && (

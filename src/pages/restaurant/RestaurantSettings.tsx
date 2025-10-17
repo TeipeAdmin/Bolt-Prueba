@@ -2149,6 +2149,144 @@ Fecha: ${new Date().toLocaleString()}
                     </div>
                   </div>
 
+                  {/* Vertical Promo Image */}
+                  <div className="space-y-3">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Imagen Promocional Vertical (Opcional)
+                    </label>
+                    <div className="space-y-2">
+                      {formData.settings.promo?.vertical_promo_image && (
+                        <div className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                          <img
+                            src={formData.settings.promo.vertical_promo_image}
+                            alt="Promo Vertical"
+                            className="w-20 h-28 object-cover rounded-lg"
+                          />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">Imagen promocional actual</p>
+                            <p className="text-xs text-gray-500">Se mostrará al hacer clic en el botón de promoción</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => updateFormData('settings.promo.vertical_promo_image', '')}
+                            className="text-red-600 hover:text-red-700 text-sm font-medium"
+                          >
+                            Eliminar
+                          </button>
+                        </div>
+                      )}
+                      <label className="cursor-pointer">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              if (file.size > 5 * 1024 * 1024) {
+                                showToast('error', 'Archivo muy grande', 'El tamaño máximo es 5MB', 3000);
+                                return;
+                              }
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                updateFormData('settings.promo.vertical_promo_image', reader.result as string);
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                          className="hidden"
+                        />
+                        <span className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all shadow-sm w-full justify-center">
+                          <Upload className="w-4 h-4 mr-2" />
+                          Subir imagen promocional vertical
+                        </span>
+                      </label>
+                      <p className="text-xs text-gray-500">
+                        Recomendado: 600x900px (formato vertical). Máximo 5MB. Formatos: JPG, PNG, WebP
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Featured Products Selector */}
+                  <div className="space-y-3">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Productos Destacados (Máximo 5)
+                    </label>
+                    <p className="text-xs text-gray-500 mb-3">
+                      Selecciona hasta 5 productos para mostrar en el carrusel de destacados
+                    </p>
+                    <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 max-h-96 overflow-y-auto">
+                      {(() => {
+                        const allProducts = loadFromStorage('products', []);
+                        const restaurantProducts = allProducts.filter((p: any) =>
+                          p.restaurant_id === restaurant?.id && p.status === 'active'
+                        );
+                        const selectedIds = formData.settings.promo?.featured_product_ids || [];
+
+                        return (
+                          <div className="space-y-2">
+                            {restaurantProducts.map((product: any) => {
+                              const isSelected = selectedIds.includes(product.id);
+                              const canSelect = selectedIds.length < 5 || isSelected;
+
+                              return (
+                                <label
+                                  key={product.id}
+                                  className={`flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer ${
+                                    isSelected
+                                      ? 'bg-orange-50 border-orange-300'
+                                      : canSelect
+                                      ? 'bg-white border-gray-200 hover:border-gray-300'
+                                      : 'bg-gray-100 border-gray-200 opacity-50 cursor-not-allowed'
+                                  }`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={isSelected}
+                                    disabled={!canSelect}
+                                    onChange={(e) => {
+                                      let newIds = [...selectedIds];
+                                      if (e.target.checked) {
+                                        if (newIds.length < 5) {
+                                          newIds.push(product.id);
+                                        }
+                                      } else {
+                                        newIds = newIds.filter(id => id !== product.id);
+                                      }
+                                      updateFormData('settings.promo.featured_product_ids', newIds);
+                                    }}
+                                    className="h-4 w-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                                  />
+                                  {product.images[0] && (
+                                    <img
+                                      src={product.images[0]}
+                                      alt={product.name}
+                                      className="w-12 h-12 object-cover rounded-lg"
+                                    />
+                                  )}
+                                  <div className="flex-1">
+                                    <p className="text-sm font-medium text-gray-900">{product.name}</p>
+                                    <p className="text-xs text-gray-500 line-clamp-1">{product.description}</p>
+                                  </div>
+                                  {isSelected && (
+                                    <Badge variant="success">Destacado</Badge>
+                                  )}
+                                </label>
+                              );
+                            })}
+                            {restaurantProducts.length === 0 && (
+                              <p className="text-center text-gray-500 text-sm py-4">
+                                No hay productos disponibles. Crea productos primero.
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                    <p className="text-xs text-gray-600">
+                      {formData.settings.promo?.featured_product_ids?.length || 0} de 5 productos seleccionados
+                    </p>
+                  </div>
+
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <div className="flex items-start gap-2">
                       <Megaphone className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
@@ -2159,6 +2297,7 @@ Fecha: ${new Date().toLocaleString()}
                           <li>Destaca descuentos o promociones limitadas en tiempo</li>
                           <li>Mantén el texto corto y directo</li>
                           <li>Usa un call-to-action claro y atractivo</li>
+                          <li>Los productos destacados aparecerán en un carrusel en la parte superior del menú</li>
                         </ul>
                       </div>
                     </div>

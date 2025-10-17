@@ -177,9 +177,11 @@ export interface NotificationSettings {
 export interface PromoSettings {
   enabled: boolean;
   banner_image: string;
+  vertical_promo_image?: string;
   promo_text: string;
   cta_text: string;
   cta_link?: string;
+  featured_product_ids?: string[];
 }
 
 export interface BillingSettings {
