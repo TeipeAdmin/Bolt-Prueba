@@ -354,8 +354,8 @@ export const PublicMenu: React.FC = () => {
                             <p
                               className="font-bold text-center text-lg"
                               style={{
-                                color: textColor,
-                                fontFamily: theme.secondary_font || 'Poppins'
+                            fontFamily: theme.secondary_font || 'Poppins',
+                            cssText: `color: ${primaryColor} !important;`
                               }}
                             >
                               {product.name}
@@ -578,7 +578,6 @@ export const PublicMenu: React.FC = () => {
                           className="font-bold text-lg"
                           style={{
                             fontFamily: theme.secondary_font || 'Poppins',
-                            // @ts-ignore
                             cssText: `color: ${primaryColor} !important;`
                           }}
                         >
@@ -627,8 +626,8 @@ export const PublicMenu: React.FC = () => {
                       <span
                         className="font-bold text-lg"
                         style={{
-                          color: secondaryColor,
-                          fontFamily: theme.secondary_font || 'Poppins'
+                            fontFamily: theme.secondary_font || 'Poppins',
+                            cssText: `color: ${primaryColor} !important;`
                         }}
                       >
                         ${minPrice.toLocaleString('es-CO')}
