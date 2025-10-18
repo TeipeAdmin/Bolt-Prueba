@@ -712,9 +712,12 @@ export const PublicMenu: React.FC = () => {
           onClick={() => setShowHoursModal(false)}
         >
           <div
-            className="relative max-w-md w-full bg-white rounded-lg overflow-hidden p-6"
+            className="relative max-w-md w-full rounded-lg overflow-hidden p-6"
             onClick={(e) => e.stopPropagation()}
-            style={{ borderRadius: theme.button_style === 'rounded' ? '1rem' : '0.5rem' }}
+            style={{
+              backgroundColor: cardBackgroundColor,
+              borderRadius: theme.button_style === 'rounded' ? '1rem' : '0.5rem',
+            }}
           >
             <button
               onClick={() => setShowHoursModal(false)}
