@@ -458,14 +458,14 @@ export const PublicMenu: React.FC = () => {
             className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white shadow-md' : 'bg-white/50'}`}
             style={{ borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem' }}
           >
-            <List className="w-5 h-5" style={{ color: viewMode === 'list' ? accentColor : textColor }} />
+            <List className="w-5 h-5" style={{ color: viewMode === 'list' ? secondaryColor : textColor }} />
           </button>
           <button
             onClick={() => setViewMode('grid')}
             className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white shadow-md' : 'bg-white/50'}`}
             style={{ borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem' }}
           >
-            <Grid3x3 className="w-5 h-5" style={{ color: viewMode === 'grid' ? accentColor : textColor }} />
+            <Grid3x3 className="w-5 h-5" style={{ color: viewMode === 'grid' ? secondaryColor : textColor }} />
           </button>
           <button
             onClick={() => setViewMode('editorial')}
