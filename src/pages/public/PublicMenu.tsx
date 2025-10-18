@@ -195,32 +195,45 @@ export const PublicMenu: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between gap-4">
             {/* Search Bar */}
-            <div className="flex-1 max-w-xs">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Buscar..."
-                  value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    if (e.target.value) {
-                      setTimeout(() => {
-                        document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                      }, 100);
-                    }
-                  }}
-                  className="w-full pl-10 pr-4 py-3 rounded-lg focus:ring-2 focus:outline-none transition-colors"
-                  style={{
-                    backgroundColor: cardBackgroundColor,
-                    borderColor: cardBackgroundColor,
-                    borderWidth: '1px',
-                    borderStyle: 'solid',
-                    borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
-                  }}
-                />
-              </div>
+           <div className="flex-1 max-w-xs">
+            <div className="relative">
+              {/* Icono de lupa */}
+              <Search
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5"
+                style={{ color: primaryTextColor, stroke: primaryTextColor }}
+              />
+          
+              {/* Input */}
+              <input
+                type="text"
+                placeholder="Buscar..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  if (e.target.value) {
+                    setTimeout(() => {
+                      document
+                        .getElementById('products-section')
+                        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 100);
+                  }
+                }}
+                className="w-full pl-10 pr-4 py-3 rounded-lg focus:ring-2 focus:outline-none transition-colors placeholder-opacity-70"
+                style={{
+                  backgroundColor: cardBackgroundColor,
+                  borderColor: cardBackgroundColor,
+                  borderWidth: '1px',
+                  borderStyle: 'solid',
+                  borderRadius:
+                    theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
+                  color: primaryTextColor,
+                  caretColor: primaryTextColor,
+                }}
+                onFocus={(e) => (e.target.style.borderColor = primaryTextColor)}
+                onBlur={(e) => (e.target.style.borderColor = cardBackgroundColor)}
+              />
             </div>
+          </div>
 
             {/* Logo */}
             <div className="flex-shrink-0 text-center">
