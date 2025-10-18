@@ -237,7 +237,7 @@ export const PublicMenu: React.FC = () => {
                     borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
                   }}
                 >
-                  <Gift className="w-5 h-5 text-gray-600" />
+                  <Gift className="w-5 h-5 textColor" />
                 </button>
               )}
               <button
