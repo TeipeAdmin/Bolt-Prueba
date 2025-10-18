@@ -809,7 +809,7 @@ export const PublicMenu: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-2 text-sm">
-              <MapPin className="w-4 h-4 text-gray-800" />
+              <MapPin className="w-4 h-4" style={{ color: secondaryTextColor, stroke: secondaryTextColor }} />
               <span className="font-medium text-gray-800" style={{ fontFamily: theme.primary_font || 'Inter' }}>
                 {restaurant.address}
               </span>
