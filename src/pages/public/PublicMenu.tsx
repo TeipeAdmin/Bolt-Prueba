@@ -161,7 +161,6 @@ export const PublicMenu: React.FC = () => {
         '--card-bg-color': cardBackgroundColor,
         '--primary-text-color': primaryTextColor,
         '--secondary-text-color': secondaryTextColor,
-        '--accent-color': secondaryColor,
         '--text-color': textColor,
         '--primary-font': theme.primary_font || 'Inter',
         '--secondary-font': theme.secondary_font || 'Poppins',
