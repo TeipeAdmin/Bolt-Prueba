@@ -505,9 +505,6 @@ export const PublicMenu: React.FC = () => {
             style={{ borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem' }}
           >
             <Edit3 className="w-5 h-5" style={{ color: viewMode === 'editorial' ? primaryColor : textColor }} />
-            <span className="text-sm font-medium" style={{ color: viewMode === 'editorial' ? primaryColor : textColor }}>
-              Editorial
-            </span>
           </button>
         </div>
 
