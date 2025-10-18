@@ -387,11 +387,21 @@ export const PublicMenu: React.FC = () => {
                             <p
                               className="font-bold text-center text-lg"
                               style={{
-                            fontFamily: theme.secondary_font || 'Poppins',
-                            cssText: `color: ${primaryTextColor} !important;`
+                                fontFamily: theme.secondary_font || 'Poppins',
                               }}
                             >
-                              {product.name}
+                              {(() => {
+                                if (!product?.name) return null;
+                                const [firstWord, ...restWords] = product.name.split(' ');
+                                return (
+                                  <>
+                                    <span style={{ color: primaryColor }}>{firstWord}</span>{' '}
+                                    <span style={{ color: primaryTextColor }}>
+                                      {restWords.join(' ')}
+                                    </span>
+                                  </>
+                                );
+                              })()}
                             </p>
                           </div>
                         )}
