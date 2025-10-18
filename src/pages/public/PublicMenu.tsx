@@ -516,7 +516,7 @@ export const PublicMenu: React.FC = () => {
                           className="font-bold mb-3 text-2xl"
                           style={{
                             fontFamily: theme.secondary_font || 'Poppins',
-                            color: textColor
+                            cssText: `color: ${primaryColor} !important;`
                           }}
                         >
                           {product.name}
