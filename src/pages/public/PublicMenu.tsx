@@ -829,7 +829,14 @@ export const PublicMenu: React.FC = () => {
                   className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
                   style={{ borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem' }}
                 >
-                  <Facebook className="w-5 h-5" style={{ color: secondaryTextColor, stroke: secondaryTextColor }} />
+                  <Facebook
+                    className="w-5 h-5 p-1 rounded-full"
+                    style={{
+                      color: secondaryTextColor,
+                      stroke: secondaryTextColor,
+                      backgroundColor: cardBackgroundColor,
+                    }}
+                  />
                 </a>
               )}
               {restaurant.settings.social_media?.instagram && (
