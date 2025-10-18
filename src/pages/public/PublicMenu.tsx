@@ -231,15 +231,33 @@ export const PublicMenu: React.FC = () => {
             {/* Action Buttons */}
             <div className="flex items-center gap-2 flex-1 justify-end max-w-xs">
               {hasPromo && (
-                <button
-                  onClick={() => setShowPromoModal(true)}
-                  className="p-3 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 transition-colors"
-                  style={{
-                    borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
-                  }}
-                >
-                  <Gift className="w-5 h-5 text-gray-600" />
-                </button>
+<button
+  onClick={() => setShowPromoModal(true)}
+  className="p-3 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 transition-colors relative"
+  style={{
+    borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
+  }}
+>
+  <Gift
+    className="w-5 h-5"
+    style={{
+      color: textColor,
+      fill: textColor,
+      stroke: textColor,
+    }}
+  />
+  <span
+    style={{
+      position: 'absolute',
+      top: '6px',
+      right: '6px',
+      width: '8px',
+      height: '8px',
+      backgroundColor: accentColor,
+      borderRadius: '50%',
+    }}
+  />
+</button>
               )}
               <button
                 onClick={() => setShowCart(true)}
