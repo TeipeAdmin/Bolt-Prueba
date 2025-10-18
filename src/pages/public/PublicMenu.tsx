@@ -849,7 +849,7 @@ export const PublicMenu: React.FC = () => {
                   <Instagram className="w-5 h-5" style={{ color: secondaryTextColor, stroke: secondaryTextColor }} />
                 </a>
               )}
-              {restaurant.phone && (
+              {restaurant.settings.social_media?.whatsapp && (
                 <a
                   href={restaurant.settings.social_media.phone}
                   target="_blank"
