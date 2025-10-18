@@ -823,7 +823,7 @@ export const PublicMenu: React.FC = () => {
             <div className="flex items-center gap-3">
               {restaurant.settings.social_media?.facebook && (
                 <a
-                  href={facebook}
+                  href={restaurant.settings.social_media.facebook}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
