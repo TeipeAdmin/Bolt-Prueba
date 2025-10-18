@@ -846,7 +846,7 @@ export const PublicMenu: React.FC = () => {
                     borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
                   }}
                 >
-                  <Instagram className="w-5 h-5 text-gray-800" />
+                  <Instagram className="w-5 h-5" style={{ color: secondaryTextColor, stroke: secondaryTextColor }} />
                 </a>
               )}
               {restaurant.phone && (
@@ -860,7 +860,7 @@ export const PublicMenu: React.FC = () => {
                     borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
                   }}
                 >
-                  <Phone className="w-5 h-5 text-gray-800" />
+                  <Phone className="w-5 h-5" style={{ color: secondaryTextColor, stroke: secondaryTextColor }} />
                 </a>
               )}
             </div>
