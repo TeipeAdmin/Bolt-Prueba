@@ -271,15 +271,15 @@ export const PublicMenu: React.FC = () => {
   />
 </button>
               )}
-                <button
-                  onClick={() => setShowCart(true)}
-                  className="p-3 rounded-lg border hover:opacity-90 transition-colors relative"
-                  style={{
-                    backgroundColor: cardBackgroundColor,
-                    borderColor: cardBackgroundColor,
-                    borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
-                  }}
-                >
+              <button
+                onClick={() => setShowCart(true)}
+                className="p-3 rounded-lg border hover:opacity-90 transition-colors relative"
+                style={{
+                  backgroundColor: cardBackgroundColor,
+                  borderColor: cardBackgroundColor,
+                  borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
+                }}
+              >
                 <ShoppingCart className="w-5 h-5" style={{ color: primaryTextColor, stroke: primaryTextColor }} />
                 {cartItemsCount > 0 && (
                   <span
@@ -381,9 +381,10 @@ export const PublicMenu: React.FC = () => {
               <>
                 <button
                   onClick={prevSlide}
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-3 shadow-lg hover:bg-gray-50 transition-colors z-20"
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 rounded-full p-3 shadow-lg transition-colors z-20 hover:opacity-90"
                   style={{
-                    borderRadius: theme.button_style === 'rounded' ? '9999px' : '0.5rem'
+                    backgroundColor: cardBackgroundColor,
+                    borderRadius: theme.button_style === 'rounded' ? '9999px' : '0.5rem',
                   }}
                 >
                   <ChevronLeft className="w-6 h-6" style={{ color: textColor }} />
