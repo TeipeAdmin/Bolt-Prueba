@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Search, Gift, Star, X, ChevronLeft, ChevronRight, Grid3x3, List, Clock, MapPin, Facebook, Instagram, Phone } from 'lucide-react';
+import { ShoppingCart, Search, Gift, Star, X, ChevronLeft, ChevronRight, Grid3x3, List, Clock, MapPin, Facebook, Instagram, Phone, Edit3 } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { Category, Product, Restaurant, Subscription } from '../../types';
 import { loadFromStorage } from '../../data/mockData';
@@ -504,7 +504,10 @@ export const PublicMenu: React.FC = () => {
             className={`p-2 px-4 rounded-lg transition-all flex items-center gap-2 ${viewMode === 'editorial' ? 'bg-white shadow-md' : 'bg-white/50'}`}
             style={{ borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem' }}
           >
-            <span className="text-sm font-medium" style={{ color: viewMode === 'editorial' ? primaryColor : textColor }}>Editorial</span>
+            <Edit3 className="w-5 h-5" style={{ color: viewMode === 'editorial' ? primaryColor : textColor }} />
+            <span className="text-sm font-medium" style={{ color: viewMode === 'editorial' ? primaryColor : textColor }}>
+              Editorial
+            </span>
           </button>
         </div>
 
