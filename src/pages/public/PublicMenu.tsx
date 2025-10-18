@@ -158,7 +158,7 @@ export const PublicMenu: React.FC = () => {
         '--secondary-font': theme.secondary_font || 'Poppins',
       } as React.CSSProperties}
     >
-      <style>{`p { color: ${textColor}; }`}</style>
+      <style>{`p { color: ${textColor} !important; }`}</style>
       {/* DECORATIVE ORGANIC SHAPES - MATCHING REFERENCE */}
       <div
         className="absolute top-0 left-0 w-[500px] h-[500px] opacity-80 pointer-events-none"
