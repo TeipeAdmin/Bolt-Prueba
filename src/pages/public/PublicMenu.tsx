@@ -318,7 +318,7 @@ export const PublicMenu: React.FC = () => {
             </h2>
             <div className="flex items-center justify-center gap-1">
               {[1,2,3,4,5].map(i => (
-                <Star key={i} className="w-5 h-5 fill-current" style={{ color: accentColor }} />
+                <Star key={i} className="w-5 h-5 fill-current" style={{ color: secondaryColor }} />
               ))}
             </div>
           </div>
