@@ -158,6 +158,7 @@ export const PublicMenu: React.FC = () => {
         '--secondary-font': theme.secondary_font || 'Poppins',
       } as React.CSSProperties}
     >
+      <style>{`p { color: ${textColor}; }`}</style>
       {/* DECORATIVE ORGANIC SHAPES - MATCHING REFERENCE */}
       <div
         className="absolute top-0 left-0 w-[500px] h-[500px] opacity-80 pointer-events-none"
@@ -237,7 +238,7 @@ export const PublicMenu: React.FC = () => {
                     borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
                   }}
                 >
-                  <Gift className="w-5 h-5 textColor" />
+                  <Gift className="w-5 h-5 text-gray-600" />
                 </button>
               )}
               <button
