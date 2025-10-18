@@ -431,7 +431,7 @@ export const PublicMenu: React.FC = () => {
                       onClick={() => setFeaturedSlideIndex(index)}
                       className="w-2 h-2 rounded-full transition-all"
                       style={{
-                        backgroundColor: index === featuredSlideIndex ? primaryColor : cardBackgroundColor,
+                        backgroundColor: index === featuredSlideIndex ? primaryColor : primaryTextColor,
                         width: index === featuredSlideIndex ? '24px' : '8px',
                       }}
                     />
