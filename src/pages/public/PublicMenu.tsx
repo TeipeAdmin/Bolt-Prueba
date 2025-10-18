@@ -837,7 +837,7 @@ export const PublicMenu: React.FC = () => {
               )}
               {restaurant.settings.social_media?.instagram && (
                 <a
-                  href={restaurant.settings.social_media.facebook}
+                  href={restaurant.settings.social_media.instagram}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-2 hover:opacity-90 transition-colors rounded-lg"
@@ -851,7 +851,7 @@ export const PublicMenu: React.FC = () => {
               )}
               {restaurant.phone && (
                 <a
-                  href={restaurant.settings.social_media.facebook}
+                  href={restaurant.settings.social_media.phone}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-2 hover:opacity-90 transition-colors rounded-lg"
