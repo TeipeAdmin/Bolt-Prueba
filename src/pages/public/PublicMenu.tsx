@@ -749,7 +749,7 @@ export const PublicMenu: React.FC = () => {
             >
               <X className="w-5 h-5" style={{ color: primaryTextColor, stroke: primaryTextColor }} />
             </button>
-            <h3 className="text-xl font-bold mb-4" style={{ color: textColor, fontFamily: theme.secondary_font || 'Poppins' }}>
+            <h3 className="text-xl font-bold mb-4" style={{ color: primaryColor, fontFamily: theme.secondary_font || 'Poppins' }}>
               Horarios de Atención
             </h3>
             <div className="space-y-3">
