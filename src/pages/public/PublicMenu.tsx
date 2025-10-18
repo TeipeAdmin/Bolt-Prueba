@@ -244,8 +244,10 @@ export const PublicMenu: React.FC = () => {
               {hasPromo && (
 <button
   onClick={() => setShowPromoModal(true)}
-  className="p-3 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 transition-colors relative"
+  className="p-3 rounded-lg border transition-colors relative hover:opacity-90"
   style={{
+    backgroundColor: cardBackgroundColor,
+    borderColor: cardBackgroundColor,
     borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
   }}
 >
