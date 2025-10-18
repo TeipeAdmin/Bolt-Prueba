@@ -723,7 +723,7 @@ export const PublicMenu: React.FC = () => {
               onClick={() => setShowHoursModal(false)}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5" style={{ color: primaryTextColor, stroke: primaryTextColor }} />
             </button>
             <h3 className="text-xl font-bold mb-4" style={{ color: textColor, fontFamily: theme.secondary_font || 'Poppins' }}>
               Horarios de Atención
