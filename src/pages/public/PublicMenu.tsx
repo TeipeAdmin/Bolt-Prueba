@@ -242,18 +242,18 @@ export const PublicMenu: React.FC = () => {
     className="w-5 h-5"
     style={{
       color: textColor,
-
     }}
   />
   <span
     style={{
       position: 'absolute',
-      top: '6px',
-      right: '6px',
-      width: '8px',
-      height: '8px',
+      top: '-4px',       // antes 6px → negativo para que quede encima del borde
+      right: '-4px',     // antes 6px → negativo para que sobresalga del borde
+      width: '10px',
+      height: '10px',
       backgroundColor: accentColor,
       borderRadius: '50%',
+      boxShadow: '0 0 0 2px white', // opcional: halo blanco para destacar
     }}
   />
 </button>
