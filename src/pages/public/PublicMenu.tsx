@@ -822,13 +822,16 @@ export const PublicMenu: React.FC = () => {
             </div>
             <div className="flex items-center gap-3">
               {restaurant.settings.social_media?.facebook && (
-                <a
-                  href={restaurant.settings.social_media.facebook}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
-                  style={{ borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem' }}
-                >
+                  <a
+                    href={restaurant.settings.social_media.facebook}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 hover:opacity-90 transition-colors rounded-lg"
+                    style={{
+                      backgroundColor: cardBackgroundColor,
+                      borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
+                    }}
+                  >
                   <Facebook className="w-5 h-5" style={{ color: secondaryTextColor, stroke: secondaryTextColor }} />
                 </a>
               )}
