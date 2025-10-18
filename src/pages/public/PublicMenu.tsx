@@ -210,9 +210,13 @@ export const PublicMenu: React.FC = () => {
                       }, 100);
                     }
                   }}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:outline-none bg-gray-50"
+                  className="w-full pl-10 pr-4 py-3 rounded-lg focus:ring-2 focus:outline-none transition-colors"
                   style={{
-                    borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
+                    backgroundColor: cardBackgroundColor,
+                    borderColor: cardBackgroundColor,
+                    borderWidth: '1px',
+                    borderStyle: 'solid',
+                    borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
                   }}
                 />
               </div>
