@@ -755,22 +755,23 @@ export const PublicMenu: React.FC = () => {
       {/* OPEN/CLOSED STATUS BUTTON */}
       <button
         onClick={() => setShowHoursModal(true)}
-        className="fixed right-6 top-1/2 transform -translate-y-1/2 bg-white shadow-lg px-4 py-3 z-40 transition-all hover:shadow-xl"
+        className="fixed right-6 top-1/2 transform -translate-y-1/2 shadow-lg px-4 py-3 z-40 transition-all hover:shadow-xl"
         style={{
+          backgroundColor: cardBackgroundColor,
           borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
           borderLeft: `4px solid ${(() => {
             const now = new Date();
             const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
             const currentDay = dayNames[now.getDay()];
             const hours = restaurant.settings.business_hours?.[currentDay];
-            if (!hours?.is_open) return '#ef4444';
+            if (!hours?.is_open) return '#ef4444'; // rojo si está cerrado
             const currentTime = now.getHours() * 60 + now.getMinutes();
             const [openH, openM] = hours.open.split(':').map(Number);
             const [closeH, closeM] = hours.close.split(':').map(Number);
             const openTime = openH * 60 + openM;
             const closeTime = closeH * 60 + closeM;
-            return currentTime >= openTime && currentTime <= closeTime ? '#10b981' : '#ef4444';
-          })()}`
+            return currentTime >= openTime && currentTime <= closeTime ? '#10b981' : '#ef4444'; // verde si abierto
+          })()}`,
         }}
       >
         <div className="flex items-center gap-2">
