@@ -146,7 +146,7 @@ export const PublicMenu: React.FC = () => {
   const cardBackgroundColor = theme.card_background_color || '#f9fafb';
   const primaryTextColor = theme.primary_text_color || '#111827';
   const secondaryTextColor = theme.secondary_text_color || '#6b7280';
-  const textColor = theme.text_color || primaryTextColor;
+  const textColor = theme.primary_text_color || '#111827';
   const hasPromo = restaurant.settings.promo?.enabled && restaurant.settings.promo?.vertical_promo_image;
 
   return (
