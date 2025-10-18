@@ -249,8 +249,8 @@ export const PublicMenu: React.FC = () => {
       position: 'absolute',
       top: '-4px',       // antes 6px → negativo para que quede encima del borde
       right: '-4px',     // antes 6px → negativo para que sobresalga del borde
-      width: '10px',
-      height: '10px',
+      width: '20px',
+      height: '20px',
       backgroundColor: accentColor,
       borderRadius: '50%',
       boxShadow: '0 0 0 2px white', // opcional: halo blanco para destacar
