@@ -271,14 +271,15 @@ export const PublicMenu: React.FC = () => {
   />
 </button>
               )}
-              <button
-                onClick={() => setShowCart(true)}
-                className="p-3 rounded-lg border border-gray-200 hover:opacity-90 transition-colors relative"
-                style={{
-                  backgroundColor: 'white',
-                  borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
-                }}
-              >
+                <button
+                  onClick={() => setShowCart(true)}
+                  className="p-3 rounded-lg border hover:opacity-90 transition-colors relative"
+                  style={{
+                    backgroundColor: cardBackgroundColor,
+                    borderColor: cardBackgroundColor,
+                    borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
+                  }}
+                >
                 <ShoppingCart className="w-5 h-5" style={{ color: primaryTextColor, stroke: primaryTextColor }} />
                 {cartItemsCount > 0 && (
                   <span
