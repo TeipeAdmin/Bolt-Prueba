@@ -42,13 +42,19 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
   };
 
   const theme = restaurant.settings.theme;
+  const cardBackgroundColor = theme.card_background_color || '#f9fafb';
+  const primaryTextColor = theme.primary_text_color || '#111827';
+  const secondaryTextColor = theme.secondary_text_color || '#6b7280';
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={onClose}>
       <div
-        className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        className="rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
-        style={{ borderRadius: theme.button_style === 'rounded' ? '1rem' : '0.25rem' }}
+        style={{
+          borderRadius: theme.button_style === 'rounded' ? '1rem' : '0.25rem',
+          backgroundColor: cardBackgroundColor
+        }}
       >
         <div className="p-6">
           <div className="flex justify-between items-start mb-6">
@@ -57,7 +63,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
               style={{
                 fontSize: 'var(--font-size-title)',
                 fontFamily: 'var(--secondary-font)',
-                color: 'var(--text-color)'
+                color: primaryTextColor
               }}
             >
               {product.name}
@@ -81,8 +87,11 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
           )}
 
           <p
-            className="mb-6 text-gray-600"
-            style={{ fontSize: 'var(--font-size-normal)' }}
+            className="mb-6"
+            style={{
+              fontSize: 'var(--font-size-normal)',
+              color: secondaryTextColor
+            }}
           >
             {product.description}
           </p>
@@ -93,7 +102,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
                 className="font-semibold mb-3"
                 style={{
                   fontSize: 'var(--font-size-subtitle)',
-                  color: 'var(--text-color)'
+                  color: primaryTextColor
                 }}
               >
                 Selecciona tu opción
@@ -129,7 +138,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
                 className="font-semibold mb-3"
                 style={{
                   fontSize: 'var(--font-size-subtitle)',
-                  color: 'var(--text-color)'
+                  color: primaryTextColor
                 }}
               >
                 Ingredientes
@@ -180,7 +189,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
               className="block font-medium mb-2"
               style={{
                 fontSize: 'var(--font-size-normal)',
-                color: 'var(--text-color)'
+                color: primaryTextColor
               }}
             >
               Notas especiales (opcional)
@@ -198,8 +207,11 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
             />
           </div>
 
-          <div className="flex items-center justify-between gap-4 p-4 bg-gray-50 rounded-lg"
-            style={{ borderRadius: theme.button_style === 'rounded' ? '0.75rem' : '0.25rem' }}
+          <div className="flex items-center justify-between gap-4 p-4 rounded-lg"
+            style={{
+              borderRadius: theme.button_style === 'rounded' ? '0.75rem' : '0.25rem',
+              backgroundColor: theme.secondary_color || '#f3f4f6'
+            }}
           >
             <div className="flex items-center gap-4">
               <span className="font-medium" style={{ fontSize: 'var(--font-size-normal)' }}>
@@ -249,7 +261,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
           </div>
 
           {product.preparation_time && (
-            <div className="flex items-center justify-center gap-2 mt-4 text-gray-600">
+            <div className="flex items-center justify-center gap-2 mt-4" style={{ color: secondaryTextColor }}>
               <Clock className="w-4 h-4" />
               <span style={{ fontSize: 'var(--font-size-small)' }}>
                 Tiempo de preparación: {product.preparation_time} min

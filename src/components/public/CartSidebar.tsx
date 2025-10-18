@@ -24,19 +24,19 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, onChe
     <>
       <style>{`
         .cart-sidebar {
-          background-color: ${themeColors.background} !important;
-          color: ${themeColors.text} !important;
+          background-color: ${themeColors.cardBackground} !important;
+          color: ${themeColors.primaryText} !important;
         }
-        
+
         .cart-item {
-          background-color: rgba(0, 0, 0, 0.05);
-          color: ${themeColors.text};
+          background-color: ${themeColors.background};
+          color: ${themeColors.primaryText};
         }
         
         .cart-quantity-btn {
           border: 1px solid #e5e7eb;
-          background-color: ${themeColors.background};
-          color: ${themeColors.text};
+          background-color: ${themeColors.cardBackground};
+          color: ${themeColors.primaryText};
           transition: all 0.3s ease;
         }
         
@@ -63,8 +63,12 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, onChe
         }
         
         .cart-total-price {
-          color: ${themeColors.text} !important;
+          color: ${themeColors.primaryText} !important;
           font-weight: 700;
+        }
+
+        .cart-secondary-text {
+          color: ${themeColors.secondaryText} !important;
         }
       `}</style>
       
@@ -80,8 +84,8 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, onChe
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
             <div className="flex items-center gap-2">
-              <ShoppingBag className="w-5 h-5" style={{ color: themeColors.text }} />
-              <h2 className="text-lg font-semibold" style={{ color: themeColors.text }}>
+              <ShoppingBag className="w-5 h-5" style={{ color: themeColors.primaryText }} />
+              <h2 className="text-lg font-semibold" style={{ color: themeColors.primaryText }}>
                 {tableNumber ? `Mesa ${tableNumber} - ` : ''}Tu Pedido ({getItemCount()})
               </h2>
             </div>
@@ -98,8 +102,8 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, onChe
             {items.length === 0 ? (
               <div className="text-center py-12">
                 <ShoppingBag className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-lg" style={{ color: themeColors.text, opacity: 0.7 }}>Tu carrito está vacío</p>
-                <p className="text-sm mt-2" style={{ color: themeColors.text, opacity: 0.5 }}>
+                <p className="text-lg" style={{ color: themeColors.primaryText, opacity: 0.7 }}>Tu carrito está vacío</p>
+                <p className="text-sm mt-2" style={{ color: themeColors.secondaryText }}>
                   Agrega algunos productos para comenzar
                 </p>
               </div>

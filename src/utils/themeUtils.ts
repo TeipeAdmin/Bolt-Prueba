@@ -1,17 +1,21 @@
 export const getThemeColors = (theme: any) => {
-  // Si no hay tema, usar valores por defecto
   if (!theme) {
     return {
       background: '#ffffff',
+      cardBackground: '#f9fafb',
       text: '#1f2937',
+      primaryText: '#111827',
+      secondaryText: '#6b7280',
       primary: '#2563eb',
     };
   }
 
-  // Usar los colores personalizados directamente
   return {
-    background: theme.secondary_color || '#ffffff',
-    text: theme.tertiary_color || '#1f2937',
+    background: theme.menu_background_color || '#ffffff',
+    cardBackground: theme.card_background_color || '#f9fafb',
+    text: theme.text_color || theme.primary_text_color || '#1f2937',
+    primaryText: theme.primary_text_color || '#111827',
+    secondaryText: theme.secondary_text_color || '#6b7280',
     primary: theme.primary_color || '#2563eb',
   };
 };

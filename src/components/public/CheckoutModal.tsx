@@ -30,6 +30,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
   if (!isOpen) return null;
 
   const theme = restaurant.settings.theme;
+  const cardBackgroundColor = theme.card_background_color || '#f9fafb';
+  const primaryTextColor = theme.primary_text_color || '#111827';
+  const secondaryTextColor = theme.secondary_text_color || '#6b7280';
 
   const handleDeliverySelect = (mode: DeliveryMode) => {
     setDeliveryMode(mode);
@@ -124,9 +127,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={handleClose}>
       <div
-        className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        className="rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
-        style={{ borderRadius: theme.button_style === 'rounded' ? '1rem' : '0.25rem' }}
+        style={{
+          borderRadius: theme.button_style === 'rounded' ? '1rem' : '0.25rem',
+          backgroundColor: cardBackgroundColor
+        }}
       >
         <div className="p-6">
           {step !== 'success' && (
@@ -136,7 +142,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                 style={{
                   fontSize: 'var(--font-size-title)',
                   fontFamily: 'var(--secondary-font)',
-                  color: 'var(--text-color)'
+                  color: primaryTextColor
                 }}
               >
                 Finalizar Pedido
@@ -153,7 +159,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
           {/* STEP 1: DELIVERY MODE */}
           {step === 'delivery' && (
             <div>
-              <p className="text-gray-600 mb-6" style={{ fontSize: 'var(--font-size-normal)' }}>
+              <p className="mb-6" style={{ fontSize: 'var(--font-size-normal)', color: secondaryTextColor }}>
                 Selecciona cómo deseas recibir tu pedido
               </p>
 
@@ -180,7 +186,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                       >
                         Retiro en Tienda
                       </h3>
-                      <p className="text-gray-600" style={{ fontSize: 'var(--font-size-small)' }}>
+                      <p style={{ fontSize: 'var(--font-size-small)', color: secondaryTextColor }}>
                         Recoge tu pedido en {restaurant.name}
                       </p>
                     </div>
@@ -209,7 +215,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                       >
                         Consumir en Restaurante
                       </h3>
-                      <p className="text-gray-600" style={{ fontSize: 'var(--font-size-small)' }}>
+                      <p style={{ fontSize: 'var(--font-size-small)', color: secondaryTextColor }}>
                         Disfruta tu pedido en nuestras instalaciones
                       </p>
                     </div>
@@ -238,7 +244,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                       >
                         Entrega a Domicilio
                       </h3>
-                      <p className="text-gray-600" style={{ fontSize: 'var(--font-size-small)' }}>
+                      <p style={{ fontSize: 'var(--font-size-small)', color: secondaryTextColor }}>
                         Te llevamos tu pedido a donde estés
                       </p>
                     </div>
@@ -263,7 +269,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                   {deliveryMode === 'delivery' && <Home className="w-5 h-5 text-white" />}
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Modalidad seleccionada</p>
+                  <p className="text-sm" style={{ color: secondaryTextColor }}>Modalidad seleccionada</p>
                   <p className="font-semibold" style={{ fontSize: 'var(--font-size-normal)' }}>
                     {getDeliveryModeLabel()}
                   </p>
@@ -430,7 +436,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                     >
                       <div className="flex-1">
                         <p className="font-medium">{item.product.name}</p>
-                        <p className="text-sm text-gray-600">{item.variation.name} x {item.quantity}</p>
+                        <p className="text-sm" style={{ color: secondaryTextColor }}>{item.variation.name} x {item.quantity}</p>
                         {item.special_notes && (
                           <p className="text-xs text-gray-500 italic mt-1">Nota: {item.special_notes}</p>
                         )}
@@ -520,7 +526,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
               <div className="bg-gray-50 rounded-lg p-6 mb-6"
                 style={{ borderRadius: theme.button_style === 'rounded' ? '0.75rem' : '0.25rem' }}
               >
-                <p className="text-sm text-gray-600 mb-2">Número de pedido</p>
+                <p className="text-sm mb-2" style={{ color: secondaryTextColor }}>Número de pedido</p>
                 <p className="text-2xl font-bold" style={{ color: 'var(--primary-color)' }}>
                   #{orderNumber}
                 </p>
@@ -533,7 +539,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                   <Clock className="w-6 h-6" style={{ color: 'var(--primary-color)' }} />
                   <div>
                     <p className="font-medium">Estado: Recibido</p>
-                    <p className="text-sm text-gray-600">Tu pedido está siendo preparado</p>
+                    <p className="text-sm" style={{ color: secondaryTextColor }}>Tu pedido está siendo preparado</p>
                   </div>
                 </div>
 

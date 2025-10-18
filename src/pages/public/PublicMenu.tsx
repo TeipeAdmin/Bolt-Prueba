@@ -142,23 +142,36 @@ export const PublicMenu: React.FC = () => {
   const theme = restaurant.settings.theme;
   const primaryColor = theme.primary_color || '#FFC700';
   const secondaryColor = theme.secondary_color || '#f3f4f6';
+  const menuBackgroundColor = theme.menu_background_color || '#ffffff';
+  const cardBackgroundColor = theme.card_background_color || '#f9fafb';
+  const primaryTextColor = theme.primary_text_color || '#111827';
+  const secondaryTextColor = theme.secondary_text_color || '#6b7280';
   const accentColor = theme.accent_color || '#FFC700';
-  const textColor = theme.text_color || '#1f2937';
+  const textColor = theme.text_color || primaryTextColor;
   const hasPromo = restaurant.settings.promo?.enabled && restaurant.settings.promo?.vertical_promo_image;
 
   return (
     <div
-      className="min-h-screen bg-gray-50 relative overflow-hidden"
+      className="min-h-screen relative overflow-hidden"
       style={{
+        backgroundColor: menuBackgroundColor,
         '--primary-color': primaryColor,
         '--secondary-color': secondaryColor,
+        '--menu-bg-color': menuBackgroundColor,
+        '--card-bg-color': cardBackgroundColor,
+        '--primary-text-color': primaryTextColor,
+        '--secondary-text-color': secondaryTextColor,
         '--accent-color': accentColor,
         '--text-color': textColor,
         '--primary-font': theme.primary_font || 'Inter',
         '--secondary-font': theme.secondary_font || 'Poppins',
       } as React.CSSProperties}
     >
-      <style>{`p, span { color: ${textColor} !important; }`}</style>
+      <style>{`
+        p, span { color: ${primaryTextColor} !important; }
+        h1, h2, h3, h4, h5, h6 { color: ${primaryTextColor} !important; }
+        .secondary-text { color: ${secondaryTextColor} !important; }
+      `}</style>
       {/* DECORATIVE ORGANIC SHAPES - MATCHING REFERENCE */}
       <div
         className="absolute top-0 left-0 w-[500px] h-[500px] opacity-80 pointer-events-none"
@@ -484,9 +497,12 @@ export const PublicMenu: React.FC = () => {
                 return (
                   <div
                     key={product.id}
-                    className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all cursor-pointer overflow-hidden"
+                    className="rounded-xl shadow-sm hover:shadow-lg transition-all cursor-pointer overflow-hidden"
                     onClick={() => setSelectedProduct(product)}
-                    style={{ borderRadius: theme.button_style === 'rounded' ? '0.75rem' : '0.25rem' }}
+                    style={{
+                      borderRadius: theme.button_style === 'rounded' ? '0.75rem' : '0.25rem',
+                      backgroundColor: cardBackgroundColor
+                    }}
                   >
                     <div className="flex flex-col md:flex-row gap-6 p-6">
                       {product.images[0] && (
@@ -508,8 +524,11 @@ export const PublicMenu: React.FC = () => {
                           {product.name}
                         </h3>
                         <p
-                          className="text-gray-600 mb-4 text-base leading-relaxed"
-                          style={{ fontFamily: theme.primary_font || 'Inter' }}
+                          className="mb-4 text-base leading-relaxed"
+                          style={{
+                            fontFamily: theme.primary_font || 'Inter',
+                            color: secondaryTextColor
+                          }}
                         >
                           {product.description}
                         </p>
@@ -532,9 +551,12 @@ export const PublicMenu: React.FC = () => {
                 return (
                   <div
                     key={product.id}
-                    className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden"
+                    className="rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden"
                     onClick={() => setSelectedProduct(product)}
-                    style={{ borderRadius: theme.button_style === 'rounded' ? '0.75rem' : '0.25rem' }}
+                    style={{
+                      borderRadius: theme.button_style === 'rounded' ? '0.75rem' : '0.25rem',
+                      backgroundColor: cardBackgroundColor
+                    }}
                   >
                     {product.images[0] && (
                       <img
@@ -571,9 +593,12 @@ export const PublicMenu: React.FC = () => {
               return (
                 <div
                   key={product.id}
-                  className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden flex items-center gap-4 p-4"
+                  className="rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden flex items-center gap-4 p-4"
                   onClick={() => setSelectedProduct(product)}
-                  style={{ borderRadius: theme.button_style === 'rounded' ? '0.75rem' : '0.25rem' }}
+                  style={{
+                    borderRadius: theme.button_style === 'rounded' ? '0.75rem' : '0.25rem',
+                    backgroundColor: cardBackgroundColor
+                  }}
                 >
                   {product.images[0] && (
                     <img
