@@ -146,7 +146,6 @@ export const PublicMenu: React.FC = () => {
   const cardBackgroundColor = theme.card_background_color || '#f9fafb';
   const primaryTextColor = theme.primary_text_color || '#111827';
   const secondaryTextColor = theme.secondary_text_color || '#6b7280';
-  const accentColor = theme.accent_color || '#FFC700';
   const textColor = theme.text_color || primaryTextColor;
   const hasPromo = restaurant.settings.promo?.enabled && restaurant.settings.promo?.vertical_promo_image;
 
@@ -161,7 +160,6 @@ export const PublicMenu: React.FC = () => {
         '--card-bg-color': cardBackgroundColor,
         '--primary-text-color': primaryTextColor,
         '--secondary-text-color': secondaryTextColor,
-        '--accent-color': accentColor,
         '--text-color': textColor,
         '--primary-font': theme.primary_font || 'Inter',
         '--secondary-font': theme.secondary_font || 'Poppins',
@@ -628,7 +626,7 @@ export const PublicMenu: React.FC = () => {
                       <span
                         className="font-bold text-lg"
                         style={{
-                          color: accentColor,
+                          color: secondaryColor,
                           fontFamily: theme.secondary_font || 'Poppins'
                         }}
                       >
