@@ -579,7 +579,7 @@ export const PublicMenu: React.FC = () => {
                       <span
                         className="font-bold text-lg"
                         style={{
-                          color: accentColor,
+                          color: secondaryColor,
                           fontFamily: theme.secondary_font || 'Poppins'
                         }}
                       >
