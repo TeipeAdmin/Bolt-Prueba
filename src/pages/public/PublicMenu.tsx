@@ -833,7 +833,7 @@ export const PublicMenu: React.FC = () => {
                     className="w-5 h-5 p-1 rounded-full"
                     style={{
                       color: secondaryTextColor,
-                      stroke: secondaryTextColor,
+
                       backgroundColor: cardBackgroundColor,
                     }}
                   />
