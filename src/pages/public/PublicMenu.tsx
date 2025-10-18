@@ -822,35 +822,43 @@ export const PublicMenu: React.FC = () => {
             </div>
             <div className="flex items-center gap-3">
               {restaurant.settings.social_media?.facebook && (
-                  <a
-                    href={restaurant.settings.social_media.facebook}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 hover:opacity-90 transition-colors rounded-lg"
-                    style={{
-                      backgroundColor: cardBackgroundColor,
-                      borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
-                    }}
-                  >
+                <a
+                  href={restaurant.settings.social_media.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 hover:opacity-90 transition-colors rounded-lg"
+                  style={{
+                    backgroundColor: cardBackgroundColor,
+                    borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
+                  }}
+                >
                   <Facebook className="w-5 h-5" style={{ color: secondaryTextColor, stroke: secondaryTextColor }} />
                 </a>
               )}
               {restaurant.settings.social_media?.instagram && (
                 <a
-                  href={restaurant.settings.social_media.instagram}
+                  href={restaurant.settings.social_media.facebook}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
-                  style={{ borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem' }}
+                  className="p-2 hover:opacity-90 transition-colors rounded-lg"
+                  style={{
+                    backgroundColor: cardBackgroundColor,
+                    borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
+                  }}
                 >
                   <Instagram className="w-5 h-5 text-gray-800" />
                 </a>
               )}
               {restaurant.phone && (
                 <a
-                  href={`tel:${restaurant.phone}`}
-                  className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
-                  style={{ borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem' }}
+                  href={restaurant.settings.social_media.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 hover:opacity-90 transition-colors rounded-lg"
+                  style={{
+                    backgroundColor: cardBackgroundColor,
+                    borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
+                  }}
                 >
                   <Phone className="w-5 h-5 text-gray-800" />
                 </a>
