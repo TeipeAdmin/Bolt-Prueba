@@ -458,7 +458,7 @@ export const PublicMenu: React.FC = () => {
             className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white shadow-md' : 'bg-white/50'}`}
             style={{ borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem' }}
           >
-            <List className="w-5 h-5" style={{ color: viewMode === 'list' ? secondaryColor : textColor }} />
+            <List className="w-5 h-5" style={{ color: viewMode === 'list' ? primaryColor : textColor }} />
           </button>
           <button
             onClick={() => setViewMode('grid')}
