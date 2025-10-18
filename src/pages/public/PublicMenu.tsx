@@ -574,15 +574,16 @@ export const PublicMenu: React.FC = () => {
                       >
                         {product.name}
                       </h3>
-                      <span
-                        className="font-bold text-lg"
-                        style={{
-                          color: primaryColor,
-                          fontFamily: theme.secondary_font || 'Poppins'
-                        }}
-                      >
-                        ${minPrice.toLocaleString('es-CO')}
-                      </span>
+                        <span
+                          className="font-bold text-lg"
+                          style={{
+                            fontFamily: theme.secondary_font || 'Poppins',
+                            // @ts-ignore
+                            cssText: `color: ${primaryColor} !important;`
+                          }}
+                        >
+                          ${minPrice.toLocaleString('es-CO')}
+                        </span>
                     </div>
                   </div>
                 );
