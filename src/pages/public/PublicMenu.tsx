@@ -242,8 +242,7 @@ export const PublicMenu: React.FC = () => {
     className="w-5 h-5"
     style={{
       color: textColor,
-      fill: textColor,
-      stroke: textColor,
+
     }}
   />
   <span
