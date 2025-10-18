@@ -277,7 +277,7 @@ export const PublicMenu: React.FC = () => {
                   borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
                 }}
               >
-                <ShoppingCart className="w-5 h-5 text-gray-600" />
+                <ShoppingCart className="w-5 h-5" style={{ color: primaryTextColor, stroke: primaryTextColor }} />
                 {cartItemsCount > 0 && (
                   <span
                     className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white"
