@@ -119,6 +119,10 @@ export interface UISettings {
 export interface Theme {
   primary_color: string;
   secondary_color: string;
+  menu_background_color: string;
+  card_background_color: string;
+  primary_text_color: string;
+  secondary_text_color: string;
   accent_color: string;
   text_color: string;
   primary_font: string;

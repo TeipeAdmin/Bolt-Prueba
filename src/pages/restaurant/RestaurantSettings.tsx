@@ -52,6 +52,10 @@ export const RestaurantSettings: React.FC = () => {
       const defaultTheme = {
         primary_color: '#dc2626',
         secondary_color: '#f3f4f6',
+        menu_background_color: '#ffffff',
+        card_background_color: '#f9fafb',
+        primary_text_color: '#111827',
+        secondary_text_color: '#6b7280',
         accent_color: '#16a34a',
         text_color: '#1f2937',
         primary_font: 'Inter',
@@ -1108,7 +1112,7 @@ Fecha: ${new Date().toLocaleString()}
 
               <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-100">
                 <h4 className="text-md font-semibold text-gray-900 mb-4">Paleta de Colores</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <div className="space-y-3">
                     <label className="block text-sm font-medium text-gray-700">
                       Color Primario
@@ -1127,7 +1131,7 @@ Fecha: ${new Date().toLocaleString()}
                           onChange={(e) => updateFormData('settings.theme.primary_color', e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono"
                         />
-                        <p className="text-xs text-gray-500 mt-1">Botones principales, navegación</p>
+                        <p className="text-xs text-gray-500 mt-1">Botones principales</p>
                       </div>
                     </div>
                   </div>
@@ -1150,53 +1154,99 @@ Fecha: ${new Date().toLocaleString()}
                           onChange={(e) => updateFormData('settings.theme.secondary_color', e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono"
                         />
-                        <p className="text-xs text-gray-500 mt-1">Fondos, tarjetas</p>
+                        <p className="text-xs text-gray-500 mt-1">Botones secundarios</p>
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-3">
                     <label className="block text-sm font-medium text-gray-700">
-                      Color de Acento
+                      Color del Fondo del Menú
                     </label>
                     <div className="flex gap-2">
                       <input
                         type="color"
-                        value={formData.settings.theme.accent_color}
-                        onChange={(e) => updateFormData('settings.theme.accent_color', e.target.value)}
+                        value={formData.settings.theme.menu_background_color}
+                        onChange={(e) => updateFormData('settings.theme.menu_background_color', e.target.value)}
                         className="w-14 h-14 border-2 border-gray-300 rounded-lg cursor-pointer"
                       />
                       <div className="flex-1">
                         <input
                           type="text"
-                          value={formData.settings.theme.accent_color}
-                          onChange={(e) => updateFormData('settings.theme.accent_color', e.target.value)}
+                          value={formData.settings.theme.menu_background_color}
+                          onChange={(e) => updateFormData('settings.theme.menu_background_color', e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono"
                         />
-                        <p className="text-xs text-gray-500 mt-1">Precios, badges, estados</p>
+                        <p className="text-xs text-gray-500 mt-1">Fondo principal del menú</p>
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-3">
                     <label className="block text-sm font-medium text-gray-700">
-                      Color de Texto
+                      Color de las Tarjetas y Fondo
                     </label>
                     <div className="flex gap-2">
                       <input
                         type="color"
-                        value={formData.settings.theme.text_color}
-                        onChange={(e) => updateFormData('settings.theme.text_color', e.target.value)}
+                        value={formData.settings.theme.card_background_color}
+                        onChange={(e) => updateFormData('settings.theme.card_background_color', e.target.value)}
                         className="w-14 h-14 border-2 border-gray-300 rounded-lg cursor-pointer"
                       />
                       <div className="flex-1">
                         <input
                           type="text"
-                          value={formData.settings.theme.text_color}
-                          onChange={(e) => updateFormData('settings.theme.text_color', e.target.value)}
+                          value={formData.settings.theme.card_background_color}
+                          onChange={(e) => updateFormData('settings.theme.card_background_color', e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono"
                         />
-                        <p className="text-xs text-gray-500 mt-1">Textos principales</p>
+                        <p className="text-xs text-gray-500 mt-1">Tarjetas de productos</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Color Texto Primario
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="color"
+                        value={formData.settings.theme.primary_text_color}
+                        onChange={(e) => updateFormData('settings.theme.primary_text_color', e.target.value)}
+                        className="w-14 h-14 border-2 border-gray-300 rounded-lg cursor-pointer"
+                      />
+                      <div className="flex-1">
+                        <input
+                          type="text"
+                          value={formData.settings.theme.primary_text_color}
+                          onChange={(e) => updateFormData('settings.theme.primary_text_color', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Títulos y textos principales</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Color Texto Secundario
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="color"
+                        value={formData.settings.theme.secondary_text_color}
+                        onChange={(e) => updateFormData('settings.theme.secondary_text_color', e.target.value)}
+                        className="w-14 h-14 border-2 border-gray-300 rounded-lg cursor-pointer"
+                      />
+                      <div className="flex-1">
+                        <input
+                          type="text"
+                          value={formData.settings.theme.secondary_text_color}
+                          onChange={(e) => updateFormData('settings.theme.secondary_text_color', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Descripciones y subtítulos</p>
                       </div>
                     </div>
                   </div>
