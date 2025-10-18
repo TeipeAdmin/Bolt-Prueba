@@ -871,7 +871,7 @@ export const PublicMenu: React.FC = () => {
                     borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
                   }}
                 >
-                  <Facebook className="w-5 h-5" style={{ color: primaryColor, stroke: secondaryTextColor }} />
+                  <Facebook className="w-5 h-5" style={{ color: primaryColor, stroke: primaryColor }} />
                 </a>
               )}
               {restaurant.settings.social_media?.instagram && (
