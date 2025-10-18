@@ -418,7 +418,7 @@ export const PublicMenu: React.FC = () => {
               className="px-6 py-2.5 whitespace-nowrap transition-all font-medium text-sm"
               style={{
                 backgroundColor: selectedCategory === 'all' ? primaryColor : 'transparent',
-                color: selectedCategory === 'all' ? '#ffffff' : textColor,
+                color: selectedCategory === 'all' ? secondaryTextColor : textColor,
                 border: `1px solid ${primaryColor}`,
                 borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
                 fontFamily: theme.primary_font || 'Inter'
@@ -433,7 +433,7 @@ export const PublicMenu: React.FC = () => {
                 className="px-6 py-2.5 whitespace-nowrap transition-all font-medium text-sm"
                 style={{
                   backgroundColor: selectedCategory === category.id ? primaryColor : 'transparent',
-                  color: selectedCategory === category.id ? '#ffffff' : textColor,
+                  color: selectedCategory === category.id ? secondaryTextColor : textColor,
                   border: `1px solid ${primaryColor}`,
                   borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
                   fontFamily: theme.primary_font || 'Inter'
