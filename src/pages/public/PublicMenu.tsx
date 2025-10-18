@@ -146,7 +146,7 @@ export const PublicMenu: React.FC = () => {
   const cardBackgroundColor = theme.card_background_color || '#f9fafb';
   const primaryTextColor = theme.primary_text_color || '#111827';
   const secondaryTextColor = theme.secondary_text_color || '#6b7280';
-  const accentColor = theme.accent_color || '#FFC700';
+  const secondaryColor = theme.accent_color || '#FFC700';
   const textColor = theme.text_color || primaryTextColor;
   const hasPromo = restaurant.settings.promo?.enabled && restaurant.settings.promo?.vertical_promo_image;
 
@@ -161,7 +161,7 @@ export const PublicMenu: React.FC = () => {
         '--card-bg-color': cardBackgroundColor,
         '--primary-text-color': primaryTextColor,
         '--secondary-text-color': secondaryTextColor,
-        '--accent-color': accentColor,
+        '--accent-color': secondaryColor,
         '--text-color': textColor,
         '--primary-font': theme.primary_font || 'Inter',
         '--secondary-font': theme.secondary_font || 'Poppins',
@@ -264,7 +264,7 @@ export const PublicMenu: React.FC = () => {
       right: '-4px',     // antes 6px → negativo para que sobresalga del borde
       width: '15px',
       height: '15px',
-      backgroundColor: accentColor,
+      backgroundColor: secondaryColor,
       borderRadius: '50%',
       boxShadow: '0 0 0 2px white', // opcional: halo blanco para destacar
     }}
@@ -318,7 +318,7 @@ export const PublicMenu: React.FC = () => {
             </h2>
             <div className="flex items-center justify-center gap-1">
               {[1,2,3,4,5].map(i => (
-                <Star key={i} className="w-5 h-5 fill-current" style={{ color: accentColor }} />
+                <Star key={i} className="w-5 h-5 fill-current" style={{ color: secondaryColor }} />
               ))}
             </div>
           </div>
@@ -399,7 +399,7 @@ export const PublicMenu: React.FC = () => {
                       onClick={() => setFeaturedSlideIndex(index)}
                       className="w-2 h-2 rounded-full transition-all"
                       style={{
-                        backgroundColor: index === featuredSlideIndex ? accentColor : '#d1d5db',
+                        backgroundColor: index === featuredSlideIndex ? secondaryColor : '#d1d5db',
                         width: index === featuredSlideIndex ? '24px' : '8px',
                       }}
                     />
@@ -458,21 +458,21 @@ export const PublicMenu: React.FC = () => {
             className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white shadow-md' : 'bg-white/50'}`}
             style={{ borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem' }}
           >
-            <List className="w-5 h-5" style={{ color: viewMode === 'list' ? accentColor : textColor }} />
+            <List className="w-5 h-5" style={{ color: viewMode === 'list' ? secondaryColor : textColor }} />
           </button>
           <button
             onClick={() => setViewMode('grid')}
             className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white shadow-md' : 'bg-white/50'}`}
             style={{ borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem' }}
           >
-            <Grid3x3 className="w-5 h-5" style={{ color: viewMode === 'grid' ? accentColor : textColor }} />
+            <Grid3x3 className="w-5 h-5" style={{ color: viewMode === 'grid' ? secondaryColor : textColor }} />
           </button>
           <button
             onClick={() => setViewMode('editorial')}
             className={`p-2 px-4 rounded-lg transition-all flex items-center gap-2 ${viewMode === 'editorial' ? 'bg-white shadow-md' : 'bg-white/50'}`}
             style={{ borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem' }}
           >
-            <span className="text-sm font-medium" style={{ color: viewMode === 'editorial' ? accentColor : textColor }}>Editorial</span>
+            <span className="text-sm font-medium" style={{ color: viewMode === 'editorial' ? secondaryColor : textColor }}>Editorial</span>
           </button>
         </div>
 
@@ -535,7 +535,7 @@ export const PublicMenu: React.FC = () => {
                         <span
                           className="font-bold text-2xl"
                           style={{
-                            color: accentColor,
+                            color: secondaryColor,
                             fontFamily: theme.secondary_font || 'Poppins'
                           }}
                         >
@@ -579,7 +579,7 @@ export const PublicMenu: React.FC = () => {
                       <span
                         className="font-bold text-lg"
                         style={{
-                          color: accentColor,
+                          color: secondaryColor,
                           fontFamily: theme.secondary_font || 'Poppins'
                         }}
                       >
@@ -628,7 +628,7 @@ export const PublicMenu: React.FC = () => {
                       <span
                         className="font-bold text-lg"
                         style={{
-                          color: accentColor,
+                          color: secondaryColor,
                           fontFamily: theme.secondary_font || 'Poppins'
                         }}
                       >
