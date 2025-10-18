@@ -499,17 +499,14 @@ export const PublicMenu: React.FC = () => {
           >
             <Grid3x3 className="w-5 h-5" style={{ color: viewMode === 'grid' ? primaryColor : textColor }} />
           </button>
-        <button
-          onClick={() => setViewMode('editorial')}
-          className={`p-2 px-4 rounded-lg transition-all flex items-center gap-2 ${viewMode === 'editorial' ? 'bg-white shadow-md' : 'bg-white/50'}`}
-          style={{ borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem' }}
-        >
-          <PenLine className="w-5 h-5" style={{ color: viewMode === 'editorial' ? primaryColor : textColor }} />
-          <span className="text-sm font-medium" style={{ color: viewMode === 'editorial' ? primaryColor : textColor }}>
-            Editorial
-          </span>
-        </button>
-      </div>
+          <button
+            onClick={() => setViewMode('editorial')}
+            className={`p-2 px-4 rounded-lg transition-all flex items-center gap-2 ${viewMode === 'editorial' ? 'bg-white shadow-md' : 'bg-white/50'}`}
+            style={{ borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem' }}
+          >
+            <span className="text-sm font-medium" style={{ color: viewMode === 'editorial' ? primaryColor : textColor }}>Editorial</span>
+          </button>
+        </div>
 
         {filteredProducts.length === 0 ? (
           <div className="text-center py-12">
