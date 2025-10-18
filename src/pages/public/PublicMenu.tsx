@@ -177,9 +177,6 @@ export const PublicMenu: React.FC = () => {
           transform: 'translate(25%, 25%)',
         }}
       />
-      p{
-        color: textColor !important
-      }
 
       {/* HEADER */}
       <header className="sticky top-0 z-50 relative bg-white/30 backdrop-blur-md">
