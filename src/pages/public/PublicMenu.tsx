@@ -167,8 +167,7 @@ export const PublicMenu: React.FC = () => {
     >
       <style>{`
         p, span { color: ${primaryTextColor} !important; }
-        h1, h2, h3, h4, h5, h6 { color: ${primaryTextColor} !important; }
-        .secondary-text { color: ${secondaryTextColor} !important; }
+
       `}</style>
       {/* DECORATIVE ORGANIC SHAPES - MATCHING REFERENCE */}
       <div
