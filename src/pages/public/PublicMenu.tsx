@@ -401,6 +401,9 @@ export const PublicMenu: React.FC = () => {
                           src={product.images[0]}
                           alt={product.name}
                           className="w-80 h-80 object-cover rounded-lg "
+                            style={{
+                              backgroundColor: cardBackgroundColor,
+                            }}
                         />
                         {isCenter && (
                           <div
