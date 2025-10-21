@@ -431,7 +431,7 @@ export const PublicMenu: React.FC = () => {
               <>
                 <button
                   onClick={prevSlide}
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 rounded-full p-3 shadow-lg transition-colors z-20 hover:opacity-90"
+                  className="absolute -left-10 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-3 shadow-lg hover:bg-gray-50 transition-colors z-20" /*DF: CAMBIO DE BOTONES EN MOVIL*/
                   style={{
                     backgroundColor: cardBackgroundColor,
                     borderRadius: theme.button_style === 'rounded' ? '9999px' : '0.5rem',
@@ -441,7 +441,7 @@ export const PublicMenu: React.FC = () => {
                 </button>
                 <button
                   onClick={nextSlide}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 rounded-full p-3 shadow-lg transition-colors z-20 hover:opacity-90"
+                  className="absolute -right-10 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-3 shadow-lg hover:bg-gray-50 transition-colors z-20"
                   style={{
                     backgroundColor: cardBackgroundColor,
                     borderRadius: theme.button_style === 'rounded' ? '9999px' : '0.5rem',
