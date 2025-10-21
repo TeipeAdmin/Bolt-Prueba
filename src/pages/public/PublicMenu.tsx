@@ -397,7 +397,9 @@ export const PublicMenu: React.FC = () => {
                       onClick={() => isCenter && setSelectedProduct(product)}
                     >
                       <div className="relative flex flex-col items-center rounded-2xl shadow-md p-4  "> 
-
+                            style={{
+                              backgroundColor: cardBackgroundColor,
+                            }}
                         <img
                           src={product.images[0]}
                           alt={product.name}
