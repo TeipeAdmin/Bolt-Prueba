@@ -875,7 +875,7 @@ export const PublicMenu: React.FC = () => {
 
       {/* FLOATING FOOTER BAR */}
       <div
-        className="fixed bottom-0 left-0 right-0 shadow-lg z-40"
+        className="fixed bottom-1 left-2 right-2 shadow-lg z-40 rounded-xl p-1 " /* se le agregar este codigo para los bordes redondeados y padding a los lados*/
         style={{ backgroundColor: primaryColor }}
       >
         <div className="max-w-7xl mx-auto px-4 py-3">
