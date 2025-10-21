@@ -412,7 +412,7 @@ export const PublicMenu: React.FC = () => {
                         />
                         {isCenter && (
                           <div
-                            className="mt-6 rounded-lg shadow-xl px-8 py-4 max-w-xs"
+                            className="mt-6 px-8 py-4 max-w-xs"
                             style={{
                               backgroundColor: cardBackgroundColor,
                             }}
