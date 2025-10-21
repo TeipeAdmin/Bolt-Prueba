@@ -400,7 +400,7 @@ export const PublicMenu: React.FC = () => {
                         <img
                           src={product.images[0]}
                           alt={product.name}
-                          className="w-80 h-80 object-cover rounded-full shadow-2xl"
+                          className="w-80 h-80 object-cover rounded-lg "
                         />
                         {isCenter && (
                           <div
