@@ -392,6 +392,7 @@ export const PublicMenu: React.FC = () => {
                         transform: `translateX(${offset * 350}px) scale(${isCenter ? 1.2 : 0.75})`,
                         opacity: isCenter ? 1 : 0.4,
                         zIndex: isCenter ? 20 : 10 - Math.abs(offset),
+                        backgroundColor: cardBackgroundColor,
                         pointerEvents: isCenter ? 'auto' : 'none',
                       }}
                       onClick={() => isCenter && setSelectedProduct(product)}
