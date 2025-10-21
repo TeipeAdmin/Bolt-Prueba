@@ -398,7 +398,7 @@ export const PublicMenu: React.FC = () => {
                     >
                       <div className="relative flex flex-col items-center rounded-2xl shadow-md p-4  "> 
                             style={{
-                              backgroundColor: cardBackgroundColor
+                              backgroundColor: cardBackgroundColor,
                             }}
                         <img
                           src={product.images[0]}
