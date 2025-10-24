@@ -33,6 +33,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
   const cardBackgroundColor = theme.card_background_color || '#f9fafb';
   const primaryTextColor = theme.primary_text_color || '#111827';
   const secondaryTextColor = theme.secondary_text_color || '#6b7280';
+  const primaryColor = theme?.primary_color || '#FFC700';
+  const secondaryColor = theme.secondary_color || '#f3f4f6';
 
   const handleDeliverySelect = (mode: DeliveryMode) => {
     setDeliveryMode(mode);
@@ -136,39 +138,55 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
       >
         <div className="p-6">
           {step !== 'success' && (
-            <div className="flex justify-between items-start mb-6">
-              <h2
-                className="font-bold"
-                style={{
-                  fontSize: 'var(--font-size-title)',
-                  fontFamily: 'var(--secondary-font)',
-                  color: primaryTextColor
-                }}
-              >
-                Finalizar Pedido
-              </h2>
-              <button
-                onClick={handleClose}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
+          <div className="relative flex items-center justify-center">
+            <h2
+              className="font-bold text-center"
+              style={{
+                fontSize: '22px',
+                fontFamily: 'var(--secondary-font)',
+                color: primaryTextColor
+              }}
+            >
+              Finalizar Pedido
+            </h2>
+            <button
+              onClick={handleClose}
+              className="absolute right-0 text-gray-400 hover:text-gray-600 transition-colors"
+              style={{ color: primaryTextColor }}
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
           )}
 
           {/* STEP 1: DELIVERY MODE */}
           {step === 'delivery' && (
             <div>
-              <p className="mb-6" style={{ fontSize: 'var(--font-size-normal)', color: secondaryTextColor }}>
-                Selecciona cómo deseas recibir tu pedido
-              </p>
+            <p
+              className="text-center"
+              style={{
+                fontSize: 'var(--font-size-normal)',
+                color: secondaryTextColor
+              }}
+            >
+              Selecciona cómo deseas recibir tu pedido
+            </p>
+            <p
+            className="mb-6 text-center"
+            style={{
+              fontSize: '12px',
+              color: primaryTextColor
+            }}
+          >
+            Tiempo de preparación estimado: {restaurant.settings.preparation_time || '30-45 minutos'}
+          </p>
 
               <div className="space-y-4">
                 <button
                   onClick={() => handleDeliverySelect('pickup')}
                   className="w-full p-6 border-2 rounded-lg text-left hover:border-current transition-all"
                   style={{
-                    borderColor: 'var(--secondary-color)',
+                    borderColor: primaryColor,
                     borderRadius: theme.button_style === 'rounded' ? '0.75rem' : '0.25rem'
                   }}
                 >
@@ -177,12 +195,15 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                       className="w-12 h-12 rounded-full flex items-center justify-center"
                       style={{ backgroundColor: 'var(--primary-color)' }}
                     >
-                      <Store className="w-6 h-6 text-white" />
+                      <Store className="w-6 h-6" style={{ color: secondaryTextColor }}  />
                     </div>
                     <div className="flex-1">
                       <h3
                         className="font-semibold mb-1"
-                        style={{ fontSize: 'var(--font-size-subtitle)' }}
+                        style={{
+                          fontSize: 'var(--font-size-subtitle)',
+                          color: primaryTextColor
+                        }}
                       >
                         Retiro en Tienda
                       </h3>
@@ -197,7 +218,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                   onClick={() => handleDeliverySelect('dine-in')}
                   className="w-full p-6 border-2 rounded-lg text-left hover:border-current transition-all"
                   style={{
-                    borderColor: 'var(--secondary-color)',
+                    borderColor: primaryColor,
                     borderRadius: theme.button_style === 'rounded' ? '0.75rem' : '0.25rem'
                   }}
                 >
@@ -206,12 +227,15 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                       className="w-12 h-12 rounded-full flex items-center justify-center"
                       style={{ backgroundColor: 'var(--primary-color)' }}
                     >
-                      <MapPin className="w-6 h-6 text-white" />
+                      <MapPin className="w-6 h-6" style={{ color: secondaryTextColor }} />
                     </div>
                     <div className="flex-1">
                       <h3
                         className="font-semibold mb-1"
-                        style={{ fontSize: 'var(--font-size-subtitle)' }}
+                          style={{
+                            fontSize: 'var(--font-size-subtitle)',
+                            color: primaryTextColor
+                          }}
                       >
                         Consumir en Restaurante
                       </h3>
@@ -226,7 +250,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                   onClick={() => handleDeliverySelect('delivery')}
                   className="w-full p-6 border-2 rounded-lg text-left hover:border-current transition-all"
                   style={{
-                    borderColor: 'var(--secondary-color)',
+                    borderColor: primaryColor,
                     borderRadius: theme.button_style === 'rounded' ? '0.75rem' : '0.25rem'
                   }}
                 >
@@ -235,12 +259,15 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                       className="w-12 h-12 rounded-full flex items-center justify-center"
                       style={{ backgroundColor: 'var(--primary-color)' }}
                     >
-                      <Home className="w-6 h-6 text-white" />
+                      <Home className="w-6 h-6" style={{ color: secondaryTextColor }}  />
                     </div>
                     <div className="flex-1">
                       <h3
                         className="font-semibold mb-1"
-                        style={{ fontSize: 'var(--font-size-subtitle)' }}
+                          style={{
+                            fontSize: 'var(--font-size-subtitle)',
+                            color: primaryTextColor
+                          }}
                       >
                         Entrega a Domicilio
                       </h3>
@@ -257,16 +284,20 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
           {/* STEP 2: CUSTOMER INFO */}
           {step === 'info' && (
             <div>
-              <div className="mb-4 p-4 bg-gray-50 rounded-lg flex items-center gap-3"
-                style={{ borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem' }}
+              <div
+                className="mb-4 p-4 mt-6 rounded-lg flex items-center gap-3"
+                style={{
+                  border: `2px solid ${primaryColor}`,
+                  borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
+                }}
               >
                 <div
                   className="w-10 h-10 rounded-full flex items-center justify-center"
                   style={{ backgroundColor: 'var(--primary-color)' }}
                 >
-                  {deliveryMode === 'pickup' && <Store className="w-5 h-5 text-white" />}
-                  {deliveryMode === 'dine-in' && <MapPin className="w-5 h-5 text-white" />}
-                  {deliveryMode === 'delivery' && <Home className="w-5 h-5 text-white" />}
+                  {deliveryMode === 'pickup' && <Store className="w-6 h-6" style={{ color: secondaryTextColor }}  />}
+                  {deliveryMode === 'dine-in' && <MapPin className="w-6 h-6" style={{ color: secondaryTextColor }}  />}
+                  {deliveryMode === 'delivery' && <Home className="w-6 h-6" style={{ color: secondaryTextColor }}  />}
                 </div>
                 <div>
                   <p className="text-sm" style={{ color: secondaryTextColor }}>Modalidad seleccionada</p>
@@ -285,17 +316,35 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
 
               <div className="space-y-4">
                 <div>
-                  <label className="block font-medium mb-2" style={{ fontSize: 'var(--font-size-normal)' }}>
+                  <label
+                    className="block font-medium mb-2"
+                    style={{
+                      fontSize: 'var(--font-size-normal)',
+                      color: primaryTextColor
+                    }}
+                  >
                     Nombre completo *
                   </label>
                   <input
                     type="text"
                     value={customerInfo.name}
                     onChange={(e) => setCustomerInfo({ ...customerInfo, name: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
+                    className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2"
                     style={{
                       fontSize: 'var(--font-size-normal)',
-                      borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
+                      borderColor: primaryColor,
+                      color: primaryTextColor,
+                      backgroundColor: 'transparent',
+                      borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
+                      boxShadow: `0 0 0 1px ${primaryColor}40` // efecto sutil de enfoque (40 = 25% opacidad)
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = primaryColor;
+                      e.target.style.boxShadow = `0 0 0 2px ${primaryColor}80`; // 50% opacidad al enfocar
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = primaryColor;
+                      e.target.style.boxShadow = `0 0 0 2px ${primaryColor}40`;
                     }}
                     placeholder="Juan Pérez"
                     required
@@ -303,17 +352,34 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                 </div>
 
                 <div>
-                  <label className="block font-medium mb-2" style={{ fontSize: 'var(--font-size-normal)' }}>
+                  <label className="block font-medium mb-2"
+                      style={{
+                      fontSize: 'var(--font-size-normal)',
+                      color: primaryTextColor
+                    }}>
                     Teléfono *
                   </label>
                   <input
                     type="tel"
                     value={customerInfo.phone}
                     onChange={(e) => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
+                    className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2"
                     style={{
                       fontSize: 'var(--font-size-normal)',
-                      borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
+                      borderColor: primaryColor,
+                      backgroundColor: 'transparent',
+                      color: primaryTextColor,
+                      borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
+                      boxShadow: `0 0 0 2px ${primaryColor}40`,
+                      caretColor: primaryColor
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = primaryColor;
+                      e.target.style.boxShadow = `0 0 0 2px ${primaryColor}80`;
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = primaryColor;
+                      e.target.style.boxShadow = `0 0 0 1px ${primaryColor}40`;
                     }}
                     placeholder="+57 300 123 4567"
                     required
@@ -321,17 +387,34 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                 </div>
 
                 <div>
-                  <label className="block font-medium mb-2" style={{ fontSize: 'var(--font-size-normal)' }}>
+                  <label className="block font-medium mb-2" 
+                    style={{
+                      fontSize: 'var(--font-size-normal)',
+                      color: primaryTextColor
+                    }}
+                    >
                     Email
                   </label>
                   <input
                     type="email"
                     value={customerInfo.email}
                     onChange={(e) => setCustomerInfo({ ...customerInfo, email: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
+                    className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2"
                     style={{
                       fontSize: 'var(--font-size-normal)',
-                      borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
+                      borderColor: primaryColor,
+                      color: primaryTextColor,
+                      backgroundColor: 'transparent',
+                      borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
+                      boxShadow: `0 0 0 1px ${primaryColor}40`
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = primaryColor;
+                      e.target.style.boxShadow = `0 0 0 2px ${primaryColor}80`;
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = primaryColor;
+                      e.target.style.boxShadow = `0 0 0 2px ${primaryColor}40`;
                     }}
                     placeholder="correo@ejemplo.com"
                   />
@@ -340,17 +423,34 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                 {deliveryMode === 'delivery' && (
                   <>
                     <div>
-                      <label className="block font-medium mb-2" style={{ fontSize: 'var(--font-size-normal)' }}>
+                      <label className="block font-medium mb-2" 
+                        style={{
+                          fontSize: 'var(--font-size-normal)',
+                          color: primaryTextColor
+                        }}
+                        >
                         Dirección *
                       </label>
                       <input
                         type="text"
                         value={customerInfo.address}
                         onChange={(e) => setCustomerInfo({ ...customerInfo, address: e.target.value })}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
+                        className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2"
                         style={{
                           fontSize: 'var(--font-size-normal)',
-                          borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
+                          borderColor: primaryColor,
+                          color: primaryTextColor,
+                          backgroundColor: 'transparent',
+                          borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
+                          boxShadow: `0 0 0 1px ${primaryColor}40`
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = primaryColor;
+                          e.target.style.boxShadow = `0 0 0 2px ${primaryColor}80`;
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = primaryColor;
+                          e.target.style.boxShadow = `0 0 0 2px ${primaryColor}40`;
                         }}
                         placeholder="Calle 123 #45-67"
                         required
@@ -358,17 +458,34 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                     </div>
 
                     <div>
-                      <label className="block font-medium mb-2" style={{ fontSize: 'var(--font-size-normal)' }}>
+                      <label className="block font-medium mb-2" 
+                        style={{
+                          fontSize: 'var(--font-size-normal)',
+                          color: primaryTextColor
+                        }}
+                        >
                         Ciudad *
                       </label>
                       <input
                         type="text"
                         value={customerInfo.city}
                         onChange={(e) => setCustomerInfo({ ...customerInfo, city: e.target.value })}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
+                        className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2"
                         style={{
                           fontSize: 'var(--font-size-normal)',
-                          borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
+                          borderColor: primaryColor,
+                          color: primaryTextColor,
+                          backgroundColor: 'transparent',
+                          borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
+                          boxShadow: `0 0 0 1px ${primaryColor}40`
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = primaryColor;
+                          e.target.style.boxShadow = `0 0 0 2px ${primaryColor}80`;
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = primaryColor;
+                          e.target.style.boxShadow = `0 0 0 2px ${primaryColor}40`;
                         }}
                         placeholder="Bogotá"
                         required
@@ -378,17 +495,35 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                 )}
 
                 <div>
-                  <label className="block font-medium mb-2" style={{ fontSize: 'var(--font-size-normal)' }}>
+                  <label className="block font-medium mb-2" 
+                    style={{
+                      fontSize: 'var(--font-size-normal)',
+                      color: primaryTextColor
+                    }}
+                    >
                     Notas adicionales
                   </label>
                   <textarea
                     value={customerInfo.notes}
                     onChange={(e) => setCustomerInfo({ ...customerInfo, notes: e.target.value })}
                     rows={3}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
+                    className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2"
                     style={{
                       fontSize: 'var(--font-size-normal)',
-                      borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
+                      borderColor: primaryColor,
+                      color: primaryTextColor,
+                      backgroundColor: 'transparent',
+                      borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
+                      boxShadow: `0 0 0 1px ${primaryColor}40`,
+                      resize: 'vertical'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = primaryColor;
+                      e.target.style.boxShadow = `0 0 0 2px ${primaryColor}80`;
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = primaryColor;
+                      e.target.style.boxShadow = `0 0 0 2px ${primaryColor}40`;
                     }}
                     placeholder="Indicaciones especiales, referencias, etc."
                   />
@@ -412,6 +547,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                   className="flex-1 px-6 py-3 text-white font-semibold rounded-lg transition-colors"
                   style={{
                     backgroundColor: 'var(--primary-color)',
+                    color: secondaryTextColor,
                     borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
                   }}
                 >
@@ -424,16 +560,57 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
           {/* STEP 3: CONFIRM */}
           {step === 'confirm' && (
             <div>
+                            <div
+                className="mb-4 p-4 mt-6 rounded-lg flex items-center gap-3"
+                style={{
+                  border: `2px solid ${primaryColor}`,
+                  borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
+                }}
+              >
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: 'var(--primary-color)' }}
+                >
+                  {deliveryMode === 'pickup' && <Store className="w-6 h-6" style={{ color: secondaryTextColor }}  />}
+                  {deliveryMode === 'dine-in' && <MapPin className="w-6 h-6" style={{ color: secondaryTextColor }}  />}
+                  {deliveryMode === 'delivery' && <Home className="w-6 h-6" style={{ color: secondaryTextColor }}  />}
+                </div>
+                <div>
+                  <p className="text-sm" style={{ color: secondaryTextColor }}>Modalidad seleccionada</p>
+                  <p className="font-semibold" style={{ fontSize: 'var(--font-size-normal)' }}>
+                    {getDeliveryModeLabel()}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setStep('delivery')}
+                  className="ml-auto text-sm underline"
+                  style={{ color: 'var(--primary-color)' }}
+                >
+                  Cambiar
+                </button>
+              </div>
               <div className="mb-6">
-                <h3 className="font-semibold mb-4" style={{ fontSize: 'var(--font-size-subtitle)' }}>
+                <h3
+                  className="font-semibold mb-4 mt-4"
+                  style={{
+                    fontSize: 'var(--font-size-subtitle)',
+                    color: primaryTextColor
+                  }}
+                >
                   Resumen del Pedido
                 </h3>
 
                 <div className="space-y-3 mb-4">
                   {items.map((item, index) => (
-                    <div key={index} className="flex justify-between p-3 bg-gray-50 rounded-lg"
-                      style={{ borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem' }}
-                    >
+                  <div
+                    key={index}
+                    className="flex justify-between p-3 rounded-lg"
+                    style={{
+                      borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
+                      border: `1px solid ${primaryColor}`,
+                      backgroundColor: 'transparent'
+                    }}
+                  >
                       <div className="flex-1">
                         <p className="font-medium">{item.product.name}</p>
                         <p className="text-sm" style={{ color: secondaryTextColor }}>{item.variation.name} x {item.quantity}</p>
@@ -448,11 +625,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                   ))}
                 </div>
 
-                <div className="border-t pt-4">
-                  <div className="flex justify-between mb-2">
-                    <span>Subtotal:</span>
-                    <span>${getTotal().toFixed(2)}</span>
-                  </div>
+                <div className="border-t pt-4" style={{ borderColor: primaryColor }}>
                   <div className="flex justify-between text-xl font-bold">
                     <span>Total:</span>
                     <span style={{ color: 'var(--accent-color)' }}>${getTotal().toFixed(2)}</span>
@@ -460,10 +633,21 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                 </div>
               </div>
 
-              <div className="mb-6 p-4 bg-gray-50 rounded-lg"
-                style={{ borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem' }}
+              <div
+                className="p-4 rounded-lg"
+                style={{
+                  borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
+                  border: `1px solid ${primaryColor}`,
+                  backgroundColor: 'transparent'
+                }}
               >
-                <h4 className="font-semibold mb-3" style={{ fontSize: 'var(--font-size-normal)' }}>
+                <h4
+                  className="font-semibold mb-3"
+                  style={{
+                    fontSize: 'var(--font-size-normal)',
+                    color: primaryTextColor
+                  }}
+                >
                   Información de Entrega
                 </h4>
                 <div className="space-y-2 text-sm">
@@ -476,14 +660,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                   )}
                   {customerInfo.notes && <p><strong>Notas:</strong> {customerInfo.notes}</p>}
                 </div>
-                <button
+              </div>
+                 <button
                   onClick={() => setStep('info')}
-                  className="mt-3 text-sm underline"
+                  className="mb-6 mt-3 text-sm underline"
                   style={{ color: 'var(--primary-color)' }}
                 >
                   Editar información
                 </button>
-              </div>
 
               <button
                 onClick={handleConfirmOrder}
@@ -491,6 +675,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                 className="w-full px-6 py-4 text-white font-bold rounded-lg transition-all text-lg disabled:opacity-50"
                 style={{
                   backgroundColor: 'var(--primary-color)',
+                  color: secondaryTextColor,
                   borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
                 }}
               >
