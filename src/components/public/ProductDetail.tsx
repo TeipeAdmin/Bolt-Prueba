@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Minus, Plus, X, Clock } from 'lucide-react';
+import { Minus, Plus, X } from 'lucide-react';
 import { Product, ProductVariation, Restaurant } from '../../types';
 import { useCart } from '../../contexts/CartContext';
+import { formatCurrency } from '../../utils/currencyUtils';
 
 interface ProductDetailProps {
   product: Product;
@@ -15,7 +16,6 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
     product.ingredients.filter(ing => !ing.optional).map(ing => ing.id)
   );
   const [quantity, setQuantity] = useState(1);
-  const [notes, setNotes] = useState('');
 
   const { addItem } = useCart();
 
@@ -37,94 +37,110 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
   };
 
   const handleAddToCart = () => {
-    addItem(product, selectedVariation, quantity, notes);
+    addItem(product, selectedVariation, quantity, '');
     onClose();
   };
 
   const theme = restaurant.settings.theme;
-  const cardBackgroundColor = theme.card_background_color || '#f9fafb';
+  const primaryColor = theme.primary_color || '#FFC700';
+  const cardBackgroundColor = theme.card_background_color || '#ffffff';
   const primaryTextColor = theme.primary_text_color || '#111827';
   const secondaryTextColor = theme.secondary_text_color || '#6b7280';
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
       <div
-        className="rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        className="relative rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
         onClick={(e) => e.stopPropagation()}
         style={{
-          borderRadius: theme.button_style === 'rounded' ? '1rem' : '0.25rem',
-          backgroundColor: cardBackgroundColor
+          backgroundColor: cardBackgroundColor,
+          maxHeight: '90vh',
+          display: 'flex',
+          flexDirection: 'column'
         }}
       >
-        <div className="p-6">
-          <div className="flex justify-between items-start mb-6">
-            <h2
-              className="font-bold"
-              style={{
-                fontSize: 'var(--font-size-title)',
-                fontFamily: 'var(--secondary-font)',
-                color: primaryTextColor
-              }}
-            >
-              {product.name}
-            </h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <X className="w-6 h-6" />
-            </button>
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 transition-colors"
+        >
+          <X className="w-5 h-5" style={{ color: primaryTextColor }} />
+        </button>
+
+        {/* Product Image */}
+        {product.images.length > 0 && (
+          <div className="relative w-full" style={{ height: '280px' }}>
+            <img
+              src={product.images[0]}
+              alt={product.name}
+              className="w-full h-full object-cover"
+            />
           </div>
+        )}
 
-          {product.images.length > 0 && (
-            <div className="aspect-video bg-gray-200 rounded-lg overflow-hidden mb-6">
-              <img
-                src={product.images[0]}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          )}
-
-          <p
-            className="mb-6"
+        {/* Content */}
+        <div className="p-6 overflow-y-auto" style={{ flex: 1 }}>
+          {/* Product Name */}
+          <h2
+            className="font-bold mb-3 text-center"
             style={{
-              fontSize: 'var(--font-size-normal)',
-              color: secondaryTextColor
+              fontSize: '28px',
+              color: primaryTextColor,
+              fontFamily: theme.primary_font || 'Inter'
+            }}
+          >
+            {product.name.split(' ').map((word, i) => (
+              <span key={i}>
+                {i === 0 ? <span style={{ color: primaryColor }}>{word}</span> : <span>{' ' + word}</span>}
+              </span>
+            ))}
+          </h2>
+
+          {/* Description */}
+          <p
+            className="text-center mb-6"
+            style={{
+              fontSize: '14px',
+              color: secondaryTextColor,
+              lineHeight: '1.6'
             }}
           >
             {product.description}
           </p>
 
-          {product.variations.length > 1 && (
+          {/* Variations */}
+          {product.variations.length > 0 && (
             <div className="mb-6">
               <h3
                 className="font-semibold mb-3"
                 style={{
-                  fontSize: 'var(--font-size-subtitle)',
+                  fontSize: '14px',
                   color: primaryTextColor
                 }}
               >
-                Selecciona tu opción
+                Selecciona una opción
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 {product.variations.map(variation => (
                   <button
                     key={variation.id}
                     onClick={() => setSelectedVariation(variation)}
                     className="p-4 rounded-lg text-left transition-all border-2"
                     style={{
-                      borderColor: selectedVariation.id === variation.id ? 'var(--primary-color)' : '#e5e7eb',
-                      backgroundColor: selectedVariation.id === variation.id ? 'var(--primary-color)' : 'white',
-                      color: selectedVariation.id === variation.id ? 'white' : 'var(--text-color)',
-                      borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
+                      borderColor: selectedVariation.id === variation.id ? primaryColor : '#e5e7eb',
+                      backgroundColor: selectedVariation.id === variation.id ? primaryColor : 'transparent',
+                      color: selectedVariation.id === variation.id ? '#ffffff' : primaryTextColor,
+                      borderRadius: '8px'
                     }}
                   >
-                    <div className="font-medium" style={{ fontSize: 'var(--font-size-normal)' }}>
+                    <div className="font-semibold" style={{ fontSize: '14px', marginBottom: '4px' }}>
                       {variation.name}
                     </div>
-                    <div className="font-bold mt-1" style={{ fontSize: 'var(--font-size-subtitle)' }}>
-                      ${variation.price.toFixed(2)}
+                    <div className="font-bold" style={{ fontSize: '16px' }}>
+                      {formatCurrency(variation.price)}
                     </div>
                   </button>
                 ))}
@@ -132,142 +148,128 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
             </div>
           )}
 
+          {/* Ingredients */}
           {product.ingredients.length > 0 && (
             <div className="mb-6">
               <h3
                 className="font-semibold mb-3"
                 style={{
-                  fontSize: 'var(--font-size-subtitle)',
+                  fontSize: '14px',
                   color: primaryTextColor
                 }}
               >
                 Ingredientes
               </h3>
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {product.ingredients.map(ingredient => (
                   <label
                     key={ingredient.id}
-                    className="flex items-center justify-between p-3 rounded-lg border cursor-pointer hover:bg-gray-50 transition-colors"
+                    className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors hover:bg-gray-50"
                     style={{
-                      borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
-                      opacity: ingredient.optional ? 1 : 0.6
+                      borderColor: '#e5e7eb',
+                      borderRadius: '8px',
+                      opacity: ingredient.optional ? 1 : 0.7
                     }}
                   >
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        checked={selectedIngredients.includes(ingredient.id)}
-                        onChange={() => toggleIngredient(ingredient.id)}
-                        disabled={!ingredient.optional}
-                        className="w-5 h-5 rounded"
-                        style={{ accentColor: 'var(--primary-color)' }}
-                      />
-                      <span style={{ fontSize: 'var(--font-size-normal)' }}>
-                        {ingredient.name}
-                        {!ingredient.optional && ' (incluido)'}
-                      </span>
-                    </div>
-                    {ingredient.optional && ingredient.extra_cost && (
+                    <input
+                      type="checkbox"
+                      checked={selectedIngredients.includes(ingredient.id)}
+                      onChange={() => toggleIngredient(ingredient.id)}
+                      disabled={!ingredient.optional}
+                      className="w-4 h-4 rounded"
+                      style={{ accentColor: primaryColor }}
+                    />
+                    <span
+                      className="flex-1"
+                      style={{
+                        fontSize: '13px',
+                        color: secondaryTextColor
+                      }}
+                    >
+                      {ingredient.name} {!ingredient.optional && '(incluido)'}
+                    </span>
+                    {ingredient.optional && ingredient.extra_cost && ingredient.extra_cost > 0 && (
                       <span
                         className="font-medium"
                         style={{
-                          fontSize: 'var(--font-size-small)',
-                          color: 'var(--accent-color)'
+                          fontSize: '13px',
+                          color: primaryColor
                         }}
                       >
-                        +${ingredient.extra_cost.toFixed(2)}
+                        +{formatCurrency(ingredient.extra_cost)}
                       </span>
                     )}
                   </label>
                 ))}
               </div>
+
+              {/* Add Ingredient Link */}
+              <button
+                className="mt-3 text-sm font-medium"
+                style={{ color: primaryColor }}
+              >
+                + Adicionar ingrediente
+              </button>
             </div>
           )}
 
-          <div className="mb-6">
-            <label
-              className="block font-medium mb-2"
-              style={{
-                fontSize: 'var(--font-size-normal)',
-                color: primaryTextColor
-              }}
-            >
-              Notas especiales (opcional)
-            </label>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={3}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
-              style={{
-                fontSize: 'var(--font-size-normal)',
-                borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
-              }}
-              placeholder="Ej: Sin cebolla, bien cocido..."
-            />
-          </div>
-
-          <div className="flex items-center justify-between gap-4 p-4 rounded-lg"
-            style={{
-              borderRadius: theme.button_style === 'rounded' ? '0.75rem' : '0.25rem',
-              backgroundColor: theme.secondary_color || '#f3f4f6'
-            }}
-          >
-            <div className="flex items-center gap-4">
-              <span className="font-medium" style={{ fontSize: 'var(--font-size-normal)' }}>
+          {/* Quantity and Add to Cart */}
+          <div className="flex items-center justify-between gap-4 mt-6">
+            <div className="flex items-center gap-3">
+              <span
+                className="font-medium"
+                style={{
+                  fontSize: '14px',
+                  color: primaryTextColor
+                }}
+              >
                 Cantidad:
               </span>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-10 h-10 rounded-full border-2 flex items-center justify-center hover:bg-gray-100 transition-colors"
+                  className="w-8 h-8 rounded-full border flex items-center justify-center transition-colors hover:bg-gray-100"
                   style={{
-                    borderColor: 'var(--primary-color)',
-                    color: 'var(--primary-color)'
+                    borderColor: primaryColor,
+                    color: primaryColor
                   }}
                 >
-                  <Minus className="w-5 h-5" />
+                  <Minus className="w-4 h-4" />
                 </button>
                 <span
-                  className="text-xl font-bold w-8 text-center"
-                  style={{ fontSize: 'var(--font-size-subtitle)' }}
+                  className="font-bold w-8 text-center"
+                  style={{
+                    fontSize: '18px',
+                    color: primaryTextColor
+                  }}
                 >
                   {quantity}
                 </span>
                 <button
                   onClick={() => setQuantity(quantity + 1)}
-                  className="w-10 h-10 rounded-full border-2 flex items-center justify-center hover:bg-gray-100 transition-colors"
+                  className="w-8 h-8 rounded-full border flex items-center justify-center transition-colors hover:bg-gray-100"
                   style={{
-                    borderColor: 'var(--primary-color)',
-                    color: 'var(--primary-color)'
+                    borderColor: primaryColor,
+                    color: primaryColor
                   }}
                 >
-                  <Plus className="w-5 h-5" />
+                  <Plus className="w-4 h-4" />
                 </button>
               </div>
             </div>
 
             <button
               onClick={handleAddToCart}
-              className="flex-1 max-w-xs px-6 py-3 text-white font-semibold rounded-lg hover:opacity-90 transition-all"
+              className="flex-1 px-6 py-3 text-white font-bold rounded-lg transition-all hover:opacity-90"
               style={{
-                backgroundColor: 'var(--primary-color)',
-                fontSize: 'var(--font-size-normal)',
-                borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
+                backgroundColor: primaryColor,
+                fontSize: '16px',
+                borderRadius: '8px'
               }}
             >
-              Agregar ${calculatePrice().toFixed(2)}
+              Agregar {formatCurrency(calculatePrice())}
             </button>
           </div>
-
-          {product.preparation_time && (
-            <div className="flex items-center justify-center gap-2 mt-4" style={{ color: secondaryTextColor }}>
-              <Clock className="w-4 h-4" />
-              <span style={{ fontSize: 'var(--font-size-small)' }}>
-                Tiempo de preparación: {product.preparation_time} min
-              </span>
-            </div>
-          )}
         </div>
       </div>
     </div>
