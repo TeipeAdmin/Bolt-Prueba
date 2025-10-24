@@ -10,6 +10,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
 import { OrderProductSelector } from '../../components/restaurant/OrderProductSelector';
+import { orderService } from '../../services/orderService';
 
 export const OrdersManagement: React.FC = () => {
   const { restaurant } = useAuth();
@@ -75,19 +76,24 @@ export const OrdersManagement: React.FC = () => {
     calculateStats();
   }, [orders]);
 
-  const loadOrders = () => {
+  const loadOrders = async () => {
     if (!restaurant) return;
 
-    const allOrders = loadFromStorage('orders') || [];
-    const restaurantOrders = allOrders.filter((order: Order) =>
-      order &&
-      order.restaurant_id === restaurant.id &&
-      order.order_number &&
-      order.status &&
-      order.items
-    );
+    const result = await orderService.getRestaurantOrders(restaurant.id);
 
-    setOrders(restaurantOrders);
+    if (result.success && result.orders) {
+      const validOrders = result.orders.filter((order: Order) =>
+        order &&
+        order.restaurant_id === restaurant.id &&
+        order.order_number &&
+        order.status &&
+        order.items
+      );
+      setOrders(validOrders);
+    } else {
+      console.error('Error loading orders:', result.error);
+      showToast('error', 'Error', 'No se pudieron cargar los pedidos', 3000);
+    }
   };
 
   const loadProductsAndCategories = () => {
@@ -142,31 +148,29 @@ export const OrdersManagement: React.FC = () => {
     });
   };
 
-  const updateOrderStatus = (orderId: string, newStatus: Order['status']) => {
-    const allOrders = loadFromStorage('orders') || [];
-    const updatedOrders = allOrders.map((order: Order) =>
-      order.id === orderId 
-        ? { ...order, status: newStatus, updated_at: new Date().toISOString() }
-        : order
-    );
-    
-    saveToStorage('orders', updatedOrders);
-    loadOrders();
-    
-    const statusMessages = {
-      confirmed: 'Pedido confirmado',
-      preparing: 'Pedido en preparación',
-      ready: 'Pedido listo para entrega',
-      delivered: 'Pedido entregado',
-      cancelled: 'Pedido cancelado'
-    };
-    
-    showToast(
-      'success',
-      'Estado Actualizado',
-      statusMessages[newStatus] || 'Estado del pedido actualizado',
-      3000
-    );
+  const updateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
+    const result = await orderService.updateOrderStatus(orderId, newStatus);
+
+    if (result.success) {
+      loadOrders();
+
+      const statusMessages = {
+        confirmed: 'Pedido confirmado',
+        preparing: 'Pedido en preparación',
+        ready: 'Pedido listo para entrega',
+        delivered: 'Pedido entregado',
+        cancelled: 'Pedido cancelado'
+      };
+
+      showToast(
+        'success',
+        'Estado Actualizado',
+        statusMessages[newStatus] || 'Estado del pedido actualizado',
+        3000
+      );
+    } else {
+      showToast('error', 'Error', 'No se pudo actualizar el estado del pedido', 3000);
+    }
   };
 
   const getNextStatus = (currentStatus: Order['status']): Order['status'] | null => {
@@ -196,22 +200,8 @@ export const OrdersManagement: React.FC = () => {
     return labels[nextStatus];
   };
 
-  const handleQuickStatusUpdate = (orderId: string, newStatus: Order['status']) => {
-    const updatedOrders = orders.map(order =>
-      order.id === orderId
-        ? { ...order, status: newStatus, updated_at: new Date().toISOString() }
-        : order
-    );
-    
-    saveToStorage('orders', updatedOrders);
-    loadOrders();
-    
-    showToast(
-      'success',
-      'Estado Actualizado',
-      `El pedido ha sido marcado como ${getStatusBadge(newStatus).props.children}`,
-      3000
-    );
+  const handleQuickStatusUpdate = async (orderId: string, newStatus: Order['status']) => {
+    await updateOrderStatus(orderId, newStatus);
   };
 
   const getStatusBadge = (status: Order['status']) => {
@@ -318,22 +308,20 @@ export const OrdersManagement: React.FC = () => {
 
   const totalPages = Math.ceil(sortedOrders.length / itemsPerPage);
 
-  const handleBulkAction = () => {
+  const handleBulkAction = async () => {
     if (!bulkAction || selectedOrders.length === 0) return;
-    
-    const allOrders = loadFromStorage('orders') || [];
-    const updatedOrders = allOrders.map((order: Order) =>
-      selectedOrders.includes(order.id)
-        ? { ...order, status: bulkAction as Order['status'], updated_at: new Date().toISOString() }
-        : order
+
+    const promises = selectedOrders.map(orderId =>
+      orderService.updateOrderStatus(orderId, bulkAction as Order['status'])
     );
-    
-    saveToStorage('orders', updatedOrders);
+
+    await Promise.all(promises);
+
     loadOrders();
     setSelectedOrders([]);
     setBulkAction('');
     setShowBulkActions(false);
-    
+
     showToast(
       'success',
       'Acción Masiva Completada',
@@ -432,29 +420,6 @@ export const OrdersManagement: React.FC = () => {
     printWindow.print();
   };
 
-  const generateOrderNumber = () => {
-    // Get all existing orders for this restaurant
-    const allOrders = loadFromStorage('orders') || [];
-    const restaurantOrders = allOrders.filter((order: Order) => 
-      order.restaurant_id === restaurant.id
-    );
-    
-    // Find the highest order number
-    let maxNumber = 1000;
-    restaurantOrders.forEach((order: Order) => {
-      // Extract number from format #RES-XXXX
-      const match = order.order_number.match(/#RES-(\d+)/);
-      if (match) {
-        const orderNum = parseInt(match[1]);
-        if (!isNaN(orderNum) && orderNum > maxNumber) {
-          maxNumber = orderNum;
-        }
-      }
-    });
-    
-    // Return next consecutive number
-    return `#RES-${maxNumber + 1}`;
-  };
 
   const generateWhatsAppMessage = (order: Order) => {
     const restaurantName = restaurant?.name || 'Restaurante';
@@ -543,17 +508,12 @@ export const OrdersManagement: React.FC = () => {
     return encodeURIComponent(message);
   };
 
-  const sendWhatsAppMessage = (order: Order) => {
+  const sendWhatsAppMessage = async (order: Order) => {
     let whatsappMessage: string;
 
     if (!order.whatsapp_sent) {
       whatsappMessage = generateWhatsAppMessage(order);
-
-      const allOrders = loadFromStorage('orders') || [];
-      const updatedOrders = allOrders.map((o: Order) =>
-        o.id === order.id ? { ...o, whatsapp_sent: true } : o
-      );
-      saveToStorage('orders', updatedOrders);
+      await orderService.updateOrder(order.id, { whatsapp_sent: true });
       loadOrders();
     } else {
       whatsappMessage = generateStatusUpdateMessage(order);
@@ -952,35 +912,35 @@ export const OrdersManagement: React.FC = () => {
     setShowDeleteModal(true);
   };
 
-  const confirmDeleteOrder = () => {
+  const confirmDeleteOrder = async () => {
     if (!orderToDelete) return;
 
-    const allOrders = loadFromStorage('orders') || [];
-    const updatedOrders = allOrders.filter((order: Order) => order.id !== orderToDelete.id);
+    const result = await orderService.deleteOrder(orderToDelete.id);
 
-    saveToStorage('orders', updatedOrders);
-    loadOrders();
-    setShowDeleteModal(false);
-    setOrderToDelete(null);
+    if (result.success) {
+      loadOrders();
+      setShowDeleteModal(false);
+      setOrderToDelete(null);
 
-    showToast(
-      'success',
-      'Pedido Eliminado',
-      `El pedido ${orderToDelete.order_number} ha sido eliminado exitosamente.`,
-      4000
-    );
+      showToast(
+        'success',
+        'Pedido Eliminado',
+        `El pedido ${orderToDelete.order_number} ha sido eliminado exitosamente.`,
+        4000
+      );
+    } else {
+      showToast('error', 'Error', 'No se pudo eliminar el pedido', 3000);
+    }
   };
 
-  const handleUpdateOrder = () => {
+  const handleUpdateOrder = async () => {
     if (!editingOrder) return;
 
     const subtotal = orderItems.reduce((sum, item) => sum + item.total_price, 0);
-    const deliveryCost = orderForm.order_type === 'delivery' ? (restaurant?.settings?.delivery?.zones[0]?.cost || 0) : 0;
+    const deliveryCost = orderForm.order_type === 'delivery' ? (restaurant?.settings?.delivery?.delivery_cost || 0) : 0;
     const total = subtotal + deliveryCost;
 
-    const allOrders = loadFromStorage('orders') || [];
-    const updatedOrder = {
-      ...editingOrder,
+    const updates = {
       customer: orderForm.customer,
       items: orderItems,
       order_type: orderForm.order_type,
@@ -991,28 +951,28 @@ export const OrdersManagement: React.FC = () => {
       subtotal: subtotal,
       total: total,
       special_instructions: orderForm.special_instructions,
-      updated_at: new Date().toISOString(),
     };
 
-    const updatedOrders = allOrders.map((order: Order) =>
-      order.id === editingOrder.id ? updatedOrder : order
-    );
+    const result = await orderService.updateOrder(editingOrder.id, updates);
 
-    saveToStorage('orders', updatedOrders);
-    loadOrders();
-    setShowEditOrderModal(false);
-    setEditingOrder(null);
-    resetOrderForm();
+    if (result.success) {
+      loadOrders();
+      setShowEditOrderModal(false);
+      setEditingOrder(null);
+      resetOrderForm();
 
-    showToast(
-      'success',
-      'Pedido Actualizado',
-      'El pedido ha sido actualizado exitosamente.',
-      4000
-    );
+      showToast(
+        'success',
+        'Pedido Actualizado',
+        'El pedido ha sido actualizado exitosamente.',
+        4000
+      );
+    } else {
+      showToast('error', 'Error', 'No se pudo actualizar el pedido', 3000);
+    }
   };
 
-  const handleCreateOrder = () => {
+  const handleCreateOrder = async () => {
     if (!restaurant) return;
 
     if (!orderForm.customer.name.trim() || !orderForm.customer.phone.trim()) {
@@ -1026,14 +986,12 @@ export const OrdersManagement: React.FC = () => {
     }
 
     const subtotal = orderItems.reduce((sum, item) => sum + item.total_price, 0);
-    const deliveryCost = orderForm.order_type === 'delivery' ? (restaurant.settings?.delivery?.zones[0]?.cost || 0) : 0;
+    const deliveryCost = orderForm.order_type === 'delivery' ? (restaurant.settings?.delivery?.delivery_cost || 0) : 0;
     const total = subtotal + deliveryCost;
 
-    const allOrders = loadFromStorage('orders') || [];
-    const newOrder: Order = {
-      id: `order-${Date.now()}`,
+    const orderData = {
       restaurant_id: restaurant.id,
-      order_number: generateOrderNumber(),
+      order_number: orderService.generateOrderNumber(restaurant.id),
       customer: orderForm.customer,
       items: orderItems,
       order_type: orderForm.order_type,
@@ -1045,22 +1003,24 @@ export const OrdersManagement: React.FC = () => {
       total: total,
       estimated_time: restaurant.settings?.preparation_time || '30-45 minutos',
       special_instructions: orderForm.special_instructions,
-      whatsapp_sent: false,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
     };
 
-    saveToStorage('orders', [...allOrders, newOrder]);
-    loadOrders();
-    setShowCreateOrderModal(false);
-    resetOrderForm();
+    const result = await orderService.createOrder(orderData);
 
-    showToast(
-      'success',
-      'Pedido Creado',
-      'El pedido ha sido creado exitosamente.',
-      4000
-    );
+    if (result.success) {
+      loadOrders();
+      setShowCreateOrderModal(false);
+      resetOrderForm();
+
+      showToast(
+        'success',
+        'Pedido Creado',
+        'El pedido ha sido creado exitosamente.',
+        4000
+      );
+    } else {
+      showToast('error', 'Error', 'No se pudo crear el pedido', 3000);
+    }
   };
 
   return (

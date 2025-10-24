@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, MapPin, Store, Home, CheckCircle, Clock, Phone } from 'lucide-react';
 import { Restaurant } from '../../types';
 import { useCart } from '../../contexts/CartContext';
-import { loadFromStorage, saveToStorage } from '../../data/mockData';
+import { orderService } from '../../services/orderService';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -63,41 +63,62 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
   const handleConfirmOrder = async () => {
     setLoading(true);
 
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      const orderNumber = orderService.generateOrderNumber(restaurant.id);
 
-    const newOrder = {
-      id: `ord-${Date.now()}`,
-      restaurant_id: restaurant.id,
-      customer_name: customerInfo.name,
-      customer_phone: customerInfo.phone,
-      customer_email: customerInfo.email,
-      delivery_mode: deliveryMode,
-      delivery_address: deliveryMode === 'delivery' ? `${customerInfo.address}, ${customerInfo.city}` : null,
-      items: items.map(item => ({
-        product_id: item.product.id,
-        product_name: item.product.name,
-        variation_id: item.variation.id,
-        variation_name: item.variation.name,
-        quantity: item.quantity,
-        price: item.variation.price,
-        special_notes: item.special_notes,
-        selected_ingredients: item.selected_ingredients
-      })),
-      notes: customerInfo.notes,
-      total: getTotal(),
-      status: 'pending',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
+      const subtotal = getTotal();
+      const deliveryCost = deliveryMode === 'delivery' ? (restaurant.settings?.delivery?.delivery_cost || 0) : 0;
+      const total = subtotal + deliveryCost;
 
-    const orders = loadFromStorage('orders', []);
-    orders.push(newOrder);
-    saveToStorage('orders', orders);
+      const orderData = {
+        restaurant_id: restaurant.id,
+        order_number: orderNumber,
+        customer: {
+          name: customerInfo.name,
+          phone: customerInfo.phone,
+          email: customerInfo.email || undefined,
+          address: deliveryMode === 'delivery' ? `${customerInfo.address}, ${customerInfo.city}` : undefined,
+          delivery_instructions: customerInfo.notes || undefined,
+        },
+        items: items.map(item => ({
+          id: `item-${Date.now()}-${Math.random()}`,
+          product_id: item.product.id,
+          product: item.product,
+          variation: item.variation,
+          quantity: item.quantity,
+          unit_price: item.variation.price,
+          total_price: item.variation.price * item.quantity,
+          selected_ingredients: item.selectedIngredients || [],
+          special_notes: item.specialNotes || undefined,
+        })),
+        order_type: deliveryMode === 'delivery' ? 'delivery' as const : deliveryMode === 'pickup' ? 'pickup' as const : 'table' as const,
+        delivery_address: deliveryMode === 'delivery' ? `${customerInfo.address}, ${customerInfo.city}` : undefined,
+        table_number: deliveryMode === 'dine-in' ? 'Mesa' : undefined,
+        delivery_cost: deliveryCost,
+        subtotal: subtotal,
+        total: total,
+        status: 'pending' as const,
+        estimated_time: restaurant.settings?.preparation_time || '30-45 minutos',
+        special_instructions: customerInfo.notes || undefined,
+      };
 
-    setOrderNumber(newOrder.id);
-    clearCart();
-    setLoading(false);
-    setStep('success');
+      const result = await orderService.createOrder(orderData);
+
+      if (!result.success || !result.order) {
+        alert('Error al crear el pedido. Por favor intenta nuevamente.');
+        setLoading(false);
+        return;
+      }
+
+      setOrderNumber(orderNumber);
+      clearCart();
+      setLoading(false);
+      setStep('success');
+    } catch (error) {
+      console.error('Error creating order:', error);
+      alert('Error al crear el pedido. Por favor intenta nuevamente.');
+      setLoading(false);
+    }
   };
 
   const handleClose = () => {
