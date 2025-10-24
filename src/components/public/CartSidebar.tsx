@@ -65,17 +65,22 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, onChe
               </div>
             ) : (
               <div className="space-y-4">
-                {items.map((item) => {
+                {items.map((item, index) => {
                   let extraCost = 0;
+                  const additionalIngredients: string[] = [];
+
                   if (item.selected_ingredients && item.product.ingredients) {
-                    extraCost = item.product.ingredients
-                      .filter(ing => ing.optional && item.selected_ingredients.includes(ing.id))
-                      .reduce((sum, ing) => sum + (ing.extra_cost || 0), 0);
+                    item.product.ingredients.forEach(ing => {
+                      if (ing.optional && item.selected_ingredients.includes(ing.id)) {
+                        extraCost += ing.extra_cost || 0;
+                        additionalIngredients.push(ing.name);
+                      }
+                    });
                   }
                   const itemTotal = (item.variation.price + extraCost) * item.quantity;
 
                   return (
-                    <div key={`${item.product.id}-${item.variation.id}`} className="flex items-center gap-4">
+                    <div key={`${item.product.id}-${item.variation.id}-${index}`} className="flex items-center gap-4">
                       {/* Product Image */}
                       {item.product.images && item.product.images.length > 0 && (
                         <img
@@ -94,11 +99,19 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, onChe
                           {item.product.name}
                         </h3>
                         <p
-                          className="text-xs mb-2"
+                          className="text-xs mb-1"
                           style={{ color: themeColors.secondaryText }}
                         >
                           {item.variation.name}
                         </p>
+                        {additionalIngredients.length > 0 && (
+                          <p
+                            className="text-xs mb-1 italic"
+                            style={{ color: primaryColor }}
+                          >
+                            + {additionalIngredients.join(', ')}
+                          </p>
+                        )}
                         <p
                           className="font-bold text-sm"
                           style={{ color: primaryColor }}

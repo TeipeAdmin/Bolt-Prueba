@@ -37,7 +37,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
   };
 
   const handleAddToCart = () => {
-    addItem(product, selectedVariation, quantity, '');
+    addItem(product, selectedVariation, quantity, selectedIngredients, '');
     onClose();
   };
 

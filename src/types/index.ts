@@ -101,13 +101,11 @@ export interface OrderItem {
 }
 
 export interface CartItem {
-  id: string;
   product: Product;
   variation: ProductVariation;
   quantity: number;
-  selectedIngredients: ProductIngredient[];
-  specialNotes?: string;
-  totalPrice: number;
+  selected_ingredients: string[];
+  special_notes?: string;
 }
 
 export interface UISettings {

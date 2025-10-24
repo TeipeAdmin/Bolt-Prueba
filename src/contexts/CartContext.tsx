@@ -3,7 +3,7 @@ import { CartItem, Product, ProductVariation } from '../types';
 
 interface CartContextType {
   items: CartItem[];
-  addItem: (product: Product, variation: ProductVariation, quantity?: number, notes?: string) => void;
+  addItem: (product: Product, variation: ProductVariation, quantity?: number, selectedIngredients?: string[], notes?: string) => void;
   removeItem: (productId: string, variationId: string) => void;
   updateQuantity: (productId: string, variationId: string, quantity: number) => void;
   clearCart: () => void;
@@ -28,10 +28,14 @@ interface CartProviderProps {
 export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const [items, setItems] = useState<CartItem[]>([]);
 
-  const addItem = (product: Product, variation: ProductVariation, quantity = 1, notes?: string) => {
+  const addItem = (product: Product, variation: ProductVariation, quantity = 1, selectedIngredients?: string[], notes?: string) => {
     setItems(prevItems => {
+      const ingredientsToUse = selectedIngredients || product.ingredients?.filter(ing => !ing.optional).map(ing => ing.id) || [];
+
       const existingItemIndex = prevItems.findIndex(
-        item => item.product.id === product.id && item.variation.id === variation.id
+        item => item.product.id === product.id &&
+               item.variation.id === variation.id &&
+               JSON.stringify(item.selected_ingredients.sort()) === JSON.stringify(ingredientsToUse.sort())
       );
 
       if (existingItemIndex >= 0) {
@@ -45,7 +49,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         variation,
         quantity,
         special_notes: notes,
-        selected_ingredients: product.ingredients.filter(ing => !ing.optional).map(ing => ing.id),
+        selected_ingredients: ingredientsToUse,
       }];
     });
   };
