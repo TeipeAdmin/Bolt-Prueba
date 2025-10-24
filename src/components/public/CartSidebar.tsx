@@ -19,6 +19,9 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, onChe
   const themeColors = getThemeColors(restaurant?.settings?.theme);
   const theme = restaurant?.settings?.theme;
   const primaryColor = theme?.primary_color || '#FFC700';
+  const secondaryColor = theme.secondary_color || '#f3f4f6';
+  const primaryTextColor = theme.primary_text_color || '#111827';
+  const secondaryTextColor = theme.secondary_text_color || '#6b7280';
 
   if (!isOpen) return null;
 
@@ -99,12 +102,12 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, onChe
                         >
                           {item.variation.name}
                         </p>
-                        <p
+                        <h3
                           className="font-bold text-sm"
                           style={{ color: primaryColor }}
                         >
                           {formatCurrency(itemTotal)}
-                        </p>
+                        </h3>
                       </div>
 
                       {/* Actions */}
@@ -113,7 +116,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, onChe
                         <button
                           onClick={() => removeItem(item.product.id, item.variation.id)}
                           className="hover:opacity-70 transition-opacity"
-                          style={{ color: '#ef4444' }}
+                          style={{ color: secondaryColor }}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -122,15 +125,16 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, onChe
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => updateQuantity(item.product.id, item.variation.id, Math.max(1, item.quantity - 1))}
-                            className="w-7 h-7 rounded-full border flex items-center justify-center transition-colors hover:opacity-70"
+                            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:opacity-70"
                             style={{
-                              borderColor: primaryColor,
+                              border: `3px solid ${primaryColor}`, // borde más grueso
                               color: primaryColor,
                               backgroundColor: 'transparent'
                             }}
                           >
-                            <Minus className="w-3 h-3" />
+                            <Minus className="w-4 h-4" strokeWidth={3} /> {/* ícono más grande y grueso */}
                           </button>
+
 
                           <span
                             className="font-semibold text-sm w-6 text-center"
@@ -141,14 +145,14 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, onChe
 
                           <button
                             onClick={() => updateQuantity(item.product.id, item.variation.id, item.quantity + 1)}
-                            className="w-7 h-7 rounded-full border flex items-center justify-center transition-colors hover:opacity-70"
+                            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:opacity-70"
                             style={{
-                              borderColor: primaryColor,
+                              border: `3px solid ${primaryColor}`, // borde más grueso
                               color: primaryColor,
                               backgroundColor: 'transparent'
                             }}
                           >
-                            <Plus className="w-3 h-3" />
+                            <Plus className="w-4 h-4" strokeWidth={3} /> {/* icono más grande y con trazo fuerte */}
                           </button>
                         </div>
                       </div>
@@ -181,7 +185,8 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, onChe
                 onClick={onCheckout}
                 className="w-full py-3 text-white font-bold rounded-lg transition-all hover:opacity-90 uppercase text-sm"
                 style={{
-                  backgroundColor: primaryColor
+                  backgroundColor: primaryColor,
+                  color: secondaryTextColor
                 }}
               >
                 PAGAR
