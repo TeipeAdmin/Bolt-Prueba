@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { X, MapPin, Store, Home, CheckCircle, Clock, Phone } from 'lucide-react';
+import { X, MapPin, Store, Home, CheckCircle, Clock, Phone, AlertCircle } from 'lucide-react';
 import { Restaurant } from '../../types';
 import { useCart } from '../../contexts/CartContext';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
+import { useToast } from '../../hooks/useToast';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ type DeliveryMode = 'pickup' | 'dine-in' | 'delivery';
 
 export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, restaurant }) => {
   const { items, getTotal, clearCart } = useCart();
+  const { showToast } = useToast();
   const [step, setStep] = useState<'delivery' | 'info' | 'confirm' | 'success'>('delivery');
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>('pickup');
   const [customerInfo, setCustomerInfo] = useState({
@@ -43,12 +45,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
 
   const validateForm = () => {
     if (!customerInfo.name || !customerInfo.phone) {
-      alert('Por favor completa tu nombre y teléfono');
+      showToast('warning', 'Información incompleta', 'Por favor completa tu nombre y teléfono');
       return false;
     }
 
     if (deliveryMode === 'delivery' && (!customerInfo.address || !customerInfo.city)) {
-      alert('Por favor completa la dirección de entrega');
+      showToast('warning', 'Dirección incompleta', 'Por favor completa la dirección de entrega');
       return false;
     }
 
@@ -163,7 +165,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
           {step === 'delivery' && (
             <div>
             <p
-              className="text-center"
+              className="text-center mb-4"
               style={{
                 fontSize: 'var(--font-size-normal)',
                 color: secondaryTextColor
@@ -171,15 +173,24 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
             >
               Selecciona cómo deseas recibir tu pedido
             </p>
-            <p
-            className="mb-6 text-center"
-            style={{
-              fontSize: '12px',
-              color: primaryTextColor
-            }}
-          >
-            Tiempo de preparación estimado: {restaurant.settings.preparation_time || '30-45 minutos'}
-          </p>
+            <div
+              className="mb-6 p-4 rounded-lg flex items-center gap-3"
+              style={{
+                backgroundColor: `${primaryColor}15`,
+                border: `1px solid ${primaryColor}30`,
+                borderRadius: theme.button_style === 'rounded' ? '0.75rem' : '0.25rem'
+              }}
+            >
+              <Clock className="w-5 h-5 flex-shrink-0" style={{ color: primaryColor }} />
+              <div>
+                <p className="font-semibold text-sm" style={{ color: primaryTextColor }}>
+                  Tiempo de preparación estimado
+                </p>
+                <p className="text-sm" style={{ color: secondaryTextColor }}>
+                  {restaurant.settings.preparation_time || '30-45 minutos'}
+                </p>
+              </div>
+            </div>
 
               <div className="space-y-4">
                 <button
@@ -587,9 +598,28 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                   Cambiar
                 </button>
               </div>
+              <div
+                className="mb-4 p-4 rounded-lg flex items-start gap-3"
+                style={{
+                  backgroundColor: `${primaryColor}10`,
+                  border: `1px solid ${primaryColor}30`,
+                  borderRadius: theme.button_style === 'rounded' ? '0.75rem' : '0.25rem'
+                }}
+              >
+                <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: primaryColor }} />
+                <div>
+                  <p className="font-semibold text-sm mb-1" style={{ color: primaryTextColor }}>
+                    Revisa tu pedido
+                  </p>
+                  <p className="text-xs" style={{ color: secondaryTextColor }}>
+                    Verifica que toda la información sea correcta antes de confirmar
+                  </p>
+                </div>
+              </div>
+
               <div className="mb-6">
                 <h3
-                  className="font-semibold mb-4 mt-4"
+                  className="font-semibold mb-4"
                   style={{
                     fontSize: 'var(--font-size-subtitle)',
                     color: primaryTextColor
@@ -717,23 +747,43 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
               </div>
 
               <div className="space-y-3 mb-6 text-left">
-                <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg"
-                  style={{ borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem' }}
+                <div
+                  className="flex items-center gap-3 p-4 rounded-lg"
+                  style={{
+                    backgroundColor: `${primaryColor}15`,
+                    border: `1px solid ${primaryColor}30`,
+                    borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
+                  }}
                 >
-                  <Clock className="w-6 h-6" style={{ color: 'var(--primary-color)' }} />
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    <Clock className="w-5 h-5" style={{ color: '#ffffff' }} />
+                  </div>
                   <div>
-                    <p className="font-medium">Estado: Recibido</p>
+                    <p className="font-semibold" style={{ color: primaryTextColor }}>Estado: Recibido</p>
                     <p className="text-sm" style={{ color: secondaryTextColor }}>Tu pedido está siendo preparado</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg"
-                  style={{ borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem' }}
+                <div
+                  className="flex items-center gap-3 p-4 rounded-lg"
+                  style={{
+                    backgroundColor: `${secondaryColor}`,
+                    border: `1px solid ${primaryColor}20`,
+                    borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
+                  }}
                 >
-                  <Phone className="w-6 h-6 text-gray-600" />
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    <Phone className="w-5 h-5" style={{ color: '#ffffff' }} />
+                  </div>
                   <div>
-                    <p className="font-medium">Contacto</p>
-                    <p className="text-sm text-gray-600">
+                    <p className="font-semibold" style={{ color: primaryTextColor }}>Contacto</p>
+                    <p className="text-sm" style={{ color: secondaryTextColor }}>
                       Te contactaremos al {customerInfo.phone}
                     </p>
                   </div>
