@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Search, Gift, Star, X, ChevronLeft, ChevronRight, Grid3x3, List, Clock, MapPin, Facebook, Instagram, Phone, AlignLeft } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { Category, Product, Restaurant, Subscription } from '../../types';
-import { loadFromStorage } from '../../data/mockData';
+import { supabase } from '../../lib/supabase';
 import { useCart } from '../../contexts/CartContext';
 import { ProductDetail } from '../../components/public/ProductDetail';
 import { CartSidebar } from '../../components/public/CartSidebar';
@@ -26,46 +26,75 @@ export const PublicMenu: React.FC = () => {
   const [viewMode, setViewMode] = useState<'list' | 'grid' | 'editorial'>('list');
   const [showHoursModal, setShowHoursModal] = useState(false);
 
-  const loadMenuData = () => {
+  const loadMenuData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const restaurants = loadFromStorage('restaurants', []);
-      const restaurantData = restaurants.find((r: Restaurant) => r.slug === slug || r.id === slug || r.domain === slug);
+      // Buscar restaurante por slug o domain
+      const { data: restaurantData, error: restaurantError } = await supabase
+        .from('restaurants')
+        .select('*')
+        .or(`slug.eq.${slug},domain.eq.${slug}`)
+        .single();
 
-      if (!restaurantData) {
+      if (restaurantError || !restaurantData) {
+        console.error('Restaurant not found:', restaurantError);
         setError(`Restaurante no encontrado: ${slug}`);
         setLoading(false);
         return;
       }
 
-      const subscriptions = loadFromStorage('subscriptions', []);
-      const subscription = subscriptions.find((s: Subscription) => s.restaurant_id === restaurantData.id);
+      // Verificar suscripción activa
+      const { data: subscription, error: subscriptionError } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('restaurant_id', restaurantData.id)
+        .eq('status', 'active')
+        .maybeSingle();
 
-      if (!subscription || subscription.status !== 'active') {
+      if (subscriptionError) {
+        console.error('Error checking subscription:', subscriptionError);
+      }
+
+      if (!subscription) {
         setError('Este restaurante no está disponible en este momento. Suscripción inactiva o vencida.');
         setLoading(false);
         return;
       }
 
-      setRestaurant(restaurantData);
+      setRestaurant(restaurantData as Restaurant);
 
-      const allCategories = loadFromStorage('categories', []);
-      const allProducts = loadFromStorage('products', []);
+      // Cargar categorías activas
+      const { data: categoriesData, error: categoriesError } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('restaurant_id', restaurantData.id)
+        .eq('active', true)
+        .order('order_position', { ascending: true });
 
-      const restaurantCategories = allCategories.filter((cat: Category) =>
-        cat.restaurant_id === restaurantData.id && cat.active
-      );
+      if (categoriesError) {
+        console.error('Error loading categories:', categoriesError);
+      }
 
-      const restaurantProducts = allProducts.filter((prod: Product) =>
-        prod.restaurant_id === restaurantData.id && prod.status === 'active'
-      );
+      // Cargar productos activos
+      const { data: productsData, error: productsError } = await supabase
+        .from('products')
+        .select('*')
+        .eq('restaurant_id', restaurantData.id)
+        .eq('status', 'active')
+        .eq('is_available', true)
+        .order('order_index', { ascending: true });
 
-      setCategories(restaurantCategories);
-      setProducts(restaurantProducts);
+      if (productsError) {
+        console.error('Error loading products:', productsError);
+      }
+
+      setCategories((categoriesData || []) as Category[]);
+      setProducts((productsData || []) as Product[]);
       setLoading(false);
     } catch (err) {
+      console.error('Error loading menu:', err);
       setError('Error al cargar el menú');
       setLoading(false);
     }
