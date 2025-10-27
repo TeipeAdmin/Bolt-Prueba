@@ -44,7 +44,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
     }
 
     if (!formData.password) {
-      newErrors.password = `Password is ${t('required')}`;
+      newErrors.password = `Contraseña es ${t('required')}`;
     } else if (formData.password.length < 6) {
       newErrors.password = t('passwordTooShort');
     }
@@ -54,7 +54,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
     }
 
     if (!formData.acceptTerms) {
-      newErrors.acceptTerms = 'You must accept the terms and conditions';
+      newErrors.acceptTerms = 'Debes aceptar los términos y condiciones';
     }
 
     setErrors(newErrors);
