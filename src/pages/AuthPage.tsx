@@ -24,7 +24,11 @@ export const AuthPage: React.FC = () => {
           {/* Logo */}
           <div className="flex items-center space-x-3 mb-16">
             <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
-              <ChefHat className="w-7 h-7 text-white" />
+                <img
+                  src="/PLATYO FAVICON BLANCO.svg"
+                  alt="Platyo"
+                  className="w-10 h-10 flex-shrink-0"
+                />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-white">Platyo</h1>
