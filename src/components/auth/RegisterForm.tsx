@@ -4,6 +4,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
+import { Modal } from '../ui/Modal';
+import { TermsAndConditions } from './TermsAndConditions';
 
 interface RegisterFormProps {
   onSwitchToLogin: () => void;
@@ -23,6 +25,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   
   const { register } = useAuth();
   const { t } = useLanguage();
@@ -210,9 +213,16 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
             />
             <label htmlFor="acceptTerms" className="ml-2 text-sm text-gray-600">
               {t('acceptTerms')}{' '}
-              <a href="#" className="text-blue-600 hover:text-blue-700">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowTermsModal(true);
+                }}
+                className="text-blue-600 hover:text-blue-700 underline"
+              >
                 términos y condiciones
-              </a>{' '}
+              </button>{' '}
               del servicio
             </label>
           </div>
@@ -246,6 +256,21 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
           </button>
         </div>
       </div>
+
+      <Modal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        title="Términos y Condiciones de Platyo"
+        size="xl"
+      >
+        <TermsAndConditions onAccept={() => {
+          setFormData(prev => ({ ...prev, acceptTerms: true }));
+          setShowTermsModal(false);
+          if (errors.acceptTerms) {
+            setErrors(prev => ({ ...prev, acceptTerms: '' }));
+          }
+        }} />
+      </Modal>
     </div>
   );
 };
