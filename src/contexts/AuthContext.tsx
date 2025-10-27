@@ -199,7 +199,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       address: data.address,
       owner_name: data.ownerName,
       owner_id: userId,
-      status: 'active',
       settings: {
         currency: 'USD',
         language: 'es',

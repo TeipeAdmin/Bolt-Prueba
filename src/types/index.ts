@@ -238,7 +238,6 @@ export interface Restaurant {
   user_id?: string;
   subscription_id?: string;
   domain?: string;
-  status?: 'active' | 'inactive' | 'pending';
   settings: RestaurantSettings;
   created_at: string;
   updated_at: string;
