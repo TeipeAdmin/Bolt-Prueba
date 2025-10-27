@@ -139,7 +139,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
               value={formData.restaurantName}
               onChange={handleChange}
               error={errors.restaurantName}
-              placeholder="My Restaurant"
+              placeholder="Mi Restaurante"
             />
 
             <Input
@@ -147,7 +147,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
               label={t('ownerName')}
               value={formData.ownerName}
               onChange={handleChange}
-              placeholder="John Doe"
+              placeholder="Pepito Perez"
             />
 
             <Input
@@ -157,7 +157,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
               value={formData.email}
               onChange={handleChange}
               error={errors.email}
-              placeholder="contact@myrestaurant.com"
+              placeholder="contacto@mirestaurante.com"
             />
 
             <Input
@@ -165,7 +165,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
               label={t('phone')}
               value={formData.phone}
               onChange={handleChange}
-              placeholder="+1 (555) 123-4567"
+              placeholder="+57 (310) 123-4567"
             />
           </div>
 
@@ -174,7 +174,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
             label="Dirección del Restaurante"
             value={formData.address}
             onChange={handleChange}
-            placeholder="123 Main Street, City"
+            placeholder="Calle 123 No 45-67, Ciudad"
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -185,7 +185,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
               value={formData.password}
               onChange={handleChange}
               error={errors.password}
-              placeholder="Minimum 6 characters"
+              placeholder="Minimo 6 caracteres"
             />
 
             <Input
@@ -195,7 +195,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
               value={formData.confirmPassword}
               onChange={handleChange}
               error={errors.confirmPassword}
-              placeholder="Repeat your password"
+              placeholder="Repite tu contraseña"
             />
           </div>
 
