@@ -272,24 +272,30 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
         {/* Image Preview */}
         {formData.image ? (
-          <div className="relative group bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow max-w-xs mx-auto">
-            <div className="aspect-square bg-gray-100" style={{ maxHeight: '200px' }}>
-              <img
-                src={formData.image}
-                alt="Product preview"
-                className="w-full h-full object-cover"
-              />
+          <div className="flex items-center gap-4 bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+            <div className="relative group flex-shrink-0">
+              <div className="w-32 h-32 bg-gray-100 rounded-lg overflow-hidden">
+                <img
+                  src={formData.image}
+                  alt="Product preview"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleImageRemove}
+                className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={handleImageRemove}
-              className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-900 mb-1">Imagen del producto</p>
+              <p className="text-xs text-gray-500">La imagen se mostrará en el menú público</p>
+            </div>
           </div>
         ) : (
-          <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-6 text-center max-w-xs mx-auto">
+          <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-6 text-center">
             <ImageIcon className="w-10 h-10 text-gray-300 mx-auto mb-2" />
             <p className="text-sm text-gray-500 mb-1">No hay imagen agregada</p>
             <p className="text-xs text-gray-400">Sube una imagen para mostrar tu producto</p>
