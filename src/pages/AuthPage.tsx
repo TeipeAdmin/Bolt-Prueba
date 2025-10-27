@@ -27,8 +27,8 @@ export const AuthPage: React.FC = () => {
               <ChefHat className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white">RestaurantOS</h1>
-              <p className="text-sm text-gray-400">Sistema de Gestión Inteligente</p>
+              <h1 className="text-2xl font-bold text-white">Platyo</h1>
+              <p className="text-sm text-gray-400">Gestión, pedidos y satisfacción: todo en un solo lugar</p>
             </div>
           </div>
 
