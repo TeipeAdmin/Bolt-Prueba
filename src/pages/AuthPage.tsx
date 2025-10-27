@@ -3,7 +3,7 @@ import { LoginForm } from '../components/auth/LoginForm';
 import { RegisterForm } from '../components/auth/RegisterForm';
 import { ChangePasswordModal } from '../components/auth/ChangePasswordModal';
 import { useAuth } from '../contexts/AuthContext';
-import { ChefHat, TrendingUp, Smartphone, Users, Clock, BarChart3, Shield, Zap } from 'lucide-react';
+import { ChefHat, TrendingUp, Smartphone, Users, Clock, BarChart3, Shield, Zap, Receipt, Eye } from 'lucide-react';
 
 export const AuthPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -101,6 +101,26 @@ export const AuthPage: React.FC = () => {
               <div>
                 <h3 className="text-white font-semibold mb-1">Configuración Rápida</h3>
                 <p className="text-sm text-gray-400">Listo en menos de 10 minutos</p>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-3">
+              <div className="w-10 h-10 bg-indigo-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Receipt className="w-5 h-5 text-indigo-400" />
+              </div>
+              <div>
+                <h3 className="text-white font-semibold mb-1">Facturación POS</h3>
+                <p className="text-sm text-gray-400">Sistema integrado de punto de venta</p>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-3">
+              <div className="w-10 h-10 bg-teal-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Eye className="w-5 h-5 text-teal-400" />
+              </div>
+              <div>
+                <h3 className="text-white font-semibold mb-1">Seguimiento en Tiempo Real</h3>
+                <p className="text-sm text-gray-400">Clientes rastrean sus pedidos al instante</p>
               </div>
             </div>
           </div>
