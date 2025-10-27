@@ -38,7 +38,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
     }
 
     if (!formData.email.trim()) {
-      newErrors.email = `Email is ${t('required')}`;
+      newErrors.email = `Email es ${t('required')}`;
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = t('invalidEmail');
     }
