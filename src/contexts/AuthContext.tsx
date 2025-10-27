@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { AuthContextType, User, Restaurant, RegisterData, Subscription, SupportTicket } from '../types';
 import { loadFromStorage, saveToStorage, initializeData } from '../data/mockData';
-import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -330,44 +329,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return { success: true };
   };
 
-  const loginWithGoogle = async (): Promise<{ success: boolean; error?: string }> => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
-
-      return { success: true };
-    } catch (err) {
-      return { success: false, error: 'Error al iniciar sesión con Google' };
-    }
-  };
-
-  const loginWithFacebook = async (): Promise<{ success: boolean; error?: string }> => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'facebook',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
-
-      return { success: true };
-    } catch (err) {
-      return { success: false, error: 'Error al iniciar sesión con Facebook' };
-    }
-  };
-
   const logout = () => {
     setUser(null);
     setRestaurant(null);
@@ -380,8 +341,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     restaurant,
     isAuthenticated,
     login,
-    loginWithGoogle,
-    loginWithFacebook,
     register,
     logout,
     loading,

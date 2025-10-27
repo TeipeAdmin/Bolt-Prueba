@@ -307,8 +307,6 @@ export interface AuthContextType {
   loading: boolean;
   requirePasswordChange?: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  loginWithGoogle: () => Promise<{ success: boolean; error?: string }>;
-  loginWithFacebook: () => Promise<{ success: boolean; error?: string }>;
   register: (data: RegisterData) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   changePassword?: (newPassword: string) => void;
