@@ -111,19 +111,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
           </button>
         </div>
 
-        <div className="mt-8 bg-gradient-to-br from-slate-50 to-gray-50 rounded-xl p-5 border border-gray-200">
-          <p className="text-sm font-semibold text-gray-700 mb-3">{t('demoAccounts')}</p>
-          <div className="space-y-2 text-xs">
-            <div className="flex items-center justify-between p-2 bg-white rounded-lg">
-              <span className="text-gray-600"><strong>{t('superadmin')}:</strong></span>
-              <span className="text-gray-700 font-mono">admin@sistema.com / admin123</span>
-            </div>
-            <div className="flex items-center justify-between p-2 bg-white rounded-lg">
-              <span className="text-gray-600"><strong>{t('restaurant')}:</strong></span>
-              <span className="text-gray-700 font-mono">orlando@gmail.com / orlando123</span>
-            </div>
-          </div>
-        </div>
+
       </div>
 
       <ForgotPasswordModal
