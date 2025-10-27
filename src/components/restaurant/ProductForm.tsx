@@ -39,7 +39,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     category_id: '',
     status: 'active' as const,
     sku: '',
-    images: [] as string[]
+    image: ''
   });
   const [variations, setVariations] = useState<ProductVariation[]>([
     { id: '1', name: 'Default', price: 0 }
@@ -55,7 +55,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         category_id: product.category_id,
         status: product.status,
         sku: product.sku || '',
-        images: product.images || []
+        image: product.images?.[0] || ''
       });
       setVariations(product.variations.length > 0 ? product.variations : [
         { id: '1', name: 'Default', price: 0 }
@@ -106,20 +106,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   const removeIngredient = (index: number) => {
     setIngredients(prev => prev.filter((_, i) => i !== index));
   };
-  const handleImageAdd = () => {
-    if (newImageUrl.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        images: [...prev.images, newImageUrl.trim()]
-      }));
-      setNewImageUrl('');
-    }
-  };
-
-  const handleImageRemove = (index: number) => {
+  const handleImageRemove = () => {
     setFormData(prev => ({
       ...prev,
-      images: prev.images.filter((_, i) => i !== index)
+      image: ''
     }));
   };
 
@@ -133,6 +123,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
     const productData = {
       ...formData,
+      images: formData.image ? [formData.image] : [],
       variations: variations.filter(v => v.name.trim() && v.price >= 0),
       ingredients: ingredients.filter(ing => ing.name.trim())
     };
@@ -228,11 +219,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         </div>
       </div>
 
-      {/* Product Images */}
+      {/* Product Image */}
       <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
         <label className="block text-sm font-medium text-gray-900 mb-4 flex items-center gap-2">
           <ImageIcon className="w-5 h-5 text-blue-600" />
-          Imágenes del Producto
+          Imagen del Producto
         </label>
 
         {/* Add Image from Device */}
@@ -243,10 +234,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 <input
                   type="file"
                   accept="image/*"
-                  multiple
                   onChange={(e) => {
-                    const files = Array.from(e.target.files || []);
-                    files.forEach(file => {
+                    const file = e.target.files?.[0];
+                    if (file) {
                       if (file.size > 5 * 1024 * 1024) {
                         alert(`${file.name} es muy grande. Tamaño máximo: 5MB`);
                         return;
@@ -255,60 +245,54 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                       reader.onloadend = () => {
                         setFormData(prev => ({
                           ...prev,
-                          images: [...prev.images, reader.result as string]
+                          image: reader.result as string
                         }));
                       };
                       reader.readAsDataURL(file);
-                    });
+                    }
                   }}
                   className="hidden"
-                  id="product-images"
+                  id="product-image"
+                  disabled={!!formData.image}
                 />
-                <span className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all shadow-sm w-full justify-center">
+                <span className={`inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium transition-all shadow-sm w-full justify-center ${
+                  formData.image ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-50 hover:border-gray-400'
+                }`}>
                   <Upload className="w-4 h-4 mr-2" />
-                  Subir imágenes desde dispositivo
+                  {formData.image ? 'Imagen cargada' : 'Subir imagen desde dispositivo'}
                 </span>
               </label>
             </div>
             <p className="text-xs text-gray-600 flex items-start gap-2">
               <span className="text-blue-500 mt-0.5">ℹ</span>
-              <span>Sube imágenes de alta calidad de tu producto. Puedes seleccionar múltiples imágenes. Máximo 5MB por imagen.</span>
+              <span>Sube una imagen de alta calidad de tu producto. Solo se permite una imagen. Máximo 5MB.</span>
             </p>
           </div>
         </div>
 
-        {/* Existing Images Grid */}
-        {formData.images.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {formData.images.map((image, index) => (
-              <div key={index} className="relative group bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                <div className="aspect-square bg-gray-100">
-                  <img
-                    src={image}
-                    alt={`Product ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="absolute top-2 left-2">
-                  <span className="inline-flex items-center px-2 py-1 bg-white/90 backdrop-blur-sm rounded text-xs font-medium text-gray-700 shadow-sm">
-                    {index === 0 ? 'Principal' : `#${index + 1}`}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleImageRemove(index)}
-                  className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
+        {/* Image Preview */}
+        {formData.image ? (
+          <div className="relative group bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow max-w-md mx-auto">
+            <div className="aspect-square bg-gray-100">
+              <img
+                src={formData.image}
+                alt="Product preview"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleImageRemove}
+              className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
           </div>
         ) : (
-          <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-8 text-center">
+          <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-8 text-center max-w-md mx-auto">
             <ImageIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-sm text-gray-500 mb-1">No hay imágenes agregadas</p>
-            <p className="text-xs text-gray-400">Sube imágenes para mostrar tu producto</p>
+            <p className="text-sm text-gray-500 mb-1">No hay imagen agregada</p>
+            <p className="text-xs text-gray-400">Sube una imagen para mostrar tu producto</p>
           </div>
         )}
       </div>
