@@ -52,30 +52,26 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Recuperar Contraseña">
       {success ? (
-        <div className="text-center py-8">
-          <div className="w-20 h-20 bg-gradient-to-br from-emerald-100 to-cyan-100 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-            <Check className="w-10 h-10 text-emerald-600" />
+        <div className="text-center py-6">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Check className="w-8 h-8 text-green-600" />
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-3">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
             ¡Solicitud Enviada!
           </h3>
-          <p className="text-gray-600 mb-6 text-base leading-relaxed">
+          <p className="text-gray-600 mb-4">
             Hemos recibido tu solicitud de recuperación de contraseña.
           </p>
-          <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-5 border border-orange-200">
-            <p className="text-sm text-gray-700 leading-relaxed">
-              Nuestro equipo se contactará contigo al email <strong className="text-orange-600">{email}</strong> para ayudarte a recuperar el acceso a tu cuenta.
-            </p>
-          </div>
+          <p className="text-sm text-gray-500">
+            Nuestro equipo se contactará contigo al email <strong>{email}</strong> para ayudarte a reactivar tu cuenta.
+          </p>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="flex items-start space-x-4 p-5 bg-gradient-to-br from-orange-50 to-red-50 rounded-xl border border-orange-200">
-            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Mail className="w-5 h-5 text-orange-600" />
-            </div>
-            <div className="text-sm text-gray-700 leading-relaxed">
-              <p>
+          <div className="flex items-start space-x-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <Mail className="w-5 h-5 text-blue-600 mt-0.5" />
+            <div className="text-sm text-blue-900">
+              <p className="mb-2">
                 Ingresa tu dirección de email y nos pondremos en contacto contigo para ayudarte a recuperar el acceso a tu cuenta.
               </p>
             </div>
@@ -86,7 +82,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
             label="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="tu@email.com"
+            placeholder="your@email.com"
             required
           />
 
@@ -96,7 +92,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
             </div>
           )}
 
-          <div className="flex gap-3 pt-2">
+          <div className="flex gap-3">
             <Button
               type="button"
               variant="ghost"
@@ -105,11 +101,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
             >
               Cancelar
             </Button>
-            <Button
-              type="submit"
-              loading={loading}
-              className="flex-1 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700"
-            >
+            <Button type="submit" loading={loading} className="flex-1">
               Enviar Solicitud
             </Button>
           </div>

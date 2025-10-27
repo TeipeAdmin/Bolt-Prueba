@@ -12,22 +12,24 @@ export const AuthPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-white flex">
       {/* Left Side - Marketing Content */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-orange-500 via-orange-600 to-red-600 p-12 flex-col justify-between relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-12 flex-col justify-between relative overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M0 38.59l2.83-2.83 1.41 1.41L1.41 40l2.83 2.83-1.41 1.41L0 41.41l-2.83 2.83-1.41-1.41L-1.41 40l-2.83-2.83 1.41-1.41L0 38.59zM0 1.4l2.83 2.83 1.41-1.41L1.41 0 4.24-2.83 2.83-4.24 0-1.41-2.83-4.24-4.24-2.83-1.41 0-4.24 2.83-2.83 4.24 0 1.41z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
           }}></div>
         </div>
 
         <div className="relative z-10">
           {/* Logo */}
           <div className="flex items-center space-x-3 mb-16">
-            <img
-              src="/PLATYO LOGO (2).png"
-              alt="Platyo"
-              className="h-16 w-auto"
-            />
+            <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
+              <ChefHat className="w-7 h-7 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-white">RestaurantOS</h1>
+              <p className="text-sm text-gray-400">Sistema de Gestión Inteligente</p>
+            </div>
           </div>
 
           {/* Main Value Proposition */}
@@ -35,7 +37,7 @@ export const AuthPage: React.FC = () => {
             <h2 className="text-4xl font-bold text-white mb-4 leading-tight">
               Transforma la gestión de tu restaurante
             </h2>
-            <p className="text-xl text-orange-100 leading-relaxed">
+            <p className="text-xl text-gray-300 leading-relaxed">
               La plataforma todo-en-uno que necesitas para modernizar tu negocio y aumentar tus ventas
             </p>
           </div>
@@ -43,62 +45,62 @@ export const AuthPage: React.FC = () => {
           {/* Key Features */}
           <div className="grid grid-cols-2 gap-6 mb-12">
             <div className="flex items-start space-x-3">
-              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Smartphone className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Smartphone className="w-5 h-5 text-emerald-400" />
               </div>
               <div>
                 <h3 className="text-white font-semibold mb-1">Menú Digital</h3>
-                <p className="text-sm text-orange-100">Catálogo online con código QR</p>
+                <p className="text-sm text-gray-400">Catálogo online con código QR</p>
               </div>
             </div>
 
             <div className="flex items-start space-x-3">
-              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                <TrendingUp className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 bg-cyan-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                <TrendingUp className="w-5 h-5 text-cyan-400" />
               </div>
               <div>
                 <h3 className="text-white font-semibold mb-1">Más Ventas</h3>
-                <p className="text-sm text-orange-100">Aumenta hasta 40% tus ingresos</p>
+                <p className="text-sm text-gray-400">Aumenta hasta 40% tus ingresos</p>
               </div>
             </div>
 
             <div className="flex items-start space-x-3">
-              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                <BarChart3 className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 bg-violet-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                <BarChart3 className="w-5 h-5 text-violet-400" />
               </div>
               <div>
                 <h3 className="text-white font-semibold mb-1">Análisis en Tiempo Real</h3>
-                <p className="text-sm text-orange-100">Reportes y estadísticas detalladas</p>
+                <p className="text-sm text-gray-400">Reportes y estadísticas detalladas</p>
               </div>
             </div>
 
             <div className="flex items-start space-x-3">
-              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Clock className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 bg-amber-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Clock className="w-5 h-5 text-amber-400" />
               </div>
               <div>
                 <h3 className="text-white font-semibold mb-1">Gestión de Pedidos</h3>
-                <p className="text-sm text-orange-100">Control total y eficiente</p>
+                <p className="text-sm text-gray-400">Control total y eficiente</p>
               </div>
             </div>
 
             <div className="flex items-start space-x-3">
-              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Users className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 bg-rose-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Users className="w-5 h-5 text-rose-400" />
               </div>
               <div>
                 <h3 className="text-white font-semibold mb-1">Base de Clientes</h3>
-                <p className="text-sm text-orange-100">Fideliza y conoce mejor a tus clientes</p>
+                <p className="text-sm text-gray-400">Fideliza y conoce mejor a tus clientes</p>
               </div>
             </div>
 
             <div className="flex items-start space-x-3">
-              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Zap className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Zap className="w-5 h-5 text-blue-400" />
               </div>
               <div>
                 <h3 className="text-white font-semibold mb-1">Configuración Rápida</h3>
-                <p className="text-sm text-orange-100">Listo en menos de 10 minutos</p>
+                <p className="text-sm text-gray-400">Listo en menos de 10 minutos</p>
               </div>
             </div>
           </div>
