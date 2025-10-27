@@ -102,16 +102,20 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
 
   if (success) {
     return (
-      <div className="w-full max-w-md mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-          <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Store className="w-8 h-8 text-white" />
+      <div className="w-full max-w-md">
+        <div className="text-center">
+          <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+            <Store className="w-10 h-10 text-white" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">{t('registrationSuccessful')}</h2>
-          <p className="text-gray-600 mb-6">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('registrationSuccessful')}</h2>
+          <p className="text-gray-600 mb-8">
             {t('accountPendingApproval')}
           </p>
-          <Button onClick={onSwitchToLogin} className="w-full">
+          <Button
+            onClick={onSwitchToLogin}
+            className="w-full bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700"
+            size="lg"
+          >
             {t('backToLogin')}
           </Button>
         </div>
@@ -120,14 +124,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
-      <div className="bg-white rounded-lg shadow-lg p-8">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Store className="w-8 h-8 text-white" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900">{t('registerTitle')}</h2>
-          <p className="text-gray-600 mt-2">{t('registerSubtitle')}</p>
+    <div className="w-full max-w-2xl">
+      <div>
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('registerTitle')}</h2>
+          <p className="text-gray-600">{t('registerSubtitle')}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -228,7 +229,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
           <Button
             type="submit"
             loading={loading}
-            className="w-full"
+            className="w-full bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700"
             size="lg"
           >
             Crear Cuenta
@@ -238,7 +239,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
         <div className="mt-6 text-center">
           <button
             onClick={onSwitchToLogin}
-            className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
+            className="inline-flex items-center text-gray-600 hover:text-gray-900 font-medium"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
             {t('backToLogin')}

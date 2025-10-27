@@ -39,14 +39,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <div className="bg-white rounded-lg shadow-lg p-8">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <LogIn className="w-8 h-8 text-white" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900">{t('loginTitle')}</h2>
-          <p className="text-gray-600 mt-2">{t('loginSubtitle')}</p>
+    <div className="w-full">
+      <div>
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('loginTitle')}</h2>
+          <p className="text-gray-600">{t('loginSubtitle')}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -86,36 +83,45 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
           <Button
             type="submit"
             loading={loading}
-            className="w-full"
+            className="w-full bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700"
             size="lg"
           >
             {t('login')}
           </Button>
         </form>
 
-        <div className="mt-4 text-center">
+        <div className="mt-6 flex items-center justify-between">
           <button
             onClick={() => setShowForgotPassword(true)}
-            className="text-sm text-gray-600 hover:text-gray-800 underline"
+            className="text-sm text-gray-600 hover:text-gray-900 underline"
           >
-            ¿Olvidé mi contraseña?
+            ¿Olvidaste tu contraseña?
           </button>
         </div>
 
-        <div className="mt-4 text-center">
+        <div className="mt-8 pt-8 border-t border-gray-200">
+          <p className="text-center text-sm text-gray-600 mb-4">
+            ¿No tienes una cuenta?
+          </p>
           <button
             onClick={onSwitchToRegister}
-            className="text-blue-600 hover:text-blue-700 font-medium"
+            className="w-full py-3 px-4 border-2 border-gray-300 rounded-lg text-gray-700 font-medium hover:border-gray-400 hover:bg-gray-50 transition-colors"
           >
-            ¿No tienes una cuenta? Registra tu restaurante
+            Registra tu restaurante
           </button>
         </div>
 
-        <div className="mt-8 bg-gray-50 rounded-lg p-4">
-          <p className="text-sm text-gray-600 mb-2"><strong>{t('demoAccounts')}</strong></p>
-          <div className="space-y-1 text-xs">
-            <p><strong>{t('superadmin')}:</strong> admin@sistema.com / admin123</p>
-            <p><strong>{t('restaurant')}:</strong> orlando@gmail.com / orlando123</p>
+        <div className="mt-8 bg-gradient-to-br from-slate-50 to-gray-50 rounded-xl p-5 border border-gray-200">
+          <p className="text-sm font-semibold text-gray-700 mb-3">{t('demoAccounts')}</p>
+          <div className="space-y-2 text-xs">
+            <div className="flex items-center justify-between p-2 bg-white rounded-lg">
+              <span className="text-gray-600"><strong>{t('superadmin')}:</strong></span>
+              <span className="text-gray-700 font-mono">admin@sistema.com / admin123</span>
+            </div>
+            <div className="flex items-center justify-between p-2 bg-white rounded-lg">
+              <span className="text-gray-600"><strong>{t('restaurant')}:</strong></span>
+              <span className="text-gray-700 font-mono">orlando@gmail.com / orlando123</span>
+            </div>
           </div>
         </div>
       </div>
