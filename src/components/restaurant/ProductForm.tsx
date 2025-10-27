@@ -272,8 +272,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
         {/* Image Preview */}
         {formData.image ? (
-          <div className="relative group bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow max-w-md mx-auto">
-            <div className="aspect-square bg-gray-100">
+          <div className="relative group bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow max-w-xs mx-auto">
+            <div className="aspect-square bg-gray-100" style={{ maxHeight: '200px' }}>
               <img
                 src={formData.image}
                 alt="Product preview"
@@ -289,8 +289,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             </button>
           </div>
         ) : (
-          <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-8 text-center max-w-md mx-auto">
-            <ImageIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+          <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-6 text-center max-w-xs mx-auto">
+            <ImageIcon className="w-10 h-10 text-gray-300 mx-auto mb-2" />
             <p className="text-sm text-gray-500 mb-1">No hay imagen agregada</p>
             <p className="text-xs text-gray-400">Sube una imagen para mostrar tu producto</p>
           </div>
