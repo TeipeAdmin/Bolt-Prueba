@@ -531,7 +531,7 @@ Fecha: ${new Date().toLocaleString()}
                     <Globe className="w-6 h-6 text-green-600" />
                   </div>
 
-                  <div className="flex-1">
+                  <div className="flex-1 w-[80%]">
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">Menú Público</h3>
                     <p className="text-sm text-gray-600 mb-4">
                       Comparte este enlace con tus clientes para que puedan ver tu menú y realizar pedidos
