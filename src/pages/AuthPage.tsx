@@ -3,14 +3,44 @@ import { LoginForm } from '../components/auth/LoginForm';
 import { RegisterForm } from '../components/auth/RegisterForm';
 import { ChangePasswordModal } from '../components/auth/ChangePasswordModal';
 import { useAuth } from '../contexts/AuthContext';
-import { ChefHat, TrendingUp, Smartphone, Users, Clock, BarChart3, Shield, Zap, Receipt, Eye } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
+import { ChefHat, TrendingUp, Smartphone, Users, Clock, BarChart3, Shield, Zap, Receipt, Eye, Globe } from 'lucide-react';
+import { Language } from '../utils/translations';
 
 export const AuthPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
   const { requirePasswordChange, changePassword } = useAuth();
+  const { language, setLanguage } = useLanguage();
 
   return (
     <div className="min-h-screen bg-white flex">
+      {/* Language Selector - Fixed position */}
+      <div className="fixed top-6 right-6 z-50">
+        <div className="flex items-center gap-2 bg-white rounded-lg shadow-lg p-2">
+          <Globe className="w-4 h-4 text-slate-600" />
+          <button
+            onClick={() => setLanguage('es')}
+            className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+              language === 'es'
+                ? 'bg-emerald-500 text-white'
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            ES
+          </button>
+          <button
+            onClick={() => setLanguage('en')}
+            className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+              language === 'en'
+                ? 'bg-emerald-500 text-white'
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            EN
+          </button>
+        </div>
+      </div>
+
       {/* Left Side - Marketing Content */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-12 flex-col justify-between relative overflow-hidden">
         {/* Background Pattern */}
