@@ -14,7 +14,7 @@ import { Modal } from '../../components/ui/Modal';
 export const RestaurantSettings: React.FC = () => {
   const { restaurant, user } = useAuth();
   const { showToast } = useToast();
-  const { t } = useLanguage();
+  const { t, setLanguage } = useLanguage();
   const [activeTab, setActiveTab] = useState('general');
   const [formData, setFormData] = useState<Restaurant | null>(null);
   const [loading, setLoading] = useState(false);
@@ -519,6 +519,60 @@ Fecha: ${new Date().toLocaleString()}
                     />
                     <p className="text-xs text-gray-500 mt-2">
                       Esta descripción aparecerá en tu menú público
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Regional Settings Section */}
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <div className="flex items-center gap-2 mb-6">
+                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <Globe className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900">{t('regionalSettings')}</h3>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {t('language')}
+                    </label>
+                    <select
+                      value={formData.settings.language || 'es'}
+                      onChange={(e) => {
+                        updateFormData('settings.language', e.target.value);
+                        setLanguage(e.target.value as 'es' | 'en');
+                      }}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    >
+                      <option value="es">Español</option>
+                      <option value="en">English</option>
+                    </select>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Idioma de la interfaz del sistema
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {t('currency')}
+                    </label>
+                    <select
+                      value={formData.settings.currency || 'COP'}
+                      onChange={(e) => updateFormData('settings.currency', e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    >
+                      <option value="COP">Peso Colombiano (COP)</option>
+                      <option value="USD">Dólar Estadounidense (USD)</option>
+                      <option value="EUR">Euro (EUR)</option>
+                      <option value="MXN">Peso Mexicano (MXN)</option>
+                      <option value="ARS">Peso Argentino (ARS)</option>
+                      <option value="CLP">Peso Chileno (CLP)</option>
+                      <option value="PEN">Sol Peruano (PEN)</option>
+                    </select>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Moneda para mostrar precios
                     </p>
                   </div>
                 </div>
