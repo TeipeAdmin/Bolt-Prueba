@@ -34,7 +34,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
     const newErrors: Record<string, string> = {};
 
     if (!formData.restaurantName.trim()) {
-      newErrors.restaurantName = `Restaurant name is ${t('required')}`;
+      newErrors.restaurantName = `El nombre del restaurante ${t('required')}`;
     }
 
     if (!formData.email.trim()) {
