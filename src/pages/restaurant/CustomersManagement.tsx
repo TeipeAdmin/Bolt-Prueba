@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { User, Phone, Mail, MapPin, Calendar, ShoppingBag, Filter, Search, Star, CreditCard as Edit, ArrowUpDown, Trash2, Info, Download, CheckSquare, Square, Users, DollarSign, TrendingUp, UserCheck, UserPlus, Upload } from 'lucide-react';
+import { User, Phone, Mail, MapPin, Calendar, ShoppingBag, Filter, Search, Star, Pencil as Edit, ArrowUpDown, Trash2, Info, Download, CheckSquare, Square, Users, DollarSign, TrendingUp, UserCheck, UserPlus, Upload } from 'lucide-react';
 import { Order, Customer, Subscription } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
