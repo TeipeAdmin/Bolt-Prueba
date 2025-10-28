@@ -32,6 +32,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
   const [orderNumber, setOrderNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const [deliveryCost, setDeliveryCost] = useState(0);
+  const [validationErrors, setValidationErrors] = useState({
+    name: '',
+    phone: '',
+    email: ''
+  });
 
   if (!isOpen) return null;
 
@@ -41,6 +46,66 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
   const secondaryTextColor = theme.secondary_text_color || '#6b7280';
   const primaryColor = theme?.primary_color || '#FFC700';
   const secondaryColor = theme.secondary_color || '#f3f4f6';
+
+  const formatPhoneNumber = (value: string): string => {
+    let cleaned = value.replace(/[^\d+]/g, '');
+
+    if (!cleaned.startsWith('+')) {
+      cleaned = '+' + cleaned;
+    }
+
+    const parts = cleaned.match(/^\+(\d{1,3})(\d*)$/);
+    if (parts) {
+      const countryCode = parts[1];
+      const number = parts[2];
+
+      if (number) {
+        return `+${countryCode} ${number}`;
+      }
+      return `+${countryCode}`;
+    }
+
+    return cleaned;
+  };
+
+  const validateName = (name: string): string => {
+    if (!name || name.trim().length === 0) return '';
+    if (name.trim().length < 2) return 'Mínimo 2 caracteres';
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(name.trim())) return 'Solo letras permitidas';
+    return '';
+  };
+
+  const validatePhone = (phone: string): string => {
+    if (!phone || phone.trim().length === 0) return '';
+    const phoneRegex = /^\+\d{1,3}\s?\d{7,14}$/;
+    if (!phoneRegex.test(phone.replace(/\s+/g, ' '))) {
+      return 'Formato: +57 3001234567';
+    }
+    return '';
+  };
+
+  const validateEmail = (email: string): string => {
+    if (!email || email.trim().length === 0) return '';
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) return 'Email inválido';
+    return '';
+  };
+
+  const handleNameChange = (value: string) => {
+    setCustomerInfo({ ...customerInfo, name: value });
+    setValidationErrors({ ...validationErrors, name: validateName(value) });
+  };
+
+  const handlePhoneChange = (value: string) => {
+    const formatted = formatPhoneNumber(value);
+    setCustomerInfo({ ...customerInfo, phone: formatted });
+    setValidationErrors({ ...validationErrors, phone: validatePhone(formatted) });
+  };
+
+  const handleEmailChange = (value: string) => {
+    setCustomerInfo({ ...customerInfo, email: value });
+    setValidationErrors({ ...validationErrors, email: validateEmail(value) });
+  };
 
   const calculateDeliveryCost = (total: number): number => {
     if (!restaurant.settings?.delivery?.pricing_tiers) return 0;
@@ -66,9 +131,43 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
   };
 
   const validateForm = () => {
-    if (!customerInfo.name || !customerInfo.phone) {
-      showToast('warning', 'Información incompleta', 'Por favor completa tu nombre y teléfono');
+    const nameError = validateName(customerInfo.name);
+    const phoneError = validatePhone(customerInfo.phone);
+    const emailError = validateEmail(customerInfo.email);
+
+    setValidationErrors({
+      name: nameError,
+      phone: phoneError,
+      email: emailError
+    });
+
+    if (!customerInfo.name || customerInfo.name.trim().length < 2) {
+      showToast('warning', 'Nombre inválido', 'Por favor ingresa un nombre válido (mínimo 2 caracteres)');
       return false;
+    }
+
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(customerInfo.name.trim())) {
+      showToast('warning', 'Nombre inválido', 'El nombre solo debe contener letras');
+      return false;
+    }
+
+    if (!customerInfo.phone || customerInfo.phone.trim().length === 0) {
+      showToast('warning', 'Teléfono requerido', 'Por favor ingresa tu número de teléfono');
+      return false;
+    }
+
+    const phoneRegex = /^\+\d{1,3}\s?\d{7,14}$/;
+    if (!phoneRegex.test(customerInfo.phone.replace(/\s+/g, ' '))) {
+      showToast('warning', 'Teléfono inválido', 'Por favor ingresa un teléfono válido con código de país (Ej: +57 3001234567)');
+      return false;
+    }
+
+    if (customerInfo.email && customerInfo.email.trim().length > 0) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(customerInfo.email.trim())) {
+        showToast('warning', 'Email inválido', 'Por favor ingresa un email válido');
+        return false;
+      }
     }
 
     if (deliveryMode === 'delivery' && (!customerInfo.address || !customerInfo.city)) {
@@ -145,6 +244,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
     });
     setOrderNumber('');
     setDeliveryCost(0);
+    setValidationErrors({
+      name: '',
+      phone: '',
+      email: ''
+    });
     onClose();
   };
 
@@ -379,27 +483,30 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                   <input
                     type="text"
                     value={customerInfo.name}
-                    onChange={(e) => setCustomerInfo({ ...customerInfo, name: e.target.value })}
+                    onChange={(e) => handleNameChange(e.target.value)}
                     className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2"
                     style={{
                       fontSize: 'var(--font-size-normal)',
-                      borderColor: primaryColor,
+                      borderColor: validationErrors.name ? '#ef4444' : primaryColor,
                       backgroundColor: 'transparent',
                       color: primaryTextColor,
                       borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
                       caretColor: primaryColor
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = primaryColor;
-                      e.target.style.boxShadow = `0 0 0 1px ${primaryColor}80`;
+                      e.target.style.borderColor = validationErrors.name ? '#ef4444' : primaryColor;
+                      e.target.style.boxShadow = `0 0 0 1px ${validationErrors.name ? '#ef4444' : primaryColor}80`;
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderColor = primaryColor;
-                      e.target.style.boxShadow = `0 0 0 1px ${primaryColor}40`;
+                      e.target.style.borderColor = validationErrors.name ? '#ef4444' : primaryColor;
+                      e.target.style.boxShadow = `0 0 0 1px ${validationErrors.name ? '#ef4444' : primaryColor}40`;
                     }}
                     placeholder="Juan Pérez"
                     required
                   />
+                  {validationErrors.name && (
+                    <p className="text-xs text-red-500 mt-1">{validationErrors.name}</p>
+                  )}
                 </div>
 
                 <div>
@@ -413,27 +520,30 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                   <input
                     type="tel"
                     value={customerInfo.phone}
-                    onChange={(e) => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
+                    onChange={(e) => handlePhoneChange(e.target.value)}
                     className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2"
                     style={{
                       fontSize: 'var(--font-size-normal)',
-                      borderColor: primaryColor,
+                      borderColor: validationErrors.phone ? '#ef4444' : primaryColor,
                       backgroundColor: 'transparent',
                       color: primaryTextColor,
                       borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
                       caretColor: primaryColor
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = primaryColor;
-                      e.target.style.boxShadow = `0 0 0 1px ${primaryColor}80`;
+                      e.target.style.borderColor = validationErrors.phone ? '#ef4444' : primaryColor;
+                      e.target.style.boxShadow = `0 0 0 1px ${validationErrors.phone ? '#ef4444' : primaryColor}80`;
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderColor = primaryColor;
-                      e.target.style.boxShadow = `0 0 0 1px ${primaryColor}40`;
+                      e.target.style.borderColor = validationErrors.phone ? '#ef4444' : primaryColor;
+                      e.target.style.boxShadow = `0 0 0 1px ${validationErrors.phone ? '#ef4444' : primaryColor}40`;
                     }}
-                    placeholder="+57 300 123 4567"
+                    placeholder="+57 3001234567"
                     required
                   />
+                  {validationErrors.phone && (
+                    <p className="text-xs text-red-500 mt-1">{validationErrors.phone}</p>
+                  )}
                 </div>
 
                 <div>
@@ -448,26 +558,29 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                   <input
                     type="email"
                     value={customerInfo.email}
-                    onChange={(e) => setCustomerInfo({ ...customerInfo, email: e.target.value })}
+                    onChange={(e) => handleEmailChange(e.target.value)}
                     className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2"
                     style={{
                       fontSize: 'var(--font-size-normal)',
-                      borderColor: primaryColor,
+                      borderColor: validationErrors.email ? '#ef4444' : primaryColor,
                       backgroundColor: 'transparent',
                       color: primaryTextColor,
                       borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
                       caretColor: primaryColor
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = primaryColor;
-                      e.target.style.boxShadow = `0 0 0 1px ${primaryColor}80`;
+                      e.target.style.borderColor = validationErrors.email ? '#ef4444' : primaryColor;
+                      e.target.style.boxShadow = `0 0 0 1px ${validationErrors.email ? '#ef4444' : primaryColor}80`;
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderColor = primaryColor;
-                      e.target.style.boxShadow = `0 0 0 1px ${primaryColor}40`;
+                      e.target.style.borderColor = validationErrors.email ? '#ef4444' : primaryColor;
+                      e.target.style.boxShadow = `0 0 0 1px ${validationErrors.email ? '#ef4444' : primaryColor}40`;
                     }}
                     placeholder="correo@ejemplo.com"
                   />
+                  {validationErrors.email && (
+                    <p className="text-xs text-red-500 mt-1">{validationErrors.email}</p>
+                  )}
                 </div>
 
                 {deliveryMode === 'dine-in' && (
