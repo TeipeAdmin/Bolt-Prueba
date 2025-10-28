@@ -22,7 +22,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>('pickup');
   const [customerInfo, setCustomerInfo] = useState({
     name: '',
-    phone: '+57',
+    phone: '',
     email: '',
     address: '',
     city: '',
