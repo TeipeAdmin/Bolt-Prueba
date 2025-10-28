@@ -680,6 +680,31 @@ export const CustomersManagement: React.FC = () => {
     reader.readAsText(file, 'UTF-8');
   };
 
+  const parseCSVLine = (line: string): string[] => {
+    const result: string[] = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      const nextChar = line[i + 1];
+
+      if (char === '"' && inQuotes && nextChar === '"') {
+        current += '"';
+        i++;
+      } else if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ',' && !inQuotes) {
+        result.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    result.push(current.trim());
+    return result;
+  };
+
   const parseCSV = (text: string) => {
     text = text.replace(/^\uFEFF/, '');
     const lines = text.split(/\r?\n/).filter(line => line.trim());
@@ -690,7 +715,7 @@ export const CustomersManagement: React.FC = () => {
       return;
     }
 
-    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+    const headers = parseCSVLine(lines[0]);
     const requiredHeaders = ['Nombre', 'Teléfono'];
     const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
 
@@ -705,26 +730,10 @@ export const CustomersManagement: React.FC = () => {
 
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i];
-      const values: string[] = [];
-      let currentValue = '';
-      let insideQuotes = false;
-
-      for (let j = 0; j < line.length; j++) {
-        const char = line[j];
-
-        if (char === '"') {
-          insideQuotes = !insideQuotes;
-        } else if (char === ',' && !insideQuotes) {
-          values.push(currentValue.trim().replace(/^"|"$/g, ''));
-          currentValue = '';
-        } else {
-          currentValue += char;
-        }
-      }
-      values.push(currentValue.trim().replace(/^"|"$/g, ''));
+      const values = parseCSVLine(line);
 
       if (values.length !== headers.length) {
-        errors.push(`Línea ${i + 1}: Número incorrecto de columnas (esperado ${headers.length}, obtenido ${values.length})`);
+        errors.push(`Línea ${i + 1}: Número incorrecto de columnas (esperado ${headers.length}, obtenido ${values.length}). Valores: [${values.join(' | ')}]`);
         continue;
       }
 
@@ -739,7 +748,7 @@ export const CustomersManagement: React.FC = () => {
       }
 
       if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(row['Nombre'].trim())) {
-        errors.push(`Línea ${i + 1}: El nombre solo puede contener letras y espacios`);
+        errors.push(`Línea ${i + 1}: El nombre "${row['Nombre']}" solo puede contener letras y espacios`);
         continue;
       }
 
@@ -749,12 +758,12 @@ export const CustomersManagement: React.FC = () => {
       }
 
       if (!/^[\d+\s()-]+$/.test(row['Teléfono'].trim())) {
-        errors.push(`Línea ${i + 1}: El teléfono solo puede contener números y el símbolo +`);
+        errors.push(`Línea ${i + 1}: El teléfono "${row['Teléfono']}" solo puede contener números y el símbolo +`);
         continue;
       }
 
       if (row['Email'] && row['Email'].trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row['Email'].trim())) {
-        errors.push(`Línea ${i + 1}: El email no tiene un formato válido`);
+        errors.push(`Línea ${i + 1}: El email "${row['Email']}" no tiene un formato válido`);
         continue;
       }
 
@@ -777,11 +786,16 @@ export const CustomersManagement: React.FC = () => {
 
     setImportErrors(errors);
     setImportPreview(preview);
+    setShowImportModal(true);
 
-    if (preview.length > 0) {
-      setShowImportModal(true);
+    if (preview.length === 0 && errors.length === 0) {
+      showToast('error', 'Sin datos', 'El archivo no contiene datos para importar.', 4000);
+    } else if (preview.length === 0 && errors.length > 0) {
+      showToast('error', 'Errores de validación', `Se encontraron ${errors.length} error(es). Revisa el archivo y corrige los errores.`, 5000);
+    } else if (preview.length > 0 && errors.length > 0) {
+      showToast('warning', 'Importación parcial', `${preview.length} registro(s) válido(s) y ${errors.length} error(es) encontrado(s).`, 5000);
     } else {
-      showToast('error', 'Sin datos válidos', 'No se encontraron datos válidos para importar.', 4000);
+      showToast('success', 'Datos validados', `${preview.length} cliente(s) listo(s) para importar.`, 3000);
     }
   };
 
