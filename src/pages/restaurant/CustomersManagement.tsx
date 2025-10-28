@@ -630,7 +630,8 @@ export const CustomersManagement: React.FC = () => {
       )
     ].join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
 
     if (link.download !== undefined) {
@@ -665,17 +666,27 @@ export const CustomersManagement: React.FC = () => {
 
     reader.onload = (e) => {
       const text = e.target?.result as string;
+      if (!text || text.trim() === '') {
+        showToast('error', 'Archivo vacío', 'El archivo CSV está vacío.', 4000);
+        return;
+      }
       parseCSV(text);
     };
 
-    reader.readAsText(file);
+    reader.onerror = () => {
+      showToast('error', 'Error de lectura', 'No se pudo leer el archivo. Por favor intenta de nuevo.', 4000);
+    };
+
+    reader.readAsText(file, 'UTF-8');
   };
 
   const parseCSV = (text: string) => {
-    const lines = text.split('\n').filter(line => line.trim());
+    text = text.replace(/^\uFEFF/, '');
+    const lines = text.split(/\r?\n/).filter(line => line.trim());
 
     if (lines.length < 2) {
       setImportErrors(['El archivo CSV está vacío o no tiene datos.']);
+      setShowImportModal(true);
       return;
     }
 
@@ -684,7 +695,8 @@ export const CustomersManagement: React.FC = () => {
     const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
 
     if (missingHeaders.length > 0) {
-      setImportErrors([`Columnas requeridas faltantes: ${missingHeaders.join(', ')}`]);
+      setImportErrors([`Columnas requeridas faltantes: ${missingHeaders.join(', ')}. Columnas encontradas: ${headers.join(', ')}`]);
+      setShowImportModal(true);
       return;
     }
 
@@ -726,8 +738,23 @@ export const CustomersManagement: React.FC = () => {
         continue;
       }
 
+      if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(row['Nombre'].trim())) {
+        errors.push(`Línea ${i + 1}: El nombre solo puede contener letras y espacios`);
+        continue;
+      }
+
       if (!row['Teléfono'] || !row['Teléfono'].trim()) {
         errors.push(`Línea ${i + 1}: El teléfono es requerido`);
+        continue;
+      }
+
+      if (!/^[\d+\s()-]+$/.test(row['Teléfono'].trim())) {
+        errors.push(`Línea ${i + 1}: El teléfono solo puede contener números y el símbolo +`);
+        continue;
+      }
+
+      if (row['Email'] && row['Email'].trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row['Email'].trim())) {
+        errors.push(`Línea ${i + 1}: El email no tiene un formato válido`);
         continue;
       }
 
@@ -763,11 +790,15 @@ export const CustomersManagement: React.FC = () => {
 
     const allOrders = loadFromStorage('orders') || [];
     const vipCustomers = loadFromStorage('vipCustomers') || [];
+    const timestamp = Date.now();
 
-    importPreview.forEach(customer => {
+    importPreview.forEach((customer, index) => {
+      const uniqueId = `imported_${timestamp}_${index}_${Math.random().toString(36).substr(2, 9)}`;
+      const orderNumber = `IMP-${String(timestamp + index).padStart(8, '0')}`;
+
       const newOrder: Order = {
-        id: `imported_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        order_number: `IMP-${Date.now()}`,
+        id: uniqueId,
+        order_number: orderNumber,
         restaurant_id: restaurant?.id || '',
         customer: {
           name: customer.name,
@@ -777,6 +808,8 @@ export const CustomersManagement: React.FC = () => {
           delivery_instructions: customer.delivery_instructions,
         },
         items: [],
+        subtotal: 0,
+        delivery_cost: 0,
         total: 0,
         status: 'delivered',
         order_type: 'delivery',
@@ -787,12 +820,15 @@ export const CustomersManagement: React.FC = () => {
       allOrders.push(newOrder);
 
       if (customer.isVip) {
-        vipCustomers.push({
-          restaurant_id: restaurant?.id,
-          phone: customer.phone,
-          name: customer.name,
-          created_at: new Date().toISOString(),
-        });
+        const existingVip = vipCustomers.find((v: any) => v.phone === customer.phone && v.restaurant_id === restaurant?.id);
+        if (!existingVip) {
+          vipCustomers.push({
+            restaurant_id: restaurant?.id,
+            phone: customer.phone,
+            name: customer.name,
+            created_at: new Date().toISOString(),
+          });
+        }
       }
     });
 
