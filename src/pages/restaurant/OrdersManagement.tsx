@@ -1960,7 +1960,7 @@ export const OrdersManagement: React.FC = () => {
           setEditingOrder(null);
           resetOrderForm();
         }}
-        title={editingOrder ? `Editar Pedido #${editingOrder.order_number}` : ''}
+        title={editingOrder ? `Editar Pedido ${editingOrder.order_number}` : ''}
         size="lg"
       >
         <div className="space-y-6">
