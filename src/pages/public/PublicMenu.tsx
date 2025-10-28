@@ -7,6 +7,7 @@ import { useCart } from '../../contexts/CartContext';
 import { ProductDetail } from '../../components/public/ProductDetail';
 import { CartSidebar } from '../../components/public/CartSidebar';
 import { CheckoutModal } from '../../components/public/CheckoutModal';
+import { formatCurrency } from '../../utils/currencyUtils';
 import Pathtop from '../../components/public/Pathformtop.tsx'; /*DF:componenetes pathform*/
 import Pathbottom from '../../components/public/Pathformbottom.tsx';/*DF:componenetes pathform*/
 import Pathleft from '../../components/public/Pathformleft.tsx';/*DF:componenetes pathform*/
@@ -683,7 +684,7 @@ export const PublicMenu: React.FC = () => {
                             cssText: `color: ${primaryColor} !important;`
                           }}
                         >
-                          Desde ${minPrice.toLocaleString('es-CO')}
+                          Desde {formatCurrency(minPrice, restaurant.settings.currency || 'USD')}
                         </span>
                       </div>
                     </div>
@@ -736,7 +737,7 @@ export const PublicMenu: React.FC = () => {
                             cssText: `color: ${primaryColor} !important;`
                           }}
                         >
-                          ${minPrice.toLocaleString('es-CO')}
+                          {formatCurrency(minPrice, restaurant.settings.currency || 'USD')}
                         </span>
                     </div>
                   </div>

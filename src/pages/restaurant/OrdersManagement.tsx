@@ -1855,6 +1855,7 @@ export const OrdersManagement: React.FC = () => {
             onRemoveItem={removeItemFromOrder}
             onUpdateQuantity={updateItemQuantity}
             onShowToast={showToast}
+            currency={currency}
           />
 
           {/* Special Instructions */}
@@ -2076,6 +2077,7 @@ export const OrdersManagement: React.FC = () => {
             onRemoveItem={removeItemFromOrder}
             onUpdateQuantity={updateItemQuantity}
             onShowToast={showToast}
+            currency={currency}
           />
 
           {/* Order Status */}

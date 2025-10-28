@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { Product, Order } from '../../types';
 import { Button } from '../ui/Button';
+import { formatCurrency } from '../../utils/currencyUtils';
 
 interface OrderProductSelectorProps {
   products: Product[];
@@ -10,6 +11,7 @@ interface OrderProductSelectorProps {
   onRemoveItem: (itemId: string) => void;
   onUpdateQuantity: (itemId: string, newQuantity: number) => void;
   onShowToast: (type: 'success' | 'error', title: string, message: string, duration: number) => void;
+  currency?: string;
 }
 
 export const OrderProductSelector: React.FC<OrderProductSelectorProps> = ({
@@ -19,6 +21,7 @@ export const OrderProductSelector: React.FC<OrderProductSelectorProps> = ({
   onRemoveItem,
   onUpdateQuantity,
   onShowToast,
+  currency = 'USD',
 }) => {
   const [selectedProductId, setSelectedProductId] = useState('');
   const [selectedVariationId, setSelectedVariationId] = useState('');
@@ -73,7 +76,7 @@ export const OrderProductSelector: React.FC<OrderProductSelectorProps> = ({
               <option value="">Seleccionar variación</option>
               {selectedProduct.variations.map(variation => (
                 <option key={variation.id} value={variation.id}>
-                  {variation.name} - ${variation.price.toFixed(2)}
+                  {variation.name} - {formatCurrency(variation.price, currency)}
                 </option>
               ))}
             </select>
@@ -128,7 +131,7 @@ export const OrderProductSelector: React.FC<OrderProductSelectorProps> = ({
                   </button>
                 </div>
                 <span className="text-sm font-medium w-20 text-right">
-                  ${item.total_price.toFixed(2)}
+                  {formatCurrency(item.total_price, currency)}
                 </span>
                 <button
                   type="button"
@@ -145,7 +148,7 @@ export const OrderProductSelector: React.FC<OrderProductSelectorProps> = ({
             <div className="flex justify-between items-center">
               <span className="font-medium text-gray-700">Subtotal:</span>
               <span className="text-lg font-bold text-blue-600">
-                ${orderItems.reduce((sum, item) => sum + item.total_price, 0).toFixed(2)}
+                {formatCurrency(orderItems.reduce((sum, item) => sum + item.total_price, 0), currency)}
               </span>
             </div>
           </div>
