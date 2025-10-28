@@ -517,9 +517,6 @@ Fecha: ${new Date().toLocaleString()}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
                       placeholder="Describe tu restaurante, tu especialidad, ambiente, horarios especiales, etc..."
                     />
-                    <p className="text-xs text-gray-500 mt-2">
-                      Esta descripción aparecerá en tu menú público
-                    </p>
                   </div>
                 </div>
               </div>
