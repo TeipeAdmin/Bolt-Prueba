@@ -1027,7 +1027,7 @@ export const PublicMenu: React.FC = () => {
                     borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
                   }}
                 >
-                  <Phone className="w-5 h-5" style={{ color: primaryColor, stroke: primaryColor }} />
+                  <Phone className="w-5 h-5" style={{ color: primaryColor, stroke: primaryColor }} />a
                 </a>
               )}
             </div>
