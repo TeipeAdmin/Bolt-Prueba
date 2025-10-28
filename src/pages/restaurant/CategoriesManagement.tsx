@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, CreditCard as Edit, Trash2, GripVertical, Eye, EyeOff, Search, Image as ImageIcon, FolderOpen, AlignLeft, X } from 'lucide-react';
+import { Plus, CreditCard as Edit, Trash2, GripVertical, Eye, EyeOff, Search, Image as ImageIcon, FolderOpen } from 'lucide-react';
 import { Category, Subscription } from '../../types';
 import { loadFromStorage, saveToStorage, availablePlans } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -463,179 +463,130 @@ export const CategoriesManagement: React.FC = () => {
         isOpen={showModal}
         onClose={handleCloseModal}
         title={editingCategory ? `${t('edit')} ${t('category')}` : t('newCategory')}
-        size="xl"
+        size="lg"
       >
         <div className="space-y-6">
-          {/* Header with Preview */}
-          <div className="bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-2xl p-8 text-white shadow-xl">
-            <div className="flex items-start gap-6">
-              <div className="flex-shrink-0">
-                <div className="w-32 h-32 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center overflow-hidden border-2 border-white/30 shadow-2xl">
-                  {formData.image ? (
-                    <img
-                      src={formData.image}
-                      alt="Preview"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : formData.icon ? (
-                    <span className="text-6xl">{formData.icon}</span>
-                  ) : (
-                    <FolderOpen className="w-16 h-16 text-white/50" />
-                  )}
-                </div>
+          {/* Preview Section */}
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+            <h4 className="text-sm font-medium text-gray-700 mb-3">Vista Previa</h4>
+            <div className="bg-white rounded-lg p-4 flex items-center gap-4">
+              <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
+                {formData.image ? (
+                  <img
+                    src={formData.image}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                  />
+                ) : formData.icon ? (
+                  <span className="text-3xl">{formData.icon}</span>
+                ) : (
+                  <FolderOpen className="w-8 h-8 text-gray-300" />
+                )}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="inline-block px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-medium mb-3">
-                  Vista Previa en Tiempo Real
-                </div>
-                <h3 className="text-3xl font-bold mb-2 truncate">
+                <h3 className="text-lg font-semibold text-gray-900 truncate">
                   {formData.name || 'Nombre de categoría'}
                 </h3>
-                <p className="text-white/90 text-lg line-clamp-2">
-                  {formData.description || 'Agrega una descripción atractiva para tus clientes'}
+                <p className="text-sm text-gray-600">
+                  {formData.description || 'Descripción de la categoría'}
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Form Content */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left Column - Basic Info */}
-            <div className="space-y-6">
-              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-6 border border-blue-100">
-                <h4 className="text-sm font-semibold text-blue-900 mb-4 flex items-center gap-2">
-                  <AlignLeft className="w-4 h-4" />
-                  Información Básica
-                </h4>
-                <div className="space-y-4">
-                  <Input
-                    label={`${t('categoryName')}*`}
-                    value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Ej: Pizzas, Bebidas, Postres"
-                  />
+          {/* Basic Info */}
+          <div className="space-y-4">
+            <Input
+              label={`${t('categoryName')}*`}
+              value={formData.name}
+              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              placeholder="e.g: Pizzas, Bebidas, Postres"
+            />
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {t('description')}
-                    </label>
-                    <textarea
-                      value={formData.description}
-                      onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                      rows={4}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none transition-all"
-                      placeholder="Describe esta categoría para tus clientes..."
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {t('description')}
+              </label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                placeholder="Descripción opcional de la categoría..."
+              />
+            </div>
+          </div>
+
+          {/* Visual Options */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Icon Section */}
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700">
+                Icono (Emoji)
+              </label>
+              <Input
+                value={formData.icon}
+                onChange={(e) => setFormData(prev => ({ ...prev, icon: e.target.value }))}
+                placeholder="🍕 🥤 🍰"
+              />
+              <p className="text-xs text-gray-500">
+                Usa emojis para representar la categoría
+              </p>
+            </div>
+
+            {/* Image Section */}
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700">
+                Imagen
+              </label>
+              <div className="space-y-2">
+                {formData.image && (
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={formData.image}
+                      alt="Category"
+                      className="w-12 h-12 object-cover rounded-lg border border-gray-300"
                     />
+                    <button
+                      onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
+                      className="text-sm text-red-600 hover:text-red-700"
+                    >
+                      Eliminar
+                    </button>
                   </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column - Visual Options */}
-            <div className="space-y-6">
-              {/* Icon Section */}
-              <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-100">
-                <h4 className="text-sm font-semibold text-amber-900 mb-4 flex items-center gap-2">
-                  <ImageIcon className="w-4 h-4" />
-                  Icono Emoji
-                </h4>
-                <Input
-                  value={formData.icon}
-                  onChange={(e) => setFormData(prev => ({ ...prev, icon: e.target.value }))}
-                  placeholder="🍕 🥤 🍰 🍔 🍣"
-                />
-                <div className="mt-3 p-3 bg-white rounded-lg">
-                  <p className="text-xs text-gray-600 mb-2 font-medium">Iconos Populares:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {['🍕', '🍔', '🍟', '🌮', '🍣', '🍜', '🥗', '🍰', '🍦', '☕', '🥤', '🍺'].map(emoji => (
-                      <button
-                        key={emoji}
-                        type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, icon: emoji }))}
-                        className="w-10 h-10 flex items-center justify-center text-2xl bg-gray-50 hover:bg-gray-100 rounded-lg transition-all hover:scale-110"
-                      >
-                        {emoji}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Image Section */}
-              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-100">
-                <h4 className="text-sm font-semibold text-purple-900 mb-4 flex items-center gap-2">
-                  <ImageIcon className="w-4 h-4" />
-                  Imagen de Portada
-                </h4>
-                <div className="space-y-3">
-                  {formData.image ? (
-                    <div className="relative group">
-                      <img
-                        src={formData.image}
-                        alt="Category"
-                        className="w-full h-32 object-cover rounded-xl border-2 border-purple-200"
-                      />
-                      <button
-                        onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
-                        className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center"
-                      >
-                        <span className="text-white font-medium flex items-center gap-2">
-                          <X className="w-4 h-4" />
-                          Eliminar
-                        </span>
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="border-2 border-dashed border-purple-200 rounded-xl p-6 text-center bg-white">
-                      <ImageIcon className="w-12 h-12 text-purple-300 mx-auto mb-2" />
-                      <p className="text-sm text-gray-600 mb-2">Sube una imagen</p>
-                    </div>
-                  )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        if (file.size > 5 * 1024 * 1024) {
-                          showToast('error', 'Archivo muy grande', 'El tamaño máximo es 5MB', 3000);
-                          return;
-                        }
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                          setFormData(prev => ({ ...prev, image: reader.result as string }));
-                        };
-                        reader.readAsDataURL(file);
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      if (file.size > 5 * 1024 * 1024) {
+                        showToast('error', 'Archivo muy grande', 'El tamaño máximo es 5MB', 3000);
+                        return;
                       }
-                    }}
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-100 file:text-purple-700 hover:file:bg-purple-200 cursor-pointer transition-all"
-                  />
-                  <p className="text-xs text-gray-500">
-                    JPG, PNG o GIF (máx. 5MB)
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Info Banner */}
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-lg p-4">
-            <div className="flex gap-3">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <span className="text-blue-600 font-bold text-sm">i</span>
-                </div>
-              </div>
-              <div>
-                <p className="text-sm text-blue-900 font-medium mb-1">Consejo de diseño</p>
-                <p className="text-xs text-blue-800">
-                  Puedes usar un icono emoji, una imagen, o ambos. La imagen se mostrará como portada, mientras que el emoji será visible en la navegación. ¡Combínalos para un mejor impacto visual!
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setFormData(prev => ({ ...prev, image: reader.result as string }));
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+                />
+                <p className="text-xs text-gray-500">
+                  Sube una imagen desde tu dispositivo (máx. 5MB)
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Action Buttons */}
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+            <p className="text-xs text-yellow-800">
+              <strong>Nota:</strong> Puedes usar un icono emoji, una imagen, o ambos. La imagen tendrá prioridad en la vista de tarjeta.
+            </p>
+          </div>
+
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
             <Button
               variant="ghost"
@@ -646,7 +597,6 @@ export const CategoriesManagement: React.FC = () => {
             <Button
               onClick={handleSave}
               disabled={!formData.name.trim()}
-              className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
             >
               {editingCategory ? t('update') : t('create')} {t('category')}
             </Button>
