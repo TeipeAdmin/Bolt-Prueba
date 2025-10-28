@@ -414,14 +414,14 @@ export const CategoriesManagement: React.FC = () => {
 
                 {/* Actions */}
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => moveCategory(category.id, 'up')}
-                    disabled={index === 0 || searchTerm !== ''}
-                    className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    title={searchTerm !== '' ? 'Clear search to reorder' : 'Move up'}
-                  >
-                    {ArrowUp}
-                  </button>
+<button
+  onClick={() => moveCategory(category.id, 'up')}
+  disabled={index === 0 || searchTerm !== ''}
+  className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1"
+  title={searchTerm !== '' ? 'Clear search to reorder' : 'Move up'}
+>
+  <ArrowUp className="w-4 h-4" />
+</button>
                   <button
                     onClick={() => moveCategory(category.id, 'down')}
                     disabled={index === filteredCategories.length - 1 || searchTerm !== ''}
