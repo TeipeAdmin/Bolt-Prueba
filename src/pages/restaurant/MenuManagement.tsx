@@ -10,6 +10,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Modal } from '../../components/ui/Modal';
 import { ProductForm } from '../../components/restaurant/ProductForm';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { formatCurrency } from '../../utils/currencyUtils';
 
 export const MenuManagement: React.FC = () => {
   const { restaurant } = useAuth();
@@ -541,18 +542,18 @@ export const MenuManagement: React.FC = () => {
                     <div className="space-y-1">
                       <div className="flex items-baseline gap-2">
                         <span className="text-2xl font-bold text-gray-900">
-                          ${Math.min(...product.variations.map(v => v.price)).toFixed(2)}
+                          {formatCurrency(Math.min(...product.variations.map(v => v.price)), restaurant?.settings?.currency || 'USD')}
                         </span>
                         {product.variations.length > 1 && (
                           <span className="text-sm font-normal text-gray-600">
-                            - ${Math.max(...product.variations.map(v => v.price)).toFixed(2)}
+                            - {formatCurrency(Math.max(...product.variations.map(v => v.price)), restaurant?.settings?.currency || 'USD')}
                           </span>
                         )}
                       </div>
                       {product.variations.some(v => v.compare_at_price && v.compare_at_price > v.price) && (
                         <div className="flex items-center gap-2">
                           <span className="text-sm text-gray-500 line-through">
-                            ${Math.min(...product.variations.filter(v => v.compare_at_price).map(v => v.compare_at_price!)).toFixed(2)}
+                            {formatCurrency(Math.min(...product.variations.filter(v => v.compare_at_price).map(v => v.compare_at_price!)), restaurant?.settings?.currency || 'USD')}
                           </span>
                           <span className="inline-flex items-center px-2 py-0.5 bg-red-100 text-red-700 rounded text-xs font-medium">
                             OFERTA

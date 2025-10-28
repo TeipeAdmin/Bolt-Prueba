@@ -46,6 +46,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
   const cardBackgroundColor = theme.card_background_color || '#ffffff';
   const primaryTextColor = theme.primary_text_color || '#111827';
   const secondaryTextColor = theme.secondary_text_color || '#6b7280';
+  const currency = restaurant.settings.currency || 'USD';
 
   return (
     <div
@@ -140,7 +141,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
                       {variation.name}
                     </div>
                     <div className="font-bold" style={{ fontSize: '16px' }}>
-                      {formatCurrency(variation.price)}
+                      {formatCurrency(variation.price, currency)}
                     </div>
                   </button>
                 ))}
@@ -196,7 +197,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
                           color: primaryColor
                         }}
                       >
-                        +{formatCurrency(ingredient.extra_cost)}
+                        +{formatCurrency(ingredient.extra_cost, currency)}
                       </span>
                     )}
                   </label>
@@ -267,7 +268,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
                 borderRadius: '8px'
               }}
             >
-              Agregar {formatCurrency(calculatePrice())}
+              Agregar {formatCurrency(calculatePrice(), currency)}
             </button>
           </div>
         </div>
