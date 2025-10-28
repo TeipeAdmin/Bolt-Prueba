@@ -425,7 +425,7 @@ export const CategoriesManagement: React.FC = () => {
                   <button
                     onClick={() => moveCategory(category.id, 'down')}
                     disabled={index === filteredCategories.length - 1 || searchTerm !== ''}
-                    className="flex-1 px-3 py-2 bg-gray-100  hover:text-blue-700 rounded-lg text-sm font-medium hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="flex-1 px-3 py-2  hover:text-blue-700 rounded-lg text-sm font-medium hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     title={searchTerm !== '' ? 'Clear search to reorder' : 'Move down'}
                   >
                     <ArrowDown className="w-4 h-4" />
