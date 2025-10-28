@@ -26,10 +26,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
     email: '',
     address: '',
     city: '',
-    notes: ''
+    notes: '',
+    tableNumber: ''
   });
   const [orderNumber, setOrderNumber] = useState('');
   const [loading, setLoading] = useState(false);
+  const [deliveryCost, setDeliveryCost] = useState(0);
 
   if (!isOpen) return null;
 
@@ -40,8 +42,26 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
   const primaryColor = theme?.primary_color || '#FFC700';
   const secondaryColor = theme.secondary_color || '#f3f4f6';
 
+  const calculateDeliveryCost = (total: number): number => {
+    if (!restaurant.settings?.delivery?.pricing_tiers) return 0;
+
+    const tiers = restaurant.settings.delivery.pricing_tiers;
+    for (const tier of tiers) {
+      if (total >= tier.min_order_amount && (tier.max_order_amount === 0 || total <= tier.max_order_amount)) {
+        return tier.cost;
+      }
+    }
+    return 0;
+  };
+
   const handleDeliverySelect = (mode: DeliveryMode) => {
     setDeliveryMode(mode);
+    if (mode === 'delivery') {
+      const cost = calculateDeliveryCost(getTotal());
+      setDeliveryCost(cost);
+    } else {
+      setDeliveryCost(0);
+    }
     setStep('info');
   };
 
@@ -53,6 +73,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
 
     if (deliveryMode === 'delivery' && (!customerInfo.address || !customerInfo.city)) {
       showToast('warning', 'Dirección incompleta', 'Por favor completa la dirección de entrega');
+      return false;
+    }
+
+    if (deliveryMode === 'dine-in' && !customerInfo.tableNumber) {
+      showToast('warning', 'Número de mesa requerido', 'Por favor ingresa el número de mesa');
       return false;
     }
 
@@ -88,7 +113,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
         selected_ingredients: item.selected_ingredients
       })),
       notes: customerInfo.notes,
-      total: getTotal(),
+      table_number: deliveryMode === 'dine-in' ? customerInfo.tableNumber : undefined,
+      delivery_cost: deliveryMode === 'delivery' ? deliveryCost : 0,
+      total: getTotal() + (deliveryMode === 'delivery' ? deliveryCost : 0),
       status: 'pending',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -113,9 +140,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
       email: '',
       address: '',
       city: '',
-      notes: ''
+      notes: '',
+      tableNumber: ''
     });
     setOrderNumber('');
+    setDeliveryCost(0);
     onClose();
   };
 
@@ -227,69 +256,78 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                   </div>
                 </button>
 
-                <button
-                  onClick={() => handleDeliverySelect('dine-in')}
-                  className="w-full p-6 border-2 rounded-lg text-left hover:border-current transition-all"
-                  style={{
-                    borderColor: primaryColor,
-                    borderRadius: theme.button_style === 'rounded' ? '0.75rem' : '0.25rem'
-                  }}
-                >
-                  <div className="flex items-start gap-4">
-                    <div
-                      className="w-12 h-12 rounded-full flex items-center justify-center"
-                      style={{ backgroundColor: 'var(--primary-color)' }}
-                    >
-                      <MapPin className="w-6 h-6" style={{ color: secondaryTextColor }} />
-                    </div>
-                    <div className="flex-1">
-                      <h3
-                        className="font-semibold mb-1"
-                          style={{
-                            fontSize: 'var(--font-size-subtitle)',
-                            color: primaryTextColor
-                          }}
+                {restaurant.settings?.table_orders?.enabled && (
+                  <button
+                    onClick={() => handleDeliverySelect('dine-in')}
+                    className="w-full p-6 border-2 rounded-lg text-left hover:border-current transition-all"
+                    style={{
+                      borderColor: primaryColor,
+                      borderRadius: theme.button_style === 'rounded' ? '0.75rem' : '0.25rem'
+                    }}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: 'var(--primary-color)' }}
                       >
-                        Consumir en Restaurante
-                      </h3>
-                      <p style={{ fontSize: 'var(--font-size-small)', color: secondaryTextColor }}>
-                        Disfruta tu pedido en nuestras instalaciones
-                      </p>
+                        <MapPin className="w-6 h-6" style={{ color: secondaryTextColor }} />
+                      </div>
+                      <div className="flex-1">
+                        <h3
+                          className="font-semibold mb-1"
+                            style={{
+                              fontSize: 'var(--font-size-subtitle)',
+                              color: primaryTextColor
+                            }}
+                        >
+                          Consumir en Restaurante
+                        </h3>
+                        <p style={{ fontSize: 'var(--font-size-small)', color: secondaryTextColor }}>
+                          Disfruta tu pedido en nuestras instalaciones
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                </button>
+                  </button>
+                )}
 
-                <button
-                  onClick={() => handleDeliverySelect('delivery')}
-                  className="w-full p-6 border-2 rounded-lg text-left hover:border-current transition-all"
-                  style={{
-                    borderColor: primaryColor,
-                    borderRadius: theme.button_style === 'rounded' ? '0.75rem' : '0.25rem'
-                  }}
-                >
-                  <div className="flex items-start gap-4">
-                    <div
-                      className="w-12 h-12 rounded-full flex items-center justify-center"
-                      style={{ backgroundColor: 'var(--primary-color)' }}
-                    >
-                      <Home className="w-6 h-6" style={{ color: secondaryTextColor }}  />
-                    </div>
-                    <div className="flex-1">
-                      <h3
-                        className="font-semibold mb-1"
-                          style={{
-                            fontSize: 'var(--font-size-subtitle)',
-                            color: primaryTextColor
-                          }}
+                {restaurant.settings?.delivery?.enabled && (
+                  <button
+                    onClick={() => handleDeliverySelect('delivery')}
+                    className="w-full p-6 border-2 rounded-lg text-left hover:border-current transition-all"
+                    style={{
+                      borderColor: primaryColor,
+                      borderRadius: theme.button_style === 'rounded' ? '0.75rem' : '0.25rem'
+                    }}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: 'var(--primary-color)' }}
                       >
-                        Entrega a Domicilio
-                      </h3>
-                      <p style={{ fontSize: 'var(--font-size-small)', color: secondaryTextColor }}>
-                        Te llevamos tu pedido a donde estés
-                      </p>
+                        <Home className="w-6 h-6" style={{ color: secondaryTextColor }}  />
+                      </div>
+                      <div className="flex-1">
+                        <h3
+                          className="font-semibold mb-1"
+                            style={{
+                              fontSize: 'var(--font-size-subtitle)',
+                              color: primaryTextColor
+                            }}
+                        >
+                          Entrega a Domicilio
+                        </h3>
+                        <p style={{ fontSize: 'var(--font-size-small)', color: secondaryTextColor }}>
+                          Te llevamos tu pedido a donde estés
+                        </p>
+                        {restaurant.settings?.delivery?.pricing_tiers && restaurant.settings.delivery.pricing_tiers.length > 0 && (
+                          <p style={{ fontSize: 'var(--font-size-small)', color: primaryColor, marginTop: '0.25rem' }}>
+                            Costo: {formatCurrency(calculateDeliveryCost(getTotal()), currency)}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </button>
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -399,7 +437,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                 </div>
 
                 <div>
-                  <label className="block font-medium mb-2" 
+                  <label className="block font-medium mb-2"
                     style={{
                       fontSize: 'var(--font-size-normal)',
                       color: primaryTextColor
@@ -431,6 +469,43 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                     placeholder="correo@ejemplo.com"
                   />
                 </div>
+
+                {deliveryMode === 'dine-in' && (
+                  <div>
+                    <label className="block font-medium mb-2"
+                      style={{
+                        fontSize: 'var(--font-size-normal)',
+                        color: primaryTextColor
+                      }}
+                      >
+                      Número de Mesa *
+                    </label>
+                    <input
+                      type="text"
+                      value={customerInfo.tableNumber}
+                      onChange={(e) => setCustomerInfo({ ...customerInfo, tableNumber: e.target.value })}
+                      className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2"
+                      style={{
+                        fontSize: 'var(--font-size-normal)',
+                        borderColor: primaryColor,
+                        backgroundColor: 'transparent',
+                        color: primaryTextColor,
+                        borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
+                        caretColor: primaryColor
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = primaryColor;
+                        e.target.style.boxShadow = `0 0 0 1px ${primaryColor}80`;
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = primaryColor;
+                        e.target.style.boxShadow = `0 0 0 1px ${primaryColor}40`;
+                      }}
+                      placeholder="Ej: 5"
+                      required
+                    />
+                  </div>
+                )}
 
                 {deliveryMode === 'delivery' && (
                   <>
@@ -655,10 +730,20 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                   ))}
                 </div>
 
-                <div className="border-t pt-4" style={{ borderColor: primaryColor }}>
-                  <div className="flex justify-between text-xl font-bold">
+                <div className="border-t pt-4 space-y-2" style={{ borderColor: primaryColor }}>
+                  <div className="flex justify-between">
+                    <span>Subtotal:</span>
+                    <span>{formatCurrency(getTotal(), currency)}</span>
+                  </div>
+                  {deliveryMode === 'delivery' && deliveryCost > 0 && (
+                    <div className="flex justify-between">
+                      <span>Costo de Envío:</span>
+                      <span>{formatCurrency(deliveryCost, currency)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-xl font-bold border-t pt-2" style={{ borderColor: primaryColor }}>
                     <span>Total:</span>
-                    <span style={{ color: 'var(--accent-color)' }}>{formatCurrency(getTotal(), currency)}</span>
+                    <span style={{ color: 'var(--accent-color)' }}>{formatCurrency(getTotal() + (deliveryMode === 'delivery' ? deliveryCost : 0), currency)}</span>
                   </div>
                 </div>
               </div>
@@ -685,6 +770,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                   <p><strong>Nombre:</strong> {customerInfo.name}</p>
                   <p><strong>Teléfono:</strong> {customerInfo.phone}</p>
                   {customerInfo.email && <p><strong>Email:</strong> {customerInfo.email}</p>}
+                  {deliveryMode === 'dine-in' && customerInfo.tableNumber && (
+                    <p><strong>Mesa:</strong> {customerInfo.tableNumber}</p>
+                  )}
                   {deliveryMode === 'delivery' && (
                     <p><strong>Dirección:</strong> {customerInfo.address}, {customerInfo.city}</p>
                   )}
@@ -709,7 +797,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                   borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
                 }}
               >
-                {loading ? 'Procesando...' : `Confirmar Pedido - ${formatCurrency(getTotal(), currency)}`}
+                {loading ? 'Procesando...' : `Confirmar Pedido - ${formatCurrency(getTotal() + (deliveryMode === 'delivery' ? deliveryCost : 0), currency)}`}
               </button>
             </div>
           )}

@@ -156,11 +156,20 @@ export interface BusinessHours {
   };
 }
 
+export interface DeliveryPricingTier {
+  id: string;
+  name: string;
+  min_order_amount: number;
+  max_order_amount: number;
+  cost: number;
+}
+
 export interface DeliverySettings {
   enabled: boolean;
   zones: string[];
   min_order_amount: number;
   delivery_cost: number;
+  pricing_tiers?: DeliveryPricingTier[];
 }
 
 export interface TableOrdersSettings {
