@@ -415,6 +415,7 @@ export const CategoriesManagement: React.FC = () => {
                 {/* Actions */}
                 <div className="flex items-center gap-2">
                   <button
+                    icon={ArrowUp}
                     onClick={() => moveCategory(category.id, 'up')}
                     disabled={index === 0 || searchTerm !== ''}
                     className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
