@@ -69,6 +69,7 @@ export const CustomersManagement: React.FC = () => {
 
     const allOrders = loadFromStorage('orders') || [];
     const vipCustomers = loadFromStorage('vipCustomers') || [];
+    const importedCustomers = loadFromStorage('importedCustomers') || [];
     const restaurantOrders = allOrders.filter((order: Order) =>
       order &&
       order.restaurant_id === restaurant.id &&
@@ -77,7 +78,6 @@ export const CustomersManagement: React.FC = () => {
       order.items
     );
 
-    // Group orders by customer phone (unique identifier) to avoid duplicates
     const customerMap = new Map<string, CustomerData>();
 
     restaurantOrders.forEach((order: Order) => {
@@ -117,6 +117,31 @@ export const CustomersManagement: React.FC = () => {
       }
     });
 
+    importedCustomers.forEach((customer: any) => {
+      if (!customer.phone || customer.restaurant_id !== restaurant.id) return;
+
+      const customerKey = customer.phone;
+
+      if (!customerMap.has(customerKey)) {
+        const isVip = vipCustomers.some((vip: any) =>
+          vip.restaurant_id === restaurant.id && vip.phone === customer.phone
+        );
+        customerMap.set(customerKey, {
+          id: customer.phone,
+          name: customer.name || 'N/A',
+          phone: customer.phone,
+          email: customer.email,
+          address: customer.address,
+          delivery_instructions: customer.delivery_instructions,
+          totalOrders: 0,
+          totalSpent: 0,
+          lastOrderDate: customer.created_at,
+          orderTypes: [],
+          isVip: isVip,
+        });
+      }
+    });
+
     setCustomers(Array.from(customerMap.values()));
   };
 
@@ -138,7 +163,7 @@ export const CustomersManagement: React.FC = () => {
           case 'regular':
             return customer.totalOrders >= 2 && customer.totalOrders <= 4;
           case 'new':
-            return customer.totalOrders === 1;
+            return customer.totalOrders === 1 || customer.totalOrders === 0;
           default:
             return true;
         }
@@ -148,9 +173,12 @@ export const CustomersManagement: React.FC = () => {
     // Apply status filter
     if (statusFilter !== 'all') {
       filtered = filtered.filter(customer => {
+        if (customer.totalOrders === 0) {
+          return statusFilter === 'inactive';
+        }
         const daysSinceLastOrder = Math.ceil((new Date().getTime() - new Date(customer.lastOrderDate).getTime()) / (1000 * 60 * 60 * 24));
-        const isActive = daysSinceLastOrder <= 30; // Active if ordered in last 30 days
-        
+        const isActive = daysSinceLastOrder <= 30;
+
         if (statusFilter === 'active') {
           return isActive;
         } else if (statusFilter === 'inactive') {
@@ -814,36 +842,19 @@ export const CustomersManagement: React.FC = () => {
   const executeImport = () => {
     if (importPreview.length === 0) return;
 
-    const allOrders = loadFromStorage('orders') || [];
+    const importedCustomers = loadFromStorage('importedCustomers') || [];
     const vipCustomers = loadFromStorage('vipCustomers') || [];
-    const timestamp = Date.now();
 
-    importPreview.forEach((customer, index) => {
-      const uniqueId = `imported_${timestamp}_${index}_${Math.random().toString(36).substr(2, 9)}`;
-      const orderNumber = `IMP-${String(timestamp + index).padStart(8, '0')}`;
-
-      const newOrder: Order = {
-        id: uniqueId,
-        order_number: orderNumber,
-        restaurant_id: restaurant?.id || '',
-        customer: {
-          name: customer.name,
-          phone: customer.phone,
-          email: customer.email,
-          address: customer.address,
-          delivery_instructions: customer.delivery_instructions,
-        },
-        items: [],
-        subtotal: 0,
-        delivery_cost: 0,
-        total: 0,
-        status: 'delivered',
-        order_type: 'delivery',
+    importPreview.forEach((customer) => {
+      importedCustomers.push({
+        restaurant_id: restaurant?.id,
+        name: customer.name,
+        phone: customer.phone,
+        email: customer.email,
+        address: customer.address,
+        delivery_instructions: customer.delivery_instructions,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      allOrders.push(newOrder);
+      });
 
       if (customer.isVip) {
         const existingVip = vipCustomers.find((v: any) => v.phone === customer.phone && v.restaurant_id === restaurant?.id);
@@ -858,7 +869,7 @@ export const CustomersManagement: React.FC = () => {
       }
     });
 
-    saveToStorage('orders', allOrders);
+    saveToStorage('importedCustomers', importedCustomers);
     saveToStorage('vipCustomers', vipCustomers);
 
     loadCustomersData();
