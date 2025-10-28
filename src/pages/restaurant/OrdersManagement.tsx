@@ -1977,15 +1977,26 @@ export const OrdersManagement: React.FC = () => {
                 }))}
                 placeholder="Nombre del cliente"
               />
-              <Input
-                label="Teléfono *"
-                value={orderForm.customer.phone}
-                onChange={(e) => setOrderForm(prev => ({
-                  ...prev,
-                  customer: { ...prev.customer, phone: e.target.value }
-                }))}
-                placeholder="Número de teléfono"
-              />
+<Input
+  label="Teléfono *"
+  value={orderForm.customer.phone}
+  onChange={(e) => {
+    const value = e.target.value;
+    // Filtra cualquier cosa que no sea +, -, o número
+    const cleanValue = value.replace(/[^0-9+-]/g, '');
+    // Solo permite un + o - al inicio
+    const normalizedValue = cleanValue.replace(/(?!^)[+-]/g, '');
+    setOrderForm(prev => ({
+      ...prev,
+      customer: { ...prev.customer, phone: normalizedValue }
+    }));
+  }}
+  onBeforeInput={(e) => {
+    // Bloquea cualquier carácter que no sea dígito o + o -
+    if (!/[0-9+-]/.test(e.data)) e.preventDefault();
+  }}
+  placeholder="Número de teléfono"
+/>
               <Input
                 label="Email"
                 type="email"
