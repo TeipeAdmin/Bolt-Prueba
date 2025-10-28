@@ -770,7 +770,7 @@ export const PublicMenu: React.FC = () => {
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4"
           onClick={() => setShowHoursModal(false)}
         >
-          <diva
+          <div
             className="relative max-w-md w-full rounded-lg overflow-hidden p-6"
             onClick={(e) => e.stopPropagation()}
             style={{
