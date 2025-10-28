@@ -405,7 +405,7 @@ export const CategoriesManagement: React.FC = () => {
                 <h3 className="text-lg font-semibold text-gray-900 mb-2 truncate">
                   {category.name}
                 </h3>
-                <p className="text-sm text-gray-600 mb-3 line-clamp-2 min-h-[40px]">
+                <p className="text-sm text-gray-600 line-clamp-2 min-h-[40px]">
                   {category.description || 'Sin descripción'}
                 </p>
                 <p className="text-xs text-gray-400 mb-4">
