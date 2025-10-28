@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Pencil as Edit, Trash2, Eye, Archive, AlertCircle, Search, Package, CheckCircle, XCircle, ArrowUp, ArrowDown, Copy } from 'lucide-react';
+import { Plus, Pencil as Edit, Trash2, Eye, Archive, AlertCircle, Search, Package, CheckCircle, XCircle, ArrowUp, ArrowDown, Copy, GripVertical } from 'lucide-react';
 import { Category, Product, Restaurant, Subscription } from '../../types';
 import { loadFromStorage, saveToStorage, availablePlans } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -28,6 +28,7 @@ export const MenuManagement: React.FC = () => {
     productId: '',
     productName: ''
   });
+  const [draggedProduct, setDraggedProduct] = useState<Product | null>(null);
 
   const handleActivateProduct = (productId: string) => {
     const allProducts = loadFromStorage('products') || [];
@@ -335,6 +336,66 @@ export const MenuManagement: React.FC = () => {
     );
   };
 
+  const handleDragStart = (e: React.DragEvent, product: Product) => {
+    setDraggedProduct(product);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, targetProduct: Product) => {
+    e.preventDefault();
+
+    if (!draggedProduct || draggedProduct.id === targetProduct.id) {
+      setDraggedProduct(null);
+      return;
+    }
+
+    const allProducts = loadFromStorage('products') || [];
+    const restaurantProducts = allProducts
+      .filter((p: Product) => p.restaurant_id === restaurant?.id)
+      .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+
+    const draggedIndex = restaurantProducts.findIndex((p: Product) => p.id === draggedProduct.id);
+    const targetIndex = restaurantProducts.findIndex((p: Product) => p.id === targetProduct.id);
+
+    if (draggedIndex === -1 || targetIndex === -1) return;
+
+    restaurantProducts.splice(draggedIndex, 1);
+    restaurantProducts.splice(targetIndex, 0, draggedProduct);
+
+    restaurantProducts.forEach((product, index) => {
+      product.order_index = index;
+      product.updated_at = new Date().toISOString();
+    });
+
+    const productMap = new Map(restaurantProducts.map(p => [p.id, p]));
+    const updatedProducts = allProducts.map((p: Product) => {
+      if (productMap.has(p.id)) {
+        return productMap.get(p.id)!;
+      }
+      return p;
+    });
+
+    saveToStorage('products', updatedProducts);
+    loadMenuData();
+    setDraggedProduct(null);
+
+    showToast(
+      'success',
+      'Orden Actualizado',
+      'Los productos han sido reordenados correctamente.',
+      2000
+    );
+  };
+
+  const handleDragEnd = () => {
+    setDraggedProduct(null);
+  };
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
@@ -461,6 +522,15 @@ export const MenuManagement: React.FC = () => {
             );
           })}
         </div>
+
+        {searchTerm === '' && filteredProducts.length > 1 && (
+          <div className="flex items-center gap-2 text-sm text-gray-600 bg-blue-50 rounded-lg p-3 border border-blue-100">
+            <GripVertical className="w-4 h-4 text-blue-600 flex-shrink-0" />
+            <p>
+              <strong className="text-blue-700">Tip:</strong> Arrastra y suelta los productos para reordenarlos
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Products Grid */}
@@ -496,7 +566,21 @@ export const MenuManagement: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           {filteredProducts.map(product => (
-            <div key={product.id} className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition-all overflow-hidden group">
+            <div
+              key={product.id}
+              draggable={searchTerm === ''}
+              onDragStart={(e) => handleDragStart(e, product)}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, product)}
+              onDragEnd={handleDragEnd}
+              className={`bg-white rounded-xl shadow-sm border-2 transition-all overflow-hidden group ${
+                searchTerm === '' ? 'cursor-move' : ''
+              } ${
+                draggedProduct?.id === product.id
+                  ? 'opacity-50 scale-95 border-blue-400'
+                  : 'border-gray-200 hover:shadow-lg hover:border-blue-300'
+              }`}
+            >
               {/* Product Image */}
               <div className="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
                 {product.images.length > 0 ? (
