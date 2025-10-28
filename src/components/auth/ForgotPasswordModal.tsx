@@ -74,7 +74,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-xl blur-xl"></div>
             <div className="relative flex items-start space-x-4 p-5 bg-white rounded-xl border border-red-200 shadow-sm">
-              <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg flex items-center justify-center">
+              <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
                 <Mail className="w-5 h-5 text-white" />
               </div>
               <div className="flex-1 text-sm text-gray-700 leading-relaxed">
