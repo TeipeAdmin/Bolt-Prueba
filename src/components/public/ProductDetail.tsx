@@ -40,7 +40,6 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
     addItem(product, selectedVariation, quantity, selectedIngredients, '');
     onClose();
   };
-
   const theme = restaurant.settings.theme;
   const primaryColor = theme.primary_color || '#FFC700';
   const cardBackgroundColor = theme.card_background_color || '#ffffff';
@@ -58,11 +57,38 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
         onClick={(e) => e.stopPropagation()}
         style={{
           backgroundColor: cardBackgroundColor,
+          maxWidth: '32rem',
           maxHeight: '90vh',
           display: 'flex',
           flexDirection: 'column'
         }}
       >
+        {/* Scrollbar personalizado */}
+        <style>
+          {`
+            /* Scrollbar general */
+            .custom-scroll::-webkit-scrollbar {
+              width: 6px;
+            }
+            .custom-scroll::-webkit-scrollbar-track {
+              background: transparent;
+            }
+            .custom-scroll::-webkit-scrollbar-thumb {
+              background-color: ${primaryColor};
+              border-radius: 8px;
+              opacity: 0.5;
+            }
+            .custom-scroll:hover::-webkit-scrollbar-thumb {
+              opacity: 1;
+            }
+            /* Firefox */
+            .custom-scroll {
+              scrollbar-width: none;
+              scrollbar-color: ${primaryColor} transparent;
+            }
+          `}
+        </style>
+
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -71,205 +97,207 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
           <X className="w-5 h-5" style={{ color: primaryTextColor }} />
         </button>
 
-        {/* Product Image */}
-        {product.images.length > 0 && (
-          <div className="relative w-full" style={{ height: '280px' }}>
-            <img
-              src={product.images[0]}
-              alt={product.name}
-              className="w-full h-full object-cover"
-            />
-          </div>
-        )}
-
         {/* Content */}
-        <div className="p-6 overflow-y-auto" style={{ flex: 1 }}>
-          {/* Product Name */}
-          <h2
-            className="font-bold mb-3 text-center"
-            style={{
-              fontSize: '28px',
-              color: primaryTextColor,
-              fontFamily: theme.primary_font || 'Inter'
-            }}
-          >
-            {product.name.split(' ').map((word, i) => (
-              <span key={i}>
-                {i === 0 ? <span style={{ color: primaryColor }}>{word}</span> : <span>{' ' + word}</span>}
-              </span>
-            ))}
-          </h2>
-
-          {/* Description */}
-          <p
-            className="text-center mb-6"
-            style={{
-              fontSize: '14px',
-              color: secondaryTextColor,
-              lineHeight: '1.6'
-            }}
-          >
-            {product.description}
-          </p>
-
-          {/* Variations */}
-          {product.variations.length > 0 && (
-            <div className="mb-6">
-              <h3
-                className="font-semibold mb-3"
-                style={{
-                  fontSize: '14px',
-                  color: primaryTextColor
-                }}
-              >
-                Selecciona una opción
-              </h3>
-              <div className="grid grid-cols-2 gap-3">
-                {product.variations.map(variation => (
-                  <button
-                    key={variation.id}
-                    onClick={() => setSelectedVariation(variation)}
-                    className="p-4 rounded-lg text-left transition-all border-2"
-                    style={{
-                      borderColor: selectedVariation.id === variation.id ? primaryColor : '#e5e7eb',
-                      backgroundColor: selectedVariation.id === variation.id ? primaryColor : 'transparent',
-                      color: selectedVariation.id === variation.id ? '#ffffff' : primaryTextColor,
-                      borderRadius: '8px'
-                    }}
-                  >
-                    <div className="font-semibold" style={{ fontSize: '14px', marginBottom: '4px' }}>
-                      {variation.name}
-                    </div>
-                    <div className="font-bold" style={{ fontSize: '16px' }}>
-                      {formatCurrency(variation.price, currency)}
-                    </div>
-                  </button>
-                ))}
-              </div>
+        <div className="overflow-y-auto custom-scroll" style={{ flex: 1 }}>
+          {/* Product Image */}
+          {product.images.length > 0 && (
+            <div className="relative w-full h-[250px] md:h-[400px]">
+              <img
+                src={product.images[0]}
+                alt={product.name}
+                className="w-full h-full object-cover"
+              />
             </div>
           )}
 
-          {/* Ingredients */}
-          {product.ingredients.length > 0 && (
-            <div className="mb-6">
-              <h3
-                className="font-semibold mb-3"
-                style={{
-                  fontSize: '14px',
-                  color: primaryTextColor
-                }}
-              >
-                Ingredientes
-              </h3>
-              <div className="space-y-2">
-                {product.ingredients.map(ingredient => (
-                  <label
-                    key={ingredient.id}
-                    className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors hover:bg-gray-50"
-                    style={{
-                      borderColor: '#e5e7eb',
-                      borderRadius: '8px',
-                      opacity: ingredient.optional ? 1 : 0.7
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedIngredients.includes(ingredient.id)}
-                      onChange={() => toggleIngredient(ingredient.id)}
-                      disabled={!ingredient.optional}
-                      className="w-4 h-4 rounded"
-                      style={{ accentColor: primaryColor }}
-                    />
+          <div className="p-6">
+            {/* Product Name */}
+            <h2
+              className="font-bold mb-3 text-center"
+              style={{
+                fontSize: '28px',
+                color: primaryTextColor,
+                fontFamily: theme.primary_font || 'Inter'
+              }}
+            >
+              {product.name.split(' ').map((word, i) => (
+                <span key={i}>
+                  {i === 0 ? (
                     <span
-                      className="flex-1"
-                      style={{
-                        fontSize: '13px',
-                        color: secondaryTextColor
-                      }}
+                      style={{ cssText: `color: ${primaryColor} !important` }}
                     >
-                      {ingredient.name} {!ingredient.optional && '(incluido)'}
+                      {word}
                     </span>
-                    {ingredient.optional && ingredient.extra_cost && ingredient.extra_cost > 0 && (
-                      <span
-                        className="font-medium"
-                        style={{
-                          fontSize: '13px',
-                          color: primaryColor
-                        }}
-                      >
-                        +{formatCurrency(ingredient.extra_cost, currency)}
-                      </span>
-                    )}
-                  </label>
-                ))}
-              </div>
+                  ) : (
+                    <span>{' ' + word}</span>
+                  )}
+                </span>
+              ))}
+            </h2>
 
-              {/* Add Ingredient Link */}
-              <button
-                className="mt-3 text-sm font-medium"
-                style={{ color: primaryColor }}
-              >
-                + Adicionar ingrediente
-              </button>
-            </div>
-          )}
+            {/* Description */}
+            <p
+              className="text-center mb-6"
+              style={{
+                fontSize: '14px',
+                color: secondaryTextColor,
+                lineHeight: '1.6'
+              }}
+            >
+              {product.description}
+            </p>
 
-          {/* Quantity and Add to Cart */}
-          <div className="flex items-center justify-between gap-4 mt-6">
-            <div className="flex items-center gap-3">
-              <span
-                className="font-medium"
-                style={{
-                  fontSize: '14px',
-                  color: primaryTextColor
-                }}
-              >
-                Cantidad:
-              </span>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-8 h-8 rounded-full border flex items-center justify-center transition-colors hover:bg-gray-100"
+            {/* Variations */}
+            {product.variations.length > 0 && (
+              <div className="mb-6">
+                <h3
+                  className="font-semibold mb-3"
                   style={{
-                    borderColor: primaryColor,
-                    color: primaryColor
-                  }}
-                >
-                  <Minus className="w-4 h-4" />
-                </button>
-                <span
-                  className="font-bold w-8 text-center"
-                  style={{
-                    fontSize: '18px',
+                    fontSize: '14px',
                     color: primaryTextColor
                   }}
                 >
-                  {quantity}
-                </span>
-                <button
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="w-8 h-8 rounded-full border flex items-center justify-center transition-colors hover:bg-gray-100"
+                  Selecciona una opción
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {product.variations.map(variation => (
+                    <button
+                      key={variation.id}
+                      onClick={() => setSelectedVariation(variation)}
+                      className="p-4 rounded-lg text-left transition-all border-2"
+                      style={{
+                        borderColor: selectedVariation.id === variation.id ? primaryColor : '#e5e7eb',
+                        backgroundColor: selectedVariation.id === variation.id ? primaryColor : 'transparent',
+                        color: selectedVariation.id === variation.id ? secondaryTextColor : primaryTextColor,
+                        borderRadius: '8px'
+                      }}
+                    >
+                      <div className="font-semibold" style={{ fontSize: '14px', marginBottom: '4px' }}>
+                        {variation.name}
+                      </div>
+                      <div className="font-bold" style={{ fontSize: '16px' }}>
+                        {formatCurrency(variation.price, currency)}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Ingredients */}
+            {product.ingredients.length > 0 && (
+              <div className="mb-6">
+                <h3
+                  className="font-semibold mb-3"
                   style={{
-                    borderColor: primaryColor,
-                    color: primaryColor
+                    fontSize: '14px',
+                    color: primaryTextColor
                   }}
                 >
-                  <Plus className="w-4 h-4" />
-                </button>
+                  Ingredientes
+                </h3>
+                <div className="space-y-2">
+                  {product.ingredients.map(ingredient => (
+                    <label
+                      key={ingredient.id}
+                      className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors hover:bg-gray-50"
+                      style={{
+                        borderColor: '#e5e7eb',
+                        borderRadius: '8px',
+                        opacity: ingredient.optional ? 1 : 0.7
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedIngredients.includes(ingredient.id)}
+                        onChange={() => toggleIngredient(ingredient.id)}
+                        disabled={!ingredient.optional}
+                        className="w-4 h-4 rounded"
+                        style={{ accentColor: primaryColor }}
+                      />
+                      <span
+                        className="flex-1"
+                        style={{
+                          fontSize: '13px',
+                          color: secondaryTextColor
+                        }}
+                      >
+                        {ingredient.name} {!ingredient.optional && '(incluido)'}
+                      </span>
+                      {ingredient.optional && ingredient.extra_cost && ingredient.extra_cost > 0 && (
+                        <span
+                          className="font-medium"
+                          style={{
+                            fontSize: '13px',
+                            color: primaryColor
+                          }}
+                        >
+                          +{formatCurrency(ingredient.extra_cost, currency)}
+                        </span>
+                      )}
+                    </label>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            <button
-              onClick={handleAddToCart}
-              className="flex-1 px-6 py-3 text-white font-bold rounded-lg transition-all hover:opacity-90"
-              style={{
-                backgroundColor: primaryColor,
-                fontSize: '16px',
-                borderRadius: '8px'
-              }}
-            >
-              Agregar {formatCurrency(calculatePrice(), currency)}
-            </button>
+            {/* Quantity and Add to Cart */}
+            <div className="flex items-center justify-between gap-4 mt-6">
+              <div className="flex items-center gap-3">
+                <span
+                  className="font-medium"
+                  style={{
+                    fontSize: '14px',
+                    color: primaryTextColor
+                  }}
+                >
+                  Cantidad:
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-gray-100"
+                    style={{
+                      border: `2px solid ${primaryColor}`,
+                      color: primaryColor
+                    }}
+                  >
+                    <Minus className="w-5 h-5" strokeWidth={3} />
+                  </button>
+                  <span
+                    className="font-bold w-8 text-center"
+                    style={{
+                      fontSize: '18px',
+                      color: primaryTextColor
+                    }}
+                  >
+                    {quantity}
+                  </span>
+                  <button
+                    onClick={() => setQuantity(quantity + 1)}
+                    className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-gray-100"
+                    style={{
+                      border: `2px solid ${primaryColor}`,
+                      color: primaryColor
+                    }}
+                  >
+                    <Plus className="w-5 h-5" strokeWidth={3} />
+                  </button>
+                </div>
+              </div>
+
+              <button
+                onClick={handleAddToCart}
+                className="flex-1 px-6 py-3 text-white font-bold rounded-lg transition-all hover:opacity-90"
+                style={{
+                  backgroundColor: primaryColor,
+                  fontSize: '16px',
+                  borderRadius: '8px'
+                }}
+              >
+                Agregar {formatCurrency(calculatePrice(), currency)}
+              </button>
+            </div>
           </div>
         </div>
       </div>
