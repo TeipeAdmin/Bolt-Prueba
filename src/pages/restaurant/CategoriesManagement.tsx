@@ -420,7 +420,7 @@ export const CategoriesManagement: React.FC = () => {
                     className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     title={searchTerm !== '' ? 'Clear search to reorder' : 'Move up'}
                   >
-                    icon={ArrowUp}
+                    {ArrowUp}
                   </button>
                   <button
                     onClick={() => moveCategory(category.id, 'down')}
