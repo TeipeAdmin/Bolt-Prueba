@@ -83,7 +83,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
           <Button
             type="submit"
             loading={loading}
-            className="w-full bg-gradient-to-r from-orange-400 to-red-500 hover:from-orange-700 hover:to-red-700"
+            className="w-full bg-gradient-to-r from-orange-400 to-red-500 hover:from-orange-500 hover:to-red-700"
             size="lg"
           >
             {t('login')}
