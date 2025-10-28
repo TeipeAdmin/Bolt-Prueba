@@ -539,21 +539,23 @@ export const CustomersManagement: React.FC = () => {
       customer.delivery_instructions || ''
     ]);
 
-    // Crear contenido CSV
+    // Crear contenido CSV con punto y coma como delimitador
+    const delimiter = ';';
+    const BOM = '\uFEFF';
     const csvContent = [
-      headers.join(','),
-      ...csvData.map(row => 
-        row.map(field => 
-          // Escapar comillas y envolver en comillas si contiene comas, saltos de línea o comillas
-          typeof field === 'string' && (field.includes(',') || field.includes('\n') || field.includes('"'))
+      headers.join(delimiter),
+      ...csvData.map(row =>
+        row.map(field =>
+          // Escapar comillas y envolver en comillas si contiene el delimitador, saltos de línea o comillas
+          typeof field === 'string' && (field.includes(delimiter) || field.includes('\n') || field.includes('"'))
             ? `"${field.replace(/"/g, '""')}"`
             : field
-        ).join(',')
+        ).join(delimiter)
       )
     ].join('\n');
 
-    // Crear y descargar archivo
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    // Crear y descargar archivo con BOM para UTF-8
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     
     if (link.download !== undefined) {
@@ -605,28 +607,30 @@ export const CustomersManagement: React.FC = () => {
         'Juan Pérez',
         '+573001234567',
         'juan.perez@email.com',
-        'Calle 123 #45-67, Bogotá',
-        'Casa de dos pisos, portón azul',
+        'Calle 123 #45-67 Bogotá',
+        'Casa de dos pisos portón azul',
         'Sí'
       ],
       [
         'María González',
         '+573009876543',
         'maria.gonzalez@email.com',
-        'Carrera 45 #12-34, Medellín',
-        'Apartamento 301, edificio blanco',
+        'Carrera 45 #12-34 Medellín',
+        'Apartamento 301 edificio blanco',
         'No'
       ]
     ];
 
+    const delimiter = ';';
+
     const csvContent = [
-      headers.join(','),
+      headers.join(delimiter),
       ...exampleRows.map(row =>
         row.map(field =>
-          typeof field === 'string' && (field.includes(',') || field.includes('\n') || field.includes('"'))
+          typeof field === 'string' && (field.includes(delimiter) || field.includes('\n') || field.includes('"'))
             ? `"${field.replace(/"/g, '""')}"`
             : field
-        ).join(',')
+        ).join(delimiter)
       )
     ].join('\n');
 
@@ -680,7 +684,14 @@ export const CustomersManagement: React.FC = () => {
     reader.readAsText(file, 'UTF-8');
   };
 
-  const parseCSVLine = (line: string): string[] => {
+  const detectDelimiter = (text: string): string => {
+    const firstLine = text.split(/\r?\n/)[0];
+    const commaCount = (firstLine.match(/,/g) || []).length;
+    const semicolonCount = (firstLine.match(/;/g) || []).length;
+    return semicolonCount > commaCount ? ';' : ',';
+  };
+
+  const parseCSVLine = (line: string, delimiter: string): string[] => {
     const result: string[] = [];
     let current = '';
     let inQuotes = false;
@@ -694,7 +705,7 @@ export const CustomersManagement: React.FC = () => {
         i++;
       } else if (char === '"') {
         inQuotes = !inQuotes;
-      } else if (char === ',' && !inQuotes) {
+      } else if (char === delimiter && !inQuotes) {
         result.push(current.trim());
         current = '';
       } else {
@@ -715,7 +726,8 @@ export const CustomersManagement: React.FC = () => {
       return;
     }
 
-    const headers = parseCSVLine(lines[0]);
+    const delimiter = detectDelimiter(text);
+    const headers = parseCSVLine(lines[0], delimiter);
     const requiredHeaders = ['Nombre', 'Teléfono'];
     const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
 
@@ -730,7 +742,7 @@ export const CustomersManagement: React.FC = () => {
 
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i];
-      const values = parseCSVLine(line);
+      const values = parseCSVLine(line, delimiter);
 
       if (values.length !== headers.length) {
         errors.push(`Línea ${i + 1}: Número incorrecto de columnas (esperado ${headers.length}, obtenido ${values.length}). Valores: [${values.join(' | ')}]`);
