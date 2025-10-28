@@ -1165,7 +1165,126 @@ Fecha: ${new Date().toLocaleString()}
               </div>
 
               <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-100">
-                <h4 className="text-md font-semibold text-gray-900 mb-4">Paleta de Colores</h4>
+                <h4 className="text-md font-semibold text-gray-900 mb-4">Plantillas de Colores</h4>
+                <p className="text-sm text-gray-600 mb-4">Selecciona una plantilla predefinida o personaliza tus colores manualmente</p>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateFormData('settings.theme.primary_color', '#3b82f6');
+                      updateFormData('settings.theme.secondary_color', '#1e40af');
+                      updateFormData('settings.theme.menu_background_color', '#f8fafc');
+                      updateFormData('settings.theme.card_background_color', '#ffffff');
+                      updateFormData('settings.theme.primary_text_color', '#1e293b');
+                      updateFormData('settings.theme.secondary_text_color', '#64748b');
+                    }}
+                    className="flex flex-col items-center gap-2 p-3 rounded-lg border-2 border-gray-200 hover:border-blue-500 transition-all"
+                  >
+                    <div className="flex gap-1 w-full">
+                      <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#3b82f6' }}></div>
+                      <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#1e40af' }}></div>
+                    </div>
+                    <span className="text-xs font-medium text-gray-700">Azul Clásico</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateFormData('settings.theme.primary_color', '#10b981');
+                      updateFormData('settings.theme.secondary_color', '#059669');
+                      updateFormData('settings.theme.menu_background_color', '#f0fdf4');
+                      updateFormData('settings.theme.card_background_color', '#ffffff');
+                      updateFormData('settings.theme.primary_text_color', '#14532d');
+                      updateFormData('settings.theme.secondary_text_color', '#6b7280');
+                    }}
+                    className="flex flex-col items-center gap-2 p-3 rounded-lg border-2 border-gray-200 hover:border-green-500 transition-all"
+                  >
+                    <div className="flex gap-1 w-full">
+                      <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#10b981' }}></div>
+                      <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#059669' }}></div>
+                    </div>
+                    <span className="text-xs font-medium text-gray-700">Verde Fresco</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateFormData('settings.theme.primary_color', '#f59e0b');
+                      updateFormData('settings.theme.secondary_color', '#d97706');
+                      updateFormData('settings.theme.menu_background_color', '#fffbeb');
+                      updateFormData('settings.theme.card_background_color', '#ffffff');
+                      updateFormData('settings.theme.primary_text_color', '#78350f');
+                      updateFormData('settings.theme.secondary_text_color', '#6b7280');
+                    }}
+                    className="flex flex-col items-center gap-2 p-3 rounded-lg border-2 border-gray-200 hover:border-amber-500 transition-all"
+                  >
+                    <div className="flex gap-1 w-full">
+                      <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#f59e0b' }}></div>
+                      <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#d97706' }}></div>
+                    </div>
+                    <span className="text-xs font-medium text-gray-700">Ámbar Cálido</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateFormData('settings.theme.primary_color', '#ef4444');
+                      updateFormData('settings.theme.secondary_color', '#dc2626');
+                      updateFormData('settings.theme.menu_background_color', '#fef2f2');
+                      updateFormData('settings.theme.card_background_color', '#ffffff');
+                      updateFormData('settings.theme.primary_text_color', '#7f1d1d');
+                      updateFormData('settings.theme.secondary_text_color', '#6b7280');
+                    }}
+                    className="flex flex-col items-center gap-2 p-3 rounded-lg border-2 border-gray-200 hover:border-red-500 transition-all"
+                  >
+                    <div className="flex gap-1 w-full">
+                      <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#ef4444' }}></div>
+                      <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#dc2626' }}></div>
+                    </div>
+                    <span className="text-xs font-medium text-gray-700">Rojo Vibrante</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateFormData('settings.theme.primary_color', '#1f2937');
+                      updateFormData('settings.theme.secondary_color', '#4b5563');
+                      updateFormData('settings.theme.menu_background_color', '#f9fafb');
+                      updateFormData('settings.theme.card_background_color', '#ffffff');
+                      updateFormData('settings.theme.primary_text_color', '#111827');
+                      updateFormData('settings.theme.secondary_text_color', '#6b7280');
+                    }}
+                    className="flex flex-col items-center gap-2 p-3 rounded-lg border-2 border-gray-200 hover:border-gray-700 transition-all"
+                  >
+                    <div className="flex gap-1 w-full">
+                      <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#1f2937' }}></div>
+                      <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#4b5563' }}></div>
+                    </div>
+                    <span className="text-xs font-medium text-gray-700">Elegante Oscuro</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateFormData('settings.theme.primary_color', '#8b5cf6');
+                      updateFormData('settings.theme.secondary_color', '#7c3aed');
+                      updateFormData('settings.theme.menu_background_color', '#faf5ff');
+                      updateFormData('settings.theme.card_background_color', '#ffffff');
+                      updateFormData('settings.theme.primary_text_color', '#4c1d95');
+                      updateFormData('settings.theme.secondary_text_color', '#6b7280');
+                    }}
+                    className="flex flex-col items-center gap-2 p-3 rounded-lg border-2 border-gray-200 hover:border-violet-500 transition-all"
+                  >
+                    <div className="flex gap-1 w-full">
+                      <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#8b5cf6' }}></div>
+                      <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#7c3aed' }}></div>
+                    </div>
+                    <span className="text-xs font-medium text-gray-700">Violeta Moderno</span>
+                  </button>
+                </div>
+
+                <h4 className="text-md font-semibold text-gray-900 mb-4">Personalización Manual</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <div className="space-y-3">
                     <label className="block text-sm font-medium text-gray-700">
