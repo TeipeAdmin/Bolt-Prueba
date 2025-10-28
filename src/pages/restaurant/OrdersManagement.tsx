@@ -1972,7 +1972,7 @@ export const OrdersManagement: React.FC = () => {
                 label="Nombre *"
                 value={orderForm.customer.name}
                 onChange={(e) => setOrderForm(prev => ({
-                  ...prev,
+                  ...pre
                   customer: { ...prev.customer, name: e.target.value }
                 }))}
                 placeholder="Nombre del cliente"
@@ -1980,17 +1980,10 @@ export const OrdersManagement: React.FC = () => {
               <Input
                 label="Teléfono *"
                 value={orderForm.customer.phone}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  // Solo permite dígitos y opcionalmente + o - al inicio
-                  const regex = /^[+-]?\d*$/;
-                  if (regex.test(value) || value === '') {
-                    setOrderForm(prev => ({
-                      ...prev,
-                      customer: { ...prev.customer, phone: value }
-                    }));
-                  }
-                }}
+                onChange={(e) => setOrderForm(prev => ({
+                  ...prev,
+                  customer: { ...prev.customer, phone: e.target.value }
+                }))}
                 placeholder="Número de teléfono"
               />
               <Input
