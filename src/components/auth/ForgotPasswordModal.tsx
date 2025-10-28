@@ -120,7 +120,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
             <Button
               type="submit"
               loading={loading}
-              className="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 shadow-md hover:shadow-lg transition-all"
+              className="flex-1 bg-gradient-to-r from-orange-400 to-red-500 hover:from-orange-600 hover:to-red-700 shadow-md hover:shadow-lg transition-all"
             >
               Enviar Solicitud
             </Button>
