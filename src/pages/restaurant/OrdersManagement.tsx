@@ -546,6 +546,18 @@ export const OrdersManagement: React.FC = () => {
   };
 
   const sendWhatsAppMessage = (order: Order) => {
+    if (!order.customer?.phone || order.customer.phone.trim() === '') {
+      showToast('error', 'Error', 'El pedido no tiene un número de teléfono asociado', 4000);
+      return;
+    }
+
+    const whatsappNumber = order.customer.phone.replace(/[^\d]/g, '');
+
+    if (!whatsappNumber || whatsappNumber.length < 10) {
+      showToast('error', 'Error', 'El número de teléfono no es válido. Debe tener al menos 10 dígitos.', 4000);
+      return;
+    }
+
     let whatsappMessage: string;
 
     if (!order.whatsapp_sent) {
@@ -561,11 +573,17 @@ export const OrdersManagement: React.FC = () => {
       whatsappMessage = generateStatusUpdateMessage(order);
     }
 
-    const whatsappNumber = order.customer.phone.replace(/[^\d]/g, '');
-
-    if (whatsappNumber) {
+    try {
       const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`;
-      window.open(whatsappUrl, '_blank');
+      const newWindow = window.open(whatsappUrl, '_blank');
+
+      if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+        showToast('warning', 'Advertencia', 'Por favor permite las ventanas emergentes para abrir WhatsApp', 5000);
+      } else {
+        showToast('success', 'Éxito', 'Abriendo WhatsApp...', 2000);
+      }
+    } catch (error) {
+      showToast('error', 'Error', 'No se pudo abrir WhatsApp. Por favor intenta de nuevo.', 4000);
     }
   };
 
