@@ -4,6 +4,7 @@ import { Restaurant } from '../../types';
 import { useCart } from '../../contexts/CartContext';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { useToast } from '../../hooks/useToast';
+import { formatCurrency } from '../../utils/currencyUtils';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ type DeliveryMode = 'pickup' | 'dine-in' | 'delivery';
 export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, restaurant }) => {
   const { items, getTotal, clearCart } = useCart();
   const { showToast } = useToast();
+  const currency = restaurant?.settings?.currency || 'USD';
   const [step, setStep] = useState<'delivery' | 'info' | 'confirm' | 'success'>('delivery');
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>('pickup');
   const [customerInfo, setCustomerInfo] = useState({
@@ -647,7 +649,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                         )}
                       </div>
                       <p className="font-semibold" style={{ color: 'var(--accent-color)' }}>
-                        ${(item.variation.price * item.quantity).toFixed(2)}
+                        {formatCurrency(item.variation.price * item.quantity, currency)}
                       </p>
                     </div>
                   ))}
@@ -656,7 +658,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                 <div className="border-t pt-4" style={{ borderColor: primaryColor }}>
                   <div className="flex justify-between text-xl font-bold">
                     <span>Total:</span>
-                    <span style={{ color: 'var(--accent-color)' }}>${getTotal().toFixed(2)}</span>
+                    <span style={{ color: 'var(--accent-color)' }}>{formatCurrency(getTotal(), currency)}</span>
                   </div>
                 </div>
               </div>
@@ -707,7 +709,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                   borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
                 }}
               >
-                {loading ? 'Procesando...' : `Confirmar Pedido - $${getTotal().toFixed(2)}`}
+                {loading ? 'Procesando...' : `Confirmar Pedido - ${formatCurrency(getTotal(), currency)}`}
               </button>
             </div>
           )}

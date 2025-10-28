@@ -9,6 +9,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
+import { formatCurrency } from '../../utils/currencyUtils';
 
 interface CustomerData extends Customer {
   id: string;
@@ -23,6 +24,7 @@ export const CustomersManagement: React.FC = () => {
   const { restaurant } = useAuth();
   const { t } = useLanguage();
   const { showToast } = useToast();
+  const currency = restaurant?.settings?.currency || 'USD';
   const [customers, setCustomers] = useState<CustomerData[]>([]);
   const [filteredCustomers, setFilteredCustomers] = useState<CustomerData[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -528,8 +530,8 @@ export const CustomersManagement: React.FC = () => {
       customer.email || '',
       customer.address || '',
       customer.totalOrders,
-      customer.totalSpent.toFixed(2),
-      (customer.totalSpent / customer.totalOrders).toFixed(2),
+      formatCurrency(customer.totalSpent, currency),
+      formatCurrency(customer.totalSpent / customer.totalOrders, currency),
       customer.orderTypes.join(', '),
       customer.isVip ? 'Sí' : 'No',
       getSegmentText(customer.totalOrders, customer.isVip),
@@ -962,13 +964,13 @@ export const CustomersManagement: React.FC = () => {
             </div>
             <div className="text-right">
               <p className="text-sm font-medium text-orange-900 mb-1">Gasto Promedio</p>
-              <p className="text-3xl font-bold text-orange-900">${stats.averageSpent.toFixed(2)}</p>
+              <p className="text-3xl font-bold text-orange-900">{formatCurrency(stats.averageSpent, currency)}</p>
             </div>
           </div>
           <div className="flex items-center justify-between pt-3 border-t border-orange-200">
             <span className="text-xs text-orange-700 font-medium">Por cliente</span>
             <span className="text-sm font-bold text-green-700">
-              ${stats.totalRevenue.toFixed(2)}
+              {formatCurrency(stats.totalRevenue, currency)}
             </span>
           </div>
         </div>
@@ -1173,10 +1175,10 @@ export const CustomersManagement: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
-                        ${customer.totalSpent.toFixed(2)}
+                        {formatCurrency(customer.totalSpent, currency)}
                       </div>
                       <div className="text-sm text-gray-500">
-                        ${(customer.totalSpent / customer.totalOrders).toFixed(2)} avg
+                        {formatCurrency(customer.totalSpent / customer.totalOrders, currency)} avg
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -1353,7 +1355,7 @@ export const CustomersManagement: React.FC = () => {
                 <ul className="text-sm text-red-800 space-y-1">
                   <li>• Toda la información del cliente</li>
                   <li>• {customerToDelete.totalOrders} pedido{customerToDelete.totalOrders !== 1 ? 's' : ''} asociado{customerToDelete.totalOrders !== 1 ? 's' : ''}</li>
-                  <li>• Historial de compras (${customerToDelete.totalSpent.toFixed(2)})</li>
+                  <li>• Historial de compras ({formatCurrency(customerToDelete.totalSpent, currency)})</li>
                   {customerToDelete.isVip && <li>• Estado VIP del cliente</li>}
                 </ul>
               </div>

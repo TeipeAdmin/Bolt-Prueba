@@ -5,6 +5,7 @@ import { loadFromStorage, availablePlans } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Badge } from '../../components/ui/Badge';
+import { formatCurrency } from '../../utils/currencyUtils';
 
 export const RestaurantDashboard: React.FC = () => {
   const { restaurant } = useAuth();
@@ -162,7 +163,7 @@ export const RestaurantDashboard: React.FC = () => {
             <div className="flex-1">
               <p className="text-sm font-medium text-teal-700">{t('totalSales')}</p>
               <p className="text-3xl font-bold text-teal-900 mt-2">
-                ${stats.currentMonthRevenue.toFixed(2)}
+                {formatCurrency(stats.currentMonthRevenue, restaurant?.settings?.currency || 'USD')}
               </p>
               <div className="mt-3 pt-3 border-t border-teal-200">
                 <span className="text-sm text-teal-700 font-medium">
@@ -305,7 +306,7 @@ export const RestaurantDashboard: React.FC = () => {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ${order.total.toFixed(2)}
+                      {formatCurrency(order.total, restaurant?.settings?.currency || 'USD')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getStatusBadge(order.status)}

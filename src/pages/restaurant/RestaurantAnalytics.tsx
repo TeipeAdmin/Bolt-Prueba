@@ -7,10 +7,12 @@ import { Badge } from '../../components/ui/Badge';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { useToast } from '../../hooks/useToast';
+import { formatCurrency } from '../../utils/currencyUtils';
 
 export const RestaurantAnalytics: React.FC = () => {
   const { restaurant } = useAuth();
   const { showToast } = useToast();
+  const currency = restaurant?.settings?.currency || 'USD';
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -163,7 +165,7 @@ export const RestaurantAnalytics: React.FC = () => {
       order.status === 'ready' ? 'Listo' :
       order.status === 'delivered' ? 'Entregado' :
       order.status === 'cancelled' ? 'Cancelado' : order.status,
-      `$${order.total.toFixed(2)}`,
+      formatCurrency(order.total, currency),
       order.items.map(item => `${item.product.name} x${item.quantity}`).join('; ')
     ]);
 
@@ -461,7 +463,7 @@ export const RestaurantAnalytics: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Ingresos Totales</p>
               <p className="text-2xl font-semibold text-gray-900">
-                ${totalRevenue.toFixed(2)}
+                {formatCurrency(totalRevenue, currency)}
               </p>
             </div>
           </div>
@@ -478,7 +480,7 @@ export const RestaurantAnalytics: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Ticket Promedio</p>
               <p className="text-2xl font-semibold text-gray-900">
-                ${averageOrderValue.toFixed(2)}
+                {formatCurrency(averageOrderValue, currency)}
               </p>
             </div>
           </div>
@@ -684,7 +686,7 @@ export const RestaurantAnalytics: React.FC = () => {
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-medium text-gray-900">
-                        ${item.revenue.toFixed(2)}
+                        {formatCurrency(item.revenue, currency)}
                       </p>
                     </div>
                   </div>
@@ -716,7 +718,7 @@ export const RestaurantAnalytics: React.FC = () => {
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-medium text-gray-900">
-                        ${order.total.toFixed(2)}
+                        {formatCurrency(order.total, currency)}
                       </p>
                       {getStatusBadge(order.status)}
                     </div>

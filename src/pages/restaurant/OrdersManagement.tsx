@@ -10,11 +10,13 @@ import { Badge } from '../../components/ui/Badge';
 import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
 import { OrderProductSelector } from '../../components/restaurant/OrderProductSelector';
+import { formatCurrency, getCurrencySymbol } from '../../utils/currencyUtils';
 
 export const OrdersManagement: React.FC = () => {
   const { restaurant } = useAuth();
   const { showToast } = useToast();
   const { t } = useLanguage();
+  const currency = restaurant?.settings?.currency || 'USD';
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -408,7 +410,7 @@ export const OrdersManagement: React.FC = () => {
                     <td>${item.product.name}</td>
                     <td>${item.variation.name}</td>
                     <td>${item.quantity}</td>
-                    <td>$${(item.variation.price * item.quantity).toFixed(2)}</td>
+                    <td>${formatCurrency(item.variation.price * item.quantity, currency)}</td>
                   </tr>
                   ${item.special_notes ? `<tr><td colspan="4"><em>Nota: ${item.special_notes}</em></td></tr>` : ''}
                 `).join('')}
@@ -417,9 +419,9 @@ export const OrdersManagement: React.FC = () => {
           </div>
           
           <div class="total">
-            <p>Subtotal: $${order.subtotal.toFixed(2)}</p>
-            ${order.delivery_cost ? `<p>Delivery: $${order.delivery_cost.toFixed(2)}</p>` : ''}
-            <p>Total: $${order.total.toFixed(2)}</p>
+            <p>Subtotal: ${formatCurrency(order.subtotal, currency)}</p>
+            ${order.delivery_cost ? `<p>Delivery: ${formatCurrency(order.delivery_cost, currency)}</p>` : ''}
+            <p>Total: ${formatCurrency(order.total, currency)}</p>
           </div>
           
           ${order.special_instructions ? `<p><strong>Instrucciones:</strong> ${order.special_instructions}</p>` : ''}
@@ -486,7 +488,7 @@ export const OrdersManagement: React.FC = () => {
     
     message += `*PRODUCTOS:*\n`;
     order.items.forEach((item, index) => {
-      const itemTotal = (item.variation.price * item.quantity).toFixed(2);
+      const itemTotal = formatCurrency(item.variation.price * item.quantity, currency);
       message += `${index + 1}. *${item.product.name}*\n`;
       message += `   - *Variacion:* ${item.variation.name}\n`;
       message += `   - *Cantidad:* ${item.quantity}\n`;
@@ -498,11 +500,11 @@ export const OrdersManagement: React.FC = () => {
     });
     
     message += `*RESUMEN DEL PEDIDO:*\n`;
-    message += `- *Subtotal:* $${order.subtotal.toFixed(2)}\n`;
+    message += `- *Subtotal:* ${formatCurrency(order.subtotal, currency)}\n`;
     if (order.delivery_cost && order.delivery_cost > 0) {
-      message += `- *Delivery:* $${order.delivery_cost.toFixed(2)}\n`;
+      message += `- *Delivery:* ${formatCurrency(order.delivery_cost, currency)}\n`;
     }
-    message += `- *TOTAL:* $${order.total.toFixed(2)}\n\n`;
+    message += `- *TOTAL:* ${formatCurrency(order.total, currency)}\n\n`;
     
     message += `*Tiempo estimado:* ${restaurant?.settings?.preparation_time || '30-45 minutos'}\n\n`;
     message += `*Gracias por tu pedido!*`;
@@ -811,8 +813,8 @@ export const OrdersManagement: React.FC = () => {
                     ${item.special_notes ? `<br><small style="font-size: 9px; color: #666;">Nota: ${item.special_notes}</small>` : ''}
                   </div>
                   <div class="item-qty">${item.quantity}</div>
-                  <div class="item-price">$${item.unit_price.toFixed(2)}</div>
-                  <div class="item-total">$${item.total_price.toFixed(2)}</div>
+                  <div class="item-price">${formatCurrency(item.unit_price, currency)}</div>
+                  <div class="item-total">${formatCurrency(item.total_price, currency)}</div>
                 </div>
               `).join('')}
             </div>
@@ -828,39 +830,39 @@ export const OrdersManagement: React.FC = () => {
           <div class="totals">
             <div class="total-row">
               <span>Subtotal:</span>
-              <span>$${subtotal.toFixed(2)}</span>
+              <span>${formatCurrency(subtotal, currency)}</span>
             </div>
 
             ${order.delivery_cost && order.delivery_cost > 0 ? `
               <div class="total-row">
                 <span>Domicilio:</span>
-                <span>$${order.delivery_cost.toFixed(2)}</span>
+                <span>${formatCurrency(order.delivery_cost, currency)}</span>
               </div>
             ` : ''}
 
             ${billing?.responsableIVA ? `
               <div class="total-row">
                 <span>IVA (19%):</span>
-                <span>$${iva.toFixed(2)}</span>
+                <span>${formatCurrency(iva, currency)}</span>
               </div>
             ` : ''}
 
             ${billing?.aplicaPropina ? `
               <div class="total-row">
                 <span>Propina sugerida (10%):</span>
-                <span>$${propina.toFixed(2)}</span>
+                <span>${formatCurrency(propina, currency)}</span>
               </div>
             ` : ''}
 
             <div class="total-row final">
               <span>TOTAL:</span>
-              <span>$${total.toFixed(2)}</span>
+              <span>${formatCurrency(total, currency)}</span>
             </div>
 
             ${billing?.aplicaPropina ? `
               <div class="total-row" style="font-size: 10px; color: #666; margin-top: 3px;">
                 <span>Total con propina:</span>
-                <span>$${(total + propina).toFixed(2)}</span>
+                <span>${formatCurrency(total + propina, currency)}</span>
               </div>
             ` : ''}
           </div>
@@ -1107,7 +1109,7 @@ export const OrdersManagement: React.FC = () => {
           <div className="flex items-center justify-between pt-3 border-t border-blue-200">
             <span className="text-xs text-blue-700 font-medium">Ventas del día</span>
             <span className="text-sm font-bold text-green-700">
-              ${orderStats.todayRevenue.toFixed(2)}
+              {formatCurrency(orderStats.todayRevenue, currency)}
             </span>
           </div>
         </div>
@@ -1156,7 +1158,7 @@ export const OrdersManagement: React.FC = () => {
             <div className="text-right">
               <p className="text-sm font-medium text-purple-900 mb-1">Ticket Promedio</p>
               <p className="text-3xl font-bold text-purple-900">
-                ${orderStats.averageOrderValue.toFixed(2)}
+                {formatCurrency(orderStats.averageOrderValue, currency)}
               </p>
             </div>
           </div>
@@ -1414,7 +1416,7 @@ export const OrdersManagement: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
-                          ${order.total.toFixed(2)}
+                          {formatCurrency(order.total, currency)}
                         </div>
                         <div className="text-sm text-gray-500">
                           {order.items.length} productos
@@ -1658,10 +1660,10 @@ export const OrdersManagement: React.FC = () => {
                     </div>
                     <div className="text-right ml-4">
                       <p className="font-medium">
-                        {item.quantity} x ${item.variation.price.toFixed(2)}
+                        {item.quantity} x {formatCurrency(item.variation.price, currency)}
                       </p>
                       <p className="text-sm text-gray-600">
-                        ${(item.variation.price * item.quantity).toFixed(2)}
+                        {formatCurrency(item.variation.price * item.quantity, currency)}
                       </p>
                     </div>
                   </div>
@@ -1674,17 +1676,17 @@ export const OrdersManagement: React.FC = () => {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span>Subtotal:</span>
-                  <span>${selectedOrder.subtotal.toFixed(2)}</span>
+                  <span>{formatCurrency(selectedOrder.subtotal, currency)}</span>
                 </div>
                 {selectedOrder.delivery_cost && selectedOrder.delivery_cost > 0 && (
                   <div className="flex justify-between">
                     <span>Delivery:</span>
-                    <span>${selectedOrder.delivery_cost.toFixed(2)}</span>
+                    <span>{formatCurrency(selectedOrder.delivery_cost, currency)}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-bold text-lg border-t pt-2">
                   <span>Total:</span>
-                  <span>${selectedOrder.total.toFixed(2)}</span>
+                  <span>{formatCurrency(selectedOrder.total, currency)}</span>
                 </div>
               </div>
             </div>
@@ -1917,7 +1919,7 @@ export const OrdersManagement: React.FC = () => {
               <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
                 <ul className="text-sm text-red-800 space-y-1">
                   <li>• Cliente: {orderToDelete.customer.name}</li>
-                  <li>• Total: ${orderToDelete.total.toFixed(2)}</li>
+                  <li>• Total: {formatCurrency(orderToDelete.total, currency)}</li>
                   <li>• {orderToDelete.items.length} producto{orderToDelete.items.length !== 1 ? 's' : ''}</li>
                   <li>• Estado: {orderToDelete.status}</li>
                 </ul>
