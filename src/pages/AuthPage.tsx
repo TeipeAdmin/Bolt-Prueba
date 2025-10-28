@@ -22,7 +22,7 @@ export const AuthPage: React.FC = () => {
             onClick={() => setLanguage('es')}
             className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
               language === 'es'
-                ? 'bg-emerald-500 text-white'
+                ? 'bg-red-500 text-white'
                 : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
