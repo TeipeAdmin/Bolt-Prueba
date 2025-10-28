@@ -1972,7 +1972,7 @@ export const OrdersManagement: React.FC = () => {
                 label="Nombre *"
                 value={orderForm.customer.name}
                 onChange={(e) => setOrderForm(prev => ({
-                  ...pre
+                  ...prev,
                   customer: { ...prev.customer, name: e.target.value }
                 }))}
                 placeholder="Nombre del cliente"
