@@ -566,33 +566,6 @@ export const CategoriesManagement: React.FC = () => {
             </div>
           </div>
 
-          {/* Preview Section */}
-          <div className="border-t border-gray-200 pt-5">
-            <h4 className="text-sm font-semibold text-gray-900 mb-3">Vista Previa</h4>
-            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-              <div className="relative h-32 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                {formData.image ? (
-                  <img
-                    src={formData.image}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                  />
-                ) : formData.icon ? (
-                  <span className="text-5xl">{formData.icon}</span>
-                ) : (
-                  <FolderOpen className="w-10 h-10 text-gray-400" />
-                )}
-              </div>
-              <div className="p-4">
-                <h3 className="text-base font-semibold text-gray-900 mb-1 truncate">
-                  {formData.name || 'Nombre de la categoría'}
-                </h3>
-                <p className="text-sm text-gray-600 line-clamp-2">
-                  {formData.description || 'La descripción aparecerá aquí'}
-                </p>
-              </div>
-            </div>
-          </div>
 
           {/* Action Buttons */}
           <div className="flex items-center justify-between gap-3 pt-4 border-t border-gray-200">
