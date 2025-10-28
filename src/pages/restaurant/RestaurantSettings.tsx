@@ -1353,60 +1353,6 @@ Fecha: ${new Date().toLocaleString()}
                   </div>
                 </div>
 
-
-                <div>
-                  <h5 className="text-sm font-medium text-gray-900 mb-3">Pesos de Fuente</h5>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="space-y-2">
-                      <label className="block text-xs font-medium text-gray-600">Light</label>
-                      <input
-                        type="number"
-                        value={formData.settings.theme.font_weights.light}
-                        onChange={(e) => updateFormData('settings.theme.font_weights.light', parseInt(e.target.value))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                        min="100"
-                        max="900"
-                        step="100"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="block text-xs font-medium text-gray-600">Regular</label>
-                      <input
-                        type="number"
-                        value={formData.settings.theme.font_weights.regular}
-                        onChange={(e) => updateFormData('settings.theme.font_weights.regular', parseInt(e.target.value))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                        min="100"
-                        max="900"
-                        step="100"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="block text-xs font-medium text-gray-600">Medium</label>
-                      <input
-                        type="number"
-                        value={formData.settings.theme.font_weights.medium}
-                        onChange={(e) => updateFormData('settings.theme.font_weights.medium', parseInt(e.target.value))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                        min="100"
-                        max="900"
-                        step="100"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="block text-xs font-medium text-gray-600">Bold</label>
-                      <input
-                        type="number"
-                        value={formData.settings.theme.font_weights.bold}
-                        onChange={(e) => updateFormData('settings.theme.font_weights.bold', parseInt(e.target.value))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                        min="100"
-                        max="900"
-                        step="100"
-                      />
-                    </div>
-                  </div>
-                </div>
               </div>
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
