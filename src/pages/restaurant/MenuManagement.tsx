@@ -498,7 +498,7 @@ export const MenuManagement: React.FC = () => {
           {filteredProducts.map(product => (
             <div key={product.id} className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition-all overflow-hidden group">
               {/* Product Image */}
-              <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
+              <div className="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
                 {product.images.length > 0 ? (
                   <img
                     src={product.images[0]}
