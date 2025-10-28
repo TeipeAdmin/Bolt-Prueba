@@ -560,7 +560,7 @@ export const CategoriesManagement: React.FC = () => {
                   </label>
                 )}
                 <p className="text-xs text-gray-500">
-                  Recomendado: 800x600px (máx. 5MB)
+                  Recomendado: 600x600px (máx. 5MB)
                 </p>
               </div>
             </div>
