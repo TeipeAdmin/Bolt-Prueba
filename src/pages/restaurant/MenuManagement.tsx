@@ -551,7 +551,7 @@ export const MenuManagement: React.FC = () => {
                         )}
                       </div>
                       {product.variations.some(v => v.compare_at_price && v.compare_at_price > v.price) && (
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-4">
                           <span className="text-sm text-gray-500 line-through">
                             {formatCurrency(Math.min(...product.variations.filter(v => v.compare_at_price).map(v => v.compare_at_price!)), restaurant?.settings?.currency || 'USD')}
                           </span>
