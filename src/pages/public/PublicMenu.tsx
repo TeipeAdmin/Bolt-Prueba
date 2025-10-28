@@ -60,9 +60,11 @@ export const PublicMenu: React.FC = () => {
       const allCategories = loadFromStorage('categories', []);
       const allProducts = loadFromStorage('products', []);
 
-      const restaurantCategories = allCategories.filter((cat: Category) =>
-        cat.restaurant_id === restaurantData.id && cat.active
-      );
+      const restaurantCategories = allCategories
+        .filter((cat: Category) =>
+          cat.restaurant_id === restaurantData.id && cat.active
+        )
+        .sort((a: Category, b: Category) => (a.order_position || 0) - (b.order_position || 0));
 
       const restaurantProducts = allProducts.filter((prod: Product) =>
         prod.restaurant_id === restaurantData.id && prod.status === 'active'
