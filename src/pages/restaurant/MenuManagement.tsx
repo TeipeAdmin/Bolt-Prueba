@@ -627,6 +627,9 @@ export const MenuManagement: React.FC = () => {
                       title="Eliminar producto"
                     />
                   </div>
+                  <div className="text-xs text-gray-500">
+                    {product.sku}
+                  </div>
                 </div>
               </div>
             </div>
