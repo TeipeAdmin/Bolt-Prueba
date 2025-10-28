@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, CreditCard as Edit, Trash2, GripVertical, Eye, EyeOff, Search, Image as ImageIcon, FolderOpen } from 'lucide-react';
+import { Plus, Pencil, Trash2, GripVertical, Eye, EyeOff, Search, Image as ImageIcon, FolderOpen } from 'lucide-react';
 import { Category, Subscription } from '../../types';
 import { loadFromStorage, saveToStorage, availablePlans } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -433,7 +433,7 @@ export const CategoriesManagement: React.FC = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    icon={Edit}
+                    icon={Pencil}
                     onClick={() => handleEdit(category)}
                     className="flex-1"
                   />
