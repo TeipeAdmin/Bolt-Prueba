@@ -540,7 +540,7 @@ export const MenuManagement: React.FC = () => {
                 <div className="mb-4">
                   {product.variations.length > 0 && (
                     <div className="space-y-1">
-                      <div className="flex items-baseline gap-2">
+                      <div className="flex items-baseline gap-4">
                         <span className="text-2xl font-bold text-gray-900">
                           {formatCurrency(Math.min(...product.variations.map(v => v.price)), restaurant?.settings?.currency || 'USD')}
                         </span>
