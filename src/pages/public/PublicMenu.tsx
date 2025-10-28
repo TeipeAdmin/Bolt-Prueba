@@ -795,7 +795,7 @@ export const PublicMenu: React.FC = () => {
                             cssText: `color: ${primaryColor} !important;`
                         }}
                       >
-                        ${minPrice.toLocaleString('es-CO')}
+                        {formatCurrency(minPrice, restaurant.settings.currency || 'USD')}
                       </span>
                     </div>
                   </div>
