@@ -505,7 +505,17 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                     required
                   />
                   {validationErrors.name && (
-                    <p className="text-xs text-red-500 mt-1">{validationErrors.name}</p>
+                    <div
+                      className="mt-2 p-2 rounded flex items-center gap-2"
+                      style={{
+                        backgroundColor: '#fef2f2',
+                        border: '1px solid #fca5a5',
+                        borderRadius: theme.button_style === 'rounded' ? '0.375rem' : '0.25rem'
+                      }}
+                    >
+                      <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
+                      <p className="text-xs text-red-700 font-medium">{validationErrors.name}</p>
+                    </div>
                   )}
                 </div>
 
@@ -542,7 +552,17 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                     required
                   />
                   {validationErrors.phone && (
-                    <p className="text-xs text-red-500 mt-1">{validationErrors.phone}</p>
+                    <div
+                      className="mt-2 p-2 rounded flex items-center gap-2"
+                      style={{
+                        backgroundColor: '#fef2f2',
+                        border: '1px solid #fca5a5',
+                        borderRadius: theme.button_style === 'rounded' ? '0.375rem' : '0.25rem'
+                      }}
+                    >
+                      <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
+                      <p className="text-xs text-red-700 font-medium">{validationErrors.phone}</p>
+                    </div>
                   )}
                 </div>
 
@@ -579,7 +599,17 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                     placeholder="correo@ejemplo.com"
                   />
                   {validationErrors.email && (
-                    <p className="text-xs text-red-500 mt-1">{validationErrors.email}</p>
+                    <div
+                      className="mt-2 p-2 rounded flex items-center gap-2"
+                      style={{
+                        backgroundColor: '#fef2f2',
+                        border: '1px solid #fca5a5',
+                        borderRadius: theme.button_style === 'rounded' ? '0.375rem' : '0.25rem'
+                      }}
+                    >
+                      <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
+                      <p className="text-xs text-red-700 font-medium">{validationErrors.email}</p>
+                    </div>
                   )}
                 </div>
 
