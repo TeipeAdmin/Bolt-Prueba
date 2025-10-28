@@ -1179,13 +1179,38 @@ Fecha: ${new Date().toLocaleString()}
                       updateFormData('settings.theme.primary_text_color', '#1e293b');
                       updateFormData('settings.theme.secondary_text_color', '#64748b');
                     }}
-                    className="flex flex-col items-center gap-2 p-3 rounded-lg border-2 border-gray-200 hover:border-blue-500 transition-all"
+                    className="flex flex-col items-center gap-2 p-3 rounded-lg border-2 border-gray-200 hover:border-blue-500 hover:shadow-lg transition-all"
                   >
-                    <div className="flex gap-1 w-full">
-                      <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#3b82f6' }}></div>
-                      <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#1e40af' }}></div>
+                    <div className="flex flex-col gap-1 w-full">
+                      <div className="h-6 rounded-t" style={{ backgroundColor: '#f8fafc' }}></div>
+                      <div className="flex gap-1">
+                        <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#3b82f6' }}></div>
+                        <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#ffffff' }}></div>
+                      </div>
                     </div>
-                    <span className="text-xs font-medium text-gray-700">Azul Clásico</span>
+                    <span className="text-xs font-medium text-gray-700">Azul Océano</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateFormData('settings.theme.primary_color', '#1e293b');
+                      updateFormData('settings.theme.secondary_color', '#334155');
+                      updateFormData('settings.theme.menu_background_color', '#0f172a');
+                      updateFormData('settings.theme.card_background_color', '#1e293b');
+                      updateFormData('settings.theme.primary_text_color', '#f1f5f9');
+                      updateFormData('settings.theme.secondary_text_color', '#94a3b8');
+                    }}
+                    className="flex flex-col items-center gap-2 p-3 rounded-lg border-2 border-gray-200 hover:border-slate-700 hover:shadow-lg transition-all"
+                  >
+                    <div className="flex flex-col gap-1 w-full">
+                      <div className="h-6 rounded-t" style={{ backgroundColor: '#0f172a' }}></div>
+                      <div className="flex gap-1">
+                        <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#1e293b' }}></div>
+                        <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#334155' }}></div>
+                      </div>
+                    </div>
+                    <span className="text-xs font-medium text-gray-700">Modo Nocturno</span>
                   </button>
 
                   <button
@@ -1193,18 +1218,43 @@ Fecha: ${new Date().toLocaleString()}
                     onClick={() => {
                       updateFormData('settings.theme.primary_color', '#10b981');
                       updateFormData('settings.theme.secondary_color', '#059669');
-                      updateFormData('settings.theme.menu_background_color', '#f0fdf4');
+                      updateFormData('settings.theme.menu_background_color', '#ecfdf5');
                       updateFormData('settings.theme.card_background_color', '#ffffff');
-                      updateFormData('settings.theme.primary_text_color', '#14532d');
+                      updateFormData('settings.theme.primary_text_color', '#064e3b');
                       updateFormData('settings.theme.secondary_text_color', '#6b7280');
                     }}
-                    className="flex flex-col items-center gap-2 p-3 rounded-lg border-2 border-gray-200 hover:border-green-500 transition-all"
+                    className="flex flex-col items-center gap-2 p-3 rounded-lg border-2 border-gray-200 hover:border-emerald-500 hover:shadow-lg transition-all"
                   >
-                    <div className="flex gap-1 w-full">
-                      <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#10b981' }}></div>
-                      <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#059669' }}></div>
+                    <div className="flex flex-col gap-1 w-full">
+                      <div className="h-6 rounded-t" style={{ backgroundColor: '#ecfdf5' }}></div>
+                      <div className="flex gap-1">
+                        <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#10b981' }}></div>
+                        <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#ffffff' }}></div>
+                      </div>
                     </div>
-                    <span className="text-xs font-medium text-gray-700">Verde Fresco</span>
+                    <span className="text-xs font-medium text-gray-700">Jardín Natural</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateFormData('settings.theme.primary_color', '#dc2626');
+                      updateFormData('settings.theme.secondary_color', '#991b1b');
+                      updateFormData('settings.theme.menu_background_color', '#1a1a1a');
+                      updateFormData('settings.theme.card_background_color', '#262626');
+                      updateFormData('settings.theme.primary_text_color', '#fca5a5');
+                      updateFormData('settings.theme.secondary_text_color', '#d1d5db');
+                    }}
+                    className="flex flex-col items-center gap-2 p-3 rounded-lg border-2 border-gray-200 hover:border-red-600 hover:shadow-lg transition-all"
+                  >
+                    <div className="flex flex-col gap-1 w-full">
+                      <div className="h-6 rounded-t" style={{ backgroundColor: '#1a1a1a' }}></div>
+                      <div className="flex gap-1">
+                        <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#dc2626' }}></div>
+                        <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#262626' }}></div>
+                      </div>
+                    </div>
+                    <span className="text-xs font-medium text-gray-700">Rojo Oscuro</span>
                   </button>
 
                   <button
@@ -1213,55 +1263,64 @@ Fecha: ${new Date().toLocaleString()}
                       updateFormData('settings.theme.primary_color', '#f59e0b');
                       updateFormData('settings.theme.secondary_color', '#d97706');
                       updateFormData('settings.theme.menu_background_color', '#fffbeb');
-                      updateFormData('settings.theme.card_background_color', '#ffffff');
+                      updateFormData('settings.theme.card_background_color', '#fefce8');
                       updateFormData('settings.theme.primary_text_color', '#78350f');
-                      updateFormData('settings.theme.secondary_text_color', '#6b7280');
+                      updateFormData('settings.theme.secondary_text_color', '#92400e');
                     }}
-                    className="flex flex-col items-center gap-2 p-3 rounded-lg border-2 border-gray-200 hover:border-amber-500 transition-all"
+                    className="flex flex-col items-center gap-2 p-3 rounded-lg border-2 border-gray-200 hover:border-amber-500 hover:shadow-lg transition-all"
                   >
-                    <div className="flex gap-1 w-full">
-                      <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#f59e0b' }}></div>
-                      <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#d97706' }}></div>
+                    <div className="flex flex-col gap-1 w-full">
+                      <div className="h-6 rounded-t" style={{ backgroundColor: '#fffbeb' }}></div>
+                      <div className="flex gap-1">
+                        <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#f59e0b' }}></div>
+                        <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#fefce8' }}></div>
+                      </div>
                     </div>
-                    <span className="text-xs font-medium text-gray-700">Ámbar Cálido</span>
+                    <span className="text-xs font-medium text-gray-700">Atardecer Dorado</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => {
-                      updateFormData('settings.theme.primary_color', '#ef4444');
-                      updateFormData('settings.theme.secondary_color', '#dc2626');
-                      updateFormData('settings.theme.menu_background_color', '#fef2f2');
-                      updateFormData('settings.theme.card_background_color', '#ffffff');
-                      updateFormData('settings.theme.primary_text_color', '#7f1d1d');
-                      updateFormData('settings.theme.secondary_text_color', '#6b7280');
+                      updateFormData('settings.theme.primary_color', '#06b6d4');
+                      updateFormData('settings.theme.secondary_color', '#0891b2');
+                      updateFormData('settings.theme.menu_background_color', '#083344');
+                      updateFormData('settings.theme.card_background_color', '#164e63');
+                      updateFormData('settings.theme.primary_text_color', '#cffafe');
+                      updateFormData('settings.theme.secondary_text_color', '#a5f3fc');
                     }}
-                    className="flex flex-col items-center gap-2 p-3 rounded-lg border-2 border-gray-200 hover:border-red-500 transition-all"
+                    className="flex flex-col items-center gap-2 p-3 rounded-lg border-2 border-gray-200 hover:border-cyan-500 hover:shadow-lg transition-all"
                   >
-                    <div className="flex gap-1 w-full">
-                      <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#ef4444' }}></div>
-                      <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#dc2626' }}></div>
+                    <div className="flex flex-col gap-1 w-full">
+                      <div className="h-6 rounded-t" style={{ backgroundColor: '#083344' }}></div>
+                      <div className="flex gap-1">
+                        <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#06b6d4' }}></div>
+                        <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#164e63' }}></div>
+                      </div>
                     </div>
-                    <span className="text-xs font-medium text-gray-700">Rojo Vibrante</span>
+                    <span className="text-xs font-medium text-gray-700">Océano Profundo</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => {
-                      updateFormData('settings.theme.primary_color', '#1f2937');
-                      updateFormData('settings.theme.secondary_color', '#4b5563');
-                      updateFormData('settings.theme.menu_background_color', '#f9fafb');
+                      updateFormData('settings.theme.primary_color', '#ec4899');
+                      updateFormData('settings.theme.secondary_color', '#db2777');
+                      updateFormData('settings.theme.menu_background_color', '#fdf2f8');
                       updateFormData('settings.theme.card_background_color', '#ffffff');
-                      updateFormData('settings.theme.primary_text_color', '#111827');
-                      updateFormData('settings.theme.secondary_text_color', '#6b7280');
+                      updateFormData('settings.theme.primary_text_color', '#831843');
+                      updateFormData('settings.theme.secondary_text_color', '#9f1239');
                     }}
-                    className="flex flex-col items-center gap-2 p-3 rounded-lg border-2 border-gray-200 hover:border-gray-700 transition-all"
+                    className="flex flex-col items-center gap-2 p-3 rounded-lg border-2 border-gray-200 hover:border-pink-500 hover:shadow-lg transition-all"
                   >
-                    <div className="flex gap-1 w-full">
-                      <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#1f2937' }}></div>
-                      <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#4b5563' }}></div>
+                    <div className="flex flex-col gap-1 w-full">
+                      <div className="h-6 rounded-t" style={{ backgroundColor: '#fdf2f8' }}></div>
+                      <div className="flex gap-1">
+                        <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#ec4899' }}></div>
+                        <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#ffffff' }}></div>
+                      </div>
                     </div>
-                    <span className="text-xs font-medium text-gray-700">Elegante Oscuro</span>
+                    <span className="text-xs font-medium text-gray-700">Rosa Vibrante</span>
                   </button>
 
                   <button
@@ -1269,18 +1328,109 @@ Fecha: ${new Date().toLocaleString()}
                     onClick={() => {
                       updateFormData('settings.theme.primary_color', '#8b5cf6');
                       updateFormData('settings.theme.secondary_color', '#7c3aed');
-                      updateFormData('settings.theme.menu_background_color', '#faf5ff');
-                      updateFormData('settings.theme.card_background_color', '#ffffff');
-                      updateFormData('settings.theme.primary_text_color', '#4c1d95');
-                      updateFormData('settings.theme.secondary_text_color', '#6b7280');
+                      updateFormData('settings.theme.menu_background_color', '#1e1b4b');
+                      updateFormData('settings.theme.card_background_color', '#312e81');
+                      updateFormData('settings.theme.primary_text_color', '#e9d5ff');
+                      updateFormData('settings.theme.secondary_text_color', '#c4b5fd');
                     }}
-                    className="flex flex-col items-center gap-2 p-3 rounded-lg border-2 border-gray-200 hover:border-violet-500 transition-all"
+                    className="flex flex-col items-center gap-2 p-3 rounded-lg border-2 border-gray-200 hover:border-violet-500 hover:shadow-lg transition-all"
                   >
-                    <div className="flex gap-1 w-full">
-                      <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#8b5cf6' }}></div>
-                      <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#7c3aed' }}></div>
+                    <div className="flex flex-col gap-1 w-full">
+                      <div className="h-6 rounded-t" style={{ backgroundColor: '#1e1b4b' }}></div>
+                      <div className="flex gap-1">
+                        <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#8b5cf6' }}></div>
+                        <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#312e81' }}></div>
+                      </div>
                     </div>
-                    <span className="text-xs font-medium text-gray-700">Violeta Moderno</span>
+                    <span className="text-xs font-medium text-gray-700">Noche Violeta</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateFormData('settings.theme.primary_color', '#65a30d');
+                      updateFormData('settings.theme.secondary_color', '#4d7c0f');
+                      updateFormData('settings.theme.menu_background_color', '#1a2e05');
+                      updateFormData('settings.theme.card_background_color', '#2d4a0f');
+                      updateFormData('settings.theme.primary_text_color', '#d9f99d');
+                      updateFormData('settings.theme.secondary_text_color', '#bef264');
+                    }}
+                    className="flex flex-col items-center gap-2 p-3 rounded-lg border-2 border-gray-200 hover:border-lime-600 hover:shadow-lg transition-all"
+                  >
+                    <div className="flex flex-col gap-1 w-full">
+                      <div className="h-6 rounded-t" style={{ backgroundColor: '#1a2e05' }}></div>
+                      <div className="flex gap-1">
+                        <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#65a30d' }}></div>
+                        <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#2d4a0f' }}></div>
+                      </div>
+                    </div>
+                    <span className="text-xs font-medium text-gray-700">Bosque Nocturno</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateFormData('settings.theme.primary_color', '#f97316');
+                      updateFormData('settings.theme.secondary_color', '#ea580c');
+                      updateFormData('settings.theme.menu_background_color', '#fff7ed');
+                      updateFormData('settings.theme.card_background_color', '#ffffff');
+                      updateFormData('settings.theme.primary_text_color', '#7c2d12');
+                      updateFormData('settings.theme.secondary_text_color', '#9a3412');
+                    }}
+                    className="flex flex-col items-center gap-2 p-3 rounded-lg border-2 border-gray-200 hover:border-orange-500 hover:shadow-lg transition-all"
+                  >
+                    <div className="flex flex-col gap-1 w-full">
+                      <div className="h-6 rounded-t" style={{ backgroundColor: '#fff7ed' }}></div>
+                      <div className="flex gap-1">
+                        <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#f97316' }}></div>
+                        <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#ffffff' }}></div>
+                      </div>
+                    </div>
+                    <span className="text-xs font-medium text-gray-700">Naranja Energía</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateFormData('settings.theme.primary_color', '#a855f7');
+                      updateFormData('settings.theme.secondary_color', '#9333ea');
+                      updateFormData('settings.theme.menu_background_color', '#faf5ff');
+                      updateFormData('settings.theme.card_background_color', '#f3e8ff');
+                      updateFormData('settings.theme.primary_text_color', '#581c87');
+                      updateFormData('settings.theme.secondary_text_color', '#6b21a8');
+                    }}
+                    className="flex flex-col items-center gap-2 p-3 rounded-lg border-2 border-gray-200 hover:border-purple-500 hover:shadow-lg transition-all"
+                  >
+                    <div className="flex flex-col gap-1 w-full">
+                      <div className="h-6 rounded-t" style={{ backgroundColor: '#faf5ff' }}></div>
+                      <div className="flex gap-1">
+                        <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#a855f7' }}></div>
+                        <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#f3e8ff' }}></div>
+                      </div>
+                    </div>
+                    <span className="text-xs font-medium text-gray-700">Lavanda Suave</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateFormData('settings.theme.primary_color', '#ffffff');
+                      updateFormData('settings.theme.secondary_color', '#f3f4f6');
+                      updateFormData('settings.theme.menu_background_color', '#111827');
+                      updateFormData('settings.theme.card_background_color', '#1f2937');
+                      updateFormData('settings.theme.primary_text_color', '#ffffff');
+                      updateFormData('settings.theme.secondary_text_color', '#d1d5db');
+                    }}
+                    className="flex flex-col items-center gap-2 p-3 rounded-lg border-2 border-gray-200 hover:border-gray-900 hover:shadow-lg transition-all"
+                  >
+                    <div className="flex flex-col gap-1 w-full">
+                      <div className="h-6 rounded-t" style={{ backgroundColor: '#111827' }}></div>
+                      <div className="flex gap-1">
+                        <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#ffffff' }}></div>
+                        <div className="flex-1 h-8 rounded" style={{ backgroundColor: '#1f2937' }}></div>
+                      </div>
+                    </div>
+                    <span className="text-xs font-medium text-gray-700">Minimalista Dark</span>
                   </button>
                 </div>
 
