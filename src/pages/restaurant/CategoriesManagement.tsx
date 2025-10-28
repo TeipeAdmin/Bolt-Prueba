@@ -465,46 +465,18 @@ export const CategoriesManagement: React.FC = () => {
         title={editingCategory ? `${t('edit')} ${t('category')}` : t('newCategory')}
         size="lg"
       >
-        <div className="space-y-6">
-          {/* Preview Section */}
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Vista Previa</h4>
-            <div className="bg-white rounded-lg p-4 flex items-center gap-4">
-              <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
-                {formData.image ? (
-                  <img
-                    src={formData.image}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                  />
-                ) : formData.icon ? (
-                  <span className="text-3xl">{formData.icon}</span>
-                ) : (
-                  <FolderOpen className="w-8 h-8 text-gray-300" />
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-semibold text-gray-900 truncate">
-                  {formData.name || 'Nombre de categoría'}
-                </h3>
-                <p className="text-sm text-gray-600">
-                  {formData.description || 'Descripción de la categoría'}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Basic Info */}
+        <div className="space-y-5">
+          {/* Form Section */}
           <div className="space-y-4">
             <Input
               label={`${t('categoryName')}*`}
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="e.g: Pizzas, Bebidas, Postres"
+              placeholder="ej: Pizzas, Bebidas, Postres"
             />
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 {t('description')}
               </label>
               <textarea
@@ -512,94 +484,135 @@ export const CategoriesManagement: React.FC = () => {
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                placeholder="Descripción opcional de la categoría..."
+                placeholder="Agrega una descripción para ayudar a tus clientes..."
               />
             </div>
           </div>
 
-          {/* Visual Options */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Icon Section */}
-            <div className="space-y-3">
-              <label className="block text-sm font-medium text-gray-700">
-                Icono (Emoji)
-              </label>
-              <Input
-                value={formData.icon}
-                onChange={(e) => setFormData(prev => ({ ...prev, icon: e.target.value }))}
-                placeholder="🍕 🥤 🍰"
-              />
-              <p className="text-xs text-gray-500">
-                Usa emojis para representar la categoría
-              </p>
-            </div>
+          {/* Visual Options Section */}
+          <div className="bg-gray-50 rounded-lg p-5 space-y-4">
+            <h4 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              <ImageIcon className="w-4 h-4 text-gray-600" />
+              Apariencia de la Categoría
+            </h4>
 
-            {/* Image Section */}
-            <div className="space-y-3">
-              <label className="block text-sm font-medium text-gray-700">
-                Imagen
-              </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Icon Section */}
               <div className="space-y-2">
-                {formData.image && (
-                  <div className="flex items-center gap-3">
+                <label className="block text-sm font-medium text-gray-700">
+                  Icono (Emoji)
+                </label>
+                <Input
+                  value={formData.icon}
+                  onChange={(e) => setFormData(prev => ({ ...prev, icon: e.target.value }))}
+                  placeholder="🍕 🥤 🍰"
+                />
+                <p className="text-xs text-gray-500">
+                  Usa un emoji para identificar rápidamente
+                </p>
+              </div>
+
+              {/* Image Section */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Imagen de Portada
+                </label>
+                {formData.image ? (
+                  <div className="relative">
                     <img
                       src={formData.image}
                       alt="Category"
-                      className="w-12 h-12 object-cover rounded-lg border border-gray-300"
+                      className="w-full h-24 object-cover rounded-lg border border-gray-300"
                     />
                     <button
                       onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
-                      className="text-sm text-red-600 hover:text-red-700"
+                      className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-lg hover:bg-red-600 transition-colors shadow-md"
+                      title="Eliminar imagen"
                     >
-                      Eliminar
+                      <Trash2 className="w-3 h-3" />
                     </button>
                   </div>
+                ) : (
+                  <label className="block w-full h-24 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 transition-colors cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          if (file.size > 5 * 1024 * 1024) {
+                            showToast('error', 'Archivo muy grande', 'El tamaño máximo es 5MB', 3000);
+                            return;
+                          }
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setFormData(prev => ({ ...prev, image: reader.result as string }));
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      className="hidden"
+                    />
+                    <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                      <ImageIcon className="w-6 h-6 mb-1" />
+                      <span className="text-xs">Subir imagen</span>
+                    </div>
+                  </label>
                 )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      if (file.size > 5 * 1024 * 1024) {
-                        showToast('error', 'Archivo muy grande', 'El tamaño máximo es 5MB', 3000);
-                        return;
-                      }
-                      const reader = new FileReader();
-                      reader.onloadend = () => {
-                        setFormData(prev => ({ ...prev, image: reader.result as string }));
-                      };
-                      reader.readAsDataURL(file);
-                    }
-                  }}
-                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
-                />
                 <p className="text-xs text-gray-500">
-                  Sube una imagen desde tu dispositivo (máx. 5MB)
+                  Recomendado: 800x600px (máx. 5MB)
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-            <p className="text-xs text-yellow-800">
-              <strong>Nota:</strong> Puedes usar un icono emoji, una imagen, o ambos. La imagen tendrá prioridad en la vista de tarjeta.
-            </p>
+          {/* Preview Section */}
+          <div className="border-t border-gray-200 pt-5">
+            <h4 className="text-sm font-semibold text-gray-900 mb-3">Vista Previa</h4>
+            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+              <div className="relative h-32 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                {formData.image ? (
+                  <img
+                    src={formData.image}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                  />
+                ) : formData.icon ? (
+                  <span className="text-5xl">{formData.icon}</span>
+                ) : (
+                  <FolderOpen className="w-10 h-10 text-gray-400" />
+                )}
+              </div>
+              <div className="p-4">
+                <h3 className="text-base font-semibold text-gray-900 mb-1 truncate">
+                  {formData.name || 'Nombre de la categoría'}
+                </h3>
+                <p className="text-sm text-gray-600 line-clamp-2">
+                  {formData.description || 'La descripción aparecerá aquí'}
+                </p>
+              </div>
+            </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-            <Button
-              variant="ghost"
-              onClick={handleCloseModal}
-            >
-              {t('cancel')}
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={!formData.name.trim()}
-            >
-              {editingCategory ? t('update') : t('create')} {t('category')}
-            </Button>
+          {/* Action Buttons */}
+          <div className="flex items-center justify-between gap-3 pt-4 border-t border-gray-200">
+            <p className="text-xs text-gray-500">
+              * Campos requeridos
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                onClick={handleCloseModal}
+              >
+                {t('cancel')}
+              </Button>
+              <Button
+                onClick={handleSave}
+                disabled={!formData.name.trim()}
+              >
+                {editingCategory ? t('update') : t('create')}
+              </Button>
+            </div>
           </div>
         </div>
       </Modal>
