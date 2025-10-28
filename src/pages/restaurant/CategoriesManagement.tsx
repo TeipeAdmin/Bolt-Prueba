@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, GripVertical, Eye, EyeOff, Search, Image as ImageIcon, FolderOpen } from 'lucide-react';
+import { Plus, Pencil, Trash2, GripVertical, Eye, EyeOff,ArrowUp, ArrowDown, Search, Image as ImageIcon, FolderOpen } from 'lucide-react';
 import { Category, Subscription } from '../../types';
 import { loadFromStorage, saveToStorage, availablePlans } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
