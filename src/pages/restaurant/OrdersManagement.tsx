@@ -976,6 +976,26 @@ export const OrdersManagement: React.FC = () => {
   const handleUpdateOrder = () => {
     if (!editingOrder) return;
 
+    if (!orderForm.customer.name.trim() || !orderForm.customer.phone.trim()) {
+      showToast('error', 'Error', 'Por favor completa el nombre y teléfono del cliente', 4000);
+      return;
+    }
+
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(orderForm.customer.name.trim())) {
+      showToast('error', 'Error', 'El nombre solo puede contener letras y espacios', 4000);
+      return;
+    }
+
+    if (!/^[\d+\s()-]+$/.test(orderForm.customer.phone.trim())) {
+      showToast('error', 'Error', 'El teléfono solo puede contener números y el símbolo +', 4000);
+      return;
+    }
+
+    if (orderForm.customer.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(orderForm.customer.email.trim())) {
+      showToast('error', 'Error', 'Por favor ingresa un email válido', 4000);
+      return;
+    }
+
     const subtotal = orderItems.reduce((sum, item) => sum + item.total_price, 0);
     const deliveryCost = orderForm.order_type === 'delivery' ? (restaurant?.settings?.delivery?.zones[0]?.cost || 0) : 0;
     const total = subtotal + deliveryCost;
@@ -1019,6 +1039,21 @@ export const OrdersManagement: React.FC = () => {
 
     if (!orderForm.customer.name.trim() || !orderForm.customer.phone.trim()) {
       showToast('error', 'Error', 'Por favor completa el nombre y teléfono del cliente', 4000);
+      return;
+    }
+
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(orderForm.customer.name.trim())) {
+      showToast('error', 'Error', 'El nombre solo puede contener letras y espacios', 4000);
+      return;
+    }
+
+    if (!/^[\d+\s()-]+$/.test(orderForm.customer.phone.trim())) {
+      showToast('error', 'Error', 'El teléfono solo puede contener números y el símbolo +', 4000);
+      return;
+    }
+
+    if (orderForm.customer.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(orderForm.customer.email.trim())) {
+      showToast('error', 'Error', 'Por favor ingresa un email válido', 4000);
       return;
     }
 
@@ -1749,29 +1784,41 @@ export const OrdersManagement: React.FC = () => {
               <Input
                 label="Nombre *"
                 value={orderForm.customer.name}
-                onChange={(e) => setOrderForm(prev => ({
-                  ...prev,
-                  customer: { ...prev.customer, name: e.target.value }
-                }))}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '' || /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/.test(value)) {
+                    setOrderForm(prev => ({
+                      ...prev,
+                      customer: { ...prev.customer, name: value }
+                    }));
+                  }
+                }}
                 placeholder="Nombre del cliente"
               />
               <Input
                 label="Teléfono *"
                 value={orderForm.customer.phone}
-                onChange={(e) => setOrderForm(prev => ({
-                  ...prev,
-                  customer: { ...prev.customer, phone: e.target.value }
-                }))}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '' || /^[\d+\s()-]*$/.test(value)) {
+                    setOrderForm(prev => ({
+                      ...prev,
+                      customer: { ...prev.customer, phone: value }
+                    }));
+                  }
+                }}
                 placeholder="Número de teléfono"
               />
               <Input
                 label="Email"
                 type="email"
                 value={orderForm.customer.email}
-                onChange={(e) => setOrderForm(prev => ({
-                  ...prev,
-                  customer: { ...prev.customer, email: e.target.value }
-                }))}
+                onChange={(e) => {
+                  setOrderForm(prev => ({
+                    ...prev,
+                    customer: { ...prev.customer, email: e.target.value }
+                  }));
+                }}
                 placeholder="Email del cliente"
               />
             </div>
@@ -1971,29 +2018,41 @@ export const OrdersManagement: React.FC = () => {
               <Input
                 label="Nombre *"
                 value={orderForm.customer.name}
-                onChange={(e) => setOrderForm(prev => ({
-                  ...prev,
-                  customer: { ...prev.customer, name: e.target.value }
-                }))}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '' || /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/.test(value)) {
+                    setOrderForm(prev => ({
+                      ...prev,
+                      customer: { ...prev.customer, name: value }
+                    }));
+                  }
+                }}
                 placeholder="Nombre del cliente"
               />
               <Input
                 label="Teléfono *"
                 value={orderForm.customer.phone}
-                onChange={(e) => setOrderForm(prev => ({
-                  ...prev,
-                  customer: { ...prev.customer, phone: e.target.value }
-                }))}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '' || /^[\d+\s()-]*$/.test(value)) {
+                    setOrderForm(prev => ({
+                      ...prev,
+                      customer: { ...prev.customer, phone: value }
+                    }));
+                  }
+                }}
                 placeholder="Número de teléfono"
               />
               <Input
                 label="Email"
                 type="email"
                 value={orderForm.customer.email}
-                onChange={(e) => setOrderForm(prev => ({
-                  ...prev,
-                  customer: { ...prev.customer, email: e.target.value }
-                }))}
+                onChange={(e) => {
+                  setOrderForm(prev => ({
+                    ...prev,
+                    customer: { ...prev.customer, email: e.target.value }
+                  }));
+                }}
                 placeholder="Email del cliente"
               />
             </div>
