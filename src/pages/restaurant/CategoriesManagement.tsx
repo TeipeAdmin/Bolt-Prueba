@@ -31,6 +31,7 @@ export const CategoriesManagement: React.FC = () => {
     categoryId: '',
     categoryName: ''
   });
+  const [draggedCategory, setDraggedCategory] = useState<Category | null>(null);
 
   useEffect(() => {
     if (restaurant) {
@@ -213,6 +214,52 @@ export const CategoriesManagement: React.FC = () => {
     loadCategories();
   };
 
+  const handleDragStart = (e: React.DragEvent, category: Category) => {
+    setDraggedCategory(category);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, targetCategory: Category) => {
+    e.preventDefault();
+
+    if (!draggedCategory || draggedCategory.id === targetCategory.id) {
+      setDraggedCategory(null);
+      return;
+    }
+
+    const draggedIndex = categories.findIndex(cat => cat.id === draggedCategory.id);
+    const targetIndex = categories.findIndex(cat => cat.id === targetCategory.id);
+
+    if (draggedIndex === -1 || targetIndex === -1) return;
+
+    const newCategories = [...categories];
+    newCategories.splice(draggedIndex, 1);
+    newCategories.splice(targetIndex, 0, draggedCategory);
+
+    // Update order positions
+    const allCategories = loadFromStorage('categories') || [];
+    const updatedCategories = allCategories.map((cat: Category) => {
+      const newCat = newCategories.find(nc => nc.id === cat.id);
+      if (newCat) {
+        return { ...cat, order_position: newCategories.indexOf(newCat) + 1 };
+      }
+      return cat;
+    });
+
+    saveToStorage('categories', updatedCategories);
+    loadCategories();
+    setDraggedCategory(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedCategory(null);
+  };
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
@@ -276,6 +323,14 @@ export const CategoriesManagement: React.FC = () => {
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
+        {searchTerm === '' && categories.length > 1 && (
+          <div className="mt-3 flex items-center gap-2 text-sm text-gray-600 bg-blue-50 rounded-lg p-3 border border-blue-100">
+            <GripVertical className="w-4 h-4 text-blue-600 flex-shrink-0" />
+            <p>
+              <strong className="text-blue-700">Tip:</strong> Arrastra y suelta las categorías para reordenarlas
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Categories List */}
@@ -304,7 +359,18 @@ export const CategoriesManagement: React.FC = () => {
           {filteredCategories.map((category, index) => (
             <div
               key={category.id}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all overflow-hidden"
+              draggable={searchTerm === ''}
+              onDragStart={(e) => handleDragStart(e, category)}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, category)}
+              onDragEnd={handleDragEnd}
+              className={`bg-white rounded-xl shadow-sm border-2 transition-all overflow-hidden ${
+                searchTerm === '' ? 'cursor-move' : ''
+              } ${
+                draggedCategory?.id === category.id
+                  ? 'opacity-50 scale-95 border-blue-400'
+                  : 'border-gray-200 hover:shadow-md hover:border-blue-300'
+              }`}
             >
               {/* Category Image/Icon Header */}
               <div className="relative h-60 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
