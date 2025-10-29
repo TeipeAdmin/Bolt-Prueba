@@ -281,12 +281,16 @@ onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${primaryColor}4D
                   </span>
                   <button
                     onClick={() => setQuantity(quantity + 1)}
-                    className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-gray-100"
+                    className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
                     style={{
                       border: `2px solid ${primaryColor}`,
-                      color: primaryColor
+                      color: primaryColor,
+                      transition: 'background-color 0.3s ease',
                     }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${primaryColor}4D`)} // 10% de opacidad
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                   >
+
                     <Plus className="w-5 h-5" strokeWidth={3} />
                   </button>
                 </div>
