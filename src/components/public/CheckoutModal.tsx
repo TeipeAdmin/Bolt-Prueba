@@ -1003,7 +1003,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
               <div
                 className="rounded-lg p-6 mb-6"
                 style={{
-                  backgroundColor: `${primaryColor}1A`,
+                  backgroundColor: `${primaryColor}4D`,
                   borderRadius: theme.button_style === 'rounded' ? '0.75rem' : '0.25rem',
                 }}
               >
