@@ -1047,7 +1047,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                     className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
                     style={{ backgroundColor: primaryColor }}
                   >
-                    <Phone className="w-5 h-5" style={{ color: '#ffffff' }} />
+                    <Phone className="w-5 h-5" style={{ color: 'secondaryTextColor' }} />
                   </div>
                   <div>
                     <p className="font-semibold" style={{ color: primaryTextColor }}>Contacto</p>
