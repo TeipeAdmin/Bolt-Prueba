@@ -265,7 +265,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
                     color: primaryColor,
                     transition: 'background-color 0.3s ease',
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = primaryColor)}
+onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${primaryColor}1A`)}
                   onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                 >
                     <Minus className="w-5 h-5" strokeWidth={3} />
