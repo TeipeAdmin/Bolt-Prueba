@@ -199,12 +199,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                             deliveryMode === 'dine-in' ? 'Consumir en Restaurante' :
                             'Entrega a Domicilio';
 
-    let message = `🛍️ *NUEVO PEDIDO - ${restaurant.name}*\n\n`;
-    message += `📋 *Pedido:* #${order.id}\n`;
-    message += `📅 *Fecha:* ${new Date().toLocaleString()}\n`;
-    message += `🚚 *Modalidad:* ${deliveryModeText}\n\n`;
+    let message = `*NUEVO PEDIDO - ${restaurant.name}*\n\n`;
+    message += `*Pedido:* #${order.id}\n`;
+    message += `*Fecha:* ${new Date().toLocaleString()}\n`;
+    message += `*Modalidad:* ${deliveryModeText}\n\n`;
 
-    message += `👤 *DATOS DEL CLIENTE*\n`;
+    message += `*DATOS DEL CLIENTE*\n`;
     message += `Nombre: ${customerInfo.name}\n`;
     message += `Teléfono: ${customerInfo.phone}\n`;
     if (customerInfo.email) message += `Email: ${customerInfo.email}\n`;
@@ -216,7 +216,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
     }
     message += `\n`;
 
-    message += `🛒 *PRODUCTOS*\n`;
+    message += `*PRODUCTOS*\n`;
     items.forEach((item, index) => {
       message += `${index + 1}. ${item.product.name}\n`;
       message += `   ${item.variation.name} x${item.quantity}\n`;
@@ -227,7 +227,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
     });
     message += `\n`;
 
-    message += `💰 *TOTAL*\n`;
+    message += `*TOTAL*\n`;
     message += `Subtotal: ${formatCurrency(getTotal(), currency)}\n`;
     if (deliveryMode === 'delivery' && deliveryCost > 0) {
       message += `Envío: ${formatCurrency(deliveryCost, currency)}\n`;
