@@ -436,9 +436,7 @@ export const SubscriptionsManagement: React.FC = () => {
                       {subscription.duration === 'quarterly' && 'Trimestral'}
                       {subscription.duration === 'annual' && 'Anual'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {new Date(subscription.end_date).toLocaleDateString()}
-                    </td>
+
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center gap-2">
                         <Button
