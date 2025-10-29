@@ -15,17 +15,43 @@ export const SuperAdminAnalytics: React.FC = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
+  const calculateNewEndDate = (currentEndDate: string, duration: Subscription['duration']): string => {
+    const endDate = new Date(currentEndDate);
+
+    if (duration === 'monthly') {
+      endDate.setMonth(endDate.getMonth() + 1);
+    } else if (duration === 'annual') {
+      endDate.setFullYear(endDate.getFullYear() + 1);
+    }
+
+    return endDate.toISOString();
+  };
+
   useEffect(() => {
     const restaurantData = loadFromStorage('restaurants') || [];
     const subscriptionData = loadFromStorage('subscriptions') || [];
     const userData = loadFromStorage('users') || [];
 
+    // Auto-renew or expire subscriptions based on end date
     const now = new Date();
     const updatedSubscriptions = subscriptionData.map((sub: Subscription) => {
       const endDate = new Date(sub.end_date);
 
+      // If subscription end date has passed and it's currently active
       if (endDate < now && sub.status === 'active') {
-        return { ...sub, status: 'expired' as const };
+        // Check if auto-renew is enabled
+        if (sub.auto_renew) {
+          // Auto-renew: extend the subscription based on duration
+          return {
+            ...sub,
+            start_date: sub.end_date,
+            end_date: calculateNewEndDate(sub.end_date, sub.duration),
+            status: 'active' as const
+          };
+        } else {
+          // No auto-renew: mark as expired
+          return { ...sub, status: 'expired' as const };
+        }
       }
       return sub;
     });

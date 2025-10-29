@@ -33,6 +33,18 @@ export const SubscriptionsManagement: React.FC = () => {
     loadData();
   }, []);
 
+  const calculateNewEndDate = (currentEndDate: string, duration: Subscription['duration']): string => {
+    const endDate = new Date(currentEndDate);
+
+    if (duration === 'monthly') {
+      endDate.setMonth(endDate.getMonth() + 1);
+    } else if (duration === 'annual') {
+      endDate.setFullYear(endDate.getFullYear() + 1);
+    }
+
+    return endDate.toISOString();
+  };
+
   const loadData = () => {
     const subscriptionData = loadFromStorage('subscriptions') || [];
     const restaurantData = loadFromStorage('restaurants') || [];
@@ -52,14 +64,26 @@ export const SubscriptionsManagement: React.FC = () => {
       return acc;
     }, []);
 
-    // Auto-expire subscriptions based on end date
+    // Auto-renew or expire subscriptions based on end date
     const now = new Date();
     const updatedSubscriptions = uniqueSubscriptions.map(sub => {
       const endDate = new Date(sub.end_date);
 
-      // If subscription end date has passed and it's currently active, mark as expired
+      // If subscription end date has passed and it's currently active
       if (endDate < now && sub.status === 'active') {
-        return { ...sub, status: 'expired' as const };
+        // Check if auto-renew is enabled
+        if (sub.auto_renew) {
+          // Auto-renew: extend the subscription based on duration
+          return {
+            ...sub,
+            start_date: sub.end_date,
+            end_date: calculateNewEndDate(sub.end_date, sub.duration),
+            status: 'active' as const
+          };
+        } else {
+          // No auto-renew: mark as expired
+          return { ...sub, status: 'expired' as const };
+        }
       }
       return sub;
     });
