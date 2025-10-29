@@ -301,6 +301,7 @@ onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${primaryColor}4D
                 className="flex-1 px-6 py-3 text-white font-bold rounded-lg transition-all hover:opacity-90"
                 style={{
                   backgroundColor: primaryColor,
+                  Color: secundaryTextColor,
                   fontSize: '16px',
                   borderRadius: '8px'
                 }}
