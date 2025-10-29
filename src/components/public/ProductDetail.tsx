@@ -257,14 +257,17 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
                   Cantidad:
                 </span>
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-gray-100"
-                    style={{
-                      border: `2px solid ${primaryColor}`,
-                      color: primaryColor
-                    }}
-                  >
+                <button
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+                  style={{
+                    border: `2px solid ${primaryColor}`,
+                    color: primaryColor,
+                    transition: 'background-color 0.3s ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = primaryColor)}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                >
                     <Minus className="w-5 h-5" strokeWidth={3} />
                   </button>
                   <span
