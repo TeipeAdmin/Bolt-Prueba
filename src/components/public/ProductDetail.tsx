@@ -93,9 +93,6 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
         <button
           onClick={onClose}
           className="absolute top-4 right-4 z-10 rounded-full p-2 shadow-lg transition-colors"
-          style={{
-            backgroundColor: 'var(--primaryColor)',
-          }}
         >
           <X className="w-5 h-5" style={{ color: primaryTextColor }} />
         </button>
