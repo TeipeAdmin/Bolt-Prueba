@@ -928,7 +928,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                   border: `1px solid ${primaryColor}`,
                   backgroundColor: 'transparent'
                 }}
-              >
+              >aa
                 <h4
                   className="font-semibold mb-3"
                   style={{
