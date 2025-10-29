@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, TrendingUp, Users, Store, Calendar, DollarSign, Filter } from 'lucide-react';
+import { BarChart3, TrendingUp, Users, Store, Calendar, DollarSign, Filter, Download, FileText, RefreshCw, Clock } from 'lucide-react';
 import { Restaurant, Subscription, User } from '../../types';
 import { loadFromStorage } from '../../data/mockData';
 import { Badge } from '../../components/ui/Badge';
@@ -20,12 +20,10 @@ export const SuperAdminAnalytics: React.FC = () => {
     const subscriptionData = loadFromStorage('subscriptions') || [];
     const userData = loadFromStorage('users') || [];
 
-    // Auto-expire subscriptions based on end date
     const now = new Date();
     const updatedSubscriptions = subscriptionData.map((sub: Subscription) => {
       const endDate = new Date(sub.end_date);
 
-      // If subscription end date has passed and it's currently active, mark as expired
       if (endDate < now && sub.status === 'active') {
         return { ...sub, status: 'expired' as const };
       }
@@ -37,16 +35,13 @@ export const SuperAdminAnalytics: React.FC = () => {
     setUsers(userData);
   }, []);
 
-  // Filter subscriptions based on selected filters
   const getFilteredSubscriptions = () => {
     let filtered = [...subscriptions];
 
-    // Filter by plan
     if (selectedPlanFilter !== 'all') {
       filtered = filtered.filter(s => s.plan_type === selectedPlanFilter);
     }
 
-    // Filter by period (only if custom dates are not set)
     if (selectedPeriodFilter !== 'all' && !startDate && !endDate) {
       const now = new Date();
       const periodStartDate = new Date();
@@ -69,7 +64,6 @@ export const SuperAdminAnalytics: React.FC = () => {
       filtered = filtered.filter(s => new Date(s.created_at) >= periodStartDate);
     }
 
-    // Filter by custom date range
     if (startDate || endDate) {
       filtered = filtered.filter(s => {
         const subDate = new Date(s.created_at);
@@ -86,22 +80,20 @@ export const SuperAdminAnalytics: React.FC = () => {
     return filtered;
   };
 
-  // Filter subscriptions first
   const filteredSubscriptions = getFilteredSubscriptions();
 
-  // Calculate analytics based on filtered data
   const totalRestaurants = restaurants.length;
-  const activeRestaurants = restaurants.filter(r => r.status === 'active').length;
-  const pendingRestaurants = restaurants.filter(r => r.status === 'pending').length;
+  const activeRestaurants = subscriptions.filter(s => s.status === 'active').length;
+  const expiredRestaurants = subscriptions.filter(s => s.status === 'expired').length;
   const totalUsers = users.length;
   const verifiedUsers = users.filter(u => u.email_verified).length;
+  const restaurantOwners = users.filter(u => u.role === 'restaurant_owner').length;
+  const superAdmins = users.filter(u => u.role === 'super_admin').length;
 
-  // Subscription stats from filtered data
   const activeSubscriptions = filteredSubscriptions.filter(s => s.status === 'active').length;
   const expiredSubscriptions = filteredSubscriptions.filter(s => s.status === 'expired').length;
   const totalFilteredSubscriptions = filteredSubscriptions.length;
 
-  // Monthly registrations
   const getMonthlyRegistrations = () => {
     const monthlyData: { [key: string]: number } = {};
 
@@ -113,12 +105,11 @@ export const SuperAdminAnalytics: React.FC = () => {
 
     return Object.entries(monthlyData)
       .sort(([a], [b]) => a.localeCompare(b))
-      .slice(-6); // Last 6 months
+      .slice(-6);
   };
 
   const monthlyRegistrations = getMonthlyRegistrations();
 
-  // Plan distribution from filtered data
   const planDistribution = {
     gratis: filteredSubscriptions.filter(s => s.plan_type === 'gratis').length,
     basic: filteredSubscriptions.filter(s => s.plan_type === 'basic').length,
@@ -126,7 +117,11 @@ export const SuperAdminAnalytics: React.FC = () => {
     business: filteredSubscriptions.filter(s => s.plan_type === 'business').length,
   };
 
-  // Plan prices (monthly) - Updated with correct prices
+  const durationDistribution = {
+    monthly: filteredSubscriptions.filter(s => s.duration === 'monthly').length,
+    annual: filteredSubscriptions.filter(s => s.duration === 'annual').length,
+  };
+
   const planPrices: Record<string, number> = {
     gratis: 0,
     basic: 15,
@@ -134,13 +129,11 @@ export const SuperAdminAnalytics: React.FC = () => {
     business: 75,
   };
 
-  // Duration multipliers
   const durationMultipliers: Record<string, number> = {
     monthly: 1,
     annual: 12,
   };
 
-  // Calculate economic statistics
   const calculateRevenue = (subs: Subscription[]) => {
     return subs.reduce((total, sub) => {
       const basePrice = planPrices[sub.plan_type] || 0;
@@ -152,7 +145,6 @@ export const SuperAdminAnalytics: React.FC = () => {
   const totalRevenue = calculateRevenue(filteredSubscriptions.filter(s => s.status === 'active'));
   const potentialRevenue = calculateRevenue(filteredSubscriptions);
 
-  // Monthly recurring revenue (MRR)
   const calculateMRR = () => {
     return subscriptions
       .filter(s => s.status === 'active')
@@ -164,7 +156,12 @@ export const SuperAdminAnalytics: React.FC = () => {
 
   const mrr = calculateMRR();
 
-  // Revenue by plan
+  const calculateARR = () => {
+    return mrr * 12;
+  };
+
+  const arr = calculateARR();
+
   const revenueByPlan = {
     gratis: calculateRevenue(filteredSubscriptions.filter(s => s.plan_type === 'gratis')),
     basic: calculateRevenue(filteredSubscriptions.filter(s => s.plan_type === 'basic')),
@@ -172,7 +169,6 @@ export const SuperAdminAnalytics: React.FC = () => {
     business: calculateRevenue(filteredSubscriptions.filter(s => s.plan_type === 'business')),
   };
 
-  // Expiring subscriptions alert
   const expiringSoon = subscriptions.filter(sub => {
     const endDate = new Date(sub.end_date);
     const now = new Date();
@@ -180,16 +176,118 @@ export const SuperAdminAnalytics: React.FC = () => {
     return daysUntilExpiry <= 7 && daysUntilExpiry > 0;
   });
 
+  const calculateChurnRate = () => {
+    const totalSubs = subscriptions.length;
+    const expired = subscriptions.filter(s => s.status === 'expired').length;
+    return totalSubs > 0 ? ((expired / totalSubs) * 100).toFixed(1) : '0.0';
+  };
+
+  const calculateConversionRate = () => {
+    const paidPlans = subscriptions.filter(s => s.plan_type !== 'gratis').length;
+    const totalSubs = subscriptions.length;
+    return totalSubs > 0 ? ((paidPlans / totalSubs) * 100).toFixed(1) : '0.0';
+  };
+
+  const calculateAveragePlanValue = () => {
+    const paidSubs = subscriptions.filter(s => s.plan_type !== 'gratis' && s.status === 'active');
+    if (paidSubs.length === 0) return 0;
+
+    const totalValue = paidSubs.reduce((sum, sub) => {
+      return sum + (planPrices[sub.plan_type] || 0);
+    }, 0);
+
+    return (totalValue / paidSubs.length).toFixed(2);
+  };
+
+  const exportToCSV = () => {
+    const csvData = [];
+
+    csvData.push(['REPORTE DE ESTADÍSTICAS DEL SISTEMA']);
+    csvData.push(['Fecha de generación:', new Date().toLocaleString()]);
+    csvData.push([]);
+
+    csvData.push(['MÉTRICAS GENERALES']);
+    csvData.push(['Total Restaurantes', totalRestaurants]);
+    csvData.push(['Restaurantes Activos', activeRestaurants]);
+    csvData.push(['Restaurantes Expirados', expiredRestaurants]);
+    csvData.push(['Total Usuarios', totalUsers]);
+    csvData.push(['Usuarios Verificados', verifiedUsers]);
+    csvData.push(['Propietarios de Restaurantes', restaurantOwners]);
+    csvData.push(['Super Administradores', superAdmins]);
+    csvData.push([]);
+
+    csvData.push(['MÉTRICAS FINANCIERAS']);
+    csvData.push(['MRR (Ingreso Recurrente Mensual)', `$${mrr.toFixed(2)}`]);
+    csvData.push(['ARR (Ingreso Recurrente Anual)', `$${arr.toFixed(2)}`]);
+    csvData.push(['Ingresos Totales Activos', `$${totalRevenue.toFixed(2)}`]);
+    csvData.push(['Potencial de Ingresos', `$${potentialRevenue.toFixed(2)}`]);
+    csvData.push(['Valor Promedio por Plan', `$${calculateAveragePlanValue()}`]);
+    csvData.push([]);
+
+    csvData.push(['SUSCRIPCIONES']);
+    csvData.push(['Total Suscripciones', totalFilteredSubscriptions]);
+    csvData.push(['Suscripciones Activas', activeSubscriptions]);
+    csvData.push(['Suscripciones Expiradas', expiredSubscriptions]);
+    csvData.push(['Tasa de Abandono (Churn)', `${calculateChurnRate()}%`]);
+    csvData.push(['Tasa de Conversión', `${calculateConversionRate()}%`]);
+    csvData.push([]);
+
+    csvData.push(['DISTRIBUCIÓN POR PLAN']);
+    csvData.push(['Plan Gratis', planDistribution.gratis, `$${revenueByPlan.gratis.toFixed(2)}`]);
+    csvData.push(['Plan Basic', planDistribution.basic, `$${revenueByPlan.basic.toFixed(2)}`]);
+    csvData.push(['Plan Pro', planDistribution.pro, `$${revenueByPlan.pro.toFixed(2)}`]);
+    csvData.push(['Plan Business', planDistribution.business, `$${revenueByPlan.business.toFixed(2)}`]);
+    csvData.push([]);
+
+    csvData.push(['DISTRIBUCIÓN POR DURACIÓN']);
+    csvData.push(['Mensual', durationDistribution.monthly]);
+    csvData.push(['Anual', durationDistribution.annual]);
+    csvData.push([]);
+
+    csvData.push(['DETALLE DE RESTAURANTES']);
+    csvData.push(['Nombre', 'Email', 'Plan', 'Estado', 'Fecha de Creación']);
+    restaurants.forEach(restaurant => {
+      const subscription = subscriptions.find(s => s.restaurant_id === restaurant.id);
+      csvData.push([
+        restaurant.name,
+        restaurant.email,
+        subscription?.plan_type || 'N/A',
+        subscription?.status || 'N/A',
+        new Date(restaurant.created_at).toLocaleDateString()
+      ]);
+    });
+
+    const csvContent = csvData.map(row => row.join(',')).join('\n');
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+
+    link.setAttribute('href', url);
+    link.setAttribute('download', `estadisticas_sistema_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900">Estadísticas del Sistema</h1>
-        <div className="text-sm text-gray-500">
-          Última actualización: {new Date().toLocaleString()}
+        <div className="flex items-center gap-3">
+          <div className="text-sm text-gray-500">
+            Última actualización: {new Date().toLocaleString()}
+          </div>
+          <Button
+            onClick={exportToCSV}
+            icon={Download}
+            variant="primary"
+          >
+            Exportar CSV
+          </Button>
         </div>
       </div>
 
-      {/* Filters */}
       <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
         <div className="space-y-4">
           <div className="flex items-center gap-2">
@@ -267,36 +365,43 @@ export const SuperAdminAnalytics: React.FC = () => {
         </div>
       </div>
 
-      {/* Economic Stats */}
       <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-lg shadow-sm border border-green-200">
         <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
           <DollarSign className="w-6 h-6 mr-2 text-green-600" />
           Estadísticas Económicas
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-white p-4 rounded-lg border border-green-200">
+            <p className="text-sm font-medium text-gray-600">MRR</p>
+            <p className="text-3xl font-bold text-blue-600 mt-2">
+              ${mrr.toFixed(2)}
+            </p>
+            <p className="text-xs text-gray-500 mt-1">Ingreso Recurrente Mensual</p>
+          </div>
+
+          <div className="bg-white p-4 rounded-lg border border-green-200">
+            <p className="text-sm font-medium text-gray-600">ARR</p>
+            <p className="text-3xl font-bold text-purple-600 mt-2">
+              ${arr.toFixed(2)}
+            </p>
+            <p className="text-xs text-gray-500 mt-1">Ingreso Recurrente Anual</p>
+          </div>
+
           <div className="bg-white p-4 rounded-lg border border-green-200">
             <p className="text-sm font-medium text-gray-600">Ingresos Totales</p>
             <p className="text-3xl font-bold text-green-600 mt-2">
               ${totalRevenue.toFixed(2)}
             </p>
-            <p className="text-xs text-gray-500 mt-1">Suscripciones activas filtradas</p>
+            <p className="text-xs text-gray-500 mt-1">Suscripciones activas</p>
           </div>
 
           <div className="bg-white p-4 rounded-lg border border-green-200">
-            <p className="text-sm font-medium text-gray-600">MRR (Ingreso Recurrente Mensual)</p>
-            <p className="text-3xl font-bold text-blue-600 mt-2">
-              ${mrr.toFixed(2)}
+            <p className="text-sm font-medium text-gray-600">Valor Promedio</p>
+            <p className="text-3xl font-bold text-orange-600 mt-2">
+              ${calculateAveragePlanValue()}
             </p>
-            <p className="text-xs text-gray-500 mt-1">Todas las suscripciones activas</p>
-          </div>
-
-          <div className="bg-white p-4 rounded-lg border border-green-200">
-            <p className="text-sm font-medium text-gray-600">Potencial de Ingresos</p>
-            <p className="text-3xl font-bold text-purple-600 mt-2">
-              ${potentialRevenue.toFixed(2)}
-            </p>
-            <p className="text-xs text-gray-500 mt-1">Incluye todas las suscripciones filtradas</p>
+            <p className="text-xs text-gray-500 mt-1">Por suscripción de pago</p>
           </div>
         </div>
 
@@ -327,19 +432,41 @@ export const SuperAdminAnalytics: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center">
+            <Store className="h-8 w-8 text-blue-600" />
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Restaurantes</p>
+              <p className="text-2xl font-semibold text-gray-900">{totalRestaurants}</p>
+            </div>
+          </div>
+          <div className="mt-2">
+            <span className="text-sm text-green-600 font-medium">
+              {activeRestaurants} activos
+            </span>
+            <span className="text-sm text-gray-400 mx-1">•</span>
+            <span className="text-sm text-red-600 font-medium">
+              {expiredRestaurants} expirados
+            </span>
+          </div>
+        </div>
+
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <div className="flex items-center">
             <Users className="h-8 w-8 text-green-600" />
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Usuarios</p>
+              <p className="text-sm font-medium text-gray-600">Usuarios</p>
               <p className="text-2xl font-semibold text-gray-900">{totalUsers}</p>
             </div>
           </div>
           <div className="mt-2">
             <span className="text-sm text-green-600 font-medium">
               {verifiedUsers} verificados
+            </span>
+            <span className="text-sm text-gray-400 mx-1">•</span>
+            <span className="text-sm text-blue-600 font-medium">
+              {restaurantOwners} propietarios
             </span>
           </div>
         </div>
@@ -367,7 +494,7 @@ export const SuperAdminAnalytics: React.FC = () => {
           <div className="flex items-center">
             <TrendingUp className="h-8 w-8 text-orange-600" />
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Crecimiento Mensual</p>
+              <p className="text-sm font-medium text-gray-600">Crecimiento</p>
               <p className="text-2xl font-semibold text-gray-900">
                 {monthlyRegistrations.length > 0 ? monthlyRegistrations[monthlyRegistrations.length - 1][1] : 0}
               </p>
@@ -381,9 +508,45 @@ export const SuperAdminAnalytics: React.FC = () => {
         </div>
       </div>
 
-      {/* Charts Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-medium text-gray-600">Tasa de Abandono</p>
+            <RefreshCw className="h-5 w-5 text-red-600" />
+          </div>
+          <p className="text-3xl font-bold text-red-600">{calculateChurnRate()}%</p>
+          <p className="text-xs text-gray-500 mt-1">Churn rate</p>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-medium text-gray-600">Tasa de Conversión</p>
+            <TrendingUp className="h-5 w-5 text-green-600" />
+          </div>
+          <p className="text-3xl font-bold text-green-600">{calculateConversionRate()}%</p>
+          <p className="text-xs text-gray-500 mt-1">A planes de pago</p>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-medium text-gray-600">Suscripciones Mensuales</p>
+            <Calendar className="h-5 w-5 text-blue-600" />
+          </div>
+          <p className="text-3xl font-bold text-blue-600">{durationDistribution.monthly}</p>
+          <p className="text-xs text-gray-500 mt-1">Duración mensual</p>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-medium text-gray-600">Suscripciones Anuales</p>
+            <Clock className="h-5 w-5 text-purple-600" />
+          </div>
+          <p className="text-3xl font-bold text-purple-600">{durationDistribution.annual}</p>
+          <p className="text-xs text-gray-500 mt-1">Duración anual</p>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Monthly Registrations */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
             <Calendar className="w-5 h-5 mr-2" />
@@ -395,8 +558,8 @@ export const SuperAdminAnalytics: React.FC = () => {
                 <span className="text-sm text-gray-600">{month}</span>
                 <div className="flex items-center">
                   <div className="w-32 bg-gray-200 rounded-full h-2 mr-3">
-                    <div 
-                      className="bg-blue-600 h-2 rounded-full" 
+                    <div
+                      className="bg-blue-600 h-2 rounded-full"
                       style={{ width: `${(count / Math.max(...monthlyRegistrations.map(([, c]) => c))) * 100}%` }}
                     />
                   </div>
@@ -407,7 +570,6 @@ export const SuperAdminAnalytics: React.FC = () => {
           </div>
         </div>
 
-        {/* Plan Distribution */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
             <BarChart3 className="w-5 h-5 mr-2" />
@@ -466,16 +628,13 @@ export const SuperAdminAnalytics: React.FC = () => {
         </div>
       </div>
 
-      {/* Recent Activity and Alerts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Plan Performance Metrics */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="px-6 py-4 border-b border-gray-200">
             <h3 className="text-lg font-medium text-gray-900">Rendimiento por Plan</h3>
           </div>
           <div className="p-6">
             <div className="space-y-4">
-              {/* Gratis Plan */}
               <div className="p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-gray-700">Plan Gratis</span>
@@ -486,7 +645,6 @@ export const SuperAdminAnalytics: React.FC = () => {
                 </div>
               </div>
 
-              {/* Basic Plan */}
               <div className="p-3 bg-blue-50 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-blue-700">Plan Basic</span>
@@ -497,7 +655,6 @@ export const SuperAdminAnalytics: React.FC = () => {
                 </div>
               </div>
 
-              {/* Pro Plan */}
               <div className="p-3 bg-green-50 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-green-700">Plan Pro</span>
@@ -508,7 +665,6 @@ export const SuperAdminAnalytics: React.FC = () => {
                 </div>
               </div>
 
-              {/* Business Plan */}
               <div className="p-3 bg-orange-50 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-orange-700">Plan Business</span>
@@ -522,7 +678,6 @@ export const SuperAdminAnalytics: React.FC = () => {
           </div>
         </div>
 
-        {/* Expiring Subscriptions */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="px-6 py-4 border-b border-gray-200">
             <h3 className="text-lg font-medium text-gray-900">Suscripciones por Vencer</h3>
@@ -534,10 +689,10 @@ export const SuperAdminAnalytics: React.FC = () => {
               </p>
             ) : (
               <div className="space-y-4">
-                {expiringSoon.map(subscription => {
+                {expiringSoon.slice(0, 5).map(subscription => {
                   const restaurant = restaurants.find(r => r.id === subscription.restaurant_id);
                   const daysLeft = Math.ceil((new Date(subscription.end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-                  
+
                   return (
                     <div key={subscription.id} className="flex items-center justify-between">
                       <div>
