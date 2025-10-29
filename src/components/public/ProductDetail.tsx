@@ -200,7 +200,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
                   {product.ingredients.map(ingredient => (
                     <label
                       key={ingredient.id}
-                      className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors hover:bg-gray-50"
+                      className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors hover:primaryColor"
                       style={{
                         borderColor: '#e5e7eb',
                         borderRadius: '8px',
