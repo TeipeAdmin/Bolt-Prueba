@@ -188,6 +188,62 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
     setStep('confirm');
   };
 
+  const sendWhatsAppMessage = (order: any) => {
+    const phone = restaurant.phone?.replace(/[^0-9]/g, '') || '';
+    if (!phone) {
+      console.warn('No restaurant phone number configured');
+      return;
+    }
+
+    const deliveryModeText = deliveryMode === 'pickup' ? 'Retiro en Tienda' :
+                            deliveryMode === 'dine-in' ? 'Consumir en Restaurante' :
+                            'Entrega a Domicilio';
+
+    let message = `🛍️ *NUEVO PEDIDO - ${restaurant.name}*\n\n`;
+    message += `📋 *Pedido:* #${order.id}\n`;
+    message += `📅 *Fecha:* ${new Date().toLocaleString()}\n`;
+    message += `🚚 *Modalidad:* ${deliveryModeText}\n\n`;
+
+    message += `👤 *DATOS DEL CLIENTE*\n`;
+    message += `Nombre: ${customerInfo.name}\n`;
+    message += `Teléfono: ${customerInfo.phone}\n`;
+    if (customerInfo.email) message += `Email: ${customerInfo.email}\n`;
+
+    if (deliveryMode === 'delivery') {
+      message += `Dirección: ${customerInfo.address}, ${customerInfo.city}\n`;
+    } else if (deliveryMode === 'dine-in') {
+      message += `Mesa: ${customerInfo.tableNumber}\n`;
+    }
+    message += `\n`;
+
+    message += `🛒 *PRODUCTOS*\n`;
+    items.forEach((item, index) => {
+      message += `${index + 1}. ${item.product.name}\n`;
+      message += `   ${item.variation.name} x${item.quantity}\n`;
+      message += `   ${formatCurrency(item.variation.price * item.quantity, currency)}\n`;
+      if (item.special_notes) {
+        message += `   📝 Nota: ${item.special_notes}\n`;
+      }
+    });
+    message += `\n`;
+
+    message += `💰 *TOTAL*\n`;
+    message += `Subtotal: ${formatCurrency(getTotal(), currency)}\n`;
+    if (deliveryMode === 'delivery' && deliveryCost > 0) {
+      message += `Envío: ${formatCurrency(deliveryCost, currency)}\n`;
+    }
+    message += `*Total: ${formatCurrency(order.total, currency)}*\n`;
+
+    if (customerInfo.notes) {
+      message += `\n📌 *Notas adicionales:*\n${customerInfo.notes}`;
+    }
+
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/${phone}?text=${encodedMessage}`;
+
+    window.open(whatsappUrl, '_blank');
+  };
+
   const handleConfirmOrder = async () => {
     setLoading(true);
 
@@ -223,6 +279,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
     const orders = loadFromStorage('orders', []);
     orders.push(newOrder);
     saveToStorage('orders', orders);
+
+    sendWhatsAppMessage(newOrder);
 
     setOrderNumber(newOrder.id);
     clearCart();
@@ -266,11 +324,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={handleClose}>
       <div
-        className="rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        className="rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto scrollbar-hide"
         onClick={(e) => e.stopPropagation()}
         style={{
           borderRadius: theme.button_style === 'rounded' ? '1rem' : '0.25rem',
-          backgroundColor: cardBackgroundColor
+          backgroundColor: cardBackgroundColor,
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none'
         }}
       >
         <div className="p-6">
