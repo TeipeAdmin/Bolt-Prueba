@@ -42,8 +42,26 @@ export const RestaurantsManagement: React.FC = () => {
   const loadData = () => {
     const restaurantData = loadFromStorage('restaurants') || [];
     const subscriptionData = loadFromStorage('subscriptions') || [];
+
+    // Auto-expire subscriptions based on end date
+    const now = new Date();
+    const updatedSubscriptions = subscriptionData.map((sub: Subscription) => {
+      const endDate = new Date(sub.end_date);
+
+      // If subscription end date has passed and it's currently active, mark as expired
+      if (endDate < now && sub.status === 'active') {
+        return { ...sub, status: 'expired' as const };
+      }
+      return sub;
+    });
+
     setRestaurants(restaurantData);
-    setSubscriptions(subscriptionData);
+    setSubscriptions(updatedSubscriptions);
+
+    // Save the updated subscriptions back to storage if there were changes
+    if (JSON.stringify(updatedSubscriptions) !== JSON.stringify(subscriptionData)) {
+      saveToStorage('subscriptions', updatedSubscriptions);
+    }
   };
 
   const getSubscription = (restaurantId: string) => {
@@ -132,9 +150,6 @@ export const RestaurantsManagement: React.FC = () => {
     switch (duration) {
       case 'monthly':
         now.setMonth(now.getMonth() + 1);
-        break;
-      case 'quarterly':
-        now.setMonth(now.getMonth() + 3);
         break;
       case 'annual':
         now.setFullYear(now.getFullYear() + 1);
@@ -714,7 +729,6 @@ export const RestaurantsManagement: React.FC = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="monthly">Mensual</option>
-                    <option value="quarterly">Trimestral</option>
                     <option value="annual">Anual</option>
                   </select>
                 <div>

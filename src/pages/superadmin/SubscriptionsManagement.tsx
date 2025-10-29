@@ -57,8 +57,8 @@ export const SubscriptionsManagement: React.FC = () => {
     const updatedSubscriptions = uniqueSubscriptions.map(sub => {
       const endDate = new Date(sub.end_date);
 
-      // If subscription is expired and not 'gratis' plan, mark as expired
-      if (endDate < now && sub.plan_type !== 'gratis' && sub.status === 'active') {
+      // If subscription end date has passed and it's currently active, mark as expired
+      if (endDate < now && sub.status === 'active') {
         return { ...sub, status: 'expired' as const };
       }
       return sub;
@@ -109,8 +109,8 @@ export const SubscriptionsManagement: React.FC = () => {
         ? {
             ...sub,
             ...formData,
-            start_date: new Date(formData.start_date).toISOString(),
-            end_date: new Date(formData.end_date).toISOString(),
+            start_date: formData.start_date + 'T00:00:00.000Z',
+            end_date: formData.end_date + 'T23:59:59.999Z',
           }
         : sub
     );
@@ -433,7 +433,6 @@ export const SubscriptionsManagement: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {subscription.duration === 'monthly' && 'Mensual'}
-                      {subscription.duration === 'quarterly' && 'Trimestral'}
                       {subscription.duration === 'annual' && 'Anual'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -508,7 +507,6 @@ export const SubscriptionsManagement: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700">Duración</label>
                 <p className="text-sm text-gray-900">
                   {selectedSubscription.duration === 'monthly' && 'Mensual'}
-                  {selectedSubscription.duration === 'quarterly' && 'Trimestral'}
                   {selectedSubscription.duration === 'annual' && 'Anual'}
                 </p>
               </div>
@@ -600,7 +598,6 @@ export const SubscriptionsManagement: React.FC = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="monthly">Mensual</option>
-                <option value="quarterly">Trimestral</option>
                 <option value="annual">Anual</option>
               </select>
             </div>

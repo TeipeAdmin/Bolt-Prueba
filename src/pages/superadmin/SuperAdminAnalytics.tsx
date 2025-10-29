@@ -19,9 +19,21 @@ export const SuperAdminAnalytics: React.FC = () => {
     const restaurantData = loadFromStorage('restaurants') || [];
     const subscriptionData = loadFromStorage('subscriptions') || [];
     const userData = loadFromStorage('users') || [];
-    
+
+    // Auto-expire subscriptions based on end date
+    const now = new Date();
+    const updatedSubscriptions = subscriptionData.map((sub: Subscription) => {
+      const endDate = new Date(sub.end_date);
+
+      // If subscription end date has passed and it's currently active, mark as expired
+      if (endDate < now && sub.status === 'active') {
+        return { ...sub, status: 'expired' as const };
+      }
+      return sub;
+    });
+
     setRestaurants(restaurantData);
-    setSubscriptions(subscriptionData);
+    setSubscriptions(updatedSubscriptions);
     setUsers(userData);
   }, []);
 
@@ -125,7 +137,6 @@ export const SuperAdminAnalytics: React.FC = () => {
   // Duration multipliers
   const durationMultipliers: Record<string, number> = {
     monthly: 1,
-    quarterly: 3,
     annual: 12,
   };
 
