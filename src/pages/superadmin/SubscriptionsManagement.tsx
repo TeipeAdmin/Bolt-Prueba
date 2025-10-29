@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CreditCard, Calendar, AlertCircle, CheckCircle, XCircle, Plus, CreditCard as Edit } from 'lucide-react';
+import { CreditCard, Calendar, AlertCircle, CheckCircle, XCircle, Plus, Pencil as Edit } from 'lucide-react';
 import { Subscription, Restaurant } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { Button } from '../../components/ui/Button';
