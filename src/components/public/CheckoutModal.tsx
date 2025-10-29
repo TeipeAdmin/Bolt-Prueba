@@ -222,7 +222,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
       message += `   ${item.variation.name} x${item.quantity}\n`;
       message += `   ${formatCurrency(item.variation.price * item.quantity, currency)}\n`;
       if (item.special_notes) {
-        message += `   📝 Nota: ${item.special_notes}\n`;
+        message += `   Nota: ${item.special_notes}\n`;
       }
     });
     message += `\n`;
@@ -235,7 +235,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
     message += `*Total: ${formatCurrency(order.total, currency)}*\n`;
 
     if (customerInfo.notes) {
-      message += `\n📌 *Notas adicionales:*\n${customerInfo.notes}`;
+      message += `\n*Notas adicionales:*\n${customerInfo.notes}`;
     }
 
     const encodedMessage = encodeURIComponent(message);
