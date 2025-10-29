@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, CreditCard as Edit, Trash2, Shield, UserCheck, UserX, Filter, Building, UserPlus, Lock, Copy } from 'lucide-react';
+import { User, Pencil as Edit, Trash2, Shield, UserCheck, UserX, Filter, Building, UserPlus, Lock, Copy } from 'lucide-react';
 import { User as UserType, Restaurant } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { Button } from '../../components/ui/Button';
