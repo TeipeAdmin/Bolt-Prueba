@@ -203,7 +203,7 @@ export const SuperAdminDashboard: React.FC = () => {
       <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
         <div className="px-6 py-5 bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
           <h2 className="text-xl font-bold text-slate-900 flex items-center">
-            <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg flex items-center justify-center mr-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-orange-500 rounded-lg flex items-center justify-center mr-3">
               <Calendar className="w-4 h-4 text-white" />
             </div>
             Restaurantes Recientes
