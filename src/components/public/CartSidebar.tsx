@@ -195,7 +195,8 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, onChe
                 onClick={onCheckout}
                 className="w-full py-3 text-white font-bold rounded-lg transition-all hover:opacity-90 uppercase text-sm"
                 style={{
-                  backgroundColor: primaryColor
+                  backgroundColor: primaryColor,
+                  color: secondaryTextColor
                 }}
               >
                 PAGAR
