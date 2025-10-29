@@ -143,36 +143,192 @@ export const RestaurantAnalytics: React.FC = () => {
   };
 
   const generateCSVContent = () => {
-    const headers = [
+    const csvData = [];
+
+    // Título del reporte
+    csvData.push(['REPORTE DE ESTADÍSTICAS Y VENTAS']);
+    csvData.push(['Restaurante:', restaurant?.name || '']);
+    csvData.push(['Fecha de generación:', new Date().toLocaleString()]);
+    csvData.push(['Período:', startDate && endDate ? `${startDate} a ${endDate}` : 'Todos los períodos']);
+    csvData.push([]);
+
+    // Resumen ejecutivo
+    csvData.push(['RESUMEN EJECUTIVO']);
+    csvData.push(['Total de Pedidos', totalOrders]);
+    csvData.push(['Pedidos Completados', completedOrders]);
+    csvData.push(['Pedidos Cancelados', ordersByStatus.cancelled]);
+    csvData.push(['Tasa de Completación', `${totalOrders > 0 ? ((completedOrders / totalOrders) * 100).toFixed(1) : 0}%`]);
+    csvData.push(['Ingresos Totales', formatCurrency(totalRevenue, currency)]);
+    csvData.push(['Ticket Promedio', formatCurrency(averageOrderValue, currency)]);
+    csvData.push([]);
+
+    // Distribución por tipo de pedido
+    csvData.push(['DISTRIBUCIÓN POR TIPO DE PEDIDO']);
+    const ordersByType = {
+      pickup: filteredOrders.filter(o => o.order_type === 'pickup').length,
+      delivery: filteredOrders.filter(o => o.order_type === 'delivery').length,
+      table: filteredOrders.filter(o => o.order_type === 'table').length,
+    };
+    csvData.push(['Recoger', ordersByType.pickup, `${totalOrders > 0 ? ((ordersByType.pickup / totalOrders) * 100).toFixed(1) : 0}%`]);
+    csvData.push(['Delivery', ordersByType.delivery, `${totalOrders > 0 ? ((ordersByType.delivery / totalOrders) * 100).toFixed(1) : 0}%`]);
+    csvData.push(['Mesa', ordersByType.table, `${totalOrders > 0 ? ((ordersByType.table / totalOrders) * 100).toFixed(1) : 0}%`]);
+    csvData.push([]);
+
+    // Distribución por estado
+    csvData.push(['DISTRIBUCIÓN POR ESTADO']);
+    csvData.push(['Pendientes', ordersByStatus.pending]);
+    csvData.push(['Confirmados', ordersByStatus.confirmed]);
+    csvData.push(['En Preparación', ordersByStatus.preparing]);
+    csvData.push(['Listos', ordersByStatus.ready]);
+    csvData.push(['Entregados', ordersByStatus.delivered]);
+    csvData.push(['Cancelados', ordersByStatus.cancelled]);
+    csvData.push([]);
+
+    // Productos más vendidos
+    csvData.push(['PRODUCTOS MÁS VENDIDOS']);
+    csvData.push(['Posición', 'Producto', 'Cantidad Vendida', 'Ingresos']);
+    topProducts.forEach((item, index) => {
+      csvData.push([
+        `#${index + 1}`,
+        item.product.name,
+        item.quantity,
+        formatCurrency(item.revenue, currency)
+      ]);
+    });
+    csvData.push([]);
+
+    // Ventas por categoría
+    csvData.push(['VENTAS POR CATEGORÍA']);
+    csvData.push(['Categoría', 'Cantidad de Productos', 'Ingresos']);
+    const salesByCategory: { [key: string]: { name: string; count: number; revenue: number } } = {};
+
+    filteredOrders.filter(o => o.status === 'delivered').forEach(order => {
+      order.items.forEach(item => {
+        const category = categories.find(c => c.id === item.product.category_id);
+        const categoryName = category?.name || 'Sin categoría';
+
+        if (!salesByCategory[categoryName]) {
+          salesByCategory[categoryName] = { name: categoryName, count: 0, revenue: 0 };
+        }
+        salesByCategory[categoryName].count += item.quantity;
+        salesByCategory[categoryName].revenue += item.variation.price * item.quantity;
+      });
+    });
+
+    Object.values(salesByCategory)
+      .sort((a, b) => b.revenue - a.revenue)
+      .forEach(cat => {
+        csvData.push([cat.name, cat.count, formatCurrency(cat.revenue, currency)]);
+      });
+    csvData.push([]);
+
+    // Ventas por día de la semana
+    csvData.push(['VENTAS POR DÍA DE LA SEMANA']);
+    csvData.push(['Día', 'Cantidad de Pedidos', 'Ingresos']);
+    const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    const salesByDay = Array(7).fill(0).map(() => ({ count: 0, revenue: 0 }));
+
+    filteredOrders.filter(o => o.status === 'delivered').forEach(order => {
+      const day = new Date(order.created_at).getDay();
+      salesByDay[day].count++;
+      salesByDay[day].revenue += order.total;
+    });
+
+    salesByDay.forEach((data, index) => {
+      csvData.push([dayNames[index], data.count, formatCurrency(data.revenue, currency)]);
+    });
+    csvData.push([]);
+
+    // Detalle completo de pedidos
+    csvData.push(['DETALLE COMPLETO DE PEDIDOS']);
+    csvData.push([
       'Número de Pedido',
       'Fecha',
+      'Hora',
       'Cliente',
-      'Tipo',
+      'Teléfono',
+      'Email',
+      'Tipo de Pedido',
       'Estado',
+      'Subtotal',
+      'Costo de Delivery',
       'Total',
-      'Items'
-    ];
-
-    const rows = filteredOrders.map(order => [
-      order.order_number,
-      new Date(order.created_at).toLocaleDateString(),
-      order.customer?.name || 'N/A',
-      order.order_type === 'pickup' ? 'Recoger' : 
-      order.order_type === 'delivery' ? 'Delivery' : 'Mesa',
-      order.status === 'pending' ? 'Pendiente' :
-      order.status === 'confirmed' ? 'Confirmado' :
-      order.status === 'preparing' ? 'Preparando' :
-      order.status === 'ready' ? 'Listo' :
-      order.status === 'delivered' ? 'Entregado' :
-      order.status === 'cancelled' ? 'Cancelado' : order.status,
-      formatCurrency(order.total, currency),
-      order.items.map(item => `${item.product.name} x${item.quantity}`).join('; ')
+      'Método de Pago',
+      'Items',
+      'Notas Especiales'
     ]);
 
-    const csvRows = [headers, ...rows];
-    return csvRows.map(row => 
+    filteredOrders.forEach(order => {
+      const orderDate = new Date(order.created_at);
+      csvData.push([
+        order.order_number,
+        orderDate.toLocaleDateString(),
+        orderDate.toLocaleTimeString(),
+        order.customer?.name || 'N/A',
+        order.customer?.phone || 'N/A',
+        order.customer?.email || 'N/A',
+        order.order_type === 'pickup' ? 'Recoger' :
+        order.order_type === 'delivery' ? 'Delivery' : 'Mesa',
+        order.status === 'pending' ? 'Pendiente' :
+        order.status === 'confirmed' ? 'Confirmado' :
+        order.status === 'preparing' ? 'Preparando' :
+        order.status === 'ready' ? 'Listo' :
+        order.status === 'delivered' ? 'Entregado' :
+        order.status === 'cancelled' ? 'Cancelado' : order.status,
+        formatCurrency(order.subtotal, currency),
+        formatCurrency(order.delivery_cost || 0, currency),
+        formatCurrency(order.total, currency),
+        'N/A', // Método de pago no está disponible
+        order.items.map(item =>
+          `${item.product.name} (${item.variation.name}) x${item.quantity} - ${formatCurrency(item.total_price, currency)}`
+        ).join('; '),
+        order.special_instructions || 'N/A'
+      ]);
+    });
+    csvData.push([]);
+
+    // Detalle de items vendidos
+    csvData.push(['DETALLE DE ITEMS VENDIDOS']);
+    csvData.push(['Producto', 'Variación', 'Cantidad', 'Precio Unitario', 'Total']);
+
+    const itemsDetails: { [key: string]: { product: string; variation: string; quantity: number; price: number; total: number } } = {};
+
+    filteredOrders.filter(o => o.status === 'delivered').forEach(order => {
+      order.items.forEach(item => {
+        const key = `${item.product.id}-${item.variation.id}`;
+        if (!itemsDetails[key]) {
+          itemsDetails[key] = {
+            product: item.product.name,
+            variation: item.variation.name,
+            quantity: 0,
+            price: item.variation.price,
+            total: 0
+          };
+        }
+        itemsDetails[key].quantity += item.quantity;
+        itemsDetails[key].total += item.total_price;
+      });
+    });
+
+    Object.values(itemsDetails)
+      .sort((a, b) => b.quantity - a.quantity)
+      .forEach(item => {
+        csvData.push([
+          item.product,
+          item.variation,
+          item.quantity,
+          formatCurrency(item.price, currency),
+          formatCurrency(item.total, currency)
+        ]);
+      });
+
+    // Convertir a formato CSV
+    const csvContent = csvData.map(row =>
       row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(',')
     ).join('\n');
+
+    // Agregar BOM para compatibilidad con Excel
+    return '\ufeff' + csvContent;
   };
 
   const generateFileName = () => {
