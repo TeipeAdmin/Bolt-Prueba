@@ -198,15 +198,18 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
                 </h3>
                 <div className="space-y-2">
                   {product.ingredients.map(ingredient => (
-                    <label
-                      key={ingredient.id}
-                      className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors hover:bg-red-50"
-                      style={{
-                        borderColor: '#e5e7eb',
-                        borderRadius: '8px',
-                        opacity: ingredient.optional ? 1 : 0.7
-                      }}
-                    >
+<label
+  key={ingredient.id}
+  className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors"
+  style={{
+    borderColor: '#e5e7eb',
+    borderRadius: '8px',
+    opacity: ingredient.optional ? 1 : 0.7,
+    transition: 'background-color 0.3s ease',
+  }}
+  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = primaryColor)}
+  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+>
                       <input
                         type="checkbox"
                         checked={selectedIngredients.includes(ingredient.id)}
