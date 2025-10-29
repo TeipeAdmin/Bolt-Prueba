@@ -19,7 +19,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, onChe
   const themeColors = getThemeColors(restaurant?.settings?.theme);
   const theme = restaurant?.settings?.theme;
   const primaryColor = theme?.primary_color || '#FFC700';
-  const secondaryColor = theme.secondary_color || '#f3f4f6';
+  const secondaryTextColor = theme.secondary_text_color || '#6b7280';
   const currency = restaurant?.settings?.currency || 'USD';
 
   if (!isOpen) return null;
@@ -197,7 +197,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, onChe
                 className="w-full py-3 font-bold rounded-lg transition-all hover:opacity-90 uppercase text-sm"
                 style={{
                   backgroundColor: primaryColor,
-                  color: secondaryTextColor
+                  color: secondaryTextColor,
                 }}
               >
                 PAGAR
