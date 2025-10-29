@@ -103,7 +103,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
           {product.images.length > 0 && (
             <div className="relative w-full h-[250px] md:h-[400px]">
               <img
-                src={product.images[0]}
+                src={product.images}
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
