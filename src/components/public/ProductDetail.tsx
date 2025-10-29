@@ -298,9 +298,10 @@ onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${primaryColor}4D
 
               <button
                 onClick={handleAddToCart}
-                className="flex-1 px-6 py-3 text-white font-bold rounded-lg transition-all hover:opacity-90"
+                className="flex-1 px-6 py-3 font-bold rounded-lg transition-all hover:opacity-90"
                 style={{
                   backgroundColor: primaryColor,
+                  color: secondaryTextColor,
                   fontSize: '16px',
                   borderRadius: '8px'
                 }}
