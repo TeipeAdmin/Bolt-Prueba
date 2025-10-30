@@ -142,41 +142,41 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
     });
 
     if (!customerInfo.name || customerInfo.name.trim().length < 2) {
-      showToast('warning', 'Nombre inválido', 'Por favor ingresa un nombre válido (mínimo 2 caracteres)');
+      showToast('warning', 'Nombre inválido', 'Por favor ingresa un nombre válido (mínimo 2 caracteres)', 5000, { primary: primaryColor, secondary: secondaryTextColor });
       return false;
     }
 
     if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(customerInfo.name.trim())) {
-      showToast('warning', 'Nombre inválido', 'El nombre solo debe contener letras');
+      showToast('warning', 'Nombre inválido', 'El nombre solo debe contener letras', 5000, { primary: primaryColor, secondary: secondaryTextColor });
       return false;
     }
 
     if (!customerInfo.phone || customerInfo.phone.trim().length === 0) {
-      showToast('warning', 'Teléfono requerido', 'Por favor ingresa tu número de teléfono');
+      showToast('warning', 'Teléfono requerido', 'Por favor ingresa tu número de teléfono', 5000, { primary: primaryColor, secondary: secondaryTextColor });
       return false;
     }
 
     const phoneRegex = /^\+\d{1,3}\s?\d{7,14}$/;
     if (!phoneRegex.test(customerInfo.phone.replace(/\s+/g, ' '))) {
-      showToast('warning', 'Teléfono inválido', 'Por favor ingresa un teléfono válido con código de país (Ej: +57 3001234567)');
+      showToast('warning', 'Teléfono inválido', 'Por favor ingresa un teléfono válido con código de país (Ej: +57 3001234567)', 5000, { primary: primaryColor, secondary: secondaryTextColor });
       return false;
     }
 
     if (customerInfo.email && customerInfo.email.trim().length > 0) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(customerInfo.email.trim())) {
-        showToast('warning', 'Email inválido', 'Por favor ingresa un email válido');
+        showToast('warning', 'Email inválido', 'Por favor ingresa un email válido', 5000, { primary: primaryColor, secondary: secondaryTextColor });
         return false;
       }
     }
 
     if (deliveryMode === 'delivery' && (!customerInfo.address || !customerInfo.city)) {
-      showToast('warning', 'Dirección incompleta', 'Por favor completa la dirección de entrega');
+      showToast('warning', 'Dirección incompleta', 'Por favor completa la dirección de entrega', 5000, { primary: primaryColor, secondary: secondaryTextColor });
       return false;
     }
 
     if (deliveryMode === 'dine-in' && !customerInfo.tableNumber) {
-      showToast('warning', 'Número de mesa requerido', 'Por favor ingresa el número de mesa');
+      showToast('warning', 'Número de mesa requerido', 'Por favor ingresa el número de mesa', 5000, { primary: primaryColor, secondary: secondaryTextColor });
       return false;
     }
 

@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { Toast } from '../components/ui/Toast';
 
 interface ToastContextType {
-  showToast: (type: 'success' | 'warning' | 'error' | 'info', title: string, message: string, duration?: number) => void;
+  showToast: (type: 'success' | 'warning' | 'error' | 'info', title: string, message: string, duration?: number, customColors?: { primary?: string; secondary?: string }) => void;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
@@ -25,15 +25,16 @@ interface ToastItem {
   title: string;
   message: string;
   duration?: number;
+  customColors?: { primary?: string; secondary?: string };
 }
 
 export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
-  const showToast = (type: 'success' | 'warning' | 'error' | 'info', title: string, message: string, duration = 5000) => {
+  const showToast = (type: 'success' | 'warning' | 'error' | 'info', title: string, message: string, duration = 5000, customColors?: { primary?: string; secondary?: string }) => {
     const id = `toast-${Date.now()}-${Math.random()}`;
-    const newToast: ToastItem = { id, type, title, message, duration };
-    
+    const newToast: ToastItem = { id, type, title, message, duration, customColors };
+
     setToasts(prev => [...prev, newToast]);
   };
 
@@ -52,6 +53,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
             title={toast.title}
             message={toast.message}
             duration={toast.duration}
+            customColors={toast.customColors}
             onClose={() => removeToast(toast.id)}
           />
         ))}

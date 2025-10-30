@@ -6,6 +6,7 @@ interface ToastProps {
   title: string;
   message: string;
   duration?: number;
+  customColors?: { primary?: string; secondary?: string };
   onClose: () => void;
 }
 
@@ -14,6 +15,7 @@ export const Toast: React.FC<ToastProps> = ({
   title,
   message,
   duration = 5000,
+  customColors,
   onClose,
 }) => {
   useEffect(() => {
@@ -25,33 +27,50 @@ export const Toast: React.FC<ToastProps> = ({
   }, [duration, onClose]);
 
   const getIcon = () => {
+    const iconColor = customColors?.primary;
+    const iconClass = "w-5 h-5";
+
     switch (type) {
       case 'success':
-        return <CheckCircle className="w-5 h-5 text-green-400" />;
+        return <CheckCircle className={iconClass} style={iconColor ? { color: iconColor } : { color: '#4ade80' }} />;
       case 'warning':
-        return <AlertTriangle className="w-5 h-5 text-yellow-400" />;
+        return <AlertTriangle className={iconClass} style={iconColor ? { color: iconColor } : { color: '#fbbf24' }} />;
       case 'error':
-        return <XCircle className="w-5 h-5 text-red-400" />;
+        return <XCircle className={iconClass} style={iconColor ? { color: iconColor } : { color: '#f87171' }} />;
       case 'info':
-        return <Info className="w-5 h-5 text-blue-400" />;
+        return <Info className={iconClass} style={iconColor ? { color: iconColor } : { color: '#60a5fa' }} />;
     }
   };
 
   const getStyles = () => {
+    if (customColors?.primary) {
+      return {
+        backgroundColor: `${customColors.primary}15`,
+        borderColor: `${customColors.primary}40`,
+        color: customColors.secondary || '#000000'
+      };
+    }
+
     switch (type) {
       case 'success':
-        return 'bg-green-50 border-green-200 text-green-800';
+        return { className: 'bg-green-50 border-green-200 text-green-800' };
       case 'warning':
-        return 'bg-yellow-50 border-yellow-200 text-yellow-800';
+        return { className: 'bg-yellow-50 border-yellow-200 text-yellow-800' };
       case 'error':
-        return 'bg-red-50 border-red-200 text-red-800';
+        return { className: 'bg-red-50 border-red-200 text-red-800' };
       case 'info':
-        return 'bg-blue-50 border-blue-200 text-blue-800';
+        return { className: 'bg-blue-50 border-blue-200 text-blue-800' };
     }
   };
 
+  const styles = getStyles();
+  const hasCustomColors = customColors?.primary;
+
   return (
-    <div className={`fixed top-4 right-4 z-50 max-w-sm w-full border rounded-lg p-4 shadow-lg transform transition-all duration-300 ease-in-out ${getStyles()}`}>
+    <div
+      className={`fixed top-4 right-4 z-50 max-w-sm w-full border rounded-lg p-4 shadow-lg transform transition-all duration-300 ease-in-out ${hasCustomColors ? '' : styles.className || ''}`}
+      style={hasCustomColors ? styles : undefined}
+    >
       <div className="flex items-start">
         <div className="flex-shrink-0">
           {getIcon()}
