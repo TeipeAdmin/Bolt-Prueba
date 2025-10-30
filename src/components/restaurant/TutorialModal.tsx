@@ -165,8 +165,8 @@ const tutorialSteps: TutorialStep[] = [
       'El menú público se actualiza automáticamente cuando agregas o editas productos',
       'Los clientes ven el menú con los colores que configuraste en personalización',
       'Si un producto está desactivado, no aparecerá en el menú público',
-      'Si una categoría está desactivada, todos sus productos se ocultan',
-      'Los productos destacados aparecen primero con un distintivo especial',
+      'Si una categoría está desactivada, no aparecerá en el menú público',
+      'Los productos destacados aparecen primero con un distintivo especial. Puedes configurarlos desde el apartado "Promocional"',
       'El carrito de compras se mantiene mientras el cliente navega por el menú',
       'Cuando el cliente confirma el pedido, tú recibes toda la información por WhatsApp',
       'El mensaje incluye resumen completo: productos, variaciones, ingredientes extras, datos de contacto, dirección de entrega si aplica'
@@ -237,7 +237,8 @@ const tutorialSteps: TutorialStep[] = [
       '4. Para buscar un cliente específico, usa la barra de búsqueda en la parte superior',
       '5. Puedes buscar por: nombre, teléfono o email',
       '6. Haz clic en un cliente para ver el detalle completo de su historial de pedidos',
-      '7. En la vista de detalle verás:',
+      '7. El número de teléfono será la identificación principal del cliente. Si un cliente ya registrado con un número ingresa un nombre diferente, no se creará un nuevo registro, sino que se actualizará la información asociada a ese número de teléfono.',
+      '8. En la vista de detalle verás:',
       '   • Información de contacto completa',
       '   • Direcciones de entrega usadas previamente',
       '   • Lista completa de todos sus pedidos con fechas',
@@ -246,11 +247,11 @@ const tutorialSteps: TutorialStep[] = [
     ],
     details: [
       'Los clientes se registran automáticamente cuando hacen su primer pedido',
-      'No necesitas crear clientes manualmente',
+      'No necesitas crear clientes manualmente. Si necesitas crear clientes de manera masiva, puedes hacerlo importando CSV',
       'La información del cliente se guarda para futuras órdenes',
       'Puedes identificar a tus clientes más frecuentes por el número de pedidos',
       'Usa esta información para crear programas de lealtad o promociones especiales',
-      'Los clientes con mayor gasto total son tus clientes VIP',
+      'Los clientes con mayor gasto total son tus clientes VIP. Podrás asignarlos manualmente',
       'Respeta siempre la privacidad de los datos de tus clientes',
       'Puedes exportar la base de datos de clientes para campañas de marketing',
       'Si un cliente solicita eliminar sus datos, puedes hacerlo desde esta sección'
@@ -288,13 +289,11 @@ const tutorialSteps: TutorialStep[] = [
     details: [
       'IMPORTANTE: Si tu suscripción vence, no podrás recibir nuevos pedidos',
       'Activa la renovación automática para evitar interrupciones en tu servicio',
-      'Recibirás notificaciones cuando tu plan esté próximo a vencer (7 días antes)',
       'Puedes cambiar de plan en cualquier momento',
       'Al cambiar a un plan superior, pagas la diferencia prorrateada',
       'Al cambiar a un plan inferior, el cambio se efectúa al final del período actual',
       'Si tu negocio está creciendo, considera actualizar a un plan con más capacidad',
-      'Todos los planes incluyen soporte técnico',
-      'El historial de pagos te sirve para llevar tu contabilidad'
+      'Todos los planes incluyen soporte técnico'
     ],
     imagePlaceholder: 'Panel de suscripción mostrando plan actual con fecha de vencimiento, switch de renovación automática y tarjetas de planes disponibles'
   }
