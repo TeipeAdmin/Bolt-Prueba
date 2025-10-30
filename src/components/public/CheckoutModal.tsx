@@ -142,7 +142,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
     });
 
     if (!customerInfo.name || customerInfo.name.trim().length < 2) {
-      showToast('warning', 'Nombre inválido', 'Por favor ingresa un nombre válido (mínimo 2 caracteres)', 1000000, { primary: primaryColor, secondary: secondaryTextColor });
+      showToast('warning', 'Nombre inválido', 'Por favor ingresa un nombre válido (mínimo 2 caracteres)', 5000, { primary: primaryColor, secondary: secondaryTextColor });
       return false;
     }
 
