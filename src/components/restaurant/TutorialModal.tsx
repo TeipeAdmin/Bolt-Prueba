@@ -326,7 +326,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ isOpen, onClose })
   const progress = ((currentStep + 1) / tutorialSteps.length) * 100;
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="">
+    <Modal isOpen={isOpen} onClose={handleClose} title="" size="xl">
       <div className="relative">
         <button
           onClick={handleClose}
