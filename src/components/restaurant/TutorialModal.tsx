@@ -79,17 +79,17 @@ const tutorialSteps: TutorialStep[] = [
       '   • Teléfono (formato: +57 3001234567) - importante para recibir pedidos por WhatsApp',
       '   • Dirección completa',
       '   • Ciudad',
-      '3. En la pestaña "Personalización", ajusta los colores de tu menú:',
+      '7. En la pestaña "Personalización", ajusta los colores de tu menú:',
       '   • Color primario (color principal de botones y elementos destacados)',
       '   • Color secundario (color de fondo y elementos secundarios)',
       '   • Color de acento (color para elementos importantes)',
-      '4. En la pestaña "Delivery", configura si ofreces servicio a domicilio:',
+      '11. En la pestaña "Delivery", configura si ofreces servicio a domicilio:',
       '   • Activa el switch "Habilitar Delivery"',
       '   • Configura los niveles de precio según el monto del pedido',
       '   • Ejemplo: $0-$20000 = $5000 domicilio | $20000-$50000 = $3000 | Más de $50000 = Gratis',
-      '5. En la misma sección, configura si aceptas pedidos para consumir en mesa',
-      '6. Establece el tiempo de preparación estimado (ej: "30-45 minutos")',
-      '7. Guarda todos los cambios'
+      '15. En la misma sección, configura si aceptas pedidos para consumir en mesa',
+      '16. Establece el tiempo de preparación estimado (ej: "30-45 minutos")',
+      '17. Guarda todos los cambios'
     ],
     details: [
       'El teléfono es crucial: todos los pedidos se enviarán automáticamente a ese número por WhatsApp',
