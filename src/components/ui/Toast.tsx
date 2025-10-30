@@ -45,7 +45,7 @@ export const Toast: React.FC<ToastProps> = ({
   const getStyles = () => {
     if (customColors?.primary) {
       return {
-      backgroundColor: `${customColors.primary}70`,
+      backgroundColor: `${customColors.primary}80`,
         borderColor: `${customColors.primary}40`,
         color: customColors.secondary || '#FFFFF'
       };
