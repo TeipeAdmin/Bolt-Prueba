@@ -33,7 +33,6 @@ const tutorialSteps: TutorialStep[] = [
     ],
     details: [
       'El nombre debe ser claro y descriptivo para tus clientes',
-      'El color ayuda a identificar visualmente cada categoría en el menú público',
       'Puedes crear categorías como: Entradas, Platos Principales, Bebidas, Postres, Especialidades, etc.',
       'Una vez creada, puedes activar/desactivar la categoría usando el interruptor en la lista',
       'Si desactivas una categoría, todos sus productos dejarán de aparecer temporalmente en el menú público',
