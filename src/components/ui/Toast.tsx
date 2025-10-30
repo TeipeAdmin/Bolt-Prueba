@@ -28,7 +28,7 @@ export const Toast: React.FC<ToastProps> = ({
 
   const getIcon = () => {
     const iconColor = customColors?.secondary;
-    const iconClass = "w-5 h-5";
+    const iconClass = "w-4 h-4 sm:w-5 sm:h-5";
 
     switch (type) {
       case 'success':
@@ -45,7 +45,7 @@ export const Toast: React.FC<ToastProps> = ({
   const getStyles = () => {
     if (customColors?.primary) {
       return {
-        backgroundColor: `${customColors.primary}FF`,
+        backgroundColor: `${customColors.primary}15`,
         borderColor: `${customColors.primary}40`,
         color: customColors.secondary || '#000000'
       };
@@ -68,10 +68,10 @@ export const Toast: React.FC<ToastProps> = ({
 
   return (
     <div
-      className={`fixed top-4 right-4 z-50 max-w-sm w-full border rounded-lg p-4 shadow-lg transform transition-all duration-300 ease-in-out ${hasCustomColors ? '' : styles.className || ''}`}
+      className={`fixed top-4 right-4 left-4 sm:left-auto z-50 max-w-sm sm:w-full w-auto border rounded-lg p-3 sm:p-4 shadow-lg transform transition-all duration-300 ease-in-out ${hasCustomColors ? '' : styles.className || ''}`}
       style={hasCustomColors ? styles : undefined}
     >
-      <div className="flex items-start">
+      <div className="flex items-start gap-2 sm:gap-0">
         <div className="flex-shrink-0">
           {getIcon()}
         </div>
@@ -89,25 +89,25 @@ export const Toast: React.FC<ToastProps> = ({
               `}
             </style>
           )}
-        
-          <div className="ml-3 flex-1">
+
+          <div className="ml-2 sm:ml-3 flex-1 min-w-0">
             <h3
-              className={`text-sm font-medium ${
+              className={`text-xs sm:text-sm font-medium break-words ${
                 hasCustomColors ? 'customSecondaryImportant' : ''
               }`}
             >
               {title}
             </h3>
             <p
-              className={`text-sm mt-1 opacity-90 ${
+              className={`text-xs sm:text-sm mt-1 opacity-90 break-words ${
                 hasCustomColors ? 'customSecondaryImportant' : ''
               }`}
             >
               {message}
             </p>
           </div>
-        
-          <div className="ml-4 flex-shrink-0">
+
+          <div className="ml-2 sm:ml-4 flex-shrink-0">
             <button
               onClick={onClose}
               className={`inline-flex transition ease-in-out duration-150 ${
@@ -115,7 +115,7 @@ export const Toast: React.FC<ToastProps> = ({
               }`}
               style={!hasCustomColors ? { color: '#9ca3af' } : undefined}
             >
-              <X className="w-4 h-4" />
+              <X className="w-3 h-3 sm:w-4 sm:h-4" />
             </button>
           </div>
         </>
