@@ -77,7 +77,7 @@ export const Toast: React.FC<ToastProps> = ({
         </div>
         <div className="ml-3 flex-1">
           <h3 className="text-sm font-medium">{title}</h3>
-          <p className="text-sm mt-1 opacity-90">{message}</p>
+          <p className="text-sm mt-1 opacity-40">{message}</p>
         </div>
         <div className="ml-4 flex-shrink-0">
           <button
