@@ -14,7 +14,7 @@ export const Toast: React.FC<ToastProps> = ({
   type,
   title,
   message,
-  duration = 10000000,
+  duration = 5000,
   customColors,
   onClose,
 }) => {
