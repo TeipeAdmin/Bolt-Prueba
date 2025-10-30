@@ -75,50 +75,50 @@ export const Toast: React.FC<ToastProps> = ({
         <div className="flex-shrink-0">
           {getIcon()}
         </div>
-<>
-  {hasCustomColors && (
-    <style>
-      {`
-        .customSecondaryImportant {
-          color: ${customColors?.secondary} !important;
-        }
-        .customSecondaryImportant svg {
-          color: ${customColors?.secondary} !important;
-          opacity: 0.6;
-        }
-      `}
-    </style>
-  )}
-
-  <div className="ml-3 flex-1">
-    <h3
-      className={`text-sm font-medium ${
-        hasCustomColors ? 'customSecondaryImportant' : ''
-      }`}
-    >
-      {title}
-    </h3>
-    <p
-      className={`text-sm mt-1 opacity-90 ${
-        hasCustomColors ? 'customSecondaryImportant' : ''
-      }`}
-    >
-      {message}
-    </p>
-  </div>
-
-  <div className="ml-4 flex-shrink-0">
-    <button
-      onClick={onClose}
-      className={`inline-flex transition ease-in-out duration-150 ${
-        hasCustomColors ? 'customSecondaryImportant' : ''
-      }`}
-      style={!hasCustomColors ? { color: '#9ca3af' } : undefined}
-    >
-      <X className="w-4 h-4" />
-    </button>
-  </div>
-</>
+        <>
+          {hasCustomColors && (
+            <style>
+              {`
+                .customSecondaryImportant {
+                  color: ${customColors?.secondary} !important;
+                }
+                .customSecondaryImportant svg {
+                  color: ${customColors?.secondary} !important;
+                  opacity: 0.6;
+                }
+              `}
+            </style>
+          )}
+        
+          <div className="ml-3 flex-1">
+            <h3
+              className={`text-sm font-medium ${
+                hasCustomColors ? 'customSecondaryImportant' : ''
+              }`}
+            >
+              {title}
+            </h3>
+            <p
+              className={`text-sm mt-1 opacity-90 ${
+                hasCustomColors ? 'customSecondaryImportant' : ''
+              }`}
+            >
+              {message}
+            </p>
+          </div>
+        
+          <div className="ml-4 flex-shrink-0">
+            <button
+              onClick={onClose}
+              className={`inline-flex transition ease-in-out duration-150 ${
+                hasCustomColors ? 'customSecondaryImportant' : ''
+              }`}
+              style={!hasCustomColors ? { color: '#9ca3af' } : undefined}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </>
       </div>
     </div>
   );
