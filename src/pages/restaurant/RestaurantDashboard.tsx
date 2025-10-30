@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, ShoppingBag, Menu, Eye, TrendingUp } from 'lucide-react';
+import { BarChart3, ShoppingBag, Menu, Eye, TrendingUp, HelpCircle } from 'lucide-react';
 import { Product, Order, Category, Subscription } from '../../types';
 import { loadFromStorage, availablePlans } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Badge } from '../../components/ui/Badge';
 import { formatCurrency } from '../../utils/currencyUtils';
+import { TutorialModal } from '../../components/restaurant/TutorialModal';
 
 export const RestaurantDashboard: React.FC = () => {
   const { restaurant } = useAuth();
@@ -14,6 +15,7 @@ export const RestaurantDashboard: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [currentSubscription, setCurrentSubscription] = useState<Subscription | null>(null);
+  const [showTutorial, setShowTutorial] = useState(false);
 
   useEffect(() => {
     if (restaurant) {
@@ -116,11 +118,22 @@ export const RestaurantDashboard: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900">{t('dashboard')}</h1>
           <p className="text-gray-600 mt-1">{restaurant?.name}</p>
         </div>
-        <div className="flex items-center gap-2 text-sm text-gray-500 bg-gray-50 px-4 py-2 rounded-lg border border-gray-200">
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-          {t('lastUpdate')}: {new Date().toLocaleString()}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-sm text-gray-500 bg-gray-50 px-4 py-2 rounded-lg border border-gray-200">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            {t('lastUpdate')}: {new Date().toLocaleString()}
+          </div>
+          <button
+            onClick={() => setShowTutorial(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+          >
+            <HelpCircle className="w-5 h-5" />
+            Tutorial
+          </button>
         </div>
       </div>
+
+      <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
