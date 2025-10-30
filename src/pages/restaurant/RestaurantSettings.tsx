@@ -385,18 +385,7 @@ Fecha: ${new Date().toLocaleString()}
         <div className="p-6">
           {activeTab === 'general' && (
             <div className="space-y-6">
-              {/* Header Card with Stats */}
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-3xl font-bold mb-2">Configuración General</h2>
-                    <p className="text-blue-100">Administra la información principal de tu restaurante</p>
-                  </div>
-                  <div className="hidden md:block">
-                    <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                      <Store className="w-10 h-10" />
-                    </div>
-                  </div>
-              </div>
+
 
               {/* Logo Section - Modern Card */}
               <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
