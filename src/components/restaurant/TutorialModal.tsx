@@ -74,7 +74,8 @@ const tutorialSteps: TutorialStep[] = [
     description: 'Personaliza la apariencia y configuración de tu menú público',
     steps: [
       '1. Haz clic en "Configuración" en el menú lateral',
-      '2. En la pestaña "General", completa toda la información de tu restaurante:',
+      '2. En la pestaña "General", completa toda la información de tu restaurante:
+      • Nombre del restaurante',
       '   • Nombre del restaurante',
       '   • Teléfono (formato: +57 3001234567) - importante para recibir pedidos por WhatsApp',
       '   • Dirección completa',
