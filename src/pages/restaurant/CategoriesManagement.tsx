@@ -280,7 +280,7 @@ export const CategoriesManagement: React.FC = () => {
               <FolderOpen className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Total Categorías</p>
+              <p className="text-sm text-gray-600">{t('totalCategories')}</p>
               <p className="text-2xl font-bold text-gray-900">{categories.length}</p>
             </div>
           </div>
@@ -292,7 +292,7 @@ export const CategoriesManagement: React.FC = () => {
               <Eye className="w-5 h-5 text-green-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Activas</p>
+              <p className="text-sm text-gray-600">{t('activeCategories')}</p>
               <p className="text-2xl font-bold text-gray-900">{categories.filter(c => c.active).length}</p>
             </div>
           </div>
@@ -304,7 +304,7 @@ export const CategoriesManagement: React.FC = () => {
               <EyeOff className="w-5 h-5 text-gray-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Inactivas</p>
+              <p className="text-sm text-gray-600">{t('inactiveCategories')}</p>
               <p className="text-2xl font-bold text-gray-900">{categories.filter(c => !c.active).length}</p>
             </div>
           </div>
@@ -327,7 +327,7 @@ export const CategoriesManagement: React.FC = () => {
           <div className="mt-3 flex items-center gap-2 text-sm text-gray-600 bg-blue-50 rounded-lg p-3 border border-blue-100">
             <GripVertical className="w-4 h-4 text-blue-600 flex-shrink-0" />
             <p>
-              <strong className="text-blue-700">Tip:</strong> Arrastra y suelta las categorías para reordenarlas
+              <strong className="text-blue-700">Tip: </strong>{t('categoriesTip')}
             </p>
           </div>
         )}
@@ -409,7 +409,7 @@ export const CategoriesManagement: React.FC = () => {
                   {category.description || 'Sin descripción'}
                 </p>
                 <p className="text-xs text-gray-400 mb-4">
-                  Creada: {new Date(category.created_at).toLocaleDateString()}
+                  {t('categoriesCreated')}: {new Date(category.created_at).toLocaleDateString()}
                 </p>
 
                 {/* Actions */}
@@ -472,7 +472,7 @@ export const CategoriesManagement: React.FC = () => {
               label={`${t('categoryName')}*`}
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="ej: Pizzas, Bebidas, Postres"
+              placeholder={t('categoriesNameDes')}
             />
 
             <div>
@@ -484,7 +484,7 @@ export const CategoriesManagement: React.FC = () => {
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                placeholder="Agrega una descripción para ayudar a tus clientes..."
+                placeholder={t('categoriesDescription')}
               />
             </div>
           </div>
@@ -493,14 +493,14 @@ export const CategoriesManagement: React.FC = () => {
           <div className="bg-gray-50 rounded-lg p-5 space-y-4">
             <h4 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
               <ImageIcon className="w-4 h-4 text-gray-600" />
-              Apariencia de la Categoría
+              {t('categoryAppearance')}
             </h4>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Icon Section */}
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">
-                  Icono (Emoji)
+                  {t('catIconSec')}
                 </label>
                 <Input
                   value={formData.icon}
@@ -508,14 +508,14 @@ export const CategoriesManagement: React.FC = () => {
                   placeholder="🍕 🥤 🍰"
                 />
                 <p className="text-xs text-gray-500">
-                  Usa un emoji para identificar rápidamente
+                  {t('catIconDes')}
                 </p>
               </div>
 
               {/* Image Section */}
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">
-                  Imagen de Portada
+                  {t('catImg')}
                 </label>
                 {formData.image ? (
                   <div className="relative">
@@ -527,7 +527,7 @@ export const CategoriesManagement: React.FC = () => {
                     <button
                       onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
                       className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-lg hover:bg-red-600 transition-colors shadow-md"
-                      title="Eliminar imagen"
+                      title={t('catDeleteImg')}
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
@@ -555,12 +555,12 @@ export const CategoriesManagement: React.FC = () => {
                     />
                     <div className="flex flex-col items-center justify-center h-full text-gray-500">
                       <ImageIcon className="w-6 h-6 mb-1" />
-                      <span className="text-xs">Subir imagen</span>
+                      <span className="text-xs">{t('catUpImg')}</span>
                     </div>
                   </label>
                 )}
                 <p className="text-xs text-gray-500">
-                  Recomendado: 600x600px (máx. 5MB)
+                  {t('catImgRec')}
                 </p>
               </div>
             </div>
@@ -570,7 +570,7 @@ export const CategoriesManagement: React.FC = () => {
           {/* Action Buttons */}
           <div className="flex items-center justify-between gap-3 pt-4 border-t border-gray-200">
             <p className="text-xs text-gray-500">
-              * Campos requeridos
+              {t('catObligatry')}
             </p>
             <div className="flex gap-2">
               <Button
