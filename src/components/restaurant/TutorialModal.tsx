@@ -360,6 +360,11 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ isOpen, onClose })
           <p className="text-gray-700 mb-6 text-lg font-medium">{step.description}</p>
 
           <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-8 mb-6 border-2 border-blue-200 min-h-[180px] flex items-center justify-center">
+                            <img
+                  src="/PLATYO FAVICON BLANCO.svg"
+                  alt="Platyo"
+                  className="w-10 h-10 flex-shrink-0"
+                />
             <div className="text-center">
               <div className="w-20 h-20 bg-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
                 <Icon className="w-10 h-10 text-white" />
