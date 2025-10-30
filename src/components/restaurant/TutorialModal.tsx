@@ -364,7 +364,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ isOpen, onClose })
               <div className="w-20 h-20 bg-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
                 <Icon className="w-10 h-10 text-white" />
               </div>
-              <p className="text-gray-700 font-medium max-w-md leading-relaxed">{step.imagePlaceholder}</p>
+              <p className="text-gray-700 font-medium max-w-md leading-relaxed"></p>
             </div>
           </div>
 
