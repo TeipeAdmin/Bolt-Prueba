@@ -718,99 +718,145 @@ Fecha: ${new Date().toLocaleString()}
 
           {activeTab === 'hours' && (
             <div className="space-y-6">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <Clock className="w-6 h-6 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">{t('businessHours')}</h3>
-                  <p className="text-sm text-gray-600">Configura los horarios de atención de tu restaurante</p>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-br from-blue-50 to-white rounded-xl p-6 border border-blue-100 shadow-sm">
-                <h4 className="text-md font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-blue-600" />
-                  Tiempo de Preparación
-                </h4>
-                <div className="space-y-3">
-                  <Input
-                    label="Tiempo estimado de preparación"
-                    value={formData.settings.preparation_time || '30-45 minutos'}
-                    onChange={(e) => updateFormData('settings.preparation_time', e.target.value)}
-                    placeholder="Ej: 30-45 minutos"
-                  />
-                  <p className="text-xs text-gray-500">
-                    Este es el tiempo que se mostrará a los clientes como estimación de preparación de sus pedidos
-                  </p>
+              {/* Header Card */}
+              <div className="bg-gradient-to-r from-orange-600 to-red-600 rounded-2xl p-8 text-white shadow-xl">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-3xl font-bold mb-2">Horarios de Atención</h2>
+                    <p className="text-orange-100">Configura los horarios y tiempo de preparación</p>
+                  </div>
+                  <div className="hidden md:block">
+                    <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                      <Clock className="w-10 h-10" />
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-blue-50 to-white rounded-xl p-6 border border-blue-100 shadow-sm">
-                <h4 className="text-md font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-blue-600" />
-                  Horarios de Atención
-                </h4>
-                <div className="space-y-3">
+              {/* Preparation Time Section */}
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center shadow-md">
+                      <Clock className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900">Tiempo de Preparación</h3>
+                      <p className="text-sm text-gray-600">Estimación que verán tus clientes</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-6">
+                  <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-5 border-2 border-orange-100">
+                    <label className="block text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                      <Clock className="w-4 h-4" />
+                      Tiempo estimado de preparación
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.settings.preparation_time || '30-45 minutos'}
+                      onChange={(e) => updateFormData('settings.preparation_time', e.target.value)}
+                      className="w-full px-4 py-3 bg-white border-2 border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all font-medium"
+                      placeholder="Ej: 30-45 minutos"
+                    />
+                    <p className="text-xs text-gray-600 mt-3 flex items-center gap-2">
+                      <svg className="w-4 h-4 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                      Este tiempo aparecerá en tu menú público para que los clientes sepan cuánto esperar
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Business Hours Section */}
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
+                      <Calendar className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900">Horarios Semanales</h3>
+                      <p className="text-sm text-gray-600">Define cuándo está abierto tu restaurante</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-6 space-y-3">
                   {Object.entries(formData.settings.business_hours).map(([day, hours]) => (
-                    <div key={day} className="bg-white rounded-lg p-4 border border-blue-200 hover:border-blue-300 transition-all">
+                    <div key={day} className="bg-gradient-to-r from-gray-50 to-white rounded-xl p-5 border-2 border-gray-200 hover:border-blue-300 transition-all shadow-sm">
                       <div className="flex flex-col md:flex-row md:items-center gap-4">
-                        <div className="flex items-center gap-3 md:w-40">
+                        <div className="flex items-center gap-3 md:w-48">
                           <input
                             type="checkbox"
                             checked={hours.is_open}
                             onChange={(e) => updateFormData(`settings.business_hours.${day}.is_open`, e.target.checked)}
-                            className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
                             id={`${day}-checkbox`}
                           />
-                          <label htmlFor={`${day}-checkbox`} className="text-sm font-semibold text-gray-900 capitalize cursor-pointer">
+                          <label htmlFor={`${day}-checkbox`} className="text-base font-bold text-gray-900 capitalize cursor-pointer">
                             {t(day)}
                           </label>
                         </div>
 
                         {hours.is_open ? (
-                          <div className="flex items-center gap-3 flex-1">
-                            <div className="flex-1">
-                              <label className="block text-xs font-medium text-gray-600 mb-1">Apertura</label>
+                          <div className="flex items-center gap-4 flex-1">
+                            <div className="flex-1 bg-white rounded-lg p-3 border border-gray-200">
+                              <label className="block text-xs font-semibold text-gray-600 mb-2">🌅 Apertura</label>
                               <input
                                 type="time"
                                 value={hours.open}
                                 onChange={(e) => updateFormData(`settings.business_hours.${day}.open`, e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                className="w-full px-3 py-2 bg-gray-50 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-medium"
                               />
                             </div>
-                            <div className="text-gray-400 mt-5">—</div>
-                            <div className="flex-1">
-                              <label className="block text-xs font-medium text-gray-600 mb-1">Cierre</label>
+                            <div className="text-gray-400 text-2xl font-bold">→</div>
+                            <div className="flex-1 bg-white rounded-lg p-3 border border-gray-200">
+                              <label className="block text-xs font-semibold text-gray-600 mb-2">🌙 Cierre</label>
                               <input
                                 type="time"
                                 value={hours.close}
                                 onChange={(e) => updateFormData(`settings.business_hours.${day}.close`, e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                className="w-full px-3 py-2 bg-gray-50 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-medium"
                               />
                             </div>
                           </div>
                         ) : (
-                          <div className="flex-1">
-                            <Badge variant="gray">Cerrado</Badge>
+                          <div className="flex-1 flex items-center">
+                            <Badge variant="gray" className="text-sm">🔒 Cerrado</Badge>
                           </div>
                         )}
                       </div>
                     </div>
                   ))}
                 </div>
-              </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-start gap-2">
-                  <Clock className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-blue-800 font-medium">Información importante:</p>
-                    <ul className="text-xs text-blue-700 mt-2 space-y-1 list-disc list-inside">
-                      <li>Los horarios se muestran en tu menú público</li>
-                      <li>Los clientes verán si estás abierto o cerrado</li>
-                      <li>Puedes configurar diferentes horarios para cada día</li>
-                    </ul>
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-t-2 border-blue-100 p-5">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900 mb-2">Información importante</p>
+                      <ul className="text-xs text-gray-700 space-y-1.5">
+                        <li className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                          Los horarios se muestran automáticamente en tu menú público
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                          Los clientes verán si estás abierto o cerrado en tiempo real
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                          Puedes configurar horarios diferentes para cada día de la semana
+                        </li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
               </div>
