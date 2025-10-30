@@ -55,7 +55,7 @@ const tutorialSteps: TutorialStep[] = [
       '7. En la sección "Variaciones", agrega al menos una opción: Nombre (ej: "Personal"), Precio (ej: $15000)',
       '8. Puedes agregar más variaciones con "+ Agregar Variación" (ej: "Mediana", "Familiar")',
       '9. Si aplica, agrega ingredientes opcionales con "+ Agregar Ingrediente" especificando nombre y precio adicional',
-      '11. Haz clic en "Guardar Producto"'
+      '10. Haz clic en "Guardar Producto"'
     ],
     details: [
       'Las variaciones son obligatorias: cada producto debe tener al menos una variación (tamaño, sabor, presentación)',
