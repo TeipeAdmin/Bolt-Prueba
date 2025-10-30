@@ -678,7 +678,10 @@ Fecha: ${new Date().toLocaleString()}
                       Comparte este enlace con tus clientes para que puedan ver tu menú y realizar pedidos
                     </p>
 
-                    <div className="bg-white rounded-lg p-4 border border-green-200 w-[80%] mx-auto">
+<div className="bg-white rounded-lg p-4 border border-green-200 w-full max-w-full overflow-hidden">
+  {/* Contenido */}
+</div>
+
                       <div className="flex items-center justify-between gap-4">
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-gray-500 mb-1">Tu URL personalizada:</p>
