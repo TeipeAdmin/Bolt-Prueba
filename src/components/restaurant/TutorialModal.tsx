@@ -326,14 +326,19 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ isOpen, onClose })
   const progress = ((currentStep + 1) / tutorialSteps.length) * 100;
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="">
-      <div className="relative">
-        <button
-          onClick={handleClose}
-          className="absolute -top-2 right-0 text-gray-400 hover:text-gray-600 transition-colors z-10"
-        >
-          <X className="w-6 h-6" />
-        </button>
+<Modal
+  isOpen={isOpen}
+  onClose={handleClose}
+  title=""
+  className="!w-[50rem] !max-w-none"
+>
+  <div className="relative">
+    <button
+      onClick={handleClose}
+      className="absolute -top-2 right-0 text-gray-400 hover:text-gray-600 transition-colors z-10"
+    >
+      <X className="w-6 h-6" />
+    </button>
 
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-4">
