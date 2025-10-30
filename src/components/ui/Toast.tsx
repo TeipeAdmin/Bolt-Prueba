@@ -64,7 +64,7 @@ export const Toast: React.FC<ToastProps> = ({
   };
 
   const styles = getStyles();
-  const hasCustomColors = customColors?.primary;
+  const hasCustomColors = customColors?.secondary;
 
   return (
     <div
