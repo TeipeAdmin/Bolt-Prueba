@@ -51,21 +51,19 @@ const tutorialSteps: TutorialStep[] = [
       '3. Completa los campos requeridos: Nombre del producto (ej: "Pizza Margarita")',
       '4. Escribe una descripción atractiva del producto (ej: "Deliciosa pizza con salsa de tomate, mozzarella fresca y albahaca")',
       '5. Selecciona la categoría a la que pertenece de la lista desplegable',
-      '6. Marca "Producto Destacado" si quieres que aparezca primero en el menú',
-      '7. Sube una imagen del producto haciendo clic en "Seleccionar Imagen" (opcional pero recomendado)',
-      '8. En la sección "Variaciones", agrega al menos una: Nombre (ej: "Personal"), Precio (ej: 15000), Stock disponible',
-      '9. Puedes agregar más variaciones con "+ Agregar Variación" (ej: "Mediana", "Familiar")',
-      '10. Si aplica, agrega ingredientes opcionales con "+ Agregar Ingrediente" especificando nombre y precio adicional',
+      '6. Sube una imagen del producto haciendo clic en "Seleccionar Imagen" (opcional pero recomendado)',
+      '7. En la sección "Variaciones", agrega al menos una opción: Nombre (ej: "Personal"), Precio (ej: $15000)',
+      '8. Puedes agregar más variaciones con "+ Agregar Variación" (ej: "Mediana", "Familiar")',
+      '9. Si aplica, agrega ingredientes opcionales con "+ Agregar Ingrediente" especificando nombre y precio adicional',
       '11. Haz clic en "Guardar Producto"'
     ],
     details: [
       'Las variaciones son obligatorias: cada producto debe tener al menos una variación (tamaño, sabor, presentación)',
       'Ejemplo de variaciones: Pizza → Personal, Mediana, Familiar | Bebida → 300ml, 500ml, 1L',
       'Los ingredientes opcionales son adicionales que el cliente puede agregar (ej: Queso extra, Tocino, Aguacate)',
-      'Las imágenes aumentan significativamente las ventas - usa fotos de buena calidad',
+      'Las imágenes aumentan significativamente las ventas',
       'El orden de los productos en la lista se puede cambiar arrastrándolos',
-      'Puedes activar/desactivar productos temporalmente sin eliminarlos usando el switch de estado',
-      'Los productos destacados aparecen con una estrella y se muestran primero a los clientes'
+      'Puedes activar/desactivar productos temporalmente sin eliminarlos usando el switch de estado'
     ],
     imagePlaceholder: 'Formulario de creación de producto con campos: nombre, descripción, categoría, imagen, variaciones (nombre/precio) e ingredientes opcionales'
   },
