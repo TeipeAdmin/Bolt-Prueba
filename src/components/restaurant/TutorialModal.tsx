@@ -27,7 +27,7 @@ const tutorialSteps: TutorialStep[] = [
       '1. Haz clic en "Categorías" en el menú lateral izquierdo',
       '2. Presiona el botón "+ Nueva Categoría" (esquina superior derecha)',
       '3. En el formulario que aparece, ingresa el nombre de la categoría (ej: "Entradas", "Platos Fuertes", "Bebidas")',
-      '4. Selecciona un color distintivo para la categoría usando el selector de color',
+      '4. Ingrese una descripción para la categoría creada',
       '5. Haz clic en "Guardar" para crear la categoría',
       '6. Repite estos pasos para crear todas las categorías que necesites'
     ],
