@@ -34,11 +34,11 @@ const tutorialSteps: TutorialStep[] = [
     details: [
       'El nombre debe ser claro y descriptivo para tus clientes',
       'Puedes crear categorías como: Entradas, Platos Principales, Bebidas, Postres, Especialidades, etc.',
-      'Una vez creada, puedes activar/desactivar la categoría usando el interruptor en la lista',
-      'Si desactivas una categoría, todos sus productos dejarán de aparecer temporalmente en el menú público',
+      'Una vez creada, puedes activar/desactivar la categoría usando el icono de visualización',
+      'Si desactivas una categoría, esta no se mostrará en el menú público',
       'Para editar o eliminar una categoría, usa los iconos de lápiz (editar) o papelera (eliminar) en cada fila'
     ],
-    imagePlaceholder: 'Pantalla de Categorías con lista de categorías creadas, cada una con su color y botón "Nueva Categoría" en la esquina superior derecha'
+    imagePlaceholder: 'Pantalla de Categorías con lista de categorías creadas, cada una con su imagen y botón "Nueva Categoría" en la esquina superior derecha'
   },
   {
     id: 'products',
