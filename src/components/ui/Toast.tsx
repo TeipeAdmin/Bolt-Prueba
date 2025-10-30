@@ -27,7 +27,7 @@ export const Toast: React.FC<ToastProps> = ({
   }, [duration, onClose]);
 
   const getIcon = () => {
-    const iconColor = customColors?.primary;
+    const iconColor = customColors?.secondary;
     const iconClass = "w-5 h-5";
 
     switch (type) {
@@ -45,9 +45,9 @@ export const Toast: React.FC<ToastProps> = ({
   const getStyles = () => {
     if (customColors?.primary) {
       return {
-      backgroundColor: `${customColors.primary}80`,
+        backgroundColor: `${customColors.primary}15`,
         borderColor: `${customColors.primary}40`,
-        color: customColors.secondary || '#FFFFF'
+        color: customColors.secondary || '#000000'
       };
     }
 
@@ -76,13 +76,14 @@ export const Toast: React.FC<ToastProps> = ({
           {getIcon()}
         </div>
         <div className="ml-3 flex-1">
-          <h3 className="text-sm font-medium">{title}</h3>
-          <p className="text-sm mt-1 opacity-40">{message}</p>
+          <h3 className="text-sm font-medium" style={hasCustomColors ? { color: customColors?.secondary } : undefined}>{title}</h3>
+          <p className="text-sm mt-1 opacity-90" style={hasCustomColors ? { color: customColors?.secondary } : undefined}>{message}</p>
         </div>
         <div className="ml-4 flex-shrink-0">
           <button
             onClick={onClose}
-            className="inline-flex text-gray-400 hover:text-gray-600 focus:outline-none focus:text-gray-600 transition ease-in-out duration-150"
+            className="inline-flex transition ease-in-out duration-150"
+            style={hasCustomColors ? { color: customColors?.secondary, opacity: 0.6 } : { color: '#9ca3af' }}
           >
             <X className="w-4 h-4" />
           </button>
