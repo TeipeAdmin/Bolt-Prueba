@@ -77,7 +77,18 @@ export const Toast: React.FC<ToastProps> = ({
         </div>
         <div className="ml-3 flex-1">
           <h3 className="text-sm font-medium" style={hasCustomColors ? { color: customColors?.secondary } : undefined}>{title}</h3>
-          <p className="text-sm mt-1 opacity-90" style={hasCustomColors ? { color: customColors?.secondary } : undefined}>{message}</p>
+<>
+  {hasCustomColors && (
+    <style>
+      {`.customColorImportant { color: ${customColors?.secondary} !important; }`}
+    </style>
+  )}
+  <p
+    className={`text-sm mt-1 opacity-90 ${hasCustomColors ? 'customColorImportant' : ''}`}
+  >
+    {message}
+  </p>
+</>
         </div>
         <div className="ml-4 flex-shrink-0">
           <button
