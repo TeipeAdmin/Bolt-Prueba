@@ -330,7 +330,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ isOpen, onClose })
   isOpen={isOpen}
   onClose={handleClose}
   title=""
-  className="!max-w-[100rem]"
+  className="!w-[50rem]""
 >
   <div className="relative">
         <button
