@@ -1050,7 +1050,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                     <Phone className="w-5 h-5" style={{ color: secondaryTextColor }} />
                   </div>
                   <div>
-                    <p className="font-semibold" style={{ color: secondaryTextColor }}>Contacto</p>
+                    <p className="font-semibold" style={{ color: `${secondaryTextColor} !important` }}>Contacto</p>
                     <p className="text-sm" style={{ color: secondaryTextColor }}>
                       Te contactaremos al {customerInfo.phone}
                     </p>
