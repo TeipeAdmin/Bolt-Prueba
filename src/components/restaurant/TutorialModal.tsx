@@ -125,7 +125,8 @@ const tutorialSteps: TutorialStep[] = [
       '   • Por estado (Pendientes, En preparación, etc.)',
       '   • Por tipo (Delivery, Pickup, Mesa)',
       '   • Por rango de fechas',
-      '9. Usa la barra de búsqueda para encontrar un pedido específico por número o nombre de cliente'
+      '9. Usa la barra de búsqueda para encontrar un pedido específico por número o nombre de cliente',
+      '10. Puedes utilizar el icono de mensaje para mantener al tanto a tus clientes sobre el estado del pedido a través de WhatsApp'
     ],
     details: [
       'El mensaje de WhatsApp incluye: número de pedido, datos del cliente, productos, precios y notas especiales',
