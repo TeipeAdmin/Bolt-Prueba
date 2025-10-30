@@ -146,7 +146,7 @@ const tutorialSteps: TutorialStep[] = [
     description: 'Comparte el enlace de tu menú con tus clientes',
     steps: [
       '1. Tu menú público tiene una URL única que puedes compartir',
-      '2. La URL tiene el formato: tuapp.com/menu/nombre-de-tu-restaurante',
+      '2. La URL tiene el formato: platyo.com/nombre-de-tu-restaurante',
       '3. Para compartir tu menú:',
       '   • Copia la URL de tu navegador cuando estés en la vista de menú público',
       '   • Compártela en redes sociales (Facebook, Instagram, WhatsApp)',
