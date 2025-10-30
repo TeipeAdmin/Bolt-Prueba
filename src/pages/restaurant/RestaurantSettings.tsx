@@ -679,8 +679,7 @@ Fecha: ${new Date().toLocaleString()}
                     </p>
 
 <div className="bg-white rounded-lg p-4 border border-green-200 w-full max-w-full overflow-hidden">
-  {/* Contenido */}
-</div>
+
 
                       <div className="flex items-center justify-between gap-4">
                         <div className="flex-1 min-w-0">
