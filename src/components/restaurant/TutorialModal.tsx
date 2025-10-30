@@ -373,7 +373,9 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ isOpen, onClose })
               <ol className="space-y-3">
                 {step.steps.map((stepText, index) => (
                   <li key={index} className="flex items-start gap-3 text-gray-800">
-
+                    <span className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                      {stepText.match(/^\d+/)?.[2] || index + 1}
+                    </span>
                     <span className="flex-1 leading-relaxed">{stepText.replace(/^\d+\.\s*/, '')}</span>
                   </li>
                 ))}
