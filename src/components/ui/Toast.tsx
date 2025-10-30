@@ -47,7 +47,7 @@ export const Toast: React.FC<ToastProps> = ({
       return {
       backgroundColor: customColors.primary, 
         borderColor: `${customColors.primary}40`,
-        color: customColors.secondary
+        color: customColors.secondary || '#FFFFF'
       };
     }
 
