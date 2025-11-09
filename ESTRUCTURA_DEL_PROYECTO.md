@@ -1,23 +1,25 @@
-# Documentación Técnica - Sistema de Gestión de Restaurantes
+# Documentación Técnica - Sistema de Gestión de Restaurantes (PLATYO)
 
 ## Índice
 1. [¿Qué es esta Aplicación?](#qué-es-esta-aplicación)
 2. [Descripción General](#descripción-general)
 3. [Arquitectura de la Aplicación](#arquitectura-de-la-aplicación)
 4. [Estructura de Carpetas](#estructura-de-carpetas)
-5. [Sistema de Datos](#sistema-de-datos)
+5. [Sistema de Base de Datos](#sistema-de-base-de-datos)
 6. [Contextos y Estado Global](#contextos-y-estado-global)
 7. [Rutas y Navegación](#rutas-y-navegación)
 8. [Componentes Principales](#componentes-principales)
 9. [Tipos de Datos](#tipos-de-datos)
-10. [Guía de Edición](#guía-de-edición)
-11. [Flujos de Usuario](#flujos-de-usuario)
+10. [Sistema de Facturación POS](#sistema-de-facturación-pos)
+11. [Sistema de Notificaciones](#sistema-de-notificaciones)
+12. [Guía de Edición](#guía-de-edición)
+13. [Flujos de Usuario](#flujos-de-usuario)
 
 ---
 
 ## ¿Qué es esta Aplicación?
 
-**Sistema de Gestión de Restaurantes** es una plataforma SaaS (Software as a Service) que permite a restaurantes crear y gestionar menús digitales accesibles mediante enlaces únicos. Es una solución completa que elimina la necesidad de menús físicos, permitiendo a los clientes ver el catálogo, agregar productos al carrito y realizar pedidos directamente desde su dispositivo móvil.
+**PLATYO** es una plataforma SaaS (Software as a Service) completa para la gestión de restaurantes que permite crear menús digitales, procesar pedidos, generar facturas POS, gestionar clientes y analizar el rendimiento del negocio. Es una solución todo-en-uno que elimina la necesidad de múltiples sistemas, integrando menús digitales, punto de venta, gestión de pedidos y análisis de datos en una sola plataforma.
 
 ### ¿Qué Incluye?
 
@@ -25,232 +27,329 @@
 
 **Gestión de Menú Digital**
 - Crear y organizar productos en categorías personalizadas
-- Agregar múltiples imágenes por producto
+- Agregar múltiples imágenes por producto (hasta 5 imágenes)
 - Definir variaciones de productos (tamaños, opciones, precios diferentes)
 - Configurar ingredientes opcionales con cargos adicionales
 - Marcar restricciones dietéticas y nivel de picante
 - Activar/desactivar productos según disponibilidad
 - Destacar productos especiales en el menú
+- Reordenar productos con drag & drop o controles
+- Búsqueda y filtrado avanzado de productos
 
 **Gestión de Categorías**
 - Crear categorías ilimitadas para organizar el menú
 - Ordenar categorías con drag & drop o controles de orden
 - Activar/desactivar categorías completas
-- Agregar descripciones a cada categoría
+- Agregar descripciones detalladas a cada categoría
+- Contador de productos por categoría
+- Iconos personalizados para cada categoría
 
-**Gestión de Pedidos**
+**Sistema de Pedidos en Tiempo Real**
 - Recibir y visualizar pedidos en tiempo real
-- Cambiar estados de pedidos (pendiente, confirmado, preparando, listo, entregado)
-- Ver detalles completos de cada pedido (productos, variaciones, notas)
-- Filtrar pedidos por estado, fecha y tipo
+- Panel de control con vista tipo kanban
+- Estados de pedidos: pendiente, confirmado, preparando, listo, entregado, cancelado
+- Ver detalles completos de cada pedido (productos, variaciones, ingredientes, notas)
+- Filtrar pedidos por estado, fecha, tipo y búsqueda
 - Información completa del cliente (nombre, teléfono, dirección)
 - Integración con WhatsApp para comunicación directa
+- Cálculo automático de tiempos de entrega
+- Historial completo de pedidos
+- Generación automática de números de orden
+
+**Sistema de Facturación POS**
+- Generación de facturas tipo recibo POS
+- Impresión optimizada para impresoras térmicas de 80mm
+- Diseño responsive que se adapta a cualquier tamaño de papel
+- Información detallada del restaurante con logo
+- Desglose completo de productos con variaciones
+- Información del cliente y tipo de pedido
+- Subtotales, costos de delivery y totales claramente marcados
+- Número de orden y fecha/hora de emisión
+- Notas especiales del pedido
+- Pie de página personalizable con mensaje de agradecimiento
+- Vista previa antes de imprimir
+- Impresión directa desde el navegador
 
 **Gestión de Clientes**
 - Base de datos de clientes automática
 - Historial completo de pedidos por cliente
-- Información de contacto y direcciones
+- Información de contacto y direcciones guardadas
 - Estadísticas de frecuencia de pedidos
-- Búsqueda y filtrado de clientes
+- Total gastado por cliente
+- Búsqueda y filtrado avanzado de clientes
+- Fecha de último pedido
+- Productos favoritos por cliente
 
-**Panel de Analíticas** (Planes de Pago)
+**Panel de Analíticas Avanzadas** (Planes de Pago)
+- Dashboard visual con gráficos interactivos
 - Estadísticas de ventas en tiempo real
-- Productos más vendidos
-- Ingresos totales y tendencias
-- Análisis por categoría
-- Gráficos interactivos de rendimiento
-- Comparativas por períodos
+- Productos más vendidos con ranking
+- Ingresos totales y tendencias por período
+- Análisis detallado por categoría
+- Comparativas entre períodos
+- Métricas clave: ticket promedio, pedidos por hora, tasa de conversión
+- Gráficos de barras, líneas y donas
+- Exportación de datos
+- Filtros por fecha personalizable
 
-**Configuración del Restaurante**
+**Configuración Avanzada del Restaurante**
 - Personalizar información básica (nombre, descripción, contacto)
-- Subir logo del restaurante
-- Configurar URL única del menú (slug)
-- Elegir tema de colores (claro/oscuro)
-- Seleccionar idioma (español/inglés)
-- Configurar horarios de atención
+- Subir y gestionar logo del restaurante
+- Configurar URL única del menú (slug personalizado)
+- Sistema de temas completo:
+  - 8 colores predefinidos profesionales
+  - Color primario personalizable con selector visual
+  - Color secundario personalizable
+  - Colores de texto personalizables
+  - Vista previa en tiempo real de los cambios
+  - Reset a valores por defecto
+- Seleccionar idioma (español/inglés) con traducciones completas
+- Configurar horarios de atención por día
 - Definir métodos de pedido (recogida, delivery, mesa)
-- Establecer costos de delivery por zona
+- Establecer costos de delivery por zona/ciudad
+- Configurar ciudades de Colombia para delivery
+- Mensajes personalizados para el menú público
+- Configuración de moneda (COP, USD, EUR, etc.)
 
 **Gestión de Suscripciones**
 - Ver plan actual y features disponibles
 - Comparar planes disponibles (Free, Basic, Pro, Business)
-- Upgrade/downgrade de planes
-- Historial de suscripciones
+- Upgrade/downgrade de planes con validación
+- Renovación automática opcional
+- Historial completo de suscripciones
 - Límites claros por plan (productos, categorías, analytics)
+- Notificaciones de vencimiento
+- Sistema de pagos simulado (preparado para integración real)
+
+**Sistema de Tutoriales Integrado**
+- Tutorial interactivo paso a paso para nuevos usuarios
+- Guías contextuales en cada sección
+- Videos y capturas de pantalla
+- Progress tracking del tutorial
+- Skip y volver a ver opciones
 
 #### Para Clientes (Menú Público):
 
-**Experiencia de Compra**
-- Acceso al menú mediante URL única (dominio.com/nombre-restaurante)
-- Navegación intuitiva por categorías
-- Búsqueda de productos por nombre
-- Ver imágenes y descripciones detalladas de productos
+**Experiencia de Compra Optimizada**
+- Acceso al menú mediante URL única personalizable
+- Diseño moderno y atractivo adaptado al tema del restaurante
+- Navegación intuitiva por categorías con smooth scroll
+- Búsqueda en tiempo real de productos
+- Vista de cuadrícula con imágenes atractivas
+- Badges visuales (featured, picante, dietético)
+- Ver imágenes en galería full-screen
 - Información nutricional y de ingredientes
-- Agregar productos al carrito con variaciones
-- Seleccionar ingredientes opcionales
+- Precios claramente visibles
+- Tiempo de preparación estimado
+
+**Carrito de Compras Inteligente**
+- Sidebar flotante con vista del carrito
+- Agregar productos con variaciones y cantidades
+- Seleccionar ingredientes opcionales con cargos
 - Agregar notas especiales a cada producto
-- Ver carrito en tiempo real
-- Calcular total automáticamente
+- Ver subtotal en tiempo real
+- Editar cantidades directamente en el carrito
+- Eliminar productos con un clic
+- Cálculo automático de totales
+- Persistencia del carrito entre sesiones
 
-**Proceso de Checkout**
-- Formulario simple de datos del cliente
+**Proceso de Checkout Simplificado**
+- Modal de checkout elegante y moderno
+- Formulario optimizado para móviles
 - Seleccionar tipo de pedido (recogida, delivery, mesa)
-- Agregar dirección de entrega para delivery
-- Calcular costo de delivery automáticamente
-- Agregar instrucciones especiales
-- Enviar pedido directamente por WhatsApp al restaurante
-- Confirmación inmediata del pedido
+- Autocompletado de direcciones
+- Selector de ciudad con ciudades colombianas
+- Cálculo automático de costo de delivery
+- Campo de instrucciones especiales
+- Validación de datos en tiempo real
+- Envío directo por WhatsApp al restaurante
+- Confirmación visual del pedido enviado
+- Redirección automática a WhatsApp
 
-**Experiencia Responsive**
-- Diseño optimizado para móviles
-- Interfaz táctil y fácil de usar
-- Carga rápida de imágenes
-- Navegación fluida entre categorías
+**Experiencia Responsive Premium**
+- Diseño mobile-first optimizado
+- Interfaz táctil intuitiva
+- Lazy loading de imágenes
+- Animaciones suaves y microinteracciones
+- Navegación gestual en móviles
+- Toast notifications personalizadas con colores del tema
+- Feedback visual en todas las acciones
+- Skeleton loaders durante carga
+- Optimización de rendimiento
 
 #### Para Super Administradores:
 
-**Gestión de Restaurantes**
-- Ver todos los restaurantes registrados
+**Gestión Completa de Restaurantes**
+- Vista de todos los restaurantes registrados
 - Activar/desactivar restaurantes
-- Editar información de cualquier restaurante
-- Ver estadísticas generales por restaurante
-- Eliminar restaurantes si es necesario
+- Editar información completa de cualquier restaurante
+- Ver estadísticas detalladas por restaurante
+- Panel de métricas globales
+- Eliminar restaurantes con confirmación
+- Búsqueda y filtrado avanzado
 
-**Gestión de Usuarios**
+**Gestión de Usuarios del Sistema**
 - Lista completa de usuarios registrados
 - Ver rol y restaurante asociado
 - Editar información de usuarios
+- Cambiar roles y permisos
 - Desactivar/activar cuentas
 - Resetear contraseñas
+- Historial de actividad
 
-**Gestión de Suscripciones**
-- Ver todas las suscripciones activas
+**Gestión Avanzada de Suscripciones**
+- Ver todas las suscripciones activas/inactivas
 - Cambiar planes manualmente
-- Extender o cancelar suscripciones
-- Ver historial de pagos (simulado)
+- Extender fechas de expiración
+- Cancelar o reactivar suscripciones
+- Configurar renovación automática
+- Ver historial completo de pagos
 - Generar reportes de ingresos
+- Métricas de conversión por plan
 
-**Sistema de Soporte**
-- Recibir tickets de soporte de restaurantes
+**Sistema de Soporte y Tickets**
+- Panel de tickets integrado
 - Clasificar por prioridad (baja, media, alta, urgente)
-- Filtrar por estado, categoría y fechas
-- Responder a tickets
+- Categorías de tickets (técnico, billing, feature request, general)
+- Filtrar por estado, categoría, prioridad y fechas
+- Responder a tickets con historial
 - Agregar notas internas
-- Cambiar estados (pendiente, en progreso, resuelto, cerrado)
+- Estados: pendiente, en progreso, resuelto, cerrado
 - Ordenar por fecha (más nuevos/antiguos primero)
+- Asignación de tickets a staff
+- SLA tracking
 
-**Analíticas Globales**
-- Estadísticas del sistema completo
-- Número de restaurantes activos
-- Total de usuarios registrados
-- Ingresos por suscripciones
-- Tendencias de crecimiento
-- Restaurantes más exitosos
-
-### ¿Qué se Puede Hacer?
-
-#### Como Restaurante:
-
-1. **Crear tu presencia digital** - Registrarte, configurar tu perfil y obtener tu URL única
-2. **Digitalizar tu menú** - Subir todos tus productos con fotos, descripciones y precios
-3. **Organizar tu catálogo** - Crear categorías lógicas (Entradas, Platos Fuertes, Postres, Bebidas, etc.)
-4. **Gestionar disponibilidad** - Activar/desactivar productos según inventario
-5. **Recibir pedidos** - Los clientes pueden hacer pedidos directamente desde el menú digital
-6. **Comunicarte con clientes** - Integración con WhatsApp para confirmaciones y consultas
-7. **Hacer seguimiento** - Ver todos los pedidos y su estado en tiempo real
-8. **Analizar tu negocio** - Con planes de pago, accede a analytics detalladas
-9. **Personalizar experiencia** - Elige colores, idiomas y configura tu marca
-10. **Escalar tu negocio** - Upgrade de plan cuando necesites más productos o features
-
-#### Como Cliente:
-
-1. **Explorar el menú** - Ver todos los productos disponibles con fotos
-2. **Buscar productos** - Encontrar rápidamente lo que quieres
-3. **Personalizar pedidos** - Elegir variaciones y agregar notas especiales
-4. **Armar tu orden** - Agregar múltiples productos al carrito
-5. **Hacer checkout** - Completar pedido con tus datos
-6. **Recibir confirmación** - Confirmación inmediata por WhatsApp
-7. **Seguimiento** - Saber el estado de tu pedido
-
-#### Como Super Admin:
-
-1. **Administrar plataforma** - Control total sobre restaurantes y usuarios
-2. **Dar soporte** - Atender tickets y resolver problemas
-3. **Gestionar suscripciones** - Actualizar planes y pagos
-4. **Monitorear sistema** - Ver estadísticas globales y rendimiento
-5. **Asegurar calidad** - Activar/desactivar restaurantes según necesidad
+**Analíticas Globales del Sistema**
+- Dashboard ejecutivo completo
+- Estadísticas del sistema en tiempo real
+- Número de restaurantes activos vs inactivos
+- Total de usuarios por rol
+- Ingresos mensuales y anuales por suscripciones
+- Gráficos de tendencias y crecimiento
+- Restaurantes más exitosos (por pedidos e ingresos)
+- Tasa de retención y churn
+- Métricas de conversión
+- Exportación de reportes
 
 ### Planes de Suscripción
 
-**Free Plan** (Gratis)
+**Free Plan** (Gratis para siempre)
 - Hasta 10 productos
 - Hasta 3 categorías
 - Menú público básico
-- Gestión de pedidos
+- Gestión de pedidos ilimitados
+- Gestión de clientes
 - Soporte por email
 
-**Basic Plan** ($9/mes)
+**Basic Plan** ($9 USD/mes)
 - Hasta 50 productos
 - Hasta 10 categorías
 - Todo de Free +
-- Personalización de temas
+- Personalización completa de temas
+- Múltiples imágenes por producto
 - Soporte prioritario
+- Sin marca de agua
 
-**Pro Plan** ($19/mes)
+**Pro Plan** ($19 USD/mes)
 - Hasta 200 productos
 - Hasta 20 categorías
 - Todo de Basic +
-- Analytics avanzadas
+- Analytics avanzadas con gráficos
+- Reportes exportables
 - Múltiples ubicaciones
-- Soporte 24/7
+- Soporte 24/7 por chat
+- Facturación POS avanzada
 
-**Business Plan** ($39/mes)
+**Business Plan** ($39 USD/mes)
 - Productos ilimitados
 - Categorías ilimitadas
 - Todo de Pro +
-- API access
-- White label
-- Soporte dedicado
-- Personalización completa
+- API access para integraciones
+- White label completo
+- Soporte dedicado con account manager
+- Personalización total de la plataforma
+- Capacitación y onboarding personalizado
+- Backups diarios
 
 ---
 
 ## Descripción General
 
-Esta es una aplicación web multi-tenant construida con React + TypeScript + Vite que permite a restaurantes crear y gestionar menús digitales. La aplicación tiene dos roles principales:
+PLATYO es una aplicación web multi-tenant construida con tecnologías modernas que permite a restaurantes gestionar completamente su operación digital. La aplicación tiene una arquitectura robusta que separa roles y responsabilidades de manera clara.
 
-- **Super Admin**: Administra todos los restaurantes, usuarios y suscripciones del sistema
-- **Restaurant Owner**: Gestiona su propio restaurante, menú, pedidos y configuraciones
+### Roles del Sistema
+
+- **Super Admin**: Control total del sistema, gestión de restaurantes, usuarios, suscripciones y soporte
+- **Restaurant Owner**: Gestión completa de su restaurante, menú, pedidos, clientes y configuraciones
+- **Cliente (Público)**: Acceso al menú digital, carrito de compras y checkout
 
 ### Tecnologías Principales
-- **React 18.3.1** - Framework principal
-- **TypeScript 5.5.3** - Tipado estático
-- **React Router DOM 7.8.2** - Navegación
-- **Tailwind CSS 3.4.1** - Estilos
-- **Lucide React 0.344.0** - Iconos
-- **Vite 5.4.2** - Build tool
-- **LocalStorage** - Persistencia de datos (mock)
+
+**Frontend**
+- React 18.3.1 - Framework principal
+- TypeScript 5.5.3 - Tipado estático robusto
+- React Router DOM 7.8.2 - Navegación SPA
+- Tailwind CSS 3.4.1 - Sistema de diseño utility-first
+- Lucide React 0.344.0 - Biblioteca de iconos moderna
+- date-fns 4.1.0 - Manipulación de fechas
+
+**Backend y Base de Datos**
+- Supabase 2.58.0 - Backend as a Service
+- PostgreSQL - Base de datos relacional
+- Row Level Security (RLS) - Seguridad a nivel de fila
+- Real-time subscriptions - Actualizaciones en tiempo real
+
+**Herramientas de Desarrollo**
+- Vite 5.4.2 - Build tool ultra rápido
+- ESLint 9.9.1 - Linting de código
+- PostCSS 8.4.35 - Procesamiento de CSS
+- Autoprefixer 10.4.18 - Prefijos CSS automáticos
 
 ---
 
 ## Arquitectura de la Aplicación
 
 ### Flujo de Datos
+
 ```
-localStorage (persistencia)
+Supabase PostgreSQL (persistencia)
     ↓
-mockData.ts (capa de datos)
+Supabase Client (src/lib/supabase.ts)
     ↓
 Contexts (AuthContext, CartContext, LanguageContext)
     ↓
-Components/Pages (UI)
+Components/Pages (UI Layer)
+    ↓
+User Interface
 ```
 
-### Patrones de Diseño
-- **Context API**: Para estado global (autenticación, carrito, idioma)
-- **Component Composition**: Componentes reutilizables pequeños
-- **Custom Hooks**: Lógica reutilizable (useToast, useAuth, useLanguage)
-- **Props drilling prevention**: Uso extensivo de Context API
+### Patrones de Diseño Implementados
+
+- **Context API Pattern**: Estado global compartido sin prop drilling
+- **Component Composition Pattern**: Componentes pequeños y reutilizables
+- **Custom Hooks Pattern**: Lógica reutilizable encapsulada (useToast, useAuth)
+- **Container/Presentational Pattern**: Separación de lógica y UI
+- **Higher Order Components**: Componentes de protección de rutas
+- **Observer Pattern**: Subscripciones en tiempo real de Supabase
+- **Repository Pattern**: Capa de abstracción para acceso a datos
+
+### Arquitectura de Seguridad
+
+```
+Frontend (React)
+    ↓
+Supabase Auth (JWT Tokens)
+    ↓
+Row Level Security Policies
+    ↓
+PostgreSQL Database
+```
+
+Cada tabla tiene políticas RLS específicas que garantizan:
+- Los restaurant owners solo ven/modifican sus propios datos
+- Los super admins tienen acceso completo
+- Los datos públicos (menú) son accesibles sin autenticación
+- Las operaciones están auditadas
 
 ---
 
@@ -259,121 +358,336 @@ Components/Pages (UI)
 ```
 project/
 ├── src/
-│   ├── components/          # Componentes reutilizables
-│   │   ├── auth/           # Componentes de autenticación
+│   ├── components/              # Componentes reutilizables
+│   │   ├── auth/               # Autenticación
 │   │   │   ├── LoginForm.tsx
-│   │   │   └── RegisterForm.tsx
-│   │   ├── layout/         # Componentes de layout
-│   │   │   ├── Header.tsx
-│   │   │   └── Sidebar.tsx
-│   │   ├── public/         # Componentes para menú público
-│   │   │   ├── CartSidebar.tsx
-│   │   │   ├── CheckoutModal.tsx
-│   │   │   └── ProductDetail.tsx
-│   │   ├── restaurant/     # Componentes del restaurante
-│   │   │   └── ProductForm.tsx
-│   │   └── ui/             # Componentes UI genéricos
-│   │       ├── Badge.tsx
-│   │       ├── Button.tsx
-│   │       ├── Input.tsx
-│   │       ├── Modal.tsx
-│   │       └── Toast.tsx
+│   │   │   ├── RegisterForm.tsx
+│   │   │   ├── ForgotPasswordModal.tsx
+│   │   │   ├── ChangePasswordModal.tsx
+│   │   │   └── TermsAndConditions.tsx
+│   │   ├── layout/             # Layout principal
+│   │   │   ├── Header.tsx      # Header con perfil y logout
+│   │   │   └── Sidebar.tsx     # Navegación lateral
+│   │   ├── public/             # Menú público
+│   │   │   ├── CartSidebar.tsx         # Carrito flotante
+│   │   │   ├── CheckoutModal.tsx       # Modal de checkout
+│   │   │   ├── ProductDetail.tsx       # Detalle de producto
+│   │   │   ├── Pathformbottom.tsx      # Decoración SVG
+│   │   │   ├── Pathformleft.tsx        # Decoración SVG
+│   │   │   └── Pathformtop.tsx         # Decoración SVG
+│   │   ├── restaurant/         # Componentes del restaurante
+│   │   │   ├── ProductForm.tsx         # Formulario de productos
+│   │   │   ├── OrderProductSelector.tsx # Selector de productos
+│   │   │   └── TutorialModal.tsx       # Tutorial interactivo
+│   │   └── ui/                 # UI Components genéricos
+│   │       ├── Badge.tsx       # Etiquetas de estado
+│   │       ├── Button.tsx      # Botones reutilizables
+│   │       ├── ConfirmDialog.tsx # Diálogos de confirmación
+│   │       ├── Input.tsx       # Inputs de formulario
+│   │       ├── Modal.tsx       # Modal genérico
+│   │       └── Toast.tsx       # Sistema de notificaciones
 │   │
-│   ├── contexts/           # Contextos de React
-│   │   ├── AuthContext.tsx      # Autenticación y usuario
-│   │   ├── CartContext.tsx      # Carrito de compras
-│   │   └── LanguageContext.tsx  # Idioma y traducciones
+│   ├── contexts/               # Estado global
+│   │   ├── AuthContext.tsx     # Autenticación y usuario actual
+│   │   ├── CartContext.tsx     # Carrito de compras
+│   │   └── LanguageContext.tsx # Internacionalización
 │   │
-│   ├── data/               # Datos y mock data
-│   │   └── mockData.ts     # Datos de prueba y funciones de storage
+│   ├── data/
+│   │   └── mockData.ts         # Datos iniciales y helpers legacy
 │   │
-│   ├── hooks/              # Custom hooks
-│   │   └── useToast.tsx    # Sistema de notificaciones
+│   ├── hooks/                  # Custom hooks
+│   │   └── useToast.tsx        # Sistema de notificaciones toast
 │   │
-│   ├── pages/              # Páginas principales
-│   │   ├── public/         # Páginas públicas
-│   │   │   └── PublicMenu.tsx
-│   │   ├── restaurant/     # Páginas del restaurante
-│   │   │   ├── CategoriesManagement.tsx
-│   │   │   ├── CustomersManagement.tsx
-│   │   │   ├── MenuManagement.tsx
-│   │   │   ├── OrdersManagement.tsx
-│   │   │   ├── RestaurantAnalytics.tsx
-│   │   │   ├── RestaurantDashboard.tsx
-│   │   │   ├── RestaurantSettings.tsx
-│   │   │   └── SubscriptionPlans.tsx
-│   │   ├── superadmin/     # Páginas del super admin
-│   │   │   ├── RestaurantsManagement.tsx
-│   │   │   ├── SubscriptionsManagement.tsx
-│   │   │   ├── SuperAdminAnalytics.tsx
-│   │   │   ├── SuperAdminDashboard.tsx
-│   │   │   ├── SupportTicketsManagement.tsx
-│   │   │   └── UsersManagement.tsx
-│   │   ├── AuthPage.tsx    # Página de login/registro
-│   │   └── DashboardPage.tsx # Dashboard principal
+│   ├── lib/
+│   │   └── supabase.ts         # Cliente de Supabase configurado
 │   │
-│   ├── types/              # Definiciones de TypeScript
-│   │   └── index.ts        # Todos los tipos e interfaces
+│   ├── pages/                  # Páginas principales
+│   │   ├── public/
+│   │   │   └── PublicMenu.tsx  # Menú público del restaurante
+│   │   │
+│   │   ├── restaurant/         # Páginas del restaurante
+│   │   │   ├── CategoriesManagement.tsx    # Gestión de categorías
+│   │   │   ├── CustomersManagement.tsx     # Gestión de clientes
+│   │   │   ├── MenuManagement.tsx          # Gestión de productos
+│   │   │   ├── OrdersManagement.tsx        # Gestión de pedidos
+│   │   │   ├── RestaurantAnalytics.tsx     # Analytics avanzadas
+│   │   │   ├── RestaurantDashboard.tsx     # Dashboard principal
+│   │   │   ├── RestaurantSettings.tsx      # Configuración
+│   │   │   └── SubscriptionPlans.tsx       # Planes y suscripción
+│   │   │
+│   │   ├── superadmin/         # Páginas del super admin
+│   │   │   ├── RestaurantsManagement.tsx   # Gestión de restaurantes
+│   │   │   ├── SubscriptionsManagement.tsx # Gestión de suscripciones
+│   │   │   ├── SuperAdminAnalytics.tsx     # Analytics globales
+│   │   │   ├── SuperAdminDashboard.tsx     # Dashboard ejecutivo
+│   │   │   ├── SupportTicketsManagement.tsx # Sistema de tickets
+│   │   │   └── UsersManagement.tsx         # Gestión de usuarios
+│   │   │
+│   │   ├── AuthPage.tsx        # Login y registro
+│   │   └── DashboardPage.tsx   # Router del dashboard
 │   │
-│   ├── utils/              # Utilidades
+│   ├── types/
+│   │   └── index.ts            # Todas las interfaces TypeScript
+│   │
+│   ├── utils/                  # Funciones utilitarias
+│   │   ├── colombianCities.ts  # Lista de ciudades de Colombia
 │   │   ├── currencyUtils.ts    # Formateo de moneda
-│   │   ├── themeUtils.ts       # Gestión de temas
-│   │   └── translations.ts     # Sistema de traducciones
+│   │   ├── themeUtils.ts       # Gestión de temas y colores
+│   │   └── translations.ts     # Sistema de traducciones i18n
 │   │
-│   ├── App.tsx             # Componente principal
-│   ├── main.tsx            # Punto de entrada
-│   └── index.css           # Estilos globales
+│   ├── App.tsx                 # Componente raíz
+│   ├── main.tsx                # Punto de entrada
+│   ├── index.css               # Estilos globales y Tailwind
+│   └── vite-env.d.ts           # Tipos de Vite
 │
-├── .env                    # Variables de entorno
-├── package.json            # Dependencias
-├── tsconfig.json           # Configuración TypeScript
-├── vite.config.ts          # Configuración Vite
-└── tailwind.config.js      # Configuración Tailwind
+├── supabase/
+│   └── migrations/             # Migraciones de base de datos
+│       ├── 20251002185927_create_restaurant_management_tables.sql
+│       ├── 20251003213638_add_subscription_expiry_automation.sql
+│       ├── 20251003214032_fix_subscription_expiry_realtime.sql
+│       ├── 20251003215240_improve_subscription_expiry_system.sql
+│       ├── 20251018002437_add_new_theme_colors.sql
+│       ├── 20251024195850_add_public_order_creation_policy.sql
+│       ├── 20251024200205_add_public_read_policies.sql
+│       └── 20251029000000_add_auto_renew_functionality.sql
+│
+├── public/
+│   └── PLATYO FAVICON BLANCO.svg # Logo de la aplicación
+│
+├── .env                        # Variables de entorno (Supabase)
+├── .gitignore                  # Archivos ignorados por Git
+├── package.json                # Dependencias del proyecto
+├── tsconfig.json               # Configuración TypeScript
+├── vite.config.ts              # Configuración Vite
+├── tailwind.config.js          # Configuración Tailwind CSS
+├── postcss.config.js           # Configuración PostCSS
+└── ESTRUCTURA_DEL_PROYECTO.md  # Este archivo
 
 ```
 
 ---
 
-## Sistema de Datos
+## Sistema de Base de Datos
 
-### LocalStorage como Base de Datos
+### Arquitectura Supabase
 
-La aplicación usa localStorage para simular una base de datos. Los datos se almacenan en estas claves:
+PLATYO utiliza Supabase como backend, que proporciona:
+- PostgreSQL database con extensiones
+- Autenticación integrada
+- Row Level Security (RLS)
+- Real-time subscriptions
+- Storage para archivos
+- Edge Functions (preparado)
 
-```typescript
-'users'          // Usuarios del sistema
-'restaurants'    // Restaurantes registrados
-'subscriptions'  // Suscripciones activas
-'categories'     // Categorías de productos
-'products'       // Productos del menú
-'orders'         // Pedidos
-'currentAuth'    // Sesión actual del usuario
+### Esquema de Base de Datos
+
+#### Tabla: `users`
+```sql
+users (
+  id: uuid PRIMARY KEY,
+  email: text UNIQUE NOT NULL,
+  role: text NOT NULL, -- 'restaurant_owner' | 'super_admin'
+  created_at: timestamptz DEFAULT now(),
+  updated_at: timestamptz DEFAULT now()
+)
 ```
 
-### Funciones Principales en mockData.ts
-
-```typescript
-// Cargar datos del localStorage
-loadFromStorage<T>(key: string, defaultValue?: T): T
-
-// Guardar datos al localStorage
-saveToStorage<T>(key: string, data: T): void
-
-// Inicializar datos de prueba
-initializeData(): void
+#### Tabla: `restaurants`
+```sql
+restaurants (
+  id: uuid PRIMARY KEY,
+  name: text NOT NULL,
+  slug: text UNIQUE NOT NULL,
+  email: text,
+  phone: text,
+  address: text,
+  description: text,
+  logo: text,
+  owner_name: text,
+  owner_id: uuid REFERENCES users(id),
+  is_active: boolean DEFAULT true,
+  settings: jsonb DEFAULT '{}'::jsonb,
+  created_at: timestamptz DEFAULT now(),
+  updated_at: timestamptz DEFAULT now()
+)
 ```
 
-### Datos de Prueba Incluidos
+**Settings JSONB incluye**:
+- theme (color_scheme, primary_color, secondary_color, etc.)
+- language (es | en)
+- currency (COP, USD, EUR, etc.)
+- business_hours
+- order_types (pickup, delivery, table)
+- delivery_zones con costos
 
-**Usuario Super Admin:**
-- Email: admin@sistema.com
-- Password: admin123
+#### Tabla: `categories`
+```sql
+categories (
+  id: uuid PRIMARY KEY,
+  name: text NOT NULL,
+  description: text,
+  restaurant_id: uuid REFERENCES restaurants(id) ON DELETE CASCADE,
+  order_index: integer DEFAULT 0,
+  is_active: boolean DEFAULT true,
+  created_at: timestamptz DEFAULT now(),
+  updated_at: timestamptz DEFAULT now()
+)
+```
 
-**Usuario Restaurante:**
-- Email: orlando@gmail.com
-- Password: orlando123
-- Restaurante: "Restaurante Orlando"
-- Slug: restaurante-orlando
+#### Tabla: `products`
+```sql
+products (
+  id: uuid PRIMARY KEY,
+  restaurant_id: uuid REFERENCES restaurants(id) ON DELETE CASCADE,
+  category_id: uuid REFERENCES categories(id) ON DELETE SET NULL,
+  name: text NOT NULL,
+  description: text,
+  images: text[] DEFAULT '{}',
+  variations: jsonb DEFAULT '[]'::jsonb,
+  ingredients: jsonb DEFAULT '[]'::jsonb,
+  dietary_restrictions: text[] DEFAULT '{}',
+  spice_level: integer DEFAULT 0,
+  preparation_time: text,
+  status: text DEFAULT 'active',
+  sku: text,
+  is_available: boolean DEFAULT true,
+  is_featured: boolean DEFAULT false,
+  order_index: integer DEFAULT 0,
+  created_at: timestamptz DEFAULT now(),
+  updated_at: timestamptz DEFAULT now()
+)
+```
+
+**Variations JSONB**:
+```json
+[
+  {
+    "id": "uuid",
+    "name": "Grande",
+    "price": 15000,
+    "is_default": true
+  }
+]
+```
+
+**Ingredients JSONB**:
+```json
+[
+  {
+    "id": "uuid",
+    "name": "Extra queso",
+    "price": 2000,
+    "is_available": true
+  }
+]
+```
+
+#### Tabla: `orders`
+```sql
+orders (
+  id: uuid PRIMARY KEY,
+  restaurant_id: uuid REFERENCES restaurants(id) ON DELETE CASCADE,
+  order_number: text UNIQUE NOT NULL,
+  customer: jsonb NOT NULL,
+  items: jsonb NOT NULL,
+  order_type: text NOT NULL,
+  delivery_address: text,
+  table_number: text,
+  delivery_cost: numeric DEFAULT 0,
+  subtotal: numeric NOT NULL,
+  total: numeric NOT NULL,
+  status: text DEFAULT 'pending',
+  estimated_time: text,
+  special_instructions: text,
+  created_at: timestamptz DEFAULT now(),
+  updated_at: timestamptz DEFAULT now()
+)
+```
+
+**Customer JSONB**:
+```json
+{
+  "name": "Juan Pérez",
+  "phone": "3001234567",
+  "email": "juan@email.com"
+}
+```
+
+**Items JSONB**:
+```json
+[
+  {
+    "product_id": "uuid",
+    "product_name": "Pizza",
+    "variation": {...},
+    "ingredients": [...],
+    "quantity": 2,
+    "unit_price": 15000,
+    "total_price": 30000,
+    "notes": "Sin cebolla"
+  }
+]
+```
+
+#### Tabla: `subscriptions`
+```sql
+subscriptions (
+  id: uuid PRIMARY KEY,
+  restaurant_id: uuid REFERENCES restaurants(id) ON DELETE CASCADE,
+  plan_type: text NOT NULL,
+  status: text DEFAULT 'active',
+  start_date: timestamptz DEFAULT now(),
+  end_date: timestamptz,
+  auto_renew: boolean DEFAULT false,
+  created_at: timestamptz DEFAULT now(),
+  updated_at: timestamptz DEFAULT now()
+)
+```
+
+### Row Level Security (RLS)
+
+Todas las tablas tienen RLS habilitado con políticas específicas:
+
+**Políticas de `restaurants`**:
+- Owners pueden ver solo su restaurante
+- Owners pueden actualizar solo su restaurante
+- Super admins tienen acceso completo
+- Público puede leer restaurantes activos (para menú público)
+
+**Políticas de `products`**:
+- Owners pueden gestionar productos de su restaurante
+- Público puede leer productos activos
+- Super admins tienen acceso completo
+
+**Políticas de `orders`**:
+- Owners pueden ver/gestionar pedidos de su restaurante
+- Público puede crear pedidos (sin autenticación)
+- Super admins tienen acceso completo
+
+**Políticas de `subscriptions`**:
+- Owners pueden ver su suscripción
+- Solo super admins pueden modificar suscripciones
+
+### Funciones de Base de Datos
+
+**Función: `check_subscription_limits`**
+Verifica si un restaurante ha alcanzado los límites de su plan actual.
+
+**Función: `auto_expire_subscriptions`**
+Trigger que marca suscripciones como expiradas automáticamente.
+
+**Función: `auto_renew_subscriptions`**
+Trigger que renueva suscripciones automáticamente si `auto_renew` está activado.
+
+### Migraciones
+
+Las migraciones están en `supabase/migrations/` y se ejecutan en orden cronológico. Cada migración incluye:
+- Comentarios descriptivos detallados
+- Creación de tablas con `IF NOT EXISTS`
+- Índices para optimización
+- Políticas RLS
+- Triggers y funciones
+- Datos semilla si es necesario
 
 ---
 
@@ -384,22 +698,25 @@ initializeData(): void
 **Ubicación**: `src/contexts/AuthContext.tsx`
 
 **Responsabilidades**:
-- Gestión de autenticación (login, register, logout)
-- Información del usuario actual
+- Gestión de autenticación con Supabase Auth
+- Sesión del usuario actual
 - Información del restaurante asociado
-- Estado de carga inicial
-- Verificación de estado de suscripción
+- Estado de carga y errores
+- Verificación de suscripción activa
+- Logout y limpieza de sesión
 
 **API del Context**:
 ```typescript
 interface AuthContextType {
   user: User | null;
   restaurant: Restaurant | null;
+  subscription: Subscription | null;
   isAuthenticated: boolean;
+  loading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   register: (data: RegisterData) => Promise<{ success: boolean; error?: string }>;
-  logout: () => void;
-  loading: boolean;
+  logout: () => Promise<void>;
+  refreshRestaurant: () => Promise<void>;
 }
 ```
 
@@ -407,7 +724,11 @@ interface AuthContextType {
 ```typescript
 import { useAuth } from '../contexts/AuthContext';
 
-const { user, restaurant, login, logout, isAuthenticated } = useAuth();
+const { user, restaurant, subscription, login, logout } = useAuth();
+
+if (subscription?.status !== 'active') {
+  // Mostrar mensaje de suscripción expirada
+}
 ```
 
 ### CartContext
@@ -416,21 +737,36 @@ const { user, restaurant, login, logout, isAuthenticated } = useAuth();
 
 **Responsabilidades**:
 - Gestión del carrito de compras
-- Añadir/eliminar productos
-- Calcular totales
-- Gestionar cantidades
+- Persistencia en localStorage
+- Cálculo de totales con variaciones e ingredientes
+- Gestión de cantidades
+- Validación de stock y disponibilidad
 
 **API del Context**:
 ```typescript
 interface CartContextType {
   items: CartItem[];
-  addItem: (product, variation, quantity?, notes?) => void;
-  removeItem: (productId, variationId) => void;
-  updateQuantity: (productId, variationId, quantity) => void;
+  addItem: (
+    product: Product,
+    variation: ProductVariation,
+    quantity?: number,
+    notes?: string,
+    selectedIngredients?: ProductIngredient[]
+  ) => void;
+  removeItem: (productId: string, variationId: string) => void;
+  updateQuantity: (productId: string, variationId: string, quantity: number) => void;
   clearCart: () => void;
   getTotal: () => number;
   getItemCount: () => number;
 }
+```
+
+**Ejemplo de uso**:
+```typescript
+const { items, addItem, getTotal, clearCart } = useCart();
+
+addItem(product, variation, 2, "Sin cebolla", selectedIngredients);
+const total = getTotal();
 ```
 
 ### LanguageContext
@@ -438,71 +774,104 @@ interface CartContextType {
 **Ubicación**: `src/contexts/LanguageContext.tsx`
 
 **Responsabilidades**:
-- Gestión del idioma de la interfaz
-- Traducciones
-- Persistir idioma en configuración del restaurante
+- Gestión de idioma de la interfaz
+- Sistema de traducciones completo
+- Persistencia en configuración del restaurante
+- Fallback a español por defecto
 
 **API del Context**:
 ```typescript
 interface LanguageContextType {
   language: Language; // 'es' | 'en'
   setLanguage: (lang: Language) => void;
-  t: (key: string) => string; // Función de traducción
+  t: (key: string) => string;
 }
+```
+
+**Uso**:
+```typescript
+const { language, setLanguage, t } = useLanguage();
+
+<h1>{t('welcome')}</h1>
+<button onClick={() => setLanguage('en')}>
+  {t('switchLanguage')}
+</button>
 ```
 
 ---
 
 ## Rutas y Navegación
 
-### Rutas Principales
+### Estructura de Rutas
 
 ```typescript
-// Rutas públicas
-'/login'                    // Página de autenticación
-'/menu/:slug'              // Menú público del restaurante
-'/:slug'                   // Alias del menú público
+// Rutas públicas (no requieren autenticación)
+'/'                     // Redirect a /login
+'/login'                // Autenticación (login/registro)
+'/menu/:slug'           // Menú público
+'/:slug'                // Alias del menú público
 
 // Rutas privadas (requieren autenticación)
-'/dashboard'               // Dashboard principal (redirige según rol)
+'/dashboard'            // Dashboard principal (renderiza según rol)
 
-// Redirección
-'/'                        // Redirige a /login
-'*'                        // Cualquier ruta no encontrada -> /login
+// Wildcard
+'*'                     // 404 - Redirect a /login
 ```
 
-### Componente PrivateRoute
+### PrivateRoute Component
 
 **Ubicación**: `src/App.tsx`
 
 **Funcionalidad**:
-- Verifica autenticación
-- Muestra loading mientras carga
-- Verifica estado de suscripción del restaurante
-- Redirige a /login si no está autenticado
-- Muestra mensaje si la suscripción expiró
+```typescript
+const PrivateRoute = ({ children }) => {
+  const { isAuthenticated, loading, subscription } = useAuth();
 
-### Lógica de Dashboard
+  if (loading) {
+    return <LoadingSpinner />;
+  }
 
-El `DashboardPage` renderiza contenido diferente según el rol:
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
 
-**Super Admin**:
-- dashboard → SuperAdminDashboard
-- restaurants → RestaurantsManagement
-- users → UsersManagement
-- subscriptions → SubscriptionsManagement
-- support → SupportTicketsManagement
-- analytics → SuperAdminAnalytics
+  if (subscription?.status === 'expired') {
+    return <SubscriptionExpiredMessage />;
+  }
 
-**Restaurant Owner**:
-- dashboard → RestaurantDashboard
-- menu → MenuManagement
-- categories → CategoriesManagement
-- orders → OrdersManagement
-- customers → CustomersManagement
-- subscription → SubscriptionPlans
-- settings → RestaurantSettings
-- analytics → RestaurantAnalytics (solo con plan de pago)
+  return children;
+};
+```
+
+### Navegación del Dashboard
+
+El componente `DashboardPage` actúa como router interno basado en tabs:
+
+**Para Super Admin**:
+```typescript
+const tabs = [
+  'dashboard',      // SuperAdminDashboard
+  'restaurants',    // RestaurantsManagement
+  'users',          // UsersManagement
+  'subscriptions',  // SubscriptionsManagement
+  'support',        // SupportTicketsManagement
+  'analytics',      // SuperAdminAnalytics
+];
+```
+
+**Para Restaurant Owner**:
+```typescript
+const tabs = [
+  'dashboard',      // RestaurantDashboard
+  'menu',           // MenuManagement
+  'categories',     // CategoriesManagement
+  'orders',         // OrdersManagement
+  'customers',      // CustomersManagement
+  'analytics',      // RestaurantAnalytics (solo con plan de pago)
+  'subscription',   // SubscriptionPlans
+  'settings',       // RestaurantSettings
+];
+```
 
 ---
 
@@ -512,6 +881,14 @@ El `DashboardPage` renderiza contenido diferente según el rol:
 
 #### Header (`components/layout/Header.tsx`)
 
+**Funcionalidad**:
+- Logo y nombre del restaurante
+- Información del usuario (email, rol)
+- Badge de plan actual
+- Botón de configuración (restaurant owner)
+- Menú de perfil con dropdown
+- Botón de logout
+
 **Props**:
 ```typescript
 interface HeaderProps {
@@ -519,13 +896,15 @@ interface HeaderProps {
 }
 ```
 
-**Funcionalidad**:
-- Muestra logo y nombre del restaurante
-- Email del usuario
-- Botón de configuración (solo restaurant owner)
-- Botón de logout
-
 #### Sidebar (`components/layout/Sidebar.tsx`)
+
+**Funcionalidad**:
+- Navegación principal por tabs
+- Iconos de Lucide React
+- Badges para features premium
+- Contador de notificaciones
+- Indicador de tab activo
+- Responsive (collapsible en móvil)
 
 **Props**:
 ```typescript
@@ -535,27 +914,204 @@ interface SidebarProps {
 }
 ```
 
+### Public Menu Components
+
+#### PublicMenu (`pages/public/PublicMenu.tsx`)
+
+**Funcionalidad completa**:
+- Carga del restaurante por slug
+- Sistema de temas dinámico del restaurante
+- Navegación por categorías con smooth scroll
+- Búsqueda en tiempo real de productos
+- Filtrado por categoría
+- Grid de productos responsive
+- Lazy loading de imágenes
+- Modal de detalle de producto
+- Integración con CartContext
+- Botón de WhatsApp flotante
+- Footer con información del restaurante
+
+#### CartSidebar (`components/public/CartSidebar.tsx`)
+
 **Funcionalidad**:
-- Navegación principal
-- Tabs diferentes según rol de usuario
-- Acceso a analytics solo con suscripción de pago
+- Sidebar flotante del lado derecho
+- Lista de productos en el carrito
+- Mostrar variaciones e ingredientes
+- Editar cantidades inline
+- Eliminar productos
+- Cálculo de subtotal y total
+- Botón de checkout
+- Animaciones de entrada/salida
+- Badge con contador de items
+
+#### CheckoutModal (`components/public/CheckoutModal.tsx`)
+
+**Funcionalidad avanzada**:
+- Modal elegante y moderno
+- Formulario de datos del cliente
+- Selector de tipo de pedido
+- Autocompletado de dirección
+- Selector de ciudades colombianas
+- Cálculo automático de delivery
+- Validación de formulario en tiempo real
+- Preview del pedido
+- Cálculo de totales
+- Generación de mensaje de WhatsApp formateado
+- Toast notifications personalizadas con colores del tema
+- Redirección a WhatsApp
+- Guardar pedido en Supabase
+
+**Toast Personalizado**:
+El componente ahora utiliza los colores del tema del restaurante para las notificaciones:
+- `primaryColor` como fondo
+- `secondaryTextColor` para iconos y texto
+- Diseño responsive optimizado para móvil
+- Cierre automático configurable
+
+#### ProductDetail (`components/public/ProductDetail.tsx`)
+
+**Funcionalidad**:
+- Modal de detalle completo
+- Galería de imágenes con navegación
+- Descripción detallada
+- Selector de variaciones
+- Selector de ingredientes opcionales
+- Campo de notas especiales
+- Selector de cantidad
+- Cálculo de precio total
+- Badges de featured, dietético, picante
+- Tiempo de preparación
+- Botón "Agregar al carrito"
+
+### Restaurant Management Components
+
+#### ProductForm (`components/restaurant/ProductForm.tsx`)
+
+**Funcionalidad completa**:
+- Formulario multi-step
+- Información básica (nombre, descripción, categoría)
+- Gestión de imágenes (hasta 5 URLs)
+- Preview de imágenes
+- Gestión de variaciones (nombre, precio, default)
+- Gestión de ingredientes opcionales
+- Restricciones dietéticas (checkbox múltiple)
+- Nivel de picante (selector visual)
+- Tiempo de preparación
+- SKU opcional
+- Estado (activo/inactivo)
+- Destacado (featured)
+- Disponibilidad
+- Validación completa
+- Modo creación/edición
+
+#### OrderProductSelector (`components/restaurant/OrderProductSelector.tsx`)
+
+**Funcionalidad**:
+- Modal de selección de productos para pedidos
+- Búsqueda y filtrado
+- Vista de productos con imágenes
+- Selector de variaciones
+- Selector de cantidad
+- Agregar múltiples productos
+- Vista previa del pedido
+- Cálculo de totales
+
+#### TutorialModal (`components/restaurant/TutorialModal.tsx`)
+
+**Funcionalidad**:
+- Tutorial paso a paso
+- Navegación entre pasos
+- Progreso visual
+- Imágenes y videos
+- Marcar como completado
+- Skip tutorial
+- Volver a ver
 
 ### UI Components
 
-#### Button (`components/ui/Button.tsx`)
-Componente de botón reutilizable con variantes y tamaños.
+#### Toast (`components/ui/Toast.tsx`)
 
-#### Modal (`components/ui/Modal.tsx`)
-Modal genérico para diálogos y formularios.
+**Funcionalidad mejorada**:
+- Sistema de notificaciones temporales
+- 4 tipos: success, warning, error, info
+- Colores personalizables por tema
+- Diseño responsive para móvil
+- Auto-close configurable
+- Animaciones de entrada/salida
+- Iconos contextuales
+- Botón de cierre manual
+
+**Props**:
+```typescript
+interface ToastProps {
+  type: 'success' | 'warning' | 'error' | 'info';
+  title: string;
+  message: string;
+  duration?: number;
+  customColors?: {
+    primary?: string;
+    secondary?: string;
+  };
+  onClose: () => void;
+}
+```
+
+**Características responsive**:
+- Texto más pequeño en móvil (text-xs)
+- Iconos adaptados (w-4 h-4 en móvil, w-5 h-5 en desktop)
+- Padding reducido en móvil
+- Ancho completo en móvil con márgenes laterales
+- Botón de cierre más pequeño en móvil
+
+#### ConfirmDialog (`components/ui/ConfirmDialog.tsx`)
+
+**Funcionalidad**:
+- Diálogo de confirmación
+- Título y mensaje personalizables
+- Botones de confirmar/cancelar
+- Variantes (danger, warning, info)
+- Callback de confirmación
 
 #### Badge (`components/ui/Badge.tsx`)
-Etiquetas de estado (success, warning, error, info, gray).
+
+**Variantes**:
+- success (verde)
+- warning (amarillo)
+- error (rojo)
+- info (azul)
+- gray (gris neutral)
+
+#### Button (`components/ui/Button.tsx`)
+
+**Variantes**:
+- primary
+- secondary
+- outline
+- ghost
+- danger
+
+**Tamaños**:
+- sm
+- md
+- lg
+
+#### Modal (`components/ui/Modal.tsx`)
+
+**Funcionalidad**:
+- Modal genérico responsive
+- Overlay con click-outside
+- Botón de cierre
+- Tamaños configurables
+- Animaciones
 
 #### Input (`components/ui/Input.tsx`)
-Input de formulario con validación y estilos.
 
-#### Toast (`components/ui/Toast.tsx`)
-Sistema de notificaciones temporales.
+**Funcionalidad**:
+- Input de formulario estilizado
+- Label opcional
+- Error message
+- Disabled state
+- Variantes de tipo (text, email, password, number, etc.)
 
 ---
 
@@ -563,23 +1119,24 @@ Sistema de notificaciones temporales.
 
 ### Interfaces Principales
 
+**Usuario**:
 ```typescript
-// Usuario del sistema
 interface User {
   id: string;
   email: string;
-  password: string;
   role: 'restaurant_owner' | 'super_admin';
   created_at: string;
   updated_at: string;
 }
+```
 
-// Restaurante
+**Restaurante**:
+```typescript
 interface Restaurant {
   id: string;
   name: string;
   slug: string;
-  email: string;
+  email?: string;
   phone?: string;
   address?: string;
   description?: string;
@@ -592,11 +1149,41 @@ interface Restaurant {
   updated_at: string;
 }
 
-// Producto
+interface RestaurantSettings {
+  theme: {
+    color_scheme: 'light' | 'dark';
+    primary_color: string;
+    secondary_color: string;
+    text_color: string;
+    secondary_text_color: string;
+  };
+  language: 'es' | 'en';
+  currency: string;
+  business_hours?: {
+    [key: string]: {
+      open: string;
+      close: string;
+      closed: boolean;
+    };
+  };
+  order_types: {
+    pickup: boolean;
+    delivery: boolean;
+    table: boolean;
+  };
+  delivery_zones?: {
+    city: string;
+    cost: number;
+  }[];
+}
+```
+
+**Producto**:
+```typescript
 interface Product {
   id: string;
   restaurant_id: string;
-  category_id: string;
+  category_id: string | null;
   name: string;
   description: string;
   images: string[];
@@ -614,7 +1201,23 @@ interface Product {
   updated_at: string;
 }
 
-// Categoría
+interface ProductVariation {
+  id: string;
+  name: string;
+  price: number;
+  is_default?: boolean;
+}
+
+interface ProductIngredient {
+  id: string;
+  name: string;
+  price: number;
+  is_available: boolean;
+}
+```
+
+**Categoría**:
+```typescript
 interface Category {
   id: string;
   name: string;
@@ -625,8 +1228,10 @@ interface Category {
   created_at: string;
   updated_at: string;
 }
+```
 
-// Pedido
+**Pedido**:
+```typescript
 interface Order {
   id: string;
   restaurant_id: string;
@@ -646,7 +1251,26 @@ interface Order {
   updated_at: string;
 }
 
-// Suscripción
+interface Customer {
+  name: string;
+  phone: string;
+  email?: string;
+}
+
+interface OrderItem {
+  product_id: string;
+  product_name: string;
+  variation: ProductVariation;
+  ingredients?: ProductIngredient[];
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  notes?: string;
+}
+```
+
+**Suscripción**:
+```typescript
 interface Subscription {
   id: string;
   restaurant_id: string;
@@ -658,9 +1282,227 @@ interface Subscription {
   created_at: string;
   updated_at: string;
 }
+
+interface SubscriptionPlan {
+  id: string;
+  name: string;
+  price: number;
+  currency: string;
+  billing_period: 'monthly' | 'yearly';
+  features: {
+    max_products: number; // -1 = ilimitado
+    max_categories: number;
+    analytics: boolean;
+    custom_domain: boolean;
+    priority_support: boolean;
+    advanced_customization: boolean;
+    api_access?: boolean;
+    white_label?: boolean;
+  };
+}
 ```
 
 **Ver todas las interfaces**: `src/types/index.ts`
+
+---
+
+## Sistema de Facturación POS
+
+### Características del Sistema POS
+
+PLATYO incluye un sistema completo de facturación tipo POS (Point of Sale) optimizado para impresoras térmicas de 80mm. Este sistema permite a los restaurantes imprimir recibos profesionales para cada pedido.
+
+### Componente POSInvoice
+
+**Ubicación**: Integrado en `OrdersManagement.tsx`
+
+**Funcionalidad**:
+
+1. **Generación de Factura**
+   - Formato tipo recibo térmico
+   - Ancho optimizado para 80mm
+   - Compatible con impresoras térmicas estándar
+   - Responsive para preview en pantalla
+
+2. **Contenido de la Factura**
+   ```
+   +----------------------------------+
+   |           [LOGO]                 |
+   |      NOMBRE DEL RESTAURANTE      |
+   |        Dirección completa        |
+   |      Teléfono: 123-456-7890      |
+   |      Email: email@ejemplo.com    |
+   +----------------------------------+
+   |           FACTURA POS            |
+   +----------------------------------+
+   | Pedido #: ORD-12345              |
+   | Fecha: 09/11/2024 14:30:00       |
+   | Tipo: Delivery                    |
+   | Estado: Confirmado                |
+   +----------------------------------+
+   |        INFORMACIÓN CLIENTE       |
+   +----------------------------------+
+   | Nombre: Juan Pérez               |
+   | Teléfono: 3001234567             |
+   | Dirección: Calle 123 #45-67      |
+   +----------------------------------+
+   |          DETALLE PEDIDO          |
+   +----------------------------------+
+   | 2x Pizza Grande         $30,000  |
+   |    - Extra queso        $ 4,000  |
+   |    Notas: Sin cebolla            |
+   |                                  |
+   | 1x Coca Cola            $ 3,000  |
+   +----------------------------------+
+   | Subtotal:              $37,000   |
+   | Delivery:              $ 5,000   |
+   | TOTAL:                 $42,000   |
+   +----------------------------------+
+   |    ¡Gracias por tu pedido!       |
+   |      www.turestaurante.com       |
+   +----------------------------------+
+   ```
+
+3. **Secciones de la Factura**:
+   - **Header**: Logo y datos del restaurante
+   - **Información del pedido**: Número, fecha, tipo, estado
+   - **Datos del cliente**: Nombre, teléfono, dirección (si aplica)
+   - **Detalle de productos**:
+     - Cantidad y nombre del producto
+     - Variación seleccionada
+     - Ingredientes opcionales con precio
+     - Notas especiales
+     - Precio unitario y total por ítem
+   - **Totales**:
+     - Subtotal de productos
+     - Costo de delivery (si aplica)
+     - Total general
+   - **Footer**: Mensaje de agradecimiento y URL
+
+4. **Características Técnicas**:
+   - Fuente monoespaciada para alineación perfecta
+   - Tamaño de fuente ajustable
+   - Separadores visuales claros
+   - Formato de moneda localizado
+   - Formato de fecha/hora legible
+   - Badges de estado coloridos
+
+5. **Proceso de Impresión**:
+   ```typescript
+   const handlePrintInvoice = (order: Order) => {
+     setSelectedOrder(order);
+     setShowInvoice(true);
+
+     // Espera a que el componente se renderice
+     setTimeout(() => {
+       window.print();
+     }, 100);
+   };
+   ```
+
+6. **Estilos de Impresión**:
+   ```css
+   @media print {
+     @page {
+       size: 80mm auto;
+       margin: 0;
+     }
+
+     body {
+       width: 80mm;
+     }
+
+     .no-print {
+       display: none;
+     }
+   }
+   ```
+
+### Uso del Sistema POS
+
+1. **Desde OrdersManagement**:
+   - El owner ve la lista de pedidos
+   - Cada pedido tiene un botón "Imprimir Factura"
+   - Al hacer clic, se muestra la vista previa
+   - La ventana de impresión se abre automáticamente
+
+2. **Vista Previa**:
+   - Modal con el formato exacto de la factura
+   - Botón para imprimir manualmente
+   - Botón para cerrar sin imprimir
+
+3. **Configuración de Impresora**:
+   - Compatible con impresoras térmicas de 80mm
+   - Configurar como impresora predeterminada
+   - Sin márgenes (margin: 0)
+   - Tamaño de página: 80mm x auto
+
+### Personalización
+
+El sistema POS respeta la configuración del restaurante:
+- Logo personalizado
+- Colores del tema (en pantalla)
+- Información de contacto
+- Mensaje personalizado en footer
+- Formato de moneda según configuración
+
+---
+
+## Sistema de Notificaciones
+
+### useToast Hook
+
+**Ubicación**: `src/hooks/useToast.tsx`
+
+**Funcionalidad**:
+```typescript
+const { showToast } = useToast();
+
+showToast({
+  type: 'success',
+  title: 'Éxito',
+  message: 'El producto se guardó correctamente',
+  duration: 3000,
+  customColors: {
+    primary: '#10b981',
+    secondary: '#ffffff'
+  }
+});
+```
+
+**Tipos de Toast**:
+- `success`: Operaciones exitosas (verde)
+- `warning`: Advertencias (amarillo)
+- `error`: Errores (rojo)
+- `info`: Información (azul)
+
+**Features**:
+- Auto-close configurable
+- Cierre manual con botón X
+- Colores personalizables por tema del restaurante
+- Animaciones suaves
+- Posición fija en top-right
+- Stack de múltiples toasts
+- Responsive (adaptado a móvil)
+
+### Integración con Temas
+
+El sistema de toast está completamente integrado con el sistema de temas:
+
+```typescript
+// En CheckoutModal.tsx
+showToast({
+  type: 'warning',
+  title: t('orderSent'),
+  message: t('checkWhatsApp'),
+  customColors: {
+    primary: restaurant.settings?.theme?.primary_color,
+    secondary: restaurant.settings?.theme?.secondary_text_color
+  }
+});
+```
+
+Esto asegura que las notificaciones mantengan la identidad visual del restaurante.
 
 ---
 
@@ -671,313 +1513,1023 @@ interface Subscription {
 1. **Crear el archivo de la página**:
 ```typescript
 // src/pages/restaurant/NuevaPagina.tsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { supabase } from '../../lib/supabase';
 
 export const NuevaPagina: React.FC = () => {
-  const { restaurant } = useAuth();
+  const { user, restaurant } = useAuth();
   const { t } = useLanguage();
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    // Cargar datos de Supabase
+  };
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold">{t('titulo')}</h1>
+      <h1 className="text-2xl font-bold mb-6">{t('titulo')}</h1>
       {/* Tu contenido aquí */}
     </div>
   );
 };
 ```
 
-2. **Importar en DashboardPage**:
+2. **Agregar ruta en DashboardPage**:
 ```typescript
 // src/pages/DashboardPage.tsx
 import { NuevaPagina } from './restaurant/NuevaPagina';
-```
 
-3. **Agregar caso en renderContent**:
-```typescript
+// En renderContent
 case 'nueva-pagina':
   return <NuevaPagina />;
 ```
 
-4. **Agregar opción en Sidebar**:
+3. **Agregar tab en Sidebar**:
 ```typescript
 // src/components/layout/Sidebar.tsx
+import { NuevoIcono } from 'lucide-react';
+
 const restaurantTabs = [
   // ... tabs existentes
-  { id: 'nueva-pagina', name: 'Nueva Página', icon: IconoDeLucide },
+  {
+    id: 'nueva-pagina',
+    name: t('nuevaPagina'),
+    icon: NuevoIcono
+  },
 ];
 ```
 
-### Cómo Agregar un Nuevo Campo a un Producto
+4. **Agregar traducciones**:
+```typescript
+// src/utils/translations.ts
+const translations = {
+  es: {
+    nuevaPagina: 'Nueva Página',
+    titulo: 'Título de la Página',
+  },
+  en: {
+    nuevaPagina: 'New Page',
+    titulo: 'Page Title',
+  },
+};
+```
 
-1. **Actualizar la interfaz**:
+### Cómo Agregar un Nuevo Campo a una Tabla
+
+1. **Crear migración de Supabase**:
+```sql
+-- supabase/migrations/YYYYMMDDHHMMSS_add_new_field.sql
+/*
+  # Agregar nuevo campo a products
+
+  1. Cambios
+    - Agregar columna `nuevo_campo` a tabla `products`
+*/
+
+ALTER TABLE products
+ADD COLUMN IF NOT EXISTS nuevo_campo text;
+```
+
+2. **Actualizar interfaz TypeScript**:
 ```typescript
 // src/types/index.ts
 export interface Product {
   // ... campos existentes
-  nuevo_campo: string; // Agregar aquí
+  nuevo_campo?: string;
 }
 ```
 
-2. **Actualizar mockData**:
-```typescript
-// src/data/mockData.ts
-export const mockProducts: Product[] = [
-  {
-    // ... campos existentes
-    nuevo_campo: 'valor por defecto',
-  }
-];
-```
-
-3. **Actualizar ProductForm**:
+3. **Actualizar formulario**:
 ```typescript
 // src/components/restaurant/ProductForm.tsx
-// Agregar input en el formulario
 <Input
-  label="Nuevo Campo"
-  value={formData.nuevo_campo}
-  onChange={(e) => setFormData({...formData, nuevo_campo: e.target.value})}
+  label={t('nuevoCampo')}
+  value={formData.nuevo_campo || ''}
+  onChange={(e) => setFormData({
+    ...formData,
+    nuevo_campo: e.target.value
+  })}
 />
 ```
 
-4. **Actualizar la visualización**:
+4. **Actualizar query de Supabase**:
 ```typescript
-// src/pages/restaurant/MenuManagement.tsx
-// Mostrar el nuevo campo donde sea necesario
-<p>{product.nuevo_campo}</p>
+const { data, error } = await supabase
+  .from('products')
+  .insert({
+    ...productData,
+    nuevo_campo: formData.nuevo_campo
+  });
 ```
 
-### Cómo Modificar Datos de localStorage
+### Cómo Crear una Nueva Tabla
 
-```typescript
-// Leer datos
-import { loadFromStorage } from '../data/mockData';
-const products = loadFromStorage('products', []);
+1. **Crear migración**:
+```sql
+-- supabase/migrations/YYYYMMDDHHMMSS_create_nueva_tabla.sql
+/*
+  # Crear tabla nueva_tabla
 
-// Modificar datos
-import { saveToStorage } from '../data/mockData';
-const updatedProducts = products.map(p =>
-  p.id === productId ? { ...p, nombre: 'nuevo nombre' } : p
+  1. Nueva Tabla
+    - `nueva_tabla`
+      - `id` (uuid, primary key)
+      - `restaurant_id` (uuid, foreign key)
+      - `campo1` (text)
+      - `created_at` (timestamptz)
+
+  2. Security
+    - Enable RLS
+    - Add policies for restaurant owners
+*/
+
+CREATE TABLE IF NOT EXISTS nueva_tabla (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  restaurant_id uuid REFERENCES restaurants(id) ON DELETE CASCADE,
+  campo1 text NOT NULL,
+  created_at timestamptz DEFAULT now()
 );
-saveToStorage('products', updatedProducts);
+
+ALTER TABLE nueva_tabla ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Restaurant owners can view own data"
+  ON nueva_tabla FOR SELECT
+  TO authenticated
+  USING (
+    restaurant_id IN (
+      SELECT id FROM restaurants
+      WHERE owner_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Restaurant owners can insert own data"
+  ON nueva_tabla FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    restaurant_id IN (
+      SELECT id FROM restaurants
+      WHERE owner_id = auth.uid()
+    )
+  );
+
+CREATE INDEX idx_nueva_tabla_restaurant
+ON nueva_tabla(restaurant_id);
+```
+
+2. **Crear interfaz TypeScript**:
+```typescript
+// src/types/index.ts
+export interface NuevaTabla {
+  id: string;
+  restaurant_id: string;
+  campo1: string;
+  created_at: string;
+}
+```
+
+3. **Crear funciones de consulta**:
+```typescript
+// En tu componente o archivo de utilidades
+const loadNuevaTabla = async (restaurantId: string) => {
+  const { data, error } = await supabase
+    .from('nueva_tabla')
+    .select('*')
+    .eq('restaurant_id', restaurantId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error loading data:', error);
+    return [];
+  }
+
+  return data;
+};
+
+const createNuevaTabla = async (newData: Partial<NuevaTabla>) => {
+  const { data, error } = await supabase
+    .from('nueva_tabla')
+    .insert(newData)
+    .select()
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+};
+```
+
+### Cómo Modificar el Sistema de Temas
+
+1. **Agregar nuevo color predefinido**:
+```typescript
+// src/utils/themeUtils.ts
+export const predefinedColors = [
+  // ... colores existentes
+  {
+    name: 'Purple',
+    primary: '#9333ea',
+    secondary: '#a855f7',
+    text: '#1f2937',
+    secondaryText: '#6b7280'
+  },
+];
+```
+
+2. **Agregar nueva propiedad de tema**:
+```typescript
+// src/types/index.ts
+interface ThemeSettings {
+  // ... propiedades existentes
+  nueva_propiedad: string;
+}
+```
+
+3. **Actualizar RestaurantSettings**:
+```typescript
+// En RestaurantSettings.tsx
+const handleSaveTheme = async () => {
+  const updatedSettings = {
+    ...restaurant.settings,
+    theme: {
+      ...themeSettings,
+      nueva_propiedad: nuevoValor
+    }
+  };
+
+  const { error } = await supabase
+    .from('restaurants')
+    .update({ settings: updatedSettings })
+    .eq('id', restaurant.id);
+};
 ```
 
 ### Cómo Agregar una Nueva Traducción
 
-1. **Actualizar translations.ts**:
 ```typescript
 // src/utils/translations.ts
 const translations = {
   es: {
     // ... traducciones existentes
     nuevaClave: 'Nuevo Texto en Español',
+    conParametros: 'Hola {name}, tienes {count} mensajes',
   },
   en: {
     // ... traducciones existentes
     nuevaClave: 'New Text in English',
+    conParametros: 'Hello {name}, you have {count} messages',
   }
 };
+
+// Uso con parámetros (si implementas esta funcionalidad)
+const message = t('conParametros')
+  .replace('{name}', userName)
+  .replace('{count}', messageCount);
 ```
 
-2. **Usar en componentes**:
-```typescript
-const { t } = useLanguage();
-<h1>{t('nuevaClave')}</h1>
-```
+### Cómo Personalizar Estilos Globales
 
-### Cómo Personalizar Estilos
-
-**Colores del tema**:
+1. **Agregar colores personalizados**:
 ```javascript
 // tailwind.config.js
 module.exports = {
   theme: {
     extend: {
       colors: {
-        // Agregar nuevos colores
-        'custom-blue': '#1E40AF',
+        'brand-primary': '#3b82f6',
+        'brand-secondary': '#8b5cf6',
       }
     }
   }
 }
 ```
 
-**Uso en componentes**:
-```jsx
-<div className="bg-custom-blue text-white">Contenido</div>
+2. **Agregar animaciones personalizadas**:
+```javascript
+// tailwind.config.js
+module.exports = {
+  theme: {
+    extend: {
+      animation: {
+        'slide-in': 'slideIn 0.3s ease-out',
+      },
+      keyframes: {
+        slideIn: {
+          '0%': { transform: 'translateX(100%)' },
+          '100%': { transform: 'translateX(0)' },
+        }
+      }
+    }
+  }
+}
 ```
 
-### Cómo Agregar un Nuevo Plan de Suscripción
-
-```typescript
-// src/data/mockData.ts
-export const availablePlans = [
-  // ... planes existentes
-  {
-    id: 'enterprise',
-    name: 'Enterprise',
-    price: 99,
-    currency: 'USD',
-    billing_period: 'monthly' as const,
-    features: {
-      max_products: -1,
-      max_categories: -1,
-      analytics: true,
-      custom_domain: true,
-      priority_support: true,
-      advanced_customization: true,
-      // Agregar nuevas features
-      api_access: true,
-      white_label: true,
-    },
-  },
-];
+3. **Usar en componentes**:
+```jsx
+<div className="bg-brand-primary animate-slide-in">
+  Contenido
+</div>
 ```
 
 ---
 
 ## Flujos de Usuario
 
-### Flujo de Registro
+### Flujo de Registro Completo
 
 1. Usuario accede a `/login`
-2. Hace clic en "Registrarse"
-3. Completa formulario de registro:
-   - Email
-   - Contraseña
+2. Clic en "Registrarse"
+3. Formulario de registro:
+   - Email (validación en tiempo real)
+   - Contraseña (mínimo 8 caracteres)
+   - Confirmar contraseña
    - Nombre del restaurante
    - Teléfono
    - Dirección
    - Nombre del propietario
-4. Sistema crea:
-   - Usuario nuevo con rol `restaurant_owner`
-   - Restaurante con slug único
-   - Suscripción gratuita activa
-5. Redirige a `/login` para iniciar sesión
+   - Aceptar términos y condiciones
+4. Sistema ejecuta:
+   ```typescript
+   // Crear usuario en Supabase Auth
+   const { data: authData, error: authError } =
+     await supabase.auth.signUp({
+       email,
+       password,
+     });
+
+   // Crear registro de usuario
+   await supabase.from('users').insert({
+     id: authData.user.id,
+     email,
+     role: 'restaurant_owner'
+   });
+
+   // Crear restaurante con slug único
+   const slug = generateSlug(restaurantName);
+   await supabase.from('restaurants').insert({
+     name: restaurantName,
+     slug,
+     owner_id: authData.user.id,
+     phone,
+     address,
+     owner_name,
+     is_active: true
+   });
+
+   // Crear suscripción gratuita
+   await supabase.from('subscriptions').insert({
+     restaurant_id: restaurantId,
+     plan_type: 'free',
+     status: 'active',
+     start_date: new Date(),
+     end_date: addMonths(new Date(), 1),
+     auto_renew: false
+   });
+   ```
+5. Email de confirmación (si está activado)
+6. Redirect a `/login` para iniciar sesión
 
 ### Flujo de Login
 
 1. Usuario ingresa email y password
-2. Sistema busca usuario en localStorage
-3. Valida credenciales
-4. Si es `restaurant_owner`, carga datos del restaurante
-5. Guarda sesión en `currentAuth`
-6. Redirige a `/dashboard`
+2. Sistema ejecuta:
+   ```typescript
+   const { data, error } = await supabase.auth.signInWithPassword({
+     email,
+     password
+   });
+   ```
+3. Si es exitoso, carga datos del usuario:
+   ```typescript
+   const { data: userData } = await supabase
+     .from('users')
+     .select('*')
+     .eq('id', data.user.id)
+     .single();
+   ```
+4. Si es `restaurant_owner`, carga restaurante y suscripción:
+   ```typescript
+   const { data: restaurantData } = await supabase
+     .from('restaurants')
+     .select('*')
+     .eq('owner_id', userData.id)
+     .single();
+
+   const { data: subscriptionData } = await supabase
+     .from('subscriptions')
+     .select('*')
+     .eq('restaurant_id', restaurantData.id)
+     .eq('status', 'active')
+     .single();
+   ```
+5. Guarda sesión en AuthContext
+6. Redirect a `/dashboard`
 
 ### Flujo de Creación de Producto
 
 1. Restaurant owner accede a "Menú"
 2. Clic en "Nuevo Producto"
-3. Sistema verifica límite del plan actual
-4. Si está dentro del límite, muestra formulario
+3. Sistema verifica límite del plan:
+   ```typescript
+   const productCount = await getProductCount(restaurant.id);
+   const limit = subscription.plan_type === 'free' ? 10 :
+                 subscription.plan_type === 'basic' ? 50 :
+                 subscription.plan_type === 'pro' ? 200 : -1;
+
+   if (limit !== -1 && productCount >= limit) {
+     showToast({
+       type: 'warning',
+       title: 'Límite alcanzado',
+       message: 'Upgrade tu plan para más productos'
+     });
+     return;
+   }
+   ```
+4. Muestra ProductForm
 5. Usuario completa:
-   - Nombre y descripción
-   - Categoría
-   - Imágenes (URLs)
-   - Variaciones (tamaños/precios)
+   - Información básica
+   - Imágenes (hasta 5 URLs)
+   - Variaciones (al menos una)
    - Ingredientes opcionales
-   - Estado (activo/inactivo)
-6. Guarda en localStorage
-7. Actualiza lista de productos
+   - Configuraciones adicionales
+6. Validación:
+   ```typescript
+   if (!name || !description || !category_id) {
+     showError('Completa todos los campos requeridos');
+     return;
+   }
+
+   if (variations.length === 0) {
+     showError('Agrega al menos una variación');
+     return;
+   }
+   ```
+7. Guardar en Supabase:
+   ```typescript
+   const { data, error } = await supabase
+     .from('products')
+     .insert({
+       restaurant_id: restaurant.id,
+       name,
+       description,
+       category_id,
+       images,
+       variations,
+       ingredients,
+       // ... más campos
+     })
+     .select()
+     .single();
+   ```
+8. Toast de éxito
+9. Actualiza lista de productos
 
 ### Flujo de Pedido Público
 
-1. Cliente accede a `/:slug` (menú público)
-2. Sistema carga restaurante por slug
-3. Muestra catálogo de productos activos
-4. Cliente agrega productos al carrito
-5. Revisa carrito en sidebar
-6. Hace checkout completando:
-   - Nombre
-   - Teléfono
-   - Dirección (si es delivery)
-   - Notas especiales
-7. Sistema genera pedido
-8. Envía por WhatsApp al restaurante
+1. Cliente accede a `/:slug`
+2. Sistema carga restaurante:
+   ```typescript
+   const { data: restaurant } = await supabase
+     .from('restaurants')
+     .select('*')
+     .eq('slug', slug)
+     .eq('is_active', true)
+     .single();
+   ```
+3. Carga categorías y productos activos:
+   ```typescript
+   const { data: categories } = await supabase
+     .from('categories')
+     .select('*')
+     .eq('restaurant_id', restaurant.id)
+     .eq('is_active', true)
+     .order('order_index');
+
+   const { data: products } = await supabase
+     .from('products')
+     .select('*')
+     .eq('restaurant_id', restaurant.id)
+     .eq('status', 'active')
+     .eq('is_available', true)
+     .order('order_index');
+   ```
+4. Aplica tema del restaurante:
+   ```typescript
+   document.documentElement.style.setProperty(
+     '--primary-color',
+     restaurant.settings.theme.primary_color
+   );
+   ```
+5. Cliente navega y agrega productos:
+   ```typescript
+   addItem(product, variation, quantity, notes, ingredients);
+   ```
+6. Revisa carrito en CartSidebar
+7. Clic en "Checkout"
+8. Completa CheckoutModal:
+   - Nombre, teléfono, email
+   - Tipo de pedido
+   - Dirección (si delivery)
+   - Ciudad (para calcular delivery)
+   - Instrucciones especiales
+9. Sistema calcula total:
+   ```typescript
+   const subtotal = cart.reduce((sum, item) => {
+     const itemTotal = item.variation.price * item.quantity;
+     const ingredientsTotal = item.ingredients.reduce(
+       (sum, ing) => sum + ing.price * item.quantity,
+       0
+     );
+     return sum + itemTotal + ingredientsTotal;
+   }, 0);
+
+   const deliveryCost = orderType === 'delivery'
+     ? getDeliveryCost(city)
+     : 0;
+
+   const total = subtotal + deliveryCost;
+   ```
+10. Genera pedido:
+    ```typescript
+    const orderNumber = `ORD-${Date.now()}`;
+
+    const { data, error } = await supabase
+      .from('orders')
+      .insert({
+        restaurant_id: restaurant.id,
+        order_number: orderNumber,
+        customer: { name, phone, email },
+        items: cartItems,
+        order_type: orderType,
+        delivery_address: address,
+        delivery_cost: deliveryCost,
+        subtotal,
+        total,
+        status: 'pending',
+        special_instructions: instructions
+      })
+      .select()
+      .single();
+    ```
+11. Genera mensaje de WhatsApp:
+    ```typescript
+    const message = `
+    🍽️ *Nuevo Pedido #${orderNumber}*
+
+    📋 *Cliente:*
+    - Nombre: ${customer.name}
+    - Teléfono: ${customer.phone}
+
+    📦 *Pedido:*
+    ${items.map(item => `
+    - ${item.quantity}x ${item.product_name}
+      ${item.variation.name} - ${formatCurrency(item.total_price)}
+      ${item.notes ? `Notas: ${item.notes}` : ''}
+    `).join('\n')}
+
+    💰 *Total: ${formatCurrency(total)}*
+
+    📍 *Entrega: ${orderType === 'delivery' ? address : 'Recoger en local'}*
+    `;
+
+    const whatsappUrl = `https://wa.me/${restaurant.phone}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+    ```
+12. Toast de confirmación con colores del tema
+13. Limpia carrito
+14. Cierra modal
 
 ### Flujo de Gestión de Pedidos
 
 1. Restaurant owner accede a "Pedidos"
-2. Ve lista de pedidos con estados
-3. Puede cambiar estado:
-   - pending → confirmed
-   - confirmed → preparing
-   - preparing → ready
-   - ready → delivered
-4. Cada cambio actualiza localStorage
-5. Sistema puede notificar al cliente
+2. Carga pedidos en tiempo real:
+   ```typescript
+   const { data: orders } = await supabase
+     .from('orders')
+     .select('*')
+     .eq('restaurant_id', restaurant.id)
+     .order('created_at', { ascending: false });
+
+   // Suscripción a cambios en tiempo real
+   const subscription = supabase
+     .channel('orders')
+     .on('postgres_changes', {
+       event: '*',
+       schema: 'public',
+       table: 'orders',
+       filter: `restaurant_id=eq.${restaurant.id}`
+     }, payload => {
+       // Actualizar lista de pedidos
+       handleOrderUpdate(payload);
+     })
+     .subscribe();
+   ```
+3. Vista tipo kanban con columnas por estado
+4. Cambiar estado de pedido:
+   ```typescript
+   const updateOrderStatus = async (orderId: string, newStatus: string) => {
+     const { error } = await supabase
+       .from('orders')
+       .update({
+         status: newStatus,
+         updated_at: new Date()
+       })
+       .eq('id', orderId);
+
+     if (error) {
+       showToast({
+         type: 'error',
+         title: 'Error',
+         message: 'No se pudo actualizar el estado'
+       });
+       return;
+     }
+
+     showToast({
+       type: 'success',
+       title: 'Estado actualizado',
+       message: `Pedido marcado como ${newStatus}`
+     });
+   };
+   ```
+5. Ver detalles completos del pedido
+6. Imprimir factura POS:
+   - Generar vista de factura
+   - Abrir diálogo de impresión
+   - Enviar a impresora térmica
+7. Contactar cliente vía WhatsApp
+8. Filtrar pedidos por:
+   - Estado
+   - Fecha
+   - Tipo de pedido
+   - Búsqueda por número o cliente
 
 ### Flujo de Cambio de Suscripción
 
 1. Restaurant owner accede a "Suscripción"
-2. Ve plan actual y opciones disponibles
-3. Selecciona nuevo plan
-4. Sistema verifica límites:
-   - Productos actuales vs límite del plan
-   - Categorías actuales vs límite del plan
-5. Si cumple límites, actualiza suscripción
-6. Actualiza fecha de inicio y fin
-7. Desbloquea/bloquea features según plan
+2. Ve plan actual con features desbloqueadas
+3. Compara planes disponibles
+4. Selecciona nuevo plan
+5. Sistema valida límites:
+   ```typescript
+   const validateUpgrade = async (newPlan: string) => {
+     const productCount = await getProductCount(restaurant.id);
+     const categoryCount = await getCategoryCount(restaurant.id);
+
+     const limits = getPlanLimits(newPlan);
+
+     if (limits.max_products !== -1 &&
+         productCount > limits.max_products) {
+       showError(
+         `Tienes ${productCount} productos. ` +
+         `El plan ${newPlan} permite máximo ${limits.max_products}`
+       );
+       return false;
+     }
+
+     if (limits.max_categories !== -1 &&
+         categoryCount > limits.max_categories) {
+       showError(
+         `Tienes ${categoryCount} categorías. ` +
+         `El plan ${newPlan} permite máximo ${limits.max_categories}`
+       );
+       return false;
+     }
+
+     return true;
+   };
+   ```
+6. Confirma cambio
+7. Sistema actualiza suscripción:
+   ```typescript
+   const upgradePlan = async (newPlanType: string) => {
+     const { error } = await supabase
+       .from('subscriptions')
+       .update({
+         plan_type: newPlanType,
+         status: 'active',
+         start_date: new Date(),
+         end_date: addMonths(new Date(), 1),
+         updated_at: new Date()
+       })
+       .eq('restaurant_id', restaurant.id)
+       .eq('status', 'active');
+
+     if (error) {
+       throw error;
+     }
+   };
+   ```
+8. Toast de éxito
+9. Recarga datos del contexto
+10. Features se desbloquean inmediatamente
+
+### Flujo de Impresión de Factura POS
+
+1. En OrdersManagement, owner selecciona un pedido
+2. Clic en "Imprimir Factura"
+3. Sistema genera vista de factura:
+   ```typescript
+   const generateInvoice = (order: Order) => {
+     return (
+       <div className="pos-invoice">
+         {/* Header con logo */}
+         <div className="invoice-header">
+           {restaurant.logo && <img src={restaurant.logo} />}
+           <h2>{restaurant.name}</h2>
+           <p>{restaurant.address}</p>
+           <p>{restaurant.phone}</p>
+         </div>
+
+         {/* Información del pedido */}
+         <div className="invoice-info">
+           <p>Pedido: {order.order_number}</p>
+           <p>Fecha: {formatDate(order.created_at)}</p>
+           <p>Tipo: {order.order_type}</p>
+         </div>
+
+         {/* Cliente */}
+         <div className="customer-info">
+           <p>Cliente: {order.customer.name}</p>
+           <p>Teléfono: {order.customer.phone}</p>
+         </div>
+
+         {/* Items */}
+         <div className="items">
+           {order.items.map(item => (
+             <div key={item.product_id}>
+               <p>
+                 {item.quantity}x {item.product_name}
+                 <span>{formatCurrency(item.total_price)}</span>
+               </p>
+               <p className="variation">
+                 {item.variation.name}
+               </p>
+               {item.ingredients?.map(ing => (
+                 <p className="ingredient">
+                   - {ing.name}
+                   <span>{formatCurrency(ing.price)}</span>
+                 </p>
+               ))}
+             </div>
+           ))}
+         </div>
+
+         {/* Totales */}
+         <div className="totals">
+           <p>Subtotal: {formatCurrency(order.subtotal)}</p>
+           {order.delivery_cost > 0 && (
+             <p>Delivery: {formatCurrency(order.delivery_cost)}</p>
+           )}
+           <p className="total">
+             TOTAL: {formatCurrency(order.total)}
+           </p>
+         </div>
+
+         {/* Footer */}
+         <div className="footer">
+           <p>¡Gracias por tu pedido!</p>
+         </div>
+       </div>
+     );
+   };
+   ```
+4. Muestra modal con vista previa
+5. Llama a `window.print()`
+6. Navegador abre diálogo de impresión
+7. Usuario selecciona impresora térmica
+8. Configuración de página:
+   - Tamaño: 80mm x auto
+   - Márgenes: 0
+   - Sin headers/footers
+9. Imprime recibo
+10. Cierra modal
 
 ---
 
 ## Notas Importantes
 
-### Limitaciones Actuales
+### Seguridad
 
-1. **Persistencia**: Usa localStorage (no es una base de datos real)
-2. **Autenticación**: Contraseñas en texto plano (no seguro para producción)
-3. **Imágenes**: Solo URLs, no hay upload de archivos
-4. **Notificaciones**: Simuladas, no envía emails/SMS reales
-5. **Pagos**: No hay integración con pasarelas de pago
+1. **Row Level Security (RLS)**:
+   - Todas las tablas tienen RLS habilitado
+   - Políticas estrictas por rol
+   - Los owners solo ven sus datos
+   - Super admins tienen acceso completo
 
-### Consideraciones para Migrar a Producción
+2. **Autenticación**:
+   - Uso de Supabase Auth
+   - JWT tokens seguros
+   - Sesiones con expiración
+   - Logout completo limpia estado
 
-**Para usar base de datos real (Supabase)**:
+3. **Validación de Datos**:
+   - Frontend: validación en tiempo real
+   - Backend: constraints de base de datos
+   - Sanitización de inputs
+   - Prevención de SQL injection (Supabase lo maneja)
 
-1. Configurar proyecto en Supabase
-2. Crear tablas según las interfaces de `types/index.ts`
-3. Reemplazar funciones `loadFromStorage` y `saveToStorage` con queries de Supabase
-4. Implementar Row Level Security (RLS)
-5. Migrar lógica de autenticación a Supabase Auth
+### Performance
 
-**Para agregar autenticación real**:
-- Usar Supabase Auth o Firebase Auth
-- Hash de contraseñas con bcrypt
-- JWT tokens para sesiones
-- Refresh tokens
+1. **Optimizaciones**:
+   - Lazy loading de imágenes
+   - Paginación en listas grandes
+   - Índices en columnas clave
+   - Real-time solo donde es necesario
+   - Debouncing en búsquedas
 
-**Para agregar pagos**:
-- Integrar Stripe o PayPal
-- Webhooks para actualizar suscripciones
-- Gestión de invoices
+2. **Caching**:
+   - Datos de restaurante en Context
+   - CartContext en localStorage
+   - Configuración de idioma en localStorage
 
-### Buenas Prácticas
+### Escalabilidad
 
-1. **Siempre usar TypeScript**: Define tipos para todos los datos
-2. **Contextos ligeros**: No almacenar demasiado estado en contextos
-3. **Componentes pequeños**: Cada componente una responsabilidad
-4. **Reutilización**: Usa componentes UI genéricos
-5. **Traducciones**: Todos los textos deben pasar por `t()`
-6. **Loading states**: Siempre mostrar feedback al usuario
-7. **Error handling**: Validar datos antes de guardar
-8. **Consistencia**: Seguir patrones establecidos
+1. **Base de Datos**:
+   - PostgreSQL escala verticalmente
+   - Índices optimizados
+   - Queries eficientes con select específicos
+   - Foreign keys con ON DELETE CASCADE
+
+2. **Frontend**:
+   - Code splitting preparado
+   - Lazy loading de rutas preparado
+   - Componentes reutilizables
+   - State management escalable
+
+### Mantenimiento
+
+1. **Migraciones**:
+   - Todas documentadas
+   - Versionadas con timestamp
+   - Reversibles cuando sea posible
+   - Con comentarios explicativos
+
+2. **Código**:
+   - TypeScript para type safety
+   - ESLint configurado
+   - Patrones consistentes
+   - Comentarios en funciones complejas
+
+### Limitaciones Conocidas
+
+1. **Imágenes**:
+   - Solo URLs, no hay upload directo
+   - No hay optimización automática
+   - No hay CDN integrado
+   - Sugerencia: usar servicios externos como Cloudinary
+
+2. **Pagos**:
+   - Sistema de pagos simulado
+   - No hay integración real con pasarelas
+   - Preparado para integrar Stripe o similar
+
+3. **Notificaciones**:
+   - No hay email/SMS automáticos
+   - WhatsApp manual (no API)
+   - Preparado para integrar servicios de notificación
+
+4. **Reportes**:
+   - Exportación no implementada
+   - Gráficos básicos
+   - Preparado para librerías como Chart.js
+
+### Roadmap Futuro
+
+1. **Corto Plazo**:
+   - Upload de imágenes a Supabase Storage
+   - Integración con pasarela de pagos
+   - Email notifications con Supabase Edge Functions
+   - Exportación de reportes (PDF, Excel)
+
+2. **Mediano Plazo**:
+   - App móvil nativa
+   - WhatsApp Business API
+   - Sistema de loyalty/puntos
+   - Multi-sucursales
+   - Inventario y stock
+
+3. **Largo Plazo**:
+   - Integración con deliverys (Rappi, UberEats)
+   - IA para recomendaciones
+   - Sistema de reservas
+   - CRM completo
+   - API pública para integraciones
 
 ---
 
-## Contacto y Soporte
+## Mejores Prácticas
 
-Para preguntas sobre la estructura o cómo editar la aplicación, revisar este documento primero. Si necesitas agregar funcionalidades complejas, considera:
+### Desarrollo
 
-1. Mantener la estructura modular
-2. Seguir los patrones existentes
-3. Documentar cambios importantes
-4. Probar en múltiples navegadores
-5. Verificar responsive design
+1. **TypeScript**:
+   - Definir interfaces para todos los datos
+   - Evitar `any`
+   - Usar tipos estrictos
+   - Documentar tipos complejos
+
+2. **Componentes**:
+   - Un componente = una responsabilidad
+   - Props tipadas
+   - Reutilización máxima
+   - Nombres descriptivos
+
+3. **Estado**:
+   - Context para estado global
+   - useState para estado local
+   - No duplicar estado
+   - Limpiar suscripciones
+
+4. **Base de Datos**:
+   - Usar RLS siempre
+   - Índices en FK y campos de búsqueda
+   - Validar datos antes de guardar
+   - Manejar errores apropiadamente
+
+5. **Estilos**:
+   - Tailwind para consistencia
+   - Responsive mobile-first
+   - Reutilizar clases en variables
+   - Seguir sistema de diseño
+
+### Testing (Recomendado)
+
+1. **Unit Tests**:
+   - Funciones utilitarias
+   - Cálculos de totales
+   - Formateo de datos
+
+2. **Integration Tests**:
+   - Flujos de usuario completos
+   - Integración con Supabase
+
+3. **E2E Tests**:
+   - Registro y login
+   - Creación de productos
+   - Proceso de pedido
+   - Cambio de suscripción
+
+### Deployment
+
+1. **Variables de Entorno**:
+   ```env
+   VITE_SUPABASE_URL=https://xxx.supabase.co
+   VITE_SUPABASE_ANON_KEY=eyJxxx...
+   ```
+
+2. **Build**:
+   ```bash
+   npm run build
+   ```
+
+3. **Hosting**:
+   - Vercel (recomendado)
+   - Netlify
+   - Supabase Hosting
+   - Cualquier hosting de SPA
+
+4. **Dominio Personalizado**:
+   - Configurar DNS
+   - SSL automático
+   - Redirects 404 a index.html
 
 ---
 
-**Última actualización**: Octubre 2025
-**Versión**: 0.0.0
+## Soporte y Contacto
+
+### Documentación Adicional
+
+- **Supabase Docs**: https://supabase.com/docs
+- **React Docs**: https://react.dev
+- **TypeScript Docs**: https://www.typescriptlang.org/docs
+- **Tailwind Docs**: https://tailwindcss.com/docs
+
+### Recursos del Proyecto
+
+- **Repositorio**: [Link al repo]
+- **Demo**: [Link a demo]
+- **Issues**: [Link a issues]
+
+### Consideraciones Finales
+
+Este sistema está diseñado para ser:
+- **Escalable**: Crece con tu negocio
+- **Mantenible**: Código limpio y documentado
+- **Seguro**: RLS y validaciones en todos los niveles
+- **Performante**: Optimizado para velocidad
+- **User-friendly**: Interfaz intuitiva y responsive
+
+Para preguntas, sugerencias o reportar bugs, por favor usa el sistema de issues del repositorio o contacta al equipo de desarrollo.
+
+---
+
+**Última actualización**: Noviembre 2024
+**Versión**: 2.0.0
+**Autor**: Equipo PLATYO
+**Licencia**: [Especificar licencia]
