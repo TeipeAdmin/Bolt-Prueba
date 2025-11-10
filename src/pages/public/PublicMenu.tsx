@@ -327,7 +327,7 @@ useEffect(() => {
       {/* HEADER */}
       <header onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className={`sticky top-0 z-50 transition-transform duration-200 pb-5 pt-5 ${
+        className={`sticky top-0 z-50 transition-transform duration-200 pb-5 ${
           showHeader || isHovered ? "translate-y-0" : "-translate-y-full"
         }`}>
         {' '}
