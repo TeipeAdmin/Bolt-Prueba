@@ -1651,16 +1651,7 @@ export const OrdersManagement: React.FC = () => {
             
             {/* Actions */}
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowModal(false);
-                  printTicket(selectedOrder);
-                }}
-                icon={Printer}
-              >
-                {t('printTicket')}
-              </Button>
+
               <Button
                 onClick={() => {
                   setShowModal(false);
