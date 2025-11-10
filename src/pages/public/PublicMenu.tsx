@@ -503,7 +503,7 @@ useEffect(() => {
                   <Gift
                     className="w-5 h-5"
                     style={{
-                      color: secondaryTextColorColor,
+                      color: secondaryTextColor,
                     }}
                   />
                   <span
