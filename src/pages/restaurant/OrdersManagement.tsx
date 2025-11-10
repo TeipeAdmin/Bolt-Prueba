@@ -925,27 +925,32 @@ export const OrdersManagement: React.FC = () => {
     setOrderItems([]);
   };
 
-  const addItemToOrder = (product: Product, variationIndex: number, quantity: number, specialNotes: string) => {
-    const variation = product.variations[variationIndex];
+  const addItemToOrder = (product: Product, variationId: string, quantity: number, specialNotes?: string) => {
+    const variation = product.variations.find(v => v.id === variationId);
     if (!variation) return;
 
     const newItem = {
+      id: `${Date.now()}-${Math.random()}`,
       product: { id: product.id, name: product.name },
       variation: { id: variation.id, name: variation.name, price: variation.price },
       quantity,
-      special_notes: specialNotes,
+      special_notes: specialNotes || '',
       total_price: variation.price * quantity,
     };
     setOrderItems(prev => [...prev, newItem]);
   };
 
-  const removeItemFromOrder = (index: number) => {
-    setOrderItems(prev => prev.filter((_, i) => i !== index));
+  const removeItemFromOrder = (itemId: string) => {
+    setOrderItems(prev => prev.filter(item => item.id !== itemId));
   };
 
-  const updateItemQuantity = (index: number, quantity: number) => {
-    setOrderItems(prev => prev.map((item, i) => {
-      if (i === index) {
+  const updateItemQuantity = (itemId: string, quantity: number) => {
+    if (quantity < 1) {
+      removeItemFromOrder(itemId);
+      return;
+    }
+    setOrderItems(prev => prev.map(item => {
+      if (item.id === itemId) {
         const newTotal = item.variation.price * quantity;
         return { ...item, quantity, total_price: newTotal };
       }
@@ -1186,13 +1191,16 @@ export const OrdersManagement: React.FC = () => {
 
       {/* Search and Bulk Actions */}
       <div className="flex items-center justify-between mb-6">
-        <Input
-          icon={Search}
-          placeholder={t('search')}
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-md"
-        />
+        <div className="relative max-w-md w-full">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder={t('search')}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
         
         {/* Bulk Actions Menu */}
         {showBulkActions && (
