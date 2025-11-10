@@ -2,10 +2,7 @@ import React, { useState } from 'react';
 import { Minus, Plus, X } from 'lucide-react';
 import { Product, ProductVariation, Restaurant } from '../../types';
 import { useCart } from '../../contexts/CartContext';
-import { Button } from '../ui/Button';
-import { Badge } from '../ui/Badge';
-import { getThemeColors } from '../../utils/themeUtils';
-import { getCurrencySymbol } from '../../utils/currencyUtils';
+import { formatCurrency } from '../../utils/currencyUtils';
 
 interface ProductDetailProps {
   product: Product;
@@ -19,12 +16,11 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
     product.ingredients.filter(ing => !ing.optional).map(ing => ing.id)
   );
   const [quantity, setQuantity] = useState(1);
-  const [notes, setNotes] = useState('');
 
   const { addItem } = useCart();
 
   const toggleIngredient = (ingredientId: string) => {
-    setSelectedIngredients(prev => 
+    setSelectedIngredients(prev =>
       prev.includes(ingredientId)
         ? prev.filter(id => id !== ingredientId)
         : [...prev, ingredientId]
@@ -36,229 +32,284 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
     const extraCost = product.ingredients
       .filter(ing => ing.optional && selectedIngredients.includes(ing.id))
       .reduce((sum, ing) => sum + (ing.extra_cost || 0), 0);
-    
+
     return (basePrice + extraCost) * quantity;
   };
 
   const handleAddToCart = () => {
-    addItem(product, selectedVariation, quantity, notes);
+    addItem(product, selectedVariation, quantity, selectedIngredients, '');
     onClose();
   };
-
-  const themeColors = getThemeColors(restaurant?.settings?.theme);
-  const currencySymbol = getCurrencySymbol(restaurant?.settings?.currency || 'USD');
+  const theme = restaurant.settings.theme;
+  const primaryColor = theme.primary_color || '#FFC700';
+  const cardBackgroundColor = theme.card_background_color || '#ffffff';
+  const primaryTextColor = theme.primary_text_color || '#111827';
+  const secondaryTextColor = theme.secondary_text_color || '#6b7280';
+  const currency = restaurant.settings.currency || 'USD';
 
   return (
-    <div className="max-w-2xl mx-auto modal-content" style={{ 
-      backgroundColor: themeColors.background, 
-      color: themeColors.text 
-    }}>
-      <style>{`
-        .modal-content {
-          background-color: ${themeColors.background} !important;
-          color: ${themeColors.text} !important;
-        }
-        
-        .variation-btn {
-          border: 1px solid #e5e7eb;
-          background-color: ${themeColors.background};
-          color: ${themeColors.text};
-          transition: all 0.3s ease;
-        }
-        
-        .variation-btn.selected {
-          border-color: ${themeColors.primary};
-          background-color: ${themeColors.primary};
-          color: white;
-        }
-        
-        .variation-btn:hover:not(.selected) {
-          border-color: ${themeColors.primary};
-          background-color: ${themeColors.primary};
-          color: white;
-        }
-        
-        .quantity-btn {
-          border: 1px solid #e5e7eb;
-          background-color: ${themeColors.background};
-          color: ${themeColors.text};
-          transition: all 0.3s ease;
-        }
-        
-        .quantity-btn:hover {
-          background-color: ${themeColors.primary};
-          color: white;
-          border-color: ${themeColors.primary};
-        }
-        
-        .add-to-cart-btn {
-          background-color: ${themeColors.primary};
-          color: white;
-          border: none;
-          transition: all 0.3s ease;
-        }
-        
-        .add-to-cart-btn:hover {
-          opacity: 0.9;
-          transform: translateY(-1px);
-        }
-        
-        .price-text {
-          color: ${themeColors.primary} !important;
-        }
-        
-        textarea, input[type="checkbox"] {
-          border-color: #e5e7eb;
-          background-color: ${themeColors.background};
-          color: ${themeColors.text};
-        }
-        
-        textarea:focus {
-          border-color: ${themeColors.primary};
-          box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
-      `}</style>
-      
-      <div className="product-detail-modal">
-        <div className="flex justify-between items-start mb-6">
-          <h2 className="text-2xl font-bold" style={{ color: themeColors.text }}>{product.name}</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <X className="w-6 h-6" />
-          </button>
-        </div>
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="relative rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          backgroundColor: cardBackgroundColor,
+          maxWidth: '32rem',
+          maxHeight: '90vh',
+          display: 'flex',
+          flexDirection: 'column'
+        }}
+      >
+        {/* Scrollbar personalizado */}
+        <style>
+          {`
+            /* Scrollbar general */
+            .custom-scroll::-webkit-scrollbar {
+              width: 6px;
+            }
+            .custom-scroll::-webkit-scrollbar-track {
+              background: transparent;
+            }
+            .custom-scroll::-webkit-scrollbar-thumb {
+              background-color: ${primaryColor};
+              border-radius: 8px;
+              opacity: 0.5;
+            }
+            .custom-scroll:hover::-webkit-scrollbar-thumb {
+              opacity: 1;
+            }
+            /* Firefox */
+            .custom-scroll {
+              scrollbar-width: none;
+              scrollbar-color: ${primaryColor} transparent;
+            }
+          `}
+        </style>
 
-        {/* Product Image */}
-        {product.images.length > 0 && (
-          <div className="aspect-video bg-gray-200 rounded-lg overflow-hidden mb-6">
-            <img
-              src={product.images[0]}
-              alt={product.name}
-              className="w-full h-full object-cover"
-            />
-          </div>
-        )}
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 rounded-full p-2 shadow-lg transition-colors"
+        >
+          <X className="w-5 h-5" style={{ color: primaryColor }} />
+        </button>
 
-        {/* Description */}
-        <p className="mb-6" style={{ color: themeColors.text }}>{product.description}</p>
-
-        {/* Dietary Restrictions and Spice Level */}
-        <div className="flex flex-wrap gap-2 mb-6">
-          {product.dietary_restrictions.map(restriction => (
-            <Badge key={restriction} variant="success">
-              {restriction}
-            </Badge>
-          ))}
-          {product.spice_level > 0 && (
-            <Badge variant="warning">
-              🌶️ Picante {product.spice_level}
-            </Badge>
+        {/* Content */}
+        <div className="overflow-y-auto custom-scroll" style={{ flex: 1 }}>
+          {/* Product Image */}
+          {product.images.length > 0 && (
+            <div className="relative w-full h-[250px] md:h-[400px]">
+              <img
+                src={product.images}
+                alt={product.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
           )}
-        </div>
 
-        {/* Variations */}
-        {product.variations.length > 1 && (
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-3" style={{ color: themeColors.text }}>Tamaño / Variación</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {product.variations.map(variation => (
-                <button
-                  key={variation.id}
-                  onClick={() => setSelectedVariation(variation)}
-                  className={`variation-btn p-3 rounded-lg text-left ${
-                    selectedVariation.id === variation.id ? 'selected' : ''
-                  }`}
-                >
-                  <div className="font-medium">{variation.name}</div>
-                  <div className="price-text font-bold">{currencySymbol}{variation.price.toFixed(2)}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Ingredients */}
-        {product.ingredients.length > 0 && (
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-3" style={{ color: themeColors.text }}>Ingredientes</h3>
-            <div className="space-y-2">
-              {product.ingredients.map(ingredient => (
-                <label key={ingredient.id} className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedIngredients.includes(ingredient.id)}
-                      onChange={() => toggleIngredient(ingredient.id)}
-                      disabled={!ingredient.optional}
-                      className="mr-3 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <span className={ingredient.optional ? '' : 'text-gray-500'}>
-                      {ingredient.name}
-                      {!ingredient.optional && ' (incluido)'}
+          <div className="p-6">
+            {/* Product Name */}
+            <h2
+              className="font-bold mb-3 text-center"
+              style={{
+                fontSize: '28px',
+                color: primaryTextColor,
+                fontFamily: theme.primary_font || 'Inter'
+              }}
+            >
+              {product.name.split(' ').map((word, i) => (
+                <span key={i}>
+                  {i === 0 ? (
+                    <span
+                      style={{ cssText: `color: ${primaryColor} !important` }}
+                    >
+                      {word}
                     </span>
-                  </div>
-                  {ingredient.optional && ingredient.extra_cost && (
-                    <span className="text-sm font-medium price-text">
-                      +{currencySymbol}{ingredient.extra_cost.toFixed(2)}
-                    </span>
+                  ) : (
+                    <span>{' ' + word}</span>
                   )}
-                </label>
+                </span>
               ))}
+            </h2>
+
+            {/* Description */}
+            <p
+              className="text-center mb-6"
+              style={{
+                fontSize: '14px',
+                color: secondaryTextColor,
+                lineHeight: '1.6'
+              }}
+            >
+              {product.description}
+            </p>
+
+            {/* Variations */}
+            {product.variations.length > 0 && (
+              <div className="mb-6">
+                <h3
+                  className="font-semibold mb-3"
+                  style={{
+                    fontSize: '14px',
+                    color: primaryTextColor
+                  }}
+                >
+                  Selecciona una opción
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {product.variations.map(variation => (
+                    <button
+                      key={variation.id}
+                      onClick={() => setSelectedVariation(variation)}
+                      className="p-4 rounded-lg text-left transition-all border-2"
+                      style={{
+                        borderColor: selectedVariation.id === variation.id ? primaryColor : '#e5e7eb',
+                        backgroundColor: selectedVariation.id === variation.id ? primaryColor : 'transparent',
+                        color: selectedVariation.id === variation.id ? secondaryTextColor : primaryTextColor,
+                        borderRadius: '8px'
+                      }}
+                    >
+                      <div className="font-semibold" style={{ fontSize: '14px', marginBottom: '4px' }}>
+                        {variation.name}
+                      </div>
+                      <div className="font-bold" style={{ fontSize: '16px' }}>
+                        {formatCurrency(variation.price, currency)}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Ingredients */}
+            {product.ingredients.length > 0 && (
+              <div className="mb-6">
+                <h3
+                  className="font-semibold mb-3"
+                  style={{
+                    fontSize: '14px',
+                    color: primaryTextColor
+                  }}
+                >
+                  Ingredientes
+                </h3>
+                <div className="space-y-2">
+                  {product.ingredients.map(ingredient => (
+                  <label
+                    key={ingredient.id}
+                    className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors"
+                    style={{
+                      borderColor: '#e5e7eb',
+                      borderRadius: '8px',
+                      opacity: ingredient.optional ? 1 : 0.7,
+                      transition: 'background-color 0.3s ease',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = primaryColor)}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                  >
+                      <input
+                        type="checkbox"
+                        checked={selectedIngredients.includes(ingredient.id)}
+                        onChange={() => toggleIngredient(ingredient.id)}
+                        disabled={!ingredient.optional}
+                        className="w-4 h-4 rounded"
+                        style={{ accentColor: primaryColor }}
+                      />
+                      <span
+                        className="flex-1"
+                        style={{
+                          fontSize: '13px',
+                          color: secondaryTextColor
+                        }}
+                      >
+                        {ingredient.name} {!ingredient.optional && '(incluido)'}
+                      </span>
+                      {ingredient.optional && ingredient.extra_cost && ingredient.extra_cost > 0 && (
+                        <span
+                          className="font-medium"
+                          style={{
+                            fontSize: '13px',
+                            color: primaryColor
+                          }}
+                        >
+                          +{formatCurrency(ingredient.extra_cost, currency)}
+                        </span>
+                      )}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Quantity and Add to Cart */}
+            <div className="flex items-center justify-between gap-4 mt-6">
+              <div className="flex items-center gap-3">
+                <span
+                  className="font-medium"
+                  style={{
+                    fontSize: '14px',
+                    color: primaryTextColor
+                  }}
+                >
+                  Cantidad:
+                </span>
+                <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+                  style={{
+                    border: `2px solid ${primaryColor}`,
+                    color: primaryColor,
+                    transition: 'background-color 0.3s ease',
+                  }}
+onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${primaryColor}4D`)}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                >
+                    <Minus className="w-5 h-5" strokeWidth={3} />
+                  </button>
+                  <span
+                    className="font-bold w-8 text-center"
+                    style={{
+                      fontSize: '18px',
+                      color: primaryTextColor
+                    }}
+                  >
+                    {quantity}
+                  </span>
+                  <button
+                    onClick={() => setQuantity(quantity + 1)}
+                    className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+                    style={{
+                      border: `2px solid ${primaryColor}`,
+                      color: primaryColor,
+                      transition: 'background-color 0.3s ease',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${primaryColor}4D`)} // 10% de opacidad
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                  >
+
+                    <Plus className="w-5 h-5" strokeWidth={3} />
+                  </button>
+                </div>
+              </div>
+
+              <button
+                onClick={handleAddToCart}
+                className="flex-1 px-6 py-3 text-white font-bold rounded-lg transition-all hover:opacity-90"
+                style={{
+                  backgroundColor: primaryColor,
+                  fontSize: '16px',
+                  borderRadius: '8px'
+                }}
+              >
+                Agregar {formatCurrency(calculatePrice(), currency)}
+              </button>
             </div>
           </div>
-        )}
-
-        {/* Special Notes */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium mb-2" style={{ color: themeColors.text }}>
-            Notas especiales (opcional)
-          </label>
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={3}
-            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Alguna indicación especial para la cocina..."
-          />
         </div>
-
-        {/* Quantity and Add to Cart */}
-        <div className="flex items-center justify-between gap-4 p-4 bg-gray-50 rounded-lg" style={{ backgroundColor: 'rgba(0,0,0,0.05)' }}>
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium" style={{ color: themeColors.text }}>Cantidad:</span>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                className="quantity-btn w-8 h-8 rounded-full flex items-center justify-center"
-              >
-                <Minus className="w-4 h-4" />
-              </button>
-              <span className="text-lg font-semibold w-8 text-center" style={{ color: themeColors.text }}>{quantity}</span>
-              <button
-                onClick={() => setQuantity(quantity + 1)}
-                className="quantity-btn w-8 h-8 rounded-full flex items-center justify-center"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          <button
-            onClick={handleAddToCart}
-            className="add-to-cart-btn flex-1 max-w-xs px-6 py-3 rounded-lg font-medium"
-          >
-            Agregar al carrito - {currencySymbol}{calculatePrice().toFixed(2)}
-          </button>
-        </div>
-
-        {/* Preparation Time */}
-        {product.preparation_time && (
-          <p className="text-sm text-center mt-4" style={{ color: themeColors.text, opacity: 0.7 }}>
-            ⏱️ Tiempo estimado: {product.preparation_time}
-          </p>
-        )}
       </div>
     </div>
   );

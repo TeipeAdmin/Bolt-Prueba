@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CreditCard, Calendar, AlertCircle, CheckCircle, XCircle, Plus, Edit } from 'lucide-react';
+import { CreditCard, Calendar, AlertCircle, CheckCircle, XCircle, Plus, Pencil as Edit } from 'lucide-react';
 import { Subscription, Restaurant } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { Button } from '../../components/ui/Button';
@@ -22,16 +22,79 @@ export const SubscriptionsManagement: React.FC = () => {
     status: 'active' as Subscription['status'],
     auto_renew: true,
   });
+  const [filterPlan, setFilterPlan] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'expiring'>('newest');
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     loadData();
   }, []);
 
+  const calculateNewEndDate = (currentEndDate: string, duration: Subscription['duration']): string => {
+    const endDate = new Date(currentEndDate);
+
+    if (duration === 'monthly') {
+      endDate.setMonth(endDate.getMonth() + 1);
+    } else if (duration === 'annual') {
+      endDate.setFullYear(endDate.getFullYear() + 1);
+    }
+
+    return endDate.toISOString();
+  };
+
   const loadData = () => {
     const subscriptionData = loadFromStorage('subscriptions') || [];
     const restaurantData = loadFromStorage('restaurants') || [];
-    setSubscriptions(subscriptionData);
+
+    // Remove duplicate subscriptions based on restaurant_id
+    const uniqueSubscriptions = subscriptionData.reduce((acc: Subscription[], current: Subscription) => {
+      const duplicate = acc.find(sub => sub.restaurant_id === current.restaurant_id);
+      if (!duplicate) {
+        acc.push(current);
+      } else {
+        // Keep the most recent one
+        const existingIndex = acc.findIndex(sub => sub.restaurant_id === current.restaurant_id);
+        if (new Date(current.created_at) > new Date(acc[existingIndex].created_at)) {
+          acc[existingIndex] = current;
+        }
+      }
+      return acc;
+    }, []);
+
+    // Auto-renew or expire subscriptions based on end date
+    const now = new Date();
+    const updatedSubscriptions = uniqueSubscriptions.map(sub => {
+      const endDate = new Date(sub.end_date);
+
+      // If subscription end date has passed and it's currently active
+      if (endDate < now && sub.status === 'active') {
+        // Check if auto-renew is enabled
+        if (sub.auto_renew) {
+          // Auto-renew: extend the subscription based on duration
+          return {
+            ...sub,
+            start_date: sub.end_date,
+            end_date: calculateNewEndDate(sub.end_date, sub.duration),
+            status: 'active' as const
+          };
+        } else {
+          // No auto-renew: mark as expired
+          return { ...sub, status: 'expired' as const };
+        }
+      }
+      return sub;
+    });
+
+    setSubscriptions(updatedSubscriptions);
     setRestaurants(restaurantData);
+
+    // Save the updated subscriptions back to storage
+    if (JSON.stringify(updatedSubscriptions) !== JSON.stringify(uniqueSubscriptions)) {
+      saveToStorage('subscriptions', updatedSubscriptions);
+    }
   };
 
   const getRestaurant = (restaurantId: string) => {
@@ -70,8 +133,8 @@ export const SubscriptionsManagement: React.FC = () => {
         ? {
             ...sub,
             ...formData,
-            start_date: new Date(formData.start_date).toISOString(),
-            end_date: new Date(formData.end_date).toISOString(),
+            start_date: formData.start_date + 'T00:00:00.000Z',
+            end_date: formData.end_date + 'T23:59:59.999Z',
           }
         : sub
     );
@@ -108,10 +171,6 @@ export const SubscriptionsManagement: React.FC = () => {
         return <Badge variant="success">Activa</Badge>;
       case 'expired':
         return <Badge variant="error">Vencida</Badge>;
-      case 'trial':
-        return <Badge variant="info">Prueba</Badge>;
-      case 'suspended':
-        return <Badge variant="warning">Suspendida</Badge>;
       default:
         return <Badge variant="gray">Desconocido</Badge>;
     }
@@ -119,8 +178,14 @@ export const SubscriptionsManagement: React.FC = () => {
 
   const getPlanBadge = (planType: Subscription['plan_type']) => {
     switch (planType) {
+      case 'gratis':
+        return <Badge variant="gray">Gratis</Badge>;
       case 'basic':
-        return <Badge variant="info">Básico</Badge>;
+        return <Badge variant="info">Basic</Badge>;
+      case 'pro':
+        return <Badge variant="success">Pro</Badge>;
+      case 'business':
+        return <Badge variant="error">Business</Badge>;
       case 'premium':
         return <Badge variant="success">Premium</Badge>;
       case 'enterprise':
@@ -179,7 +244,7 @@ export const SubscriptionsManagement: React.FC = () => {
           <div className="flex items-center">
             <AlertCircle className="h-8 w-8 text-yellow-600" />
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Por Vencer</p>
+              <p className="text-sm font-medium text-gray-600">Por Vencer (7 días)</p>
               <p className="text-2xl font-semibold text-gray-900">
                 {subscriptions.filter(s => isExpiringSoon(s.end_date)).length}
               </p>
@@ -189,13 +254,113 @@ export const SubscriptionsManagement: React.FC = () => {
 
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <div className="flex items-center">
-            <CreditCard className="h-8 w-8 text-blue-600" />
+            <CreditCard className="h-8 w-8 text-gray-600" />
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Pruebas</p>
+              <p className="text-sm font-medium text-gray-600">Plan Gratis</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {subscriptions.filter(s => s.status === 'trial').length}
+                {subscriptions.filter(s => s.plan_type === 'gratis').length}
               </p>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white rounded-lg shadow p-4 mb-6">
+        <div className="flex flex-col gap-4">
+          {/* Search Bar */}
+          <div className="flex-1">
+            <Input
+              placeholder="Buscar por restaurante..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Plan
+              </label>
+              <select
+                value={filterPlan}
+                onChange={(e) => setFilterPlan(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">Todos los planes</option>
+                <option value="gratis">Gratis</option>
+                <option value="basic">Basic</option>
+                <option value="pro">Pro</option>
+                <option value="business">Business</option>
+              </select>
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Estado
+              </label>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">Todos los estados</option>
+                <option value="active">Activa</option>
+                <option value="expired">Vencida</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 items-end">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Fecha de vencimiento (desde)
+              </label>
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Fecha de vencimiento (hasta)
+              </label>
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Ordenar por
+              </label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as 'newest' | 'oldest' | 'expiring')}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="newest">Más reciente</option>
+                <option value="oldest">Más antiguo</option>
+                <option value="expiring">Próximo a expirar</option>
+              </select>
+            </div>
+            {(filterPlan !== 'all' || filterStatus !== 'all' || startDate || endDate || sortBy !== 'newest' || searchTerm) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setFilterPlan('all');
+                  setFilterStatus('all');
+                  setStartDate('');
+                  setEndDate('');
+                  setSortBy('newest');
+                  setSearchTerm('');
+                }}
+              >
+                Limpiar
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -227,7 +392,45 @@ export const SubscriptionsManagement: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {subscriptions.map((subscription) => {
+              {subscriptions
+                .filter(subscription => {
+                  // Filter by search term (restaurant name)
+                  if (searchTerm) {
+                    const restaurant = getRestaurant(subscription.restaurant_id);
+                    if (!restaurant || !restaurant.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+                      return false;
+                    }
+                  }
+
+                  // Filter by plan
+                  if (filterPlan !== 'all' && subscription.plan_type !== filterPlan) return false;
+
+                  // Filter by status
+                  if (filterStatus !== 'all' && subscription.status !== filterStatus) return false;
+
+                  // Filter by date range (using end_date - fecha de vencimiento)
+                  if (startDate || endDate) {
+                    const subDate = new Date(subscription.end_date);
+                    if (startDate && subDate < new Date(startDate)) return false;
+                    if (endDate) {
+                      const end = new Date(endDate);
+                      end.setHours(23, 59, 59, 999);
+                      if (subDate > end) return false;
+                    }
+                  }
+
+                  return true;
+                })
+                .sort((a, b) => {
+                  if (sortBy === 'newest') {
+                    return new Date(b.end_date).getTime() - new Date(a.end_date).getTime();
+                  } else if (sortBy === 'oldest') {
+                    return new Date(a.end_date).getTime() - new Date(b.end_date).getTime();
+                  } else { // expiring
+                    return new Date(a.end_date).getTime() - new Date(b.end_date).getTime();
+                  }
+                })
+                .map((subscription) => {
                 const restaurant = getRestaurant(subscription.restaurant_id);
                 const expiringSoon = isExpiringSoon(subscription.end_date);
                 const expired = isExpired(subscription.end_date);
@@ -254,7 +457,6 @@ export const SubscriptionsManagement: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {subscription.duration === 'monthly' && 'Mensual'}
-                      {subscription.duration === 'quarterly' && 'Trimestral'}
                       {subscription.duration === 'annual' && 'Anual'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -279,29 +481,7 @@ export const SubscriptionsManagement: React.FC = () => {
                         >
                           Ver
                         </Button>
-                        
-                        {subscription.status === 'expired' && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => updateSubscriptionStatus(subscription.id, 'active')}
-                            className="text-green-600 hover:text-green-700"
-                          >
-                            Reactivar
-                          </Button>
-                        )}
-                        
-                        {subscription.status === 'active' && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => updateSubscriptionStatus(subscription.id, 'suspended')}
-                            className="text-orange-600 hover:text-orange-700"
-                          >
-                            Suspender
-                          </Button>
-                        )}
-                        
+
                         <Button
                           variant="ghost"
                           size="sm"
@@ -351,7 +531,6 @@ export const SubscriptionsManagement: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700">Duración</label>
                 <p className="text-sm text-gray-900">
                   {selectedSubscription.duration === 'monthly' && 'Mensual'}
-                  {selectedSubscription.duration === 'quarterly' && 'Trimestral'}
                   {selectedSubscription.duration === 'annual' && 'Anual'}
                 </p>
               </div>
@@ -426,10 +605,10 @@ export const SubscriptionsManagement: React.FC = () => {
                 onChange={(e) => setFormData(prev => ({ ...prev, plan_type: e.target.value as Subscription['plan_type'] }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="trial">Prueba</option>
-                <option value="basic">Básico</option>
-                <option value="premium">Premium</option>
-                <option value="enterprise">Enterprise</option>
+                <option value="gratis">Gratis</option>
+                <option value="basic">Basic</option>
+                <option value="pro">Pro</option>
+                <option value="business">Business</option>
               </select>
             </div>
 
@@ -443,7 +622,6 @@ export const SubscriptionsManagement: React.FC = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="monthly">Mensual</option>
-                <option value="quarterly">Trimestral</option>
                 <option value="annual">Anual</option>
               </select>
             </div>
@@ -457,10 +635,8 @@ export const SubscriptionsManagement: React.FC = () => {
                 onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as Subscription['status'] }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="trial">Prueba</option>
                 <option value="active">Activa</option>
                 <option value="expired">Vencida</option>
-                <option value="suspended">Suspendida</option>
               </select>
             </div>
 

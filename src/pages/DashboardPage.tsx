@@ -68,7 +68,7 @@ export const DashboardPage: React.FC = () => {
       <Header onNavigateToSettings={() => setActiveTab('settings')} />
       <div className="flex">
         <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
-        <main className="flex-1">
+        <main className="flex-1 min-w-0">
           {renderContent()}
         </main>
       </div>

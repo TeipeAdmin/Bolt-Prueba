@@ -16,6 +16,7 @@ interface ProductVariation {
   id: string;
   name: string;
   price: number;
+  compare_at_price?: number;
   sku?: string;
 }
 
@@ -38,7 +39,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     category_id: '',
     status: 'active' as const,
     sku: '',
-    images: [] as string[]
+    image: ''
   });
   const [variations, setVariations] = useState<ProductVariation[]>([
     { id: '1', name: 'Default', price: 0 }
@@ -54,7 +55,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         category_id: product.category_id,
         status: product.status,
         sku: product.sku || '',
-        images: product.images || []
+        image: product.images?.[0] || ''
       });
       setVariations(product.variations.length > 0 ? product.variations : [
         { id: '1', name: 'Default', price: 0 }
@@ -105,20 +106,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   const removeIngredient = (index: number) => {
     setIngredients(prev => prev.filter((_, i) => i !== index));
   };
-  const handleImageAdd = () => {
-    if (newImageUrl.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        images: [...prev.images, newImageUrl.trim()]
-      }));
-      setNewImageUrl('');
-    }
-  };
-
-  const handleImageRemove = (index: number) => {
+  const handleImageRemove = () => {
     setFormData(prev => ({
       ...prev,
-      images: prev.images.filter((_, i) => i !== index)
+      image: ''
     }));
   };
 
@@ -132,6 +123,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
     const productData = {
       ...formData,
+      images: formData.image ? [formData.image] : [],
       variations: variations.filter(v => v.name.trim() && v.price >= 0),
       ingredients: ingredients.filter(ing => ing.name.trim())
     };
@@ -227,98 +219,114 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         </div>
       </div>
 
-      {/* Product Images */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Imágenes del Producto
+      {/* Product Image */}
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+        <label className="block text-sm font-medium text-gray-900 mb-4 flex items-center gap-2">
+          <ImageIcon className="w-5 h-5 text-blue-600" />
+          Imagen del Producto
         </label>
-        
-        {/* Add New Image */}
-        <div className="mb-4 p-4 border-2 border-dashed border-gray-300 rounded-lg">
-          <div className="flex items-center gap-3">
-            <div className="flex-1">
-              <Input
-                type="url"
-                value={newImageUrl}
-                onChange={(e) => setNewImageUrl(e.target.value)}
-                placeholder="https://example.com/image.jpg"
-                className="w-full"
-              />
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleImageAdd}
-              disabled={!newImageUrl.trim()}
-              icon={Plus}
-            >
-              Agregar Imagen
-            </Button>
-          </div>
-          <p className="text-xs text-gray-500 mt-2">
-            Agrega la URL de una imagen para tu producto. Recomendamos imágenes de alta calidad.
-          </p>
-        </div>
-        
-        {/* Existing Images */}
-        <div className="space-y-2">
-          {formData.images.map((image, index) => (
-            <div key={index} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg bg-gray-50">
-              <div className="w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                <img
-                  src={image}
-                  alt={`Product image ${index + 1}`}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    target.nextElementSibling!.classList.remove('hidden');
+
+        {/* Add Image from Device */}
+        <div className="mb-4">
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <label className="flex-1 cursor-pointer">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      if (file.size > 5 * 1024 * 1024) {
+                        alert(`${file.name} es muy grande. Tamaño máximo: 5MB`);
+                        return;
+                      }
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setFormData(prev => ({
+                          ...prev,
+                          image: reader.result as string
+                        }));
+                      };
+                      reader.readAsDataURL(file);
+                    }
                   }}
+                  className="hidden"
+                  id="product-image"
+                  disabled={!!formData.image}
                 />
-                <div className="hidden w-full h-full flex items-center justify-center">
-                  <ImageIcon className="w-6 h-6 text-gray-400" />
-                </div>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">Imagen {index + 1}</p>
-                <p className="text-xs text-gray-500 truncate">{image}</p>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                icon={Trash2}
-                onClick={() => handleImageRemove(index)}
-                className="text-red-600 hover:text-red-700"
-              />
+                <span className={`inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium transition-all shadow-sm w-full justify-center ${
+                  formData.image ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-50 hover:border-gray-400'
+                }`}>
+                  <Upload className="w-4 h-4 mr-2" />
+                  {formData.image ? 'Imagen cargada' : 'Subir imagen desde dispositivo'}
+                </span>
+              </label>
             </div>
-          ))}
+            <p className="text-xs text-gray-600 flex items-start gap-2">
+              <span className="text-blue-500 mt-0.5">ℹ</span>
+              <span>Sube una imagen de alta calidad de tu producto. Solo se permite una imagen. Máximo 5MB.</span>
+            </p>
+          </div>
         </div>
+
+        {/* Image Preview */}
+        {formData.image ? (
+          <div className="flex items-center gap-4 bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+            <div className="relative group flex-shrink-0">
+              <div className="w-32 h-32 bg-gray-100 rounded-lg overflow-hidden">
+                <img
+                  src={formData.image}
+                  alt="Product preview"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleImageRemove}
+                className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-900 mb-1">Imagen del producto</p>
+              <p className="text-xs text-gray-500">La imagen se mostrará en el menú público</p>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-6 text-center">
+            <ImageIcon className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+            <p className="text-sm text-gray-500 mb-1">No hay imagen agregada</p>
+            <p className="text-xs text-gray-400">Sube una imagen para mostrar tu producto</p>
+          </div>
+        )}
       </div>
 
       {/* Product Variations */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <label className="block text-sm font-medium text-gray-700">
+      <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border border-green-100">
+        <div className="flex items-center justify-between mb-4">
+          <label className="block text-sm font-medium text-gray-900 flex items-center gap-2">
+            <DollarSign className="w-5 h-5 text-green-600" />
             Variaciones y Precios *
           </label>
-          <div className="flex items-center gap-4 text-sm text-gray-600">
+          <div className="flex items-center gap-4 text-sm">
             {variations.length > 1 && (
               <>
-                <div className="flex items-center gap-1">
-                  <DollarSign className="w-4 h-4" />
-                  <span>Desde: ${getMinPrice().toFixed(2)}</span>
+                <div className="flex items-center gap-1 bg-white px-3 py-1 rounded-lg shadow-sm">
+                  <span className="text-gray-600">Desde:</span>
+                  <span className="font-bold text-green-700">${getMinPrice().toFixed(2)}</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <DollarSign className="w-4 h-4" />
-                  <span>Hasta: ${getMaxPrice().toFixed(2)}</span>
+                <div className="flex items-center gap-1 bg-white px-3 py-1 rounded-lg shadow-sm">
+                  <span className="text-gray-600">Hasta:</span>
+                  <span className="font-bold text-green-700">${getMaxPrice().toFixed(2)}</span>
                 </div>
               </>
             )}
           </div>
         </div>
-        
-        <div className="mb-3">
+
+        <div className="mb-4">
           <Button
             type="button"
             variant="outline"
@@ -329,52 +337,88 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             Agregar Variación
           </Button>
         </div>
-        
+
         <div className="space-y-3">
           {variations.map((variation, index) => (
-            <div key={variation.id} className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg bg-gray-50">
-              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-sm font-medium text-blue-600">{index + 1}</span>
+            <div key={variation.id} className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-sm font-medium text-blue-600">{index + 1}</span>
+                </div>
+                <div className="flex-1">
+                  <Input
+                    type="text"
+                    value={variation.name}
+                    onChange={(e) => handleVariationChange(index, 'name', e.target.value)}
+                    placeholder="Nombre de la variación (ej: Pequeño, Mediano, Grande)"
+                  />
+                </div>
+                {variations.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    icon={Trash2}
+                    onClick={() => removeVariation(index)}
+                    className="text-red-600 hover:text-red-700"
+                  />
+                )}
               </div>
-              <div className="flex-1">
-                <Input
-                  type="text"
-                  value={variation.name}
-                  onChange={(e) => handleVariationChange(index, 'name', e.target.value)}
-                  placeholder="Nombre de la variación (ej: Pequeño, Mediano, Grande)"
-                />
-              </div>
-              <div className="w-36">
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  type="number"
-                  value={variation.price}
-                  onChange={(e) => handleVariationChange(index, 'price', parseFloat(e.target.value) || 0)}
-                    placeholder="0.00"
-                  min="0"
-                  step="0.01"
-                    className="pl-8"
-                />
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pl-11">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Precio *</label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Input
+                      type="number"
+                      value={variation.price}
+                      onChange={(e) => handleVariationChange(index, 'price', parseFloat(e.target.value) || 0)}
+                      placeholder="0.00"
+                      min="0"
+                      step="0.01"
+                      className="pl-8"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Precio Comparativo</label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Input
+                      type="number"
+                      value={variation.compare_at_price || ''}
+                      onChange={(e) => handleVariationChange(index, 'compare_at_price', parseFloat(e.target.value) || undefined)}
+                      placeholder="0.00"
+                      min="0"
+                      step="0.01"
+                      className="pl-8"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Precio antes del descuento</p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">SKU</label>
+                  <Input
+                    type="text"
+                    value={variation.sku || ''}
+                    onChange={(e) => handleVariationChange(index, 'sku', e.target.value)}
+                    placeholder="SKU-001"
+                  />
                 </div>
               </div>
-              <div className="w-32">
-                <Input
-                  type="text"
-                  value={variation.sku || ''}
-                  onChange={(e) => handleVariationChange(index, 'sku', e.target.value)}
-                  placeholder="SKU"
-                />
-              </div>
-              {variations.length > 1 && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  icon={Trash2}
-                  onClick={() => removeVariation(index)}
-                  className="text-red-600 hover:text-red-700"
-                />
+
+              {variation.compare_at_price && variation.compare_at_price > variation.price && (
+                <div className="mt-3 pl-11 flex items-center gap-2 text-sm">
+                  <span className="inline-flex items-center px-2 py-1 bg-red-100 text-red-700 rounded font-medium">
+                    {Math.round(((variation.compare_at_price - variation.price) / variation.compare_at_price) * 100)}% OFF
+                  </span>
+                  <span className="text-gray-600">
+                    Ahorro: <span className="font-medium text-green-600">${(variation.compare_at_price - variation.price).toFixed(2)}</span>
+                  </span>
+                </div>
               )}
             </div>
           ))}

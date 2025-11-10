@@ -4,6 +4,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
+import { Modal } from '../ui/Modal';
+import { TermsAndConditions } from './TermsAndConditions';
 
 interface RegisterFormProps {
   onSwitchToLogin: () => void;
@@ -23,6 +25,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   
   const { register } = useAuth();
   const { t } = useLanguage();
@@ -31,17 +34,17 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
     const newErrors: Record<string, string> = {};
 
     if (!formData.restaurantName.trim()) {
-      newErrors.restaurantName = `Restaurant name is ${t('required')}`;
+      newErrors.restaurantName = `El nombre del restaurante ${t('required')}`;
     }
 
     if (!formData.email.trim()) {
-      newErrors.email = `Email is ${t('required')}`;
+      newErrors.email = `Email es ${t('required')}`;
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = t('invalidEmail');
     }
 
     if (!formData.password) {
-      newErrors.password = `Password is ${t('required')}`;
+      newErrors.password = `Contraseña es ${t('required')}`;
     } else if (formData.password.length < 6) {
       newErrors.password = t('passwordTooShort');
     }
@@ -51,7 +54,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
     }
 
     if (!formData.acceptTerms) {
-      newErrors.acceptTerms = 'You must accept the terms and conditions';
+      newErrors.acceptTerms = 'Debes aceptar los términos y condiciones';
     }
 
     setErrors(newErrors);
@@ -102,16 +105,20 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
 
   if (success) {
     return (
-      <div className="w-full max-w-md mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-          <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Store className="w-8 h-8 text-white" />
+      <div className="w-full max-w-md">
+        <div className="text-center">
+          <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+            <Store className="w-10 h-10 text-white" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">{t('registrationSuccessful')}</h2>
-          <p className="text-gray-600 mb-6">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('registrationSuccessful')}</h2>
+          <p className="text-gray-600 mb-8">
             {t('accountPendingApproval')}
           </p>
-          <Button onClick={onSwitchToLogin} className="w-full">
+          <Button
+            onClick={onSwitchToLogin}
+            className="w-full bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700"
+            size="lg"
+          >
             {t('backToLogin')}
           </Button>
         </div>
@@ -120,14 +127,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
-      <div className="bg-white rounded-lg shadow-lg p-8">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Store className="w-8 h-8 text-white" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900">{t('registerTitle')}</h2>
-          <p className="text-gray-600 mt-2">{t('registerSubtitle')}</p>
+    <div className="w-full max-w-2xl">
+      <div>
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('registerTitle')}</h2>
+          <p className="text-gray-600">{t('registerSubtitle')}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -138,7 +142,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
               value={formData.restaurantName}
               onChange={handleChange}
               error={errors.restaurantName}
-              placeholder="My Restaurant"
+              placeholder="Mi Restaurante"
             />
 
             <Input
@@ -146,17 +150,17 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
               label={t('ownerName')}
               value={formData.ownerName}
               onChange={handleChange}
-              placeholder="John Doe"
+              placeholder="Pepito Perez"
             />
 
             <Input
               name="email"
               type="email"
-              label="Contact Email*"
+              label="Email de Contacto*"
               value={formData.email}
               onChange={handleChange}
               error={errors.email}
-              placeholder="contact@myrestaurant.com"
+              placeholder="contacto@mirestaurante.com"
             />
 
             <Input
@@ -164,16 +168,16 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
               label={t('phone')}
               value={formData.phone}
               onChange={handleChange}
-              placeholder="+1 (555) 123-4567"
+              placeholder="+57 (310) 123-4567"
             />
           </div>
 
           <Input
             name="address"
-            label="Restaurant Address"
+            label="Dirección del Restaurante"
             value={formData.address}
             onChange={handleChange}
-            placeholder="123 Main Street, City"
+            placeholder="Calle 123 No 45-67, Ciudad"
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -184,7 +188,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
               value={formData.password}
               onChange={handleChange}
               error={errors.password}
-              placeholder="Minimum 6 characters"
+              placeholder="Minimo 6 caracteres"
             />
 
             <Input
@@ -194,7 +198,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
               value={formData.confirmPassword}
               onChange={handleChange}
               error={errors.confirmPassword}
-              placeholder="Repeat your password"
+              placeholder="Repite tu contraseña"
             />
           </div>
 
@@ -209,10 +213,17 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
             />
             <label htmlFor="acceptTerms" className="ml-2 text-sm text-gray-600">
               {t('acceptTerms')}{' '}
-              <a href="#" className="text-blue-600 hover:text-blue-700">
-                terms and conditions
-              </a>{' '}
-              of service
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowTermsModal(true);
+                }}
+                className="text-blue-600 hover:text-blue-700 underline"
+              >
+                términos y condiciones
+              </button>{' '}
+              del servicio
             </label>
           </div>
           {errors.acceptTerms && (
@@ -228,23 +239,38 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
           <Button
             type="submit"
             loading={loading}
-            className="w-full"
+            className="w-full bg-gradient-to-r from-orange-400 to-red-500 hover:from-orange-600 hover:to-red-700"
             size="lg"
           >
-            Create Account
+            Crear Cuenta
           </Button>
         </form>
 
         <div className="mt-6 text-center">
           <button
             onClick={onSwitchToLogin}
-            className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
+            className="inline-flex items-center text-gray-600 hover:text-gray-900 font-medium"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
             {t('backToLogin')}
           </button>
         </div>
       </div>
+
+      <Modal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        title="Términos y Condiciones de Platyo"
+        size="xl"
+      >
+        <TermsAndConditions onAccept={() => {
+          setFormData(prev => ({ ...prev, acceptTerms: true }));
+          setShowTermsModal(false);
+          if (errors.acceptTerms) {
+            setErrors(prev => ({ ...prev, acceptTerms: '' }));
+          }
+        }} />
+      </Modal>
     </div>
   );
 };

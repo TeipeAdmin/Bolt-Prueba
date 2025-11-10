@@ -25,19 +25,24 @@ interface LanguageProviderProps {
 
 export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
   const { restaurant } = useAuth();
-  const [language, setLanguageState] = useState<Language>('es');
+  const [language, setLanguageState] = useState<Language>(() => {
+    const savedLanguage = localStorage.getItem('app_language');
+    return (savedLanguage as Language) || 'es';
+  });
   const { t } = useTranslation(language);
 
   useEffect(() => {
-    // Load language from restaurant settings or default to Spanish
+    // Load language from restaurant settings if logged in, otherwise use saved preference
     if (restaurant?.settings?.language) {
       setLanguageState(restaurant.settings.language as Language);
+      localStorage.setItem('app_language', restaurant.settings.language);
     }
   }, [restaurant]);
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
-    
+    localStorage.setItem('app_language', lang);
+
     // Update restaurant settings if user is logged in
     if (restaurant) {
       const restaurants = loadFromStorage('restaurants', []);
@@ -47,7 +52,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
           : r
       );
       saveToStorage('restaurants', updatedRestaurants);
-      
+
       // Update auth context
       const currentAuth = loadFromStorage('currentAuth', null);
       if (currentAuth) {

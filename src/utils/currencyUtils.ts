@@ -17,7 +17,25 @@ export const getCurrencySymbol = (currency: string): string => {
 
 export const formatCurrency = (amount: number, currency: string = 'USD'): string => {
   const symbol = getCurrencySymbol(currency);
-  return `${symbol}${amount.toFixed(2)}`;
+
+  // Currencies that don't use decimal places
+  const noDecimalCurrencies = ['COP', 'CLP', 'ARS'];
+
+  // Format based on currency
+  if (noDecimalCurrencies.includes(currency)) {
+    // No decimals, use thousand separators
+    const formattedAmount = Math.round(amount).toLocaleString('es-CO');
+    return `${symbol}${formattedAmount}`;
+  }
+
+  // Currencies with decimals (USD, EUR, MXN, PEN, etc.)
+  const formattedAmount = amount.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+
+  // EUR typically goes after the amount in some countries, but we'll keep it before for consistency
+  return `${symbol}${formattedAmount}`;
 };
 
 export const getCurrencyName = (currency: string): string => {

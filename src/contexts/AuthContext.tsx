@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { AuthContextType, User, Restaurant, RegisterData, Subscription } from '../types';
+import { AuthContextType, User, Restaurant, RegisterData, Subscription, SupportTicket } from '../types';
 import { loadFromStorage, saveToStorage, initializeData } from '../data/mockData';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,6 +21,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [requirePasswordChange, setRequirePasswordChange] = useState(false);
 
   useEffect(() => {
     const savedAuth = loadFromStorage('currentAuth', null);
@@ -40,36 +41,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const checkSubscriptionStatus = () => {
     const subscriptions = loadFromStorage('subscriptions', []) as Subscription[];
-    const restaurants = loadFromStorage('restaurants', []) as Restaurant[];
     const now = new Date();
 
-    console.log('Checking subscription status:', { subscriptions, restaurants });
+    console.log('Checking subscription status:', { subscriptions });
 
     // Check for expired subscriptions
     const updatedSubscriptions = subscriptions.map((sub: Subscription) => {
-      if (sub.status === 'active' && new Date(sub.end_date) < now && sub.plan_type !== 'free') {
+      if (sub.status === 'active' && new Date(sub.end_date) < now && sub.plan_type !== 'gratis') {
         console.log('Expiring subscription:', sub);
         return { ...sub, status: 'expired' as const };
       }
       return sub;
     });
 
-    // Update restaurant status based on subscription
-    const updatedRestaurants = restaurants.map((restaurant: Restaurant) => {
-      const subscription = updatedSubscriptions.find((sub: Subscription) => 
-        sub.restaurant_id === restaurant.id && sub.status === 'active'
-      );
-      
-      if (!subscription) {
-        console.log('Restaurant going inactive:', restaurant);
-        return { ...restaurant, status: 'inactive' as const };
-      }
-      
-      return restaurant;
-    });
-
-    saveToStorage('subscriptions', updatedSubscriptions);
-    saveToStorage('restaurants', updatedRestaurants);
+    // Save updated subscriptions if any changed
+    if (JSON.stringify(updatedSubscriptions) !== JSON.stringify(subscriptions)) {
+      saveToStorage('subscriptions', updatedSubscriptions);
+    }
   };
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
@@ -98,14 +86,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     let userRestaurant = null;
     if (foundUser.role === 'restaurant_owner') {
-      userRestaurant = restaurants.find((r: Restaurant) => r.user_id === foundUser.id);
-      if (!userRestaurant) {
-        console.log('Restaurant not found for user');
-        return { success: false, error: 'Restaurante no encontrado' };
+      if (foundUser.restaurant_id) {
+        userRestaurant = restaurants.find((r: Restaurant) => r.id === foundUser.restaurant_id);
+        if (!userRestaurant) {
+          console.log('Restaurant not found for user');
+          return { success: false, error: 'Restaurante no encontrado para este usuario' };
+        }
+      } else {
+        console.log('User has no restaurant assigned');
+        return { success: false, error: 'No tienes un restaurante asignado. Contacta al administrador.' };
       }
     }
 
     console.log('Login successful');
+
+    // Check if password change is required
+    if (foundUser.require_password_change) {
+      setUser(foundUser);
+      setRestaurant(userRestaurant);
+      setRequirePasswordChange(true);
+      setIsAuthenticated(false);
+      return { success: true };
+    }
+
     setUser(foundUser);
     setRestaurant(userRestaurant);
     setIsAuthenticated(true);
@@ -119,6 +122,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     saveToStorage('currentAuth', authData);
 
     return { success: true };
+  };
+
+  const changePassword = (newPassword: string) => {
+    if (!user) return;
+
+    const users = loadFromStorage('users', []) as User[];
+    const updatedUsers = users.map((u: User) =>
+      u.id === user.id
+        ? { ...u, password: newPassword, require_password_change: false, updated_at: new Date().toISOString() }
+        : u
+    );
+
+    saveToStorage('users', updatedUsers);
+
+    const updatedUser = { ...user, password: newPassword, require_password_change: false };
+    setUser(updatedUser);
+    setRequirePasswordChange(false);
+    setIsAuthenticated(true);
+
+    // Save to localStorage
+    const authData = {
+      user: updatedUser,
+      restaurant
+    };
+    saveToStorage('currentAuth', authData);
   };
 
   const register = async (data: RegisterData): Promise<{ success: boolean; error?: string }> => {
@@ -146,48 +174,65 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       counter++;
     }
 
+    const restaurantId = `rest-${Date.now()}`;
+    const userId = `user-${Date.now()}`;
+
     // Create new user
     const newUser: User = {
-      id: `user-${Date.now()}`,
+      id: userId,
       email: data.email,
+      password: data.password,
       role: 'restaurant_owner',
+      restaurant_id: restaurantId,
       created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       email_verified: false,
     };
 
-    // Create new restaurant
+    // Create new restaurant - ACTIVE with FREE subscription
     const newRestaurant: Restaurant = {
-      id: `rest-${Date.now()}`,
-      user_id: newUser.id,
+      id: restaurantId,
       name: data.restaurantName,
       slug: uniqueSlug,
       email: data.email,
       phone: data.phone,
       address: data.address,
       owner_name: data.ownerName,
+      owner_id: userId,
       settings: {
         currency: 'USD',
         language: 'es',
-        timezone: 'America/Mexico_City',
+        timezone: 'America/Bogota',
         ui_settings: {
-          layout_type: 'cards',
+          layout_type: 'list',
           show_search_bar: true,
           info_message: 'Agrega los productos que desees al carrito, al finalizar tu pedido lo recibiremos por WhatsApp',
         },
         theme: {
-          template: 'modern',
-          primary_color: '#2563eb', 
-          secondary_color: '#ffffff',
-          tertiary_color: '#1f2937',
-          font_family: 'Inter',
+          primary_color: '#dc2626',
+          secondary_color: '#f3f4f6',
+          accent_color: '#16a34a',
+          text_color: '#1f2937',
+          primary_font: 'Monserrat',
+          secondary_font: 'Poppins',
+          font_sizes: {
+            title: '32px',
+            subtitle: '24px',
+            normal: '16px',
+            small: '14px',
+          },
+          font_weights: {
+            light: 300,
+            regular: 400,
+            medium: 500,
+            bold: 700,
+          },
           button_style: 'rounded',
         },
         social_media: {
           facebook: '',
           instagram: '',
-          twitter: '',
-          whatsapp: '',
-          website: '',
+          whatsapp: data.phone || '',
         },
         business_hours: {
           monday: { open: '09:00', close: '22:00', is_open: true },
@@ -202,22 +247,84 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           enabled: false,
           zones: [],
           min_order_amount: 0,
-          estimated_time: '30-45 minutos',
+        },
+        table_orders: {
+          enabled: false,
+          table_numbers: 0,
+          qr_codes: false,
+          auto_assign: false,
         },
         notifications: {
           email: data.email,
+          whatsapp: data.phone,
           sound_enabled: true,
         },
       },
-      status: 'pending',
       domain: uniqueSlug,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
 
+    // Create FREE subscription (gratis plan - never expires)
+    const subscriptionId = `sub-${Date.now()}`;
+    const newSubscription: Subscription = {
+      id: subscriptionId,
+      restaurant_id: restaurantId,
+      plan_type: 'gratis',
+      duration: 'monthly',
+      status: 'active',
+      start_date: new Date().toISOString(),
+      end_date: '2099-12-31T23:59:59Z', // Gratis plan never expires
+      auto_renew: false,
+      created_at: new Date().toISOString(),
+    };
+
+    // Link subscription to restaurant
+    newRestaurant.subscription_id = subscriptionId;
+
     // Save to storage
+    const subscriptions = loadFromStorage('subscriptions', []) as Subscription[];
     saveToStorage('users', [...users, newUser]);
     saveToStorage('restaurants', [...restaurants, newRestaurant]);
+    saveToStorage('subscriptions', [...subscriptions, newSubscription]);
+
+    return { success: true };
+  };
+
+  const requestPasswordReset = async (email: string): Promise<{ success: boolean; error?: string }> => {
+    const users = loadFromStorage('users', []) as User[];
+    const restaurants = loadFromStorage('restaurants', []) as Restaurant[];
+
+    const foundUser = users.find((u: User) => u.email === email);
+
+    if (!foundUser) {
+      return { success: false, error: 'No se encontró una cuenta con ese email' };
+    }
+
+    const userRestaurant = restaurants.find((r: Restaurant) => r.owner_id === foundUser.id);
+
+    const ticketId = `ticket-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const now = new Date().toISOString();
+
+    const newTicket = {
+      id: ticketId,
+      restaurantId: userRestaurant?.id || 'N/A',
+      restaurantName: userRestaurant?.name || 'Usuario sin restaurante',
+      subject: 'Solicitud de recuperación de contraseña',
+      category: 'account',
+      priority: 'high',
+      message: `El usuario ${foundUser.name || 'Sin nombre'} con email ${email} ha solicitado recuperar su contraseña.\n\nRol del usuario: ${foundUser.role}\nFecha de solicitud: ${new Date(now).toLocaleString('es-CO')}`,
+      contactEmail: email,
+      contactPhone: userRestaurant?.phone || 'No disponible',
+      status: 'pending' as const,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    const tickets = loadFromStorage('supportTickets', []);
+    saveToStorage('supportTickets', [...tickets, newTicket]);
+
+    console.log('Password reset request created as support ticket:', ticketId);
 
     return { success: true };
   };
@@ -237,6 +344,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     register,
     logout,
     loading,
+    requirePasswordChange,
+    changePassword,
+    requestPasswordReset,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

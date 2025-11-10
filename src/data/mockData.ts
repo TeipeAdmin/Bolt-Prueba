@@ -1,16 +1,16 @@
 import { User, Restaurant, Subscription, Category, Product, Order } from '../types';
 
-// Available plans
+// Available plans - Updated system
 export const availablePlans = [
   {
-    id: 'free',
+    id: 'gratis',
     name: 'Gratis',
     price: 0,
     currency: 'USD',
     billing_period: 'monthly' as const,
     features: {
-      max_products: 5,
-      max_categories: 3,
+      max_products: 10,
+      max_categories: 5,
       analytics: false,
       custom_domain: false,
       priority_support: false,
@@ -20,12 +20,12 @@ export const availablePlans = [
   {
     id: 'basic',
     name: 'Basic',
-    price: 7,
+    price: 15,
     currency: 'USD',
     billing_period: 'monthly' as const,
     features: {
       max_products: 50,
-      max_categories: 10,
+      max_categories: 15,
       analytics: true,
       custom_domain: false,
       priority_support: false,
@@ -35,13 +35,13 @@ export const availablePlans = [
   {
     id: 'pro',
     name: 'Pro',
-    price: 18,
+    price: 35,
     currency: 'USD',
     billing_period: 'monthly' as const,
     popular: true,
     features: {
       max_products: 200,
-      max_categories: 25,
+      max_categories: 50,
       analytics: true,
       custom_domain: true,
       priority_support: true,
@@ -51,7 +51,7 @@ export const availablePlans = [
   {
     id: 'business',
     name: 'Business',
-    price: 42,
+    price: 75,
     currency: 'USD',
     billing_period: 'monthly' as const,
     features: {
@@ -73,6 +73,7 @@ export const mockUsers: User[] = [
     password: 'admin123',
     role: 'super_admin',
     created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
     email_verified: true,
   },
   {
@@ -80,7 +81,9 @@ export const mockUsers: User[] = [
     email: 'orlando@gmail.com',
     password: 'orlando123',
     role: 'restaurant_owner',
+    restaurant_id: 'rest-orlando',
     created_at: '2024-01-15T00:00:00Z',
+    updated_at: '2024-01-15T00:00:00Z',
     email_verified: true,
   },
 ];
@@ -110,14 +113,27 @@ export const mockRestaurants: Restaurant[] = [
       ui_settings: {
         show_search_bar: true,
         info_message: 'Agrega los productos que desees al carrito, al finalizar tu pedido lo recibiremos por WhatsApp',
-        layout_type: 'cards',
+        layout_type: 'list',
       },
       theme: {
-        template: 'modern',
         primary_color: '#dc2626',
-        secondary_color: '#16a34a',
-        tertiary_color: '#eab308',
-        font_family: 'Inter',
+        secondary_color: '#f3f4f6',
+        accent_color: '#16a34a',
+        text_color: '#1f2937',
+        primary_font: 'Inter',
+        secondary_font: 'Poppins',
+        font_sizes: {
+          title: '32px',
+          subtitle: '24px',
+          normal: '16px',
+          small: '14px',
+        },
+        font_weights: {
+          light: 300,
+          regular: 400,
+          medium: 500,
+          bold: 700,
+        },
         button_style: 'rounded',
       },
       business_hours: {
@@ -136,16 +152,22 @@ export const mockRestaurants: Restaurant[] = [
           { id: '2', name: 'Norte', cost: 4.50, area_description: 'Zona norte de la ciudad' },
         ],
         min_order_amount: 15.00,
-        estimated_time: '30-45 minutos',
       },
+      preparation_time: '30-45 minutos',
       notifications: {
         email: 'orders@lapizzeria.com',
         whatsapp: '+1555123456',
         sound_enabled: true,
       },
+      promo: {
+        enabled: false,
+        banner_image: '',
+        promo_text: '',
+        cta_text: 'Ver Ofertas',
+        cta_link: '',
+      },
     },
     subscription_id: 'sub-orlando',
-    status: 'active',
     domain: 'restaurante-orlando',
     created_at: '2024-01-15T00:00:00Z',
     updated_at: '2024-12-01T00:00:00Z',
@@ -157,9 +179,10 @@ export const mockSubscriptions: Subscription[] = [
   {
     id: 'sub-orlando',
     restaurant_id: 'rest-orlando',
-    plan_type: 'free',
+    plan_type: 'gratis',
+    duration: 'monthly',
     start_date: '2024-01-15T00:00:00Z',
-    end_date: '2099-12-31T23:59:59Z', // Free plan never expires
+    end_date: '2099-12-31T23:59:59Z', // Gratis plan never expires
     status: 'active',
     auto_renew: false,
     created_at: '2024-01-15T00:00:00Z',
@@ -326,24 +349,39 @@ export const saveToStorage = <T>(key: string, data: T): void => {
 
 // Initialize data in localStorage if not present
 export const initializeData = (): void => {
-  // Clear existing data to ensure fresh start
-  localStorage.removeItem('users');
-  localStorage.removeItem('restaurants');
-  localStorage.removeItem('subscriptions');
-  localStorage.removeItem('categories');
-  localStorage.removeItem('products');
-  localStorage.removeItem('orders');
-  
-  // Always initialize with fresh data
+  const hasInitialized = localStorage.getItem('data_initialized');
+
+  if (!hasInitialized) {
+    console.log('First time initialization - loading mock data');
+    saveToStorage('users', mockUsers);
+    saveToStorage('restaurants', mockRestaurants);
+    saveToStorage('subscriptions', mockSubscriptions);
+    saveToStorage('categories', mockCategories);
+    saveToStorage('products', mockProducts);
+    saveToStorage('orders', mockOrders);
+    saveToStorage('supportTickets', []);
+    localStorage.setItem('data_initialized', 'true');
+
+    console.log('Data initialized:', {
+      users: mockUsers,
+      restaurants: mockRestaurants
+    });
+  } else {
+    console.log('Data already initialized, skipping...');
+  }
+};
+
+// Reset all data to initial mock data
+export const resetAllData = (): void => {
+  console.log('Resetting all data to initial state...');
   saveToStorage('users', mockUsers);
   saveToStorage('restaurants', mockRestaurants);
   saveToStorage('subscriptions', mockSubscriptions);
   saveToStorage('categories', mockCategories);
   saveToStorage('products', mockProducts);
   saveToStorage('orders', mockOrders);
-  
-  console.log('Data initialized:', {
-    users: mockUsers,
-    restaurants: mockRestaurants
-  });
+  saveToStorage('supportTickets', []);
+  localStorage.setItem('data_initialized', 'true');
+  console.log('Data reset complete!');
+  window.location.reload();
 };

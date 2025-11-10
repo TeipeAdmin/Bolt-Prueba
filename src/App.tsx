@@ -29,7 +29,7 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Suscripción Requerida</h2>
           <p className="text-gray-600 mb-6">
-            Tu suscripción ha expirado. Selecciona un plan para reactivar tu cuenta.
+            {t('suscriptionend')}
           </p>
           <Navigate to="/dashboard" />
         </div>
@@ -43,43 +43,51 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 const AppRoutes: React.FC = () => {
   const { isAuthenticated, loading } = useAuth();
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando aplicación...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <Routes>
       <Route 
-        path="/login" 
-        element={isAuthenticated ? <Navigate to="/dashboard" /> : <AuthPage />} 
-      />
-      <Route 
-        path="/dashboard" 
+        path="/login"
         element={
-          <PrivateRoute>
-            <DashboardPage />
-          </PrivateRoute>
-        } 
+          loading ? (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Cargando aplicación...</p>
+              </div>
+            </div>
+          ) : isAuthenticated ? (
+            <Navigate to="/dashboard" />
+          ) : (
+            <AuthPage />
+          )
+        }
       />
-      <Route path="/menu/:slug" element={
-        <CartProvider>
-          <PublicMenu />
-        </CartProvider>
-      } />
-      <Route path="/:slug" element={
-        <CartProvider>
-          <PublicMenu />
-        </CartProvider>
-      } />
+      <Route
+        path="/dashboard"
+        element={
+          loading ? (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Cargando aplicación...</p>
+              </div>
+            </div>
+          ) : (
+            <PrivateRoute>
+              <DashboardPage />
+            </PrivateRoute>
+          )
+        }
+      />
+      <Route
+        path="/:slug"
+        element={
+          <CartProvider>
+            <PublicMenu />
+          </CartProvider>
+        }
+      />
       <Route path="/" element={<Navigate to="/login" />} />
-      <Route path="*" element={<Navigate to="/login" />} />
     </Routes>
   );
 };

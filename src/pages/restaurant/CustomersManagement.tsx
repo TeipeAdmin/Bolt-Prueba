@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { User, Phone, Mail, MapPin, Calendar, ShoppingBag, Filter, Search, Star, Edit, ArrowUpDown, Trash2, Info, Download, CheckSquare, Square, Users } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { User, Phone, Mail, MapPin, Calendar, ShoppingBag, Filter, Search, Star, Pencil as Edit, ArrowUpDown, Trash2, Info, Download, CheckSquare, Square, Users, DollarSign, TrendingUp, UserCheck, UserPlus, Upload } from 'lucide-react';
 import { Order, Customer, Subscription } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -9,6 +9,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
+import { formatCurrency } from '../../utils/currencyUtils';
 
 interface CustomerData extends Customer {
   id: string;
@@ -23,6 +24,7 @@ export const CustomersManagement: React.FC = () => {
   const { restaurant } = useAuth();
   const { t } = useLanguage();
   const { showToast } = useToast();
+  const currency = restaurant?.settings?.currency || 'USD';
   const [customers, setCustomers] = useState<CustomerData[]>([]);
   const [filteredCustomers, setFilteredCustomers] = useState<CustomerData[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -38,6 +40,11 @@ export const CustomersManagement: React.FC = () => {
   const [selectedCustomers, setSelectedCustomers] = useState<Set<string>>(new Set());
   const [showBulkEditModal, setShowBulkEditModal] = useState(false);
   const [bulkEditAction, setBulkEditAction] = useState<'vip' | 'remove_vip' | 'delete'>('vip');
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importPreview, setImportPreview] = useState<any[]>([]);
+  const [importErrors, setImportErrors] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [editForm, setEditForm] = useState({
     name: '',
     phone: '',
@@ -62,16 +69,22 @@ export const CustomersManagement: React.FC = () => {
 
     const allOrders = loadFromStorage('orders') || [];
     const vipCustomers = loadFromStorage('vipCustomers') || [];
-    const restaurantOrders = allOrders.filter((order: Order) => 
-      order.restaurant_id === restaurant.id
+    const importedCustomers = loadFromStorage('importedCustomers') || [];
+    const restaurantOrders = allOrders.filter((order: Order) =>
+      order &&
+      order.restaurant_id === restaurant.id &&
+      order.order_number &&
+      order.status &&
+      order.items
     );
 
-    // Group orders by customer phone (unique identifier) to avoid duplicates
     const customerMap = new Map<string, CustomerData>();
 
     restaurantOrders.forEach((order: Order) => {
-      const customerKey = order.customer.phone; // Use phone as unique identifier
-      
+      if (!order.customer || !order.customer.phone) return;
+
+      const customerKey = order.customer.phone;
+
       if (customerMap.has(customerKey)) {
         const existing = customerMap.get(customerKey)!;
         existing.totalOrders += 1;
@@ -80,18 +93,17 @@ export const CustomersManagement: React.FC = () => {
         if (!existing.orderTypes.includes(order.order_type)) {
           existing.orderTypes.push(order.order_type);
         }
-        // Update customer info with most recent data (keep latest information)
-        existing.name = order.customer.name;
+        existing.name = order.customer.name || existing.name;
         existing.email = order.customer.email || existing.email;
         existing.address = order.customer.address || existing.address;
         existing.delivery_instructions = order.customer.delivery_instructions || existing.delivery_instructions;
       } else {
-        const isVip = vipCustomers.some((vip: any) => 
+        const isVip = vipCustomers.some((vip: any) =>
           vip.restaurant_id === restaurant.id && vip.phone === order.customer.phone
         );
         customerMap.set(customerKey, {
           id: order.customer.phone,
-          name: order.customer.name,
+          name: order.customer.name || 'N/A',
           phone: order.customer.phone,
           email: order.customer.email,
           address: order.customer.address,
@@ -100,6 +112,31 @@ export const CustomersManagement: React.FC = () => {
           totalSpent: order.status === 'delivered' ? order.total : 0,
           lastOrderDate: order.created_at,
           orderTypes: [order.order_type],
+          isVip: isVip,
+        });
+      }
+    });
+
+    importedCustomers.forEach((customer: any) => {
+      if (!customer.phone || customer.restaurant_id !== restaurant.id) return;
+
+      const customerKey = customer.phone;
+
+      if (!customerMap.has(customerKey)) {
+        const isVip = vipCustomers.some((vip: any) =>
+          vip.restaurant_id === restaurant.id && vip.phone === customer.phone
+        );
+        customerMap.set(customerKey, {
+          id: customer.phone,
+          name: customer.name || 'N/A',
+          phone: customer.phone,
+          email: customer.email,
+          address: customer.address,
+          delivery_instructions: customer.delivery_instructions,
+          totalOrders: 0,
+          totalSpent: 0,
+          lastOrderDate: customer.created_at,
+          orderTypes: [],
           isVip: isVip,
         });
       }
@@ -118,17 +155,15 @@ export const CustomersManagement: React.FC = () => {
     // Apply segment filter
     if (filterBy !== 'all') {
       filtered = filtered.filter(customer => {
-        const isVip = customer.isVip || customer.totalOrders >= 10;
-        const isFrequent = customer.totalOrders >= 5 && !isVip;
-        const isNew = customer.totalOrders < 3 && !isFrequent && !isVip;
-
         switch (filterBy) {
           case 'vip':
-            return isVip;
+            return customer.isVip;
           case 'frequent':
-            return isFrequent;
+            return customer.totalOrders >= 5;
+          case 'regular':
+            return customer.totalOrders >= 2 && customer.totalOrders <= 4;
           case 'new':
-            return isNew;
+            return customer.totalOrders === 1 || customer.totalOrders === 0;
           default:
             return true;
         }
@@ -138,9 +173,12 @@ export const CustomersManagement: React.FC = () => {
     // Apply status filter
     if (statusFilter !== 'all') {
       filtered = filtered.filter(customer => {
+        if (customer.totalOrders === 0) {
+          return statusFilter === 'inactive';
+        }
         const daysSinceLastOrder = Math.ceil((new Date().getTime() - new Date(customer.lastOrderDate).getTime()) / (1000 * 60 * 60 * 24));
-        const isActive = daysSinceLastOrder <= 30; // Active if ordered in last 30 days
-        
+        const isActive = daysSinceLastOrder <= 30;
+
         if (statusFilter === 'active') {
           return isActive;
         } else if (statusFilter === 'inactive') {
@@ -210,10 +248,10 @@ export const CustomersManagement: React.FC = () => {
 
     showToast(
       'success',
-      customer.isVip ? 'Cliente VIP Removido' : 'Cliente VIP Agregado',
+      customer.isVip ? t('vipCustomerRemoved') : t('vipCustomerAdded'),
       customer.isVip 
-        ? `${customer.name} ya no es un cliente VIP.`
-        : `${customer.name} ahora es un cliente VIP.`,
+        ? `${customer.name} ${t('noLongerVipCustomer')}`
+        : `${customer.name} ${t('nowVipCustomer')}`,
       4000
     );
   };
@@ -238,7 +276,7 @@ export const CustomersManagement: React.FC = () => {
 
   const handleBulkEdit = () => {
     if (selectedCustomers.size === 0) {
-      showToast('warning', 'Sin selección', 'Selecciona al menos un cliente para editar.', 4000);
+      showToast('warning', t('noSelection'), t('selectAtLeastOneCustomer'), 4000);
       return;
     }
     setShowBulkEditModal(true);
@@ -275,7 +313,7 @@ export const CustomersManagement: React.FC = () => {
           )
         );
         
-        showToast('success', 'VIP Asignado', `${selectedCustomers.size} cliente${selectedCustomers.size !== 1 ? 's' : ''} marcado${selectedCustomers.size !== 1 ? 's' : ''} como VIP.`, 4000);
+        showToast('success', t('vipAssigned'), `${selectedCustomers.size} ${t('customerPlural', { count: selectedCustomers.size })} ${t('markedAsVip', { count: selectedCustomers.size })}`, 4000);
         break;
         
       case 'remove_vip':
@@ -295,17 +333,17 @@ export const CustomersManagement: React.FC = () => {
           )
         );
         
-        showToast('info', 'VIP Removido', `${selectedCustomers.size} cliente${selectedCustomers.size !== 1 ? 's' : ''} ya no ${selectedCustomers.size !== 1 ? 'son' : 'es'} VIP.`, 4000);
+        showToast('info', t('vipRemoved'), `${selectedCustomers.size} ${t('customerPlural', { count: selectedCustomers.size })} ${t('noLongerVip', { count: selectedCustomers.size })}`, 4000);
         break;
         
       case 'delete':
-        // Eliminar todos los seleccionados
-        if (confirm(`¿Estás seguro de que quieres eliminar ${selectedCustomers.size} cliente${selectedCustomers.size !== 1 ? 's' : ''}? Esta acción eliminará también todos sus pedidos y no se puede deshacer.`)) {
-          selectedCustomersList.forEach(customer => {
-            deleteCustomerData(customer);
-          });
+       // Eliminar todos los seleccionados
+if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${selectedCustomers.size !== 1 ? 's' : ''}? ${t('warningDeleteAction')}`)) {
+  selectedCustomersList.forEach(customer => {
+    deleteCustomerData(customer);
+  });
           
-          showToast('info', 'Clientes Eliminados', `${selectedCustomers.size} cliente${selectedCustomers.size !== 1 ? 's' : ''} eliminado${selectedCustomers.size !== 1 ? 's' : ''} exitosamente.`, 5000);
+          showToast('info', t('customersDeleted'), `${selectedCustomers.size} ${t('customerPlural', { count: selectedCustomers.size })} ${t('deletedSuccessfully', { count: selectedCustomers.size })}`, 5000);
         }
         break;
     }
@@ -372,8 +410,8 @@ export const CustomersManagement: React.FC = () => {
     
     showToast(
       'success',
-      'Cliente Actualizado',
-      'La información del cliente ha sido actualizada exitosamente.',
+      t('customerUpdated'),
+      t('customerInfoUpdatedSuccessfully'),
       4000
     );
   };
@@ -414,8 +452,8 @@ export const CustomersManagement: React.FC = () => {
     
     showToast(
       'info',
-      'Cliente Eliminado',
-      `El cliente "${customer.name}" y todos sus pedidos han sido eliminados.`,
+      t('customerDeleted'),
+      t('customerAndOrdersDeleted', { name: customer.name }),
       5000
     );
   };
@@ -473,8 +511,8 @@ export const CustomersManagement: React.FC = () => {
     if (dataToExport.length === 0) {
       showToast(
         'warning',
-        'Sin datos para exportar',
-        'No hay clientes que coincidan con los filtros actuales.',
+        t('noDataToExport'),
+        t('noCustomersMatchFilters'),
         4000
       );
       return;
@@ -482,18 +520,18 @@ export const CustomersManagement: React.FC = () => {
 
     // Definir las columnas del CSV
     const headers = [
-      'Nombre',
-      'Teléfono',
-      'Email',
-      'Dirección',
-      'Total Pedidos',
-      'Total Gastado',
-      'Promedio por Pedido',
-      'Tipos de Pedido',
-      'Es VIP',
-      'Segmento',
-      'Último Pedido',
-      'Referencias de Entrega'
+      t('name'),
+      t('phone'),
+      t('email'),
+      t('address'),
+      t('totalOrders'),
+      t('totalSpent'),
+      t('averagePerOrder'),
+      t('orderTypes'),
+      t('isVip'),
+      t('segment'),
+      t('lastOrder'),
+      t('deliveryInstructions')
     ];
 
     // Función para obtener el segmento como texto
@@ -503,11 +541,11 @@ export const CustomersManagement: React.FC = () => {
       if (isVip) segments.push('VIP');
       
       if (totalOrders === 1) {
-        segments.push('Nuevo');
+        segments.push(t('new'));
       } else if (totalOrders >= 2 && totalOrders <= 4) {
-        segments.push('Regular');
+        segments.push(t('regular'));
       } else if (totalOrders >= 5) {
-        segments.push('Frecuente');
+        segments.push(t('frequent'));
       }
       
       return segments.join(', ');
@@ -520,30 +558,32 @@ export const CustomersManagement: React.FC = () => {
       customer.email || '',
       customer.address || '',
       customer.totalOrders,
-      customer.totalSpent.toFixed(2),
-      (customer.totalSpent / customer.totalOrders).toFixed(2),
+      formatCurrency(customer.totalSpent, currency),
+      formatCurrency(customer.totalSpent / customer.totalOrders, currency),
       customer.orderTypes.join(', '),
-      customer.isVip ? 'Sí' : 'No',
+      customer.isVip ? t('yes') : t('no'),
       getSegmentText(customer.totalOrders, customer.isVip),
       new Date(customer.lastOrderDate).toLocaleDateString(),
       customer.delivery_instructions || ''
     ]);
 
-    // Crear contenido CSV
+    // Crear contenido CSV con punto y coma como delimitador
+    const delimiter = ';';
+    const BOM = '\uFEFF';
     const csvContent = [
-      headers.join(','),
-      ...csvData.map(row => 
-        row.map(field => 
-          // Escapar comillas y envolver en comillas si contiene comas, saltos de línea o comillas
-          typeof field === 'string' && (field.includes(',') || field.includes('\n') || field.includes('"'))
+      headers.join(delimiter),
+      ...csvData.map(row =>
+        row.map(field =>
+          // Escapar comillas y envolver en comillas si contiene el delimitador, saltos de línea o comillas
+          typeof field === 'string' && (field.includes(delimiter) || field.includes('\n') || field.includes('"'))
             ? `"${field.replace(/"/g, '""')}"`
             : field
-        ).join(',')
+        ).join(delimiter)
       )
     ].join('\n');
 
-    // Crear y descargar archivo
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    // Crear y descargar archivo con BOM para UTF-8
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     
     if (link.download !== undefined) {
@@ -552,11 +592,11 @@ export const CustomersManagement: React.FC = () => {
       
       // Generar nombre de archivo con fecha y filtros aplicados
       const today = new Date().toISOString().split('T')[0];
-      let fileName = `clientes_${restaurant?.name?.replace(/[^a-zA-Z0-9]/g, '_')}_${today}`;
+      let fileName = `${t('customers')}_${restaurant?.name?.replace(/[^a-zA-Z0-9]/g, '_')}_${today}`;
       
       // Añadir información de filtros al nombre
       if (searchTerm) {
-        fileName += `_busqueda_${searchTerm.replace(/[^a-zA-Z0-9]/g, '_')}`;
+        fileName += `_${t('search')}_${searchTerm.replace(/[^a-zA-Z0-9]/g, '_')}`;
       }
       if (filterBy !== 'all') {
         fileName += `_${filterBy}`;
@@ -574,16 +614,312 @@ export const CustomersManagement: React.FC = () => {
 
     showToast(
       'success',
-      'CSV Exportado',
-      `Se han exportado ${dataToExport.length} cliente${dataToExport.length !== 1 ? 's' : ''} exitosamente.`,
+      t('csvExported'),
+      t('customersExportedSuccessfully', { count: dataToExport.length }),
       4000
     );
   };
+
+  const downloadCSVTemplate = () => {
+    const headers = [
+      t('name'),
+      t('phone'),
+      t('email'),
+      t('address'),
+      t('deliveryInstructions'),
+      t('isVip')
+    ];
+
+    const exampleRows = [
+      [
+        'Juan Pérez',
+        '+573001234567',
+        'juan.perez@email.com',
+        'Calle 123 #45-67 Bogotá',
+        t('exampleDeliveryInstruction1'),
+        t('yes')
+      ],
+      [
+        'María González',
+        '+573009876543',
+        'maria.gonzalez@email.com',
+        'Carrera 45 #12-34 Medellín',
+        t('exampleDeliveryInstruction2'),
+        t('no')
+      ]
+    ];
+
+    const delimiter = ';';
+
+    const csvContent = [
+      headers.join(delimiter),
+      ...exampleRows.map(row =>
+        row.map(field =>
+          typeof field === 'string' && (field.includes(delimiter) || field.includes('\n') || field.includes('"'))
+            ? `"${field.replace(/"/g, '""')}"`
+            : field
+        ).join(delimiter)
+      )
+    ].join('\n');
+
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `${t('customersTemplate')}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    showToast(
+      'success',
+      t('templateDownloaded'),
+      t('useTemplateAsGuide'),
+      4000
+    );
+  };
+
+  const handleImportFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.csv')) {
+      showToast('error', t('invalidFile'), t('pleaseSelectValidCSV'), 4000);
+      return;
+    }
+
+    setImportFile(file);
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      if (!text || text.trim() === '') {
+        showToast('error', t('emptyFile'), t('csvFileIsEmpty'), 4000);
+        return;
+      }
+      parseCSV(text);
+    };
+
+    reader.onerror = () => {
+      showToast('error', t('readError'), t('couldNotReadFile'), 4000);
+    };
+
+    reader.readAsText(file, 'UTF-8');
+  };
+
+  const detectDelimiter = (text: string): string => {
+    const firstLine = text.split(/\r?\n/)[0];
+    const commaCount = (firstLine.match(/,/g) || []).length;
+    const semicolonCount = (firstLine.match(/;/g) || []).length;
+    return semicolonCount > commaCount ? ';' : ',';
+  };
+
+  const parseCSVLine = (line: string, delimiter: string): string[] => {
+    const result: string[] = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      const nextChar = line[i + 1];
+
+      if (char === '"' && inQuotes && nextChar === '"') {
+        current += '"';
+        i++;
+      } else if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === delimiter && !inQuotes) {
+        result.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    result.push(current.trim());
+    return result;
+  };
+
+  const parseCSV = (text: string) => {
+    text = text.replace(/^\uFEFF/, '');
+    const lines = text.split(/\r?\n/).filter(line => line.trim());
+
+    if (lines.length < 2) {
+      setImportErrors([t('csvEmptyOrNoData')]);
+      setShowImportModal(true);
+      return;
+    }
+
+    const delimiter = detectDelimiter(text);
+    const headers = parseCSVLine(lines[0], delimiter);
+    const requiredHeaders = [t('name'), t('phone')];
+    const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+
+    if (missingHeaders.length > 0) {
+      setImportErrors([t('missingRequiredColumns', { columns: missingHeaders.join(', '), found: headers.join(', ') })]);
+      setShowImportModal(true);
+      return;
+    }
+
+    const errors: string[] = [];
+    const preview: any[] = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i];
+      const values = parseCSVLine(line, delimiter);
+
+      if (values.length !== headers.length) {
+        errors.push(t('lineIncorrectColumns', { line: i + 1, expected: headers.length, got: values.length, values: values.join(' | ') }));
+        continue;
+      }
+
+      const row: any = {};
+      headers.forEach((header, index) => {
+        row[header] = values[index];
+      });
+
+      if (!row[t('name')] || !row[t('name')].trim()) {
+        errors.push(t('lineNameRequired', { line: i + 1 }));
+        continue;
+      }
+
+      if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(row[t('name')].trim())) {
+        errors.push(t('lineNameOnlyLetters', { line: i + 1, name: row[t('name')] }));
+        continue;
+      }
+
+      if (!row[t('phone')] || !row[t('phone')].trim()) {
+        errors.push(t('linePhoneRequired', { line: i + 1 }));
+        continue;
+      }
+
+      if (!/^[\d+\s()-]+$/.test(row[t('phone')].trim())) {
+        errors.push(t('linePhoneOnlyNumbers', { line: i + 1, phone: row[t('phone')] }));
+        continue;
+      }
+
+      if (row[t('email')] && row[t('email')].trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row[t('email')].trim())) {
+        errors.push(t('lineEmailInvalidFormat', { line: i + 1, email: row[t('email')] }));
+        continue;
+      }
+
+      const existingCustomer = customers.find(c => c.phone === row[t('phone')]);
+      if (existingCustomer) {
+        errors.push(t('lineCustomerAlreadyExists', { line: i + 1, phone: row[t('phone')] }));
+        continue;
+      }
+
+      preview.push({
+        name: row[t('name')],
+        phone: row[t('phone')],
+        email: row[t('email')] || '',
+        address: row[t('address')] || '',
+        delivery_instructions: row[t('deliveryInstructions')] || '',
+        isVip: row[t('isVip')]?.toLowerCase() === t('yes').toLowerCase() || row[t('isVip')]?.toLowerCase() === 'yes',
+        lineNumber: i + 1
+      });
+    }
+
+    setImportErrors(errors);
+    setImportPreview(preview);
+    setShowImportModal(true);
+
+    if (preview.length === 0 && errors.length === 0) {
+      showToast('error', t('noData'), t('fileContainsNoData'), 4000);
+    } else if (preview.length === 0 && errors.length > 0) {
+      showToast('error', t('validationErrors'), t('errorsFoundReview', { count: errors.length }), 5000);
+    } else if (preview.length > 0 && errors.length > 0) {
+      showToast('warning', t('partialImport'), t('validRecordsAndErrors', { valid: preview.length, errors: errors.length }), 5000);
+    } else {
+      showToast('success', t('dataValidated'), t('customersReadyToImport', { count: preview.length }), 3000);
+    }
+  };
+
+  const executeImport = () => {
+    if (importPreview.length === 0) return;
+
+    const importedCustomers = loadFromStorage('importedCustomers') || [];
+    const vipCustomers = loadFromStorage('vipCustomers') || [];
+
+    importPreview.forEach((customer) => {
+      importedCustomers.push({
+        restaurant_id: restaurant?.id,
+        name: customer.name,
+        phone: customer.phone,
+        email: customer.email,
+        address: customer.address,
+        delivery_instructions: customer.delivery_instructions,
+        created_at: new Date().toISOString(),
+      });
+
+      if (customer.isVip) {
+        const existingVip = vipCustomers.find((v: any) => v.phone === customer.phone && v.restaurant_id === restaurant?.id);
+        if (!existingVip) {
+          vipCustomers.push({
+            restaurant_id: restaurant?.id,
+            phone: customer.phone,
+            name: customer.name,
+            created_at: new Date().toISOString(),
+          });
+        }
+      }
+    });
+
+    saveToStorage('importedCustomers', importedCustomers);
+    saveToStorage('vipCustomers', vipCustomers);
+
+    loadCustomersData();
+
+    setShowImportModal(false);
+    setImportFile(null);
+    setImportPreview([]);
+    setImportErrors([]);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+
+    showToast(
+      'success',
+      t('importSuccessful'),
+      t('customersImportedSuccessfully', { count: importPreview.length }),
+      4000
+    );
+  };
+
+  const cancelImport = () => {
+    setShowImportModal(false);
+    setImportFile(null);
+    setImportPreview([]);
+    setImportErrors([]);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+  
   const stats = {
     totalCustomers: customers.length,
     vipCustomers: customers.filter(c => c.isVip).length,
     frequentCustomers: customers.filter(c => c.totalOrders >= 5).length,
+    regularCustomers: customers.filter(c => c.totalOrders >= 2 && c.totalOrders <= 4).length,
+    newCustomers: customers.filter(c => c.totalOrders === 1).length,
+    activeCustomers: customers.filter(c => {
+      const daysSinceLastOrder = Math.ceil((new Date().getTime() - new Date(c.lastOrderDate).getTime()) / (1000 * 60 * 60 * 24));
+      return daysSinceLastOrder <= 30;
+    }).length,
+    inactiveCustomers: customers.filter(c => {
+      const daysSinceLastOrder = Math.ceil((new Date().getTime() - new Date(c.lastOrderDate).getTime()) / (1000 * 60 * 60 * 24));
+      return daysSinceLastOrder > 30;
+    }).length,
+    totalRevenue: customers.reduce((sum, c) => sum + c.totalSpent, 0),
     averageSpent: customers.length > 0 ? customers.reduce((sum, c) => sum + c.totalSpent, 0) / customers.length : 0,
+    topCustomerSpent: customers.length > 0 ? Math.max(...customers.map(c => c.totalSpent)) : 0,
+    totalOrders: customers.reduce((sum, c) => sum + c.totalOrders, 0),
   };
 
   return (
@@ -599,7 +935,7 @@ export const CustomersManagement: React.FC = () => {
               onClick={handleBulkEdit}
               className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
             >
-              Editar {selectedCustomers.size} seleccionado{selectedCustomers.size !== 1 ? 's' : ''}
+              {t('edit')} {selectedCustomers.size} {t('selectedPlural', { count: selectedCustomers.size })}
             </Button>
           )}
           <Button
@@ -609,8 +945,24 @@ export const CustomersManagement: React.FC = () => {
             onClick={exportToCSV}
             className="text-green-600 hover:text-green-700 hover:bg-green-50"
           >
-            Exportar CSV
+            {t('exportCSV')}
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            icon={Upload}
+            onClick={() => fileInputRef.current?.click()}
+            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+          >
+            {t('importCSV')}
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv"
+            onChange={handleImportFile}
+            className="hidden"
+          />
           <Button
             variant="outline"
             size="sm"
@@ -618,50 +970,82 @@ export const CustomersManagement: React.FC = () => {
             onClick={() => setShowFilters(!showFilters)}
             className={showFilters ? 'bg-blue-50 border-blue-200 text-blue-700' : ''}
           >
-            Filtros y Búsqueda
+            {t('filtersAndSearch')}
           </Button>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <User className="h-8 w-8 text-blue-600" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">{t('totalCustomers')}</p>
-              <p className="text-2xl font-semibold text-gray-900">{stats.totalCustomers}</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-md border border-blue-200 hover:shadow-lg transition-shadow">
+          <div className="flex items-start justify-between mb-4">
+            <div className="p-3 bg-blue-600 rounded-lg">
+              <Users className="h-6 w-6 text-white" />
             </div>
+            <div className="text-right">
+              <p className="text-sm font-medium text-blue-900 mb-1">{t('totalCustomers')}</p>
+              <p className="text-3xl font-bold text-blue-900">{stats.totalCustomers}</p>
+            </div>
+          </div>
+          <div className="flex items-center justify-between pt-3 border-t border-blue-200">
+            <span className="text-xs text-blue-700 font-medium">{t('customerBase')}</span>
+            <span className="text-sm font-bold text-blue-800">
+              {stats.newCustomers} {t('new')}
+            </span>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <ShoppingBag className="h-8 w-8 text-purple-600" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">{t('vipCustomers')}</p>
-              <p className="text-2xl font-semibold text-gray-900">{stats.vipCustomers}</p>
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl shadow-md border border-purple-200 hover:shadow-lg transition-shadow">
+          <div className="flex items-start justify-between mb-4">
+            <div className="p-3 bg-purple-600 rounded-lg">
+              <Star className="h-6 w-6 text-white" />
             </div>
+            <div className="text-right">
+              <p className="text-sm font-medium text-purple-900 mb-1">{t('vipCustomers')}</p>
+              <p className="text-3xl font-bold text-purple-900">{stats.vipCustomers}</p>
+            </div>
+          </div>
+          <div className="flex items-center justify-between pt-3 border-t border-purple-200">
+            <span className="text-xs text-purple-700 font-medium">{t('assignedManually')}</span>
+            <span className="text-sm font-bold text-purple-800">
+              {((stats.vipCustomers / stats.totalCustomers) * 100 || 0).toFixed(1)}%
+            </span>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <User className="h-8 w-8 text-green-600" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">{t('frequentCustomers')}</p>
-              <p className="text-2xl font-semibold text-gray-900">{stats.frequentCustomers}</p>
+        <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-md border border-green-200 hover:shadow-lg transition-shadow">
+          <div className="flex items-start justify-between mb-4">
+            <div className="p-3 bg-green-600 rounded-lg">
+              <UserCheck className="h-6 w-6 text-white" />
             </div>
+            <div className="text-right">
+              <p className="text-sm font-medium text-green-900 mb-1">{t('frequentCustomers')}</p>
+              <p className="text-3xl font-bold text-green-900">{stats.frequentCustomers}</p>
+            </div>
+          </div>
+          <div className="flex items-center justify-between pt-3 border-t border-green-200">
+            <span className="text-xs text-green-700 font-medium">{t('ordersPlus')}</span>
+            <span className="text-sm font-bold text-green-800">
+              {((stats.frequentCustomers / stats.totalCustomers) * 100 || 0).toFixed(1)}%
+            </span>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <Calendar className="h-8 w-8 text-orange-600" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">{t('averageSpent')}</p>
-              <p className="text-2xl font-semibold text-gray-900">${stats.averageSpent.toFixed(2)}</p>
+        <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl shadow-md border border-orange-200 hover:shadow-lg transition-shadow">
+          <div className="flex items-start justify-between mb-4">
+            <div className="p-3 bg-orange-600 rounded-lg">
+              <DollarSign className="h-6 w-6 text-white" />
             </div>
+            <div className="text-right">
+              <p className="text-sm font-medium text-orange-900 mb-1">{t('averageSpending')}</p>
+              <p className="text-3xl font-bold text-orange-900">{formatCurrency(stats.averageSpent, currency)}</p>
+            </div>
+          </div>
+          <div className="flex items-center justify-between pt-3 border-t border-orange-200">
+            <span className="text-xs text-orange-700 font-medium">{t('perCustomer')}</span>
+            <span className="text-sm font-bold text-green-700">
+              {formatCurrency(stats.totalRevenue, currency)}
+            </span>
           </div>
         </div>
       </div>
@@ -674,7 +1058,7 @@ export const CustomersManagement: React.FC = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
-              placeholder={`${t('search')} clientes por nombre, teléfono o email...`}
+              placeholder={t('searchCustomersPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -691,9 +1075,9 @@ export const CustomersManagement: React.FC = () => {
                 onChange={(e) => setStatusFilter(e.target.value as any)}
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0"
               >
-                <option value="all">Todos los estados</option>
-                <option value="active">Activos (últimos 30 días)</option>
-                <option value="inactive">Inactivos (+30 días)</option>
+                <option value="all">{t('allStatuses')}</option>
+                <option value="active">{t('activeLast30Days')}</option>
+                <option value="inactive">{t('inactivePlus30Days')}</option>
               </select>
             </div>
             
@@ -705,10 +1089,11 @@ export const CustomersManagement: React.FC = () => {
                 onChange={(e) => setFilterBy(e.target.value as any)}
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0"
               >
-                <option value="all">Todos los segmentos</option>
-                <option value="vip">Solo VIP</option>
-                <option value="frequent">Solo Frecuentes</option>
-                <option value="new">Solo Nuevos</option>
+                <option value="all">{t('allSegments')}</option>
+                <option value="vip">{t('onlyVip')}</option>
+                <option value="frequent">{t('onlyFrequent')}</option>
+                <option value="regular">{t('onlyRegular')}</option>
+                <option value="new">{t('onlyNew')}</option>
               </select>
             </div>
             
@@ -720,10 +1105,10 @@ export const CustomersManagement: React.FC = () => {
                 onChange={(e) => setSortBy(e.target.value as any)}
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0"
               >
-                <option value="name">Ordenar por {t('name')}</option>
-                <option value="orders">Ordenar por {t('ordersCount')}</option>
-                <option value="spent">Ordenar por {t('totalSpent')}</option>
-                <option value="date">Ordenar por {t('date')}</option>
+                <option value="name">{t('sortByName')}</option>
+                <option value="orders">{t('sortByOrders')}</option>
+                <option value="spent">{t('sortBySpent')}</option>
+                <option value="date">{t('sortByDate')}</option>
               </select>
             </div>
             
@@ -732,7 +1117,7 @@ export const CustomersManagement: React.FC = () => {
               <button
                 onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50 transition-colors flex items-center gap-1"
-                title={sortDirection === 'asc' ? 'Cambiar a descendente' : 'Cambiar a ascendente'}
+                title={sortDirection === 'asc' ? t('changeToDescending') : t('changeToAscending')}
               >
                 <ArrowUpDown className="w-4 h-4" />
                 {sortDirection === 'asc' ? '↑' : '↓'}
@@ -747,12 +1132,12 @@ export const CustomersManagement: React.FC = () => {
         <div className="bg-white rounded-lg shadow p-12 text-center">
           <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            {customers.length === 0 ? 'No registered customers' : 'No customers found'}
+            {customers.length === 0 ? t('noRegisteredCustomers') : t('noCustomersFound')}
           </h3>
           <p className="text-gray-600">
             {customers.length === 0 
-              ? 'Customers will appear here once they place orders.'
-              : 'Try different search terms.'
+              ? t('customersWillAppear')
+              : t('tryDifferentSearch')
             }
           </p>
         </div>
@@ -791,12 +1176,12 @@ export const CustomersManagement: React.FC = () => {
                       <Info className="w-3 h-3 ml-1 text-gray-400" />
                       <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 hidden group-hover:block bg-white text-gray-800 text-xs rounded-lg p-3 w-64 shadow-xl border border-gray-200 z-50">
                         <div className="space-y-1">
-                          <div><strong className="text-green-300">VIP:</strong> Asignado manualmente</div>
-                          <div><strong className="text-blue-300">Nuevo:</strong> 1 pedido</div>
-                          <div><strong className="text-gray-300">Regular:</strong> 2-4 pedidos</div>
-                          <div><strong className="text-orange-300">Frecuente:</strong> 5+ pedidos</div>
-                          <div className="text-xs text-gray-400 mt-2 pt-2 border-t border-gray-300">
-                            * Un cliente puede ser VIP y tener otro segmento
+                          <div><strong className="text-green-600">VIP:</strong> {t('segmentVipDescription')}</div>
+                          <div><strong className="text-blue-600">{t('new')}:</strong> {t('segmentNewDescription')}</div>
+                          <div><strong className="text-gray-600">{t('regular')}:</strong> {t('segmentRegularDescription')}</div>
+                          <div><strong className="text-orange-600">{t('frequent')}:</strong> {t('segmentFrequentDescription')}</div>
+                          <div className="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-200">
+                            {t('segmentNote')}
                           </div>
                         </div>
                         <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-white"></div>
@@ -859,15 +1244,15 @@ export const CustomersManagement: React.FC = () => {
                         {customer.totalOrders}
                       </div>
                       <div className="text-sm text-gray-500">
-                        orders
+                        {t('orders')}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
-                        ${customer.totalSpent.toFixed(2)}
+                        {formatCurrency(customer.totalSpent, currency)}
                       </div>
                       <div className="text-sm text-gray-500">
-                        ${(customer.totalSpent / customer.totalOrders).toFixed(2)} avg
+                        {formatCurrency(customer.totalSpent / customer.totalOrders, currency)} {t('avg')}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -892,7 +1277,7 @@ export const CustomersManagement: React.FC = () => {
                       <button
                         onClick={() => handleEditCustomer(customer)}
                         className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-colors bg-blue-100 text-blue-800 hover:bg-blue-200 mr-2"
-                        title="Editar cliente"
+                        title={t('editCustomer')}
                       >
                         <Edit className="w-3 h-3 mr-1" />
                       </button>
@@ -903,14 +1288,14 @@ export const CustomersManagement: React.FC = () => {
                             ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
                             : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                         } mr-2`}
-                        title={customer.isVip ? 'Quitar VIP' : 'Hacer VIP'}
+                        title={customer.isVip ? t('removeVip') : t('makeVip')}
                       >
                         <Star className={`w-3 h-3 mr-1 ${customer.isVip ? 'fill-current' : ''}`} />
                       </button>
                       <button
                         onClick={() => handleDeleteCustomer(customer.id)}
                         className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-colors bg-red-100 text-red-800 hover:bg-red-200"
-                        title="Eliminar cliente"
+                        title={t('deleteCustomer')}
                       >
                         <Trash2 className="w-3 h-3 mr-1" />
                       </button>
@@ -927,19 +1312,19 @@ export const CustomersManagement: React.FC = () => {
       <Modal
         isOpen={showEditModal}
         onClose={handleCloseEditModal}
-        title="Editar Cliente"
+        title={t('editCustomer')}
         size="lg"
       >
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
-              label="Nombre Completo*"
+              label={t('fullNameRequired')}
               value={editForm.name}
               onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="Nombre del cliente"
+              placeholder={t('customerName')}
             />
             <Input
-              label="Teléfono*"
+              label={t('phoneRequired')}
               value={editForm.phone}
               onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
               placeholder="+1 (555) 123-4567"
@@ -947,7 +1332,7 @@ export const CustomersManagement: React.FC = () => {
           </div>
           
           <Input
-            label="Email"
+            label={t('email')}
             type="email"
             value={editForm.email}
             onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
@@ -955,22 +1340,22 @@ export const CustomersManagement: React.FC = () => {
           />
           
           <Input
-            label="Dirección"
+            label={t('address')}
             value={editForm.address}
             onChange={(e) => setEditForm(prev => ({ ...prev, address: e.target.value }))}
-            placeholder="Dirección completa"
+            placeholder={t('fullAddress')}
           />
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Referencias de Entrega
+              {t('deliveryInstructions')}
             </label>
             <textarea
               value={editForm.delivery_instructions}
               onChange={(e) => setEditForm(prev => ({ ...prev, delivery_instructions: e.target.value }))}
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Referencias para encontrar la dirección..."
+              placeholder={t('deliveryInstructionsPlaceholder')}
             />
           </div>
           
@@ -982,7 +1367,7 @@ export const CustomersManagement: React.FC = () => {
               className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mr-2"
             />
             <label className="text-sm font-medium text-gray-700">
-              Cliente VIP
+              {t('vipCustomer')}
             </label>
           </div>
 
@@ -1003,13 +1388,13 @@ export const CustomersManagement: React.FC = () => {
                 }
               }}
             >
-              Eliminar Cliente
+              {t('deleteCustomer')}
             </Button>
             <Button
               onClick={handleSaveCustomer}
               disabled={!editForm.name.trim() || !editForm.phone.trim()}
             >
-              Guardar Cambios
+              {t('saveChanges')}
             </Button>
           </div>
         </div>
@@ -1022,7 +1407,7 @@ export const CustomersManagement: React.FC = () => {
           setShowDeleteModal(false);
           setCustomerToDelete(null);
         }}
-        title="Confirmar Eliminación"
+        title={t('confirmDeletion')}
         size="md"
       >
         {customerToDelete && (
@@ -1035,21 +1420,21 @@ export const CustomersManagement: React.FC = () => {
             
             <div className="text-center">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                ¿Eliminar cliente "{customerToDelete.name}"?
+                {t('deleteCustomerConfirm')} "{customerToDelete.name}"?
               </h3>
               <p className="text-gray-600 mb-4">
-                Esta acción eliminará permanentemente:
+                {t('actionWillDeletePermanently')}
               </p>
               <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
                 <ul className="text-sm text-red-800 space-y-1">
-                  <li>• Toda la información del cliente</li>
-                  <li>• {customerToDelete.totalOrders} pedido{customerToDelete.totalOrders !== 1 ? 's' : ''} asociado{customerToDelete.totalOrders !== 1 ? 's' : ''}</li>
-                  <li>• Historial de compras (${customerToDelete.totalSpent.toFixed(2)})</li>
-                  {customerToDelete.isVip && <li>• Estado VIP del cliente</li>}
+                  <li>• {t('allCustomerInfo')}</li>
+                  <li>• {customerToDelete.totalOrders} {t('orderPlural', { count: customerToDelete.totalOrders })} {t('associated', { count: customerToDelete.totalOrders })}</li>
+                  <li>• {t('purchaseHistory')} ({formatCurrency(customerToDelete.totalSpent, currency)})</li>
+                  {customerToDelete.isVip && <li>• {t('customerVipStatus')}</li>}
                 </ul>
               </div>
               <p className="text-sm text-gray-500">
-                <strong>Esta acción no se puede deshacer.</strong>
+                <strong>{t('actionCannotBeUndone')}</strong>
               </p>
             </div>
 
@@ -1061,14 +1446,14 @@ export const CustomersManagement: React.FC = () => {
                   setCustomerToDelete(null);
                 }}
               >
-                Cancelar
+                {t('cancel')}
               </Button>
               <Button
                 variant="danger"
                 onClick={confirmDeleteCustomer}
                 icon={Trash2}
               >
-                Eliminar Cliente
+                {t('deleteCustomer')}
               </Button>
             </div>
           </div>
@@ -1082,7 +1467,7 @@ export const CustomersManagement: React.FC = () => {
           setShowBulkEditModal(false);
           setBulkEditAction('vip');
         }}
-        title="Edición Masiva"
+        title={t('bulkEdit')}
         size="md"
       >
         <div className="space-y-6">
@@ -1090,14 +1475,14 @@ export const CustomersManagement: React.FC = () => {
             <div className="flex items-center">
               <Users className="w-5 h-5 text-blue-600 mr-2" />
               <span className="text-sm font-medium text-blue-800">
-                {selectedCustomers.size} cliente{selectedCustomers.size !== 1 ? 's' : ''} seleccionado{selectedCustomers.size !== 1 ? 's' : ''}
+                {selectedCustomers.size} {t('customerPlural', { count: selectedCustomers.size })} {t('selectedPlural', { count: selectedCustomers.size })}
               </span>
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">
-              Selecciona la acción a realizar:
+              {t('selectActionToPerform')}
             </label>
             <div className="space-y-3">
               <label className="flex items-center">
@@ -1110,8 +1495,8 @@ export const CustomersManagement: React.FC = () => {
                   className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500 mr-3"
                 />
                 <div>
-                  <span className="text-sm font-medium text-gray-900">Marcar como VIP</span>
-                  <p className="text-xs text-gray-500">Agregar estado VIP a todos los clientes seleccionados</p>
+                  <span className="text-sm font-medium text-gray-900">{t('markAsVip')}</span>
+                  <p className="text-xs text-gray-500">{t('addVipStatusToSelected')}</p>
                 </div>
               </label>
               
@@ -1125,8 +1510,8 @@ export const CustomersManagement: React.FC = () => {
                   className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500 mr-3"
                 />
                 <div>
-                  <span className="text-sm font-medium text-gray-900">Remover VIP</span>
-                  <p className="text-xs text-gray-500">Quitar estado VIP de todos los clientes seleccionados</p>
+                  <span className="text-sm font-medium text-gray-900">{t('removeVip')}</span>
+                  <p className="text-xs text-gray-500">{t('removeVipStatusFromSelected')}</p>
                 </div>
               </label>
               
@@ -1140,8 +1525,8 @@ export const CustomersManagement: React.FC = () => {
                   className="h-4 w-4 text-red-600 border-gray-300 focus:ring-red-500 mr-3"
                 />
                 <div>
-                  <span className="text-sm font-medium text-red-900">Eliminar clientes</span>
-                  <p className="text-xs text-red-500">⚠️ Eliminar permanentemente todos los clientes y sus pedidos</p>
+                  <span className="text-sm font-medium text-red-900">{t('deleteCustomers')}</span>
+                  <p className="text-xs text-red-500">⚠️ {t('permanentlyDeleteAllCustomersAndOrders')}</p>
                 </div>
               </label>
             </div>
@@ -1161,9 +1546,118 @@ export const CustomersManagement: React.FC = () => {
               variant={bulkEditAction === 'delete' ? 'danger' : 'primary'}
               icon={bulkEditAction === 'delete' ? Trash2 : Users}
             >
-              {bulkEditAction === 'vip' && 'Marcar como VIP'}
-              {bulkEditAction === 'remove_vip' && 'Remover VIP'}
-              {bulkEditAction === 'delete' && 'Eliminar Clientes'}
+              {bulkEditAction === 'vip' && t('markAsVip')}
+              {bulkEditAction === 'remove_vip' && t('removeVip')}
+              {bulkEditAction === 'delete' && t('deleteCustomers')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Import CSV Modal */}
+      <Modal
+        isOpen={showImportModal}
+        onClose={cancelImport}
+        title={t('importCustomersFromCSV')}
+        size="lg"
+      >
+        <div className="space-y-6">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start">
+              <Info className="w-5 h-5 text-blue-600 mr-2 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-blue-800">
+                <p className="font-medium mb-2">{t('csvFileFormat')}</p>
+                <ul className="list-disc list-inside space-y-1 text-xs">
+                  <li><strong>{t('name')}</strong> ({t('required')}): {t('customerFullName')}</li>
+                  <li><strong>{t('phone')}</strong> ({t('required')}): {t('uniquePhoneNumber')}</li>
+                  <li><strong>{t('email')}</strong> ({t('optional')}): {t('emailAddress')}</li>
+                  <li><strong>{t('address')}</strong> ({t('optional')}): {t('fullAddress')}</li>
+                  <li><strong>{t('deliveryInstructions')}</strong> ({t('optional')}): {t('additionalDirections')}</li>
+                  <li><strong>{t('isVip')}</strong> ({t('optional')}): "{t('yes')}" {t('or')} "{t('no')}"</li>
+                </ul>
+                <button
+                  onClick={downloadCSVTemplate}
+                  className="mt-3 text-xs font-medium text-blue-700 hover:text-blue-800 underline"
+                >
+                  {t('downloadExampleTemplate')}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {importErrors.length > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-start">
+                <Info className="w-5 h-5 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-red-800 mb-2">{t('errorsFound', { count: importErrors.length })}</p>
+                  <ul className="text-xs text-red-700 space-y-1 max-h-40 overflow-y-auto">
+                    {importErrors.map((error, index) => (
+                      <li key={index}>• {error}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {importPreview.length > 0 && (
+            <div>
+              <h4 className="text-sm font-medium text-gray-900 mb-3">
+                {t('preview')}: {importPreview.length} {t('customerPlural', { count: importPreview.length })} {t('validPlural', { count: importPreview.length })}
+              </h4>
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 max-h-80 overflow-y-auto">
+                <div className="space-y-3">
+                  {importPreview.map((customer, index) => (
+                    <div key={index} className="bg-white rounded-lg p-3 border border-gray-200">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <User className="w-4 h-4 text-gray-600" />
+                            <span className="font-medium text-gray-900">{customer.name}</span>
+                            {customer.isVip && <Badge variant="success" size="sm">VIP</Badge>}
+                          </div>
+                          <div className="text-xs text-gray-600 space-y-1">
+                            <div className="flex items-center gap-1">
+                              <Phone className="w-3 h-3" />
+                              {customer.phone}
+                            </div>
+                            {customer.email && (
+                              <div className="flex items-center gap-1">
+                                <Mail className="w-3 h-3" />
+                                {customer.email}
+                              </div>
+                            )}
+                            {customer.address && (
+                              <div className="flex items-center gap-1">
+                                <MapPin className="w-3 h-3" />
+                                {customer.address}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <span className="text-xs text-gray-500">{t('line')} {customer.lineNumber}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <Button
+              variant="ghost"
+              onClick={cancelImport}
+            >
+              {t('cancel')}
+            </Button>
+            <Button
+              onClick={executeImport}
+              disabled={importPreview.length === 0}
+              icon={Upload}
+            >
+              {t('import')} {importPreview.length} {t('customerPlural', { count: importPreview.length })}
             </Button>
           </div>
         </div>

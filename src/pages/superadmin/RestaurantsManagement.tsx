@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, Edit, Trash2, CheckCircle, XCircle, Filter, ExternalLink, Settings } from 'lucide-react';
+import { Eye, Trash2, Filter, ExternalLink, Settings, Plus } from 'lucide-react';
 import { Restaurant, Subscription } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { Button } from '../../components/ui/Button';
@@ -13,43 +13,88 @@ export const RestaurantsManagement: React.FC = () => {
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [restaurantToDelete, setRestaurantToDelete] = useState<Restaurant | null>(null);
   const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(null);
   const [subscriptionForm, setSubscriptionForm] = useState({
-    plan_type: 'basic' as Subscription['plan_type'],
+    plan_type: 'gratis' as Subscription['plan_type'],
     duration: 'monthly' as Subscription['duration'],
     status: 'active' as Subscription['status'],
   });
+  const [newRestaurantForm, setNewRestaurantForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    description: '',
+  });
   const [filter, setFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'name'>('newest');
 
   useEffect(() => {
     loadData();
   }, []);
 
+  const calculateNewEndDate = (currentEndDate: string, duration: Subscription['duration']): string => {
+    const endDate = new Date(currentEndDate);
+
+    if (duration === 'monthly') {
+      endDate.setMonth(endDate.getMonth() + 1);
+    } else if (duration === 'annual') {
+      endDate.setFullYear(endDate.getFullYear() + 1);
+    }
+
+    return endDate.toISOString();
+  };
+
   const loadData = () => {
     const restaurantData = loadFromStorage('restaurants') || [];
     const subscriptionData = loadFromStorage('subscriptions') || [];
+
+    // Auto-renew or expire subscriptions based on end date
+    const now = new Date();
+    const updatedSubscriptions = subscriptionData.map((sub: Subscription) => {
+      const endDate = new Date(sub.end_date);
+
+      // If subscription end date has passed and it's currently active
+      if (endDate < now && sub.status === 'active') {
+        // Check if auto-renew is enabled
+        if (sub.auto_renew) {
+          // Auto-renew: extend the subscription based on duration
+          return {
+            ...sub,
+            start_date: sub.end_date,
+            end_date: calculateNewEndDate(sub.end_date, sub.duration),
+            status: 'active' as const
+          };
+        } else {
+          // No auto-renew: mark as expired
+          return { ...sub, status: 'expired' as const };
+        }
+      }
+      return sub;
+    });
+
     setRestaurants(restaurantData);
-    setSubscriptions(subscriptionData);
+    setSubscriptions(updatedSubscriptions);
+
+    // Save the updated subscriptions back to storage if there were changes
+    if (JSON.stringify(updatedSubscriptions) !== JSON.stringify(subscriptionData)) {
+      saveToStorage('subscriptions', updatedSubscriptions);
+    }
   };
 
   const getSubscription = (restaurantId: string) => {
     return subscriptions.find(sub => sub.restaurant_id === restaurantId);
   };
 
-  const toggleRestaurantStatus = (restaurantId: string) => {
-    const restaurant = restaurants.find(r => r.id === restaurantId);
-    if (!restaurant) return;
-    
-    const newStatus = restaurant.status === 'active' ? 'inactive' : 'active';
-    const updatedRestaurants = restaurants.map(restaurant => 
-      restaurant.id === restaurantId 
-        ? { ...restaurant, status: newStatus, updated_at: new Date().toISOString() }
-        : restaurant
-    );
-    
-    setRestaurants(updatedRestaurants);
-    saveToStorage('restaurants', updatedRestaurants);
+  const isRestaurantActive = (restaurantId: string) => {
+    const subscription = getSubscription(restaurantId);
+    return subscription?.status === 'active';
   };
 
   const handleEditSubscription = (restaurant: Restaurant) => {
@@ -64,7 +109,7 @@ export const RestaurantsManagement: React.FC = () => {
       });
     } else {
       setSubscriptionForm({
-        plan_type: 'basic',
+        plan_type: 'gratis',
         duration: 'monthly',
         status: 'active',
       });
@@ -105,18 +150,17 @@ export const RestaurantsManagement: React.FC = () => {
       saveToStorage('subscriptions', [...allSubscriptions, newSubscription]);
     }
 
-    // Update restaurant status based on subscription
+    // Update restaurant subscription_id if needed
     const updatedRestaurants = restaurants.map(restaurant =>
       restaurant.id === editingRestaurant.id
-        ? { 
-            ...restaurant, 
-            status: subscriptionForm.status === 'active' ? 'active' : 'inactive',
+        ? {
+            ...restaurant,
             subscription_id: existingSubscription?.id || `sub-${Date.now()}`,
             updated_at: new Date().toISOString()
           }
         : restaurant
     );
-    
+
     setRestaurants(updatedRestaurants);
     saveToStorage('restaurants', updatedRestaurants);
     
@@ -131,9 +175,6 @@ export const RestaurantsManagement: React.FC = () => {
       case 'monthly':
         now.setMonth(now.getMonth() + 1);
         break;
-      case 'quarterly':
-        now.setMonth(now.getMonth() + 3);
-        break;
       case 'annual':
         now.setFullYear(now.getFullYear() + 1);
         break;
@@ -141,36 +182,225 @@ export const RestaurantsManagement: React.FC = () => {
     return now.toISOString();
   };
 
-  const filteredRestaurants = restaurants.filter(restaurant => {
-    const matchesSearch = restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         restaurant.email.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    if (filter === 'all') return matchesSearch;
-    return matchesSearch && restaurant.status === filter;
-  });
+  const filteredRestaurants = restaurants
+    .filter(restaurant => {
+      const matchesSearch = restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           restaurant.email.toLowerCase().includes(searchTerm.toLowerCase());
 
-  const getStatusBadge = (status: Restaurant['status']) => {
-    switch (status) {
-      case 'active':
-        return <Badge variant="success">Activo</Badge>;
-      case 'inactive':
-        return <Badge variant="error">Inactivo</Badge>;
-      default:
-        return <Badge variant="gray">Inactivo</Badge>;
+      // Filter by date range
+      if (startDate || endDate) {
+        const restaurantDate = new Date(restaurant.created_at);
+        if (startDate && restaurantDate < new Date(startDate)) return false;
+        if (endDate) {
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          if (restaurantDate > end) return false;
+        }
+      }
+
+      if (filter === 'all') return matchesSearch;
+
+      const isActive = isRestaurantActive(restaurant.id);
+      if (filter === 'active') return matchesSearch && isActive;
+      if (filter === 'inactive') return matchesSearch && !isActive;
+
+      return matchesSearch;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'newest') {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      } else if (sortBy === 'oldest') {
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      } else {
+        return a.name.localeCompare(b.name);
+      }
+    });
+
+  const getRestaurantStatusBadge = (restaurantId: string) => {
+    const subscription = getSubscription(restaurantId);
+    if (!subscription) {
+      return <Badge variant="gray">Sin suscripción</Badge>;
     }
+
+    return subscription.status === 'active'
+      ? <Badge variant="success">Activo</Badge>
+      : <Badge variant="error">Inactivo</Badge>;
   };
 
   const getSubscriptionBadge = (subscription: Subscription | undefined) => {
     if (!subscription) return <Badge variant="gray">Sin suscripción</Badge>;
-    
-    switch (subscription.status) {
-      case 'active':
-        return <Badge variant="success">{subscription.plan_type.toUpperCase()}</Badge>;
-      case 'inactive':
-        return <Badge variant="error">Inactiva</Badge>;
-      default:
-        return <Badge variant="gray">Inactiva</Badge>;
+
+    const planName = subscription.plan_type === 'gratis' ? 'Gratis' :
+                     subscription.plan_type === 'basic' ? 'Basic' :
+                     subscription.plan_type === 'pro' ? 'Pro' :
+                     subscription.plan_type === 'business' ? 'Business' :
+                     subscription.plan_type.toUpperCase();
+
+    const variant = subscription.plan_type === 'gratis' ? 'gray' :
+                   subscription.plan_type === 'basic' ? 'info' :
+                   subscription.plan_type === 'pro' ? 'success' :
+                   'error';
+
+    return <Badge variant={variant}>{planName}</Badge>;
+  };
+
+  const handleCreateRestaurant = () => {
+    if (!newRestaurantForm.name || !newRestaurantForm.email) {
+      alert('Por favor completa al menos el nombre y email del restaurante');
+      return;
     }
+
+    const restaurantId = `rest-${Date.now()}`;
+    const slug = newRestaurantForm.name
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+
+    const newRestaurant: Restaurant = {
+      id: restaurantId,
+      name: newRestaurantForm.name,
+      slug: slug,
+      email: newRestaurantForm.email,
+      phone: newRestaurantForm.phone,
+      address: newRestaurantForm.address,
+      description: newRestaurantForm.description,
+      owner_id: '',
+      owner_name: '',
+      domain: slug,
+      settings: {
+        currency: 'USD',
+        language: 'es',
+        timezone: 'America/Bogota',
+        social_media: {
+          facebook: '',
+          instagram: '',
+          whatsapp: newRestaurantForm.phone || '',
+        },
+        ui_settings: {
+          show_search_bar: true,
+          info_message: 'Agrega los productos que desees al carrito',
+          layout_type: 'list',
+        },
+        theme: {
+          primary_color: '#dc2626',
+          secondary_color: '#f3f4f6',
+          accent_color: '#16a34a',
+          text_color: '#1f2937',
+          primary_font: 'Inter',
+          secondary_font: 'Poppins',
+          font_sizes: {
+            title: '32px',
+            subtitle: '24px',
+            normal: '16px',
+            small: '14px',
+          },
+          font_weights: {
+            light: 300,
+            regular: 400,
+            medium: 500,
+            bold: 700,
+          },
+          button_style: 'rounded',
+        },
+        business_hours: {
+          monday: { open: '09:00', close: '18:00', is_open: true },
+          tuesday: { open: '09:00', close: '18:00', is_open: true },
+          wednesday: { open: '09:00', close: '18:00', is_open: true },
+          thursday: { open: '09:00', close: '18:00', is_open: true },
+          friday: { open: '09:00', close: '18:00', is_open: true },
+          saturday: { open: '09:00', close: '18:00', is_open: true },
+          sunday: { open: '09:00', close: '18:00', is_open: false },
+        },
+        delivery: {
+          enabled: false,
+          zones: [],
+          min_order_amount: 0,
+        },
+        table_orders: {
+          enabled: false,
+          table_numbers: 0,
+          qr_codes: false,
+          auto_assign: false,
+        },
+        notifications: {
+          email: newRestaurantForm.email,
+          whatsapp: newRestaurantForm.phone,
+          sound_enabled: true,
+        },
+      },
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    // Create subscription
+    const subscriptionId = `sub-${Date.now()}`;
+    const newSubscription: Subscription = {
+      id: subscriptionId,
+      restaurant_id: restaurantId,
+      plan_type: 'gratis',
+      duration: 'monthly',
+      status: 'active',
+      start_date: new Date().toISOString(),
+      end_date: '2099-12-31T23:59:59Z',
+      auto_renew: false,
+      created_at: new Date().toISOString(),
+    };
+
+    newRestaurant.subscription_id = subscriptionId;
+
+    const updatedRestaurants = [...restaurants, newRestaurant];
+    const allSubscriptions = loadFromStorage('subscriptions') || [];
+    const updatedSubscriptions = [...allSubscriptions, newSubscription];
+
+    saveToStorage('restaurants', updatedRestaurants);
+    saveToStorage('subscriptions', updatedSubscriptions);
+
+    setNewRestaurantForm({
+      name: '',
+      email: '',
+      phone: '',
+      address: '',
+      description: '',
+    });
+    setShowCreateModal(false);
+    loadData();
+  };
+
+  const handleDeleteRestaurant = (restaurant: Restaurant) => {
+    setRestaurantToDelete(restaurant);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteRestaurant = () => {
+    if (!restaurantToDelete) return;
+
+    // Delete restaurant
+    const updatedRestaurants = restaurants.filter(r => r.id !== restaurantToDelete.id);
+    saveToStorage('restaurants', updatedRestaurants);
+
+    // Delete associated subscription
+    const allSubscriptions = loadFromStorage('subscriptions') || [];
+    const updatedSubscriptions = allSubscriptions.filter((sub: Subscription) => sub.restaurant_id !== restaurantToDelete.id);
+    saveToStorage('subscriptions', updatedSubscriptions);
+
+    // Delete associated data (categories, products, orders)
+    const allCategories = loadFromStorage('categories') || [];
+    const updatedCategories = allCategories.filter((cat: any) => cat.restaurant_id !== restaurantToDelete.id);
+    saveToStorage('categories', updatedCategories);
+
+    const allProducts = loadFromStorage('products') || [];
+    const updatedProducts = allProducts.filter((prod: any) => prod.restaurant_id !== restaurantToDelete.id);
+    saveToStorage('products', updatedProducts);
+
+    const allOrders = loadFromStorage('orders') || [];
+    const updatedOrders = allOrders.filter((order: any) => order.restaurant_id !== restaurantToDelete.id);
+    saveToStorage('orders', updatedOrders);
+
+    loadData();
+    setShowDeleteModal(false);
+    setRestaurantToDelete(null);
   };
 
   const getPublicMenuUrl = (restaurant: Restaurant) => {
@@ -180,29 +410,88 @@ export const RestaurantsManagement: React.FC = () => {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Gestión de Restaurantes</h1>
+        <Button
+          variant="primary"
+          icon={Plus}
+          onClick={() => setShowCreateModal(true)}
+        >
+          Crear Restaurante
+        </Button>
       </div>
 
       {/* Filters and Search */}
       <div className="bg-white rounded-lg shadow p-4 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <Input
-              placeholder="Buscar por nombre o email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <Input
+                placeholder="Buscar por nombre o email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-gray-500" />
+              <select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">Todos los estados</option>
+                <option value="active">Activos</option>
+                <option value="inactive">Inactivos</option>
+              </select>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-gray-500" />
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="all">Todos los estados</option>
-              <option value="active">Activos</option>
-              <option value="inactive">Inactivos</option>
-            </select>
+
+          <div className="flex flex-col sm:flex-row gap-4 items-end">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Fecha inicio
+              </label>
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Fecha fin
+              </label>
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Ordenar por
+              </label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as 'newest' | 'oldest' | 'name')}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="newest">Más reciente</option>
+                <option value="oldest">Más antiguo</option>
+                <option value="name">Nombre A-Z</option>
+              </select>
+            </div>
+            {(startDate || endDate || sortBy !== 'newest') && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setStartDate('');
+                  setEndDate('');
+                  setSortBy('newest');
+                }}
+              >
+                Limpiar
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -267,7 +556,7 @@ export const RestaurantsManagement: React.FC = () => {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(restaurant.status)}
+                      {getRestaurantStatusBadge(restaurant.id)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getSubscriptionBadge(subscription)}
@@ -301,22 +590,19 @@ export const RestaurantsManagement: React.FC = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          icon={restaurant.status === 'active' ? XCircle : CheckCircle}
-                          onClick={() => toggleRestaurantStatus(restaurant.id)}
-                          className={restaurant.status === 'active' 
-                            ? "text-red-600 hover:text-red-700" 
-                            : "text-green-600 hover:text-green-700"
-                          }
-                          title={restaurant.status === 'active' ? 'Desactivar' : 'Activar'}
-                        />
-                        
-                        <Button
-                          variant="ghost"
-                          size="sm"
                           icon={Settings}
                           onClick={() => handleEditSubscription(restaurant)}
                           className="text-blue-600 hover:text-blue-700"
                           title="Gestionar Suscripción"
+                        />
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          icon={Trash2}
+                          onClick={() => handleDeleteRestaurant(restaurant)}
+                          className="text-red-600 hover:text-red-700"
+                          title="Eliminar Restaurante"
                         />
                       </div>
                     </td>
@@ -390,7 +676,7 @@ export const RestaurantsManagement: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Estado</label>
-                {getStatusBadge(selectedRestaurant.status)}
+                {getRestaurantStatusBadge(selectedRestaurant.id)}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Suscripción</label>
@@ -441,15 +727,16 @@ export const RestaurantsManagement: React.FC = () => {
                   </label>
                   <select
                     value={subscriptionForm.plan_type}
-                    onChange={(e) => setSubscriptionForm(prev => ({ 
-                      ...prev, 
-                      plan_type: e.target.value as Subscription['plan_type'] 
+                    onChange={(e) => setSubscriptionForm(prev => ({
+                      ...prev,
+                      plan_type: e.target.value as Subscription['plan_type']
                     }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="basic">Básico</option>
-                    <option value="premium">Premium</option>
-                    <option value="enterprise">Enterprise</option>
+                    <option value="gratis">Gratis</option>
+                    <option value="basic">Basic</option>
+                    <option value="pro">Pro</option>
+                    <option value="business">Business</option>
                   </select>
                 </div>
 
@@ -466,7 +753,6 @@ export const RestaurantsManagement: React.FC = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="monthly">Mensual</option>
-                    <option value="quarterly">Trimestral</option>
                     <option value="annual">Anual</option>
                   </select>
                 <div>
@@ -475,14 +761,14 @@ export const RestaurantsManagement: React.FC = () => {
                   </label>
                   <select
                     value={subscriptionForm.status}
-                    onChange={(e) => setSubscriptionForm(prev => ({ 
-                      ...prev, 
-                      status: e.target.value as Subscription['status'] 
+                    onChange={(e) => setSubscriptionForm(prev => ({
+                      ...prev,
+                      status: e.target.value as Subscription['status']
                     }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="active">Activa</option>
-                    <option value="inactive">Inactiva</option>
+                    <option value="expired">Vencida</option>
                   </select>
                 </div>
               </div>
@@ -504,6 +790,183 @@ export const RestaurantsManagement: React.FC = () => {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* Delete Restaurant Confirmation Modal */}
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setRestaurantToDelete(null);
+        }}
+        title="Confirmar Eliminación"
+        size="md"
+      >
+        {restaurantToDelete && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-center mb-6">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 className="w-8 h-8 text-red-600" />
+              </div>
+            </div>
+
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                ¿Eliminar restaurante "{restaurantToDelete.name}"?
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Esta acción eliminará permanentemente:
+              </p>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                <ul className="text-sm text-red-800 space-y-1 text-left">
+                  <li>• Toda la información del restaurante</li>
+                  <li>• Suscripción activa</li>
+                  <li>• Categorías y productos</li>
+                  <li>• Historial de pedidos</li>
+                  <li>• Configuraciones personalizadas</li>
+                </ul>
+              </div>
+              <p className="text-sm text-gray-500">
+                <strong>Esta acción no se puede deshacer.</strong>
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setRestaurantToDelete(null);
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="danger"
+                onClick={confirmDeleteRestaurant}
+                icon={Trash2}
+              >
+                Eliminar Restaurante
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Create Restaurant Modal */}
+      <Modal
+        isOpen={showCreateModal}
+        onClose={() => {
+          setShowCreateModal(false);
+          setNewRestaurantForm({
+            name: '',
+            email: '',
+            phone: '',
+            address: '',
+            description: '',
+          });
+        }}
+        title="Crear Nuevo Restaurante"
+        size="lg"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nombre del Restaurante *
+            </label>
+            <Input
+              value={newRestaurantForm.name}
+              onChange={(e) => setNewRestaurantForm({ ...newRestaurantForm, name: e.target.value })}
+              placeholder="Ej: Restaurante Mi Sabor"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Email *
+            </label>
+            <Input
+              type="email"
+              value={newRestaurantForm.email}
+              onChange={(e) => setNewRestaurantForm({ ...newRestaurantForm, email: e.target.value })}
+              placeholder="contacto@restaurante.com"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Teléfono
+            </label>
+            <Input
+              type="tel"
+              value={newRestaurantForm.phone}
+              onChange={(e) => setNewRestaurantForm({ ...newRestaurantForm, phone: e.target.value })}
+              placeholder="+57 300 123 4567"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Dirección
+            </label>
+            <Input
+              value={newRestaurantForm.address}
+              onChange={(e) => setNewRestaurantForm({ ...newRestaurantForm, address: e.target.value })}
+              placeholder="Calle 123 #45-67"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Descripción
+            </label>
+            <textarea
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              rows={3}
+              value={newRestaurantForm.description}
+              onChange={(e) => setNewRestaurantForm({ ...newRestaurantForm, description: e.target.value })}
+              placeholder="Breve descripción del restaurante..."
+            />
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-sm text-blue-800">
+              <strong>Nota:</strong> El restaurante se creará con:
+            </p>
+            <ul className="text-sm text-blue-700 mt-2 space-y-1">
+              <li>• Plan Gratis activo</li>
+              <li>• Configuración predeterminada</li>
+              <li>• Sin usuarios asignados (asignar desde Gestión de Usuarios)</li>
+            </ul>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setShowCreateModal(false);
+                setNewRestaurantForm({
+                  name: '',
+                  email: '',
+                  phone: '',
+                  address: '',
+                  description: '',
+                });
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleCreateRestaurant}
+              icon={Plus}
+            >
+              Crear Restaurante
+            </Button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

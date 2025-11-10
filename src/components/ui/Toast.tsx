@@ -6,6 +6,7 @@ interface ToastProps {
   title: string;
   message: string;
   duration?: number;
+  customColors?: { primary?: string; secondary?: string };
   onClose: () => void;
 }
 
@@ -14,6 +15,7 @@ export const Toast: React.FC<ToastProps> = ({
   title,
   message,
   duration = 5000,
+  customColors,
   onClose,
 }) => {
   useEffect(() => {
@@ -25,49 +27,98 @@ export const Toast: React.FC<ToastProps> = ({
   }, [duration, onClose]);
 
   const getIcon = () => {
+    const iconColor = customColors?.secondary;
+    const iconClass = "w-4 h-4 sm:w-5 sm:h-5";
+
     switch (type) {
       case 'success':
-        return <CheckCircle className="w-5 h-5 text-green-400" />;
+        return <CheckCircle className={iconClass} style={iconColor ? { color: iconColor } : { color: '#4ade80' }} />;
       case 'warning':
-        return <AlertTriangle className="w-5 h-5 text-yellow-400" />;
+        return <AlertTriangle className={iconClass} style={iconColor ? { color: iconColor } : { color: '#fbbf24' }} />;
       case 'error':
-        return <XCircle className="w-5 h-5 text-red-400" />;
+        return <XCircle className={iconClass} style={iconColor ? { color: iconColor } : { color: '#f87171' }} />;
       case 'info':
-        return <Info className="w-5 h-5 text-blue-400" />;
+        return <Info className={iconClass} style={iconColor ? { color: iconColor } : { color: '#60a5fa' }} />;
     }
   };
 
   const getStyles = () => {
+    if (customColors?.primary) {
+      return {
+        backgroundColor: `${customColors.primary}ff`,
+        borderColor: `${customColors.primary}40`,
+        color: customColors.secondary || '#000000'
+      };
+    }
+
     switch (type) {
       case 'success':
-        return 'bg-green-50 border-green-200 text-green-800';
+        return { className: 'bg-green-50 border-green-200 text-green-800' };
       case 'warning':
-        return 'bg-yellow-50 border-yellow-200 text-yellow-800';
+        return { className: 'bg-yellow-50 border-yellow-200 text-yellow-800' };
       case 'error':
-        return 'bg-red-50 border-red-200 text-red-800';
+        return { className: 'bg-red-50 border-red-200 text-red-800' };
       case 'info':
-        return 'bg-blue-50 border-blue-200 text-blue-800';
+        return { className: 'bg-blue-50 border-blue-200 text-blue-800' };
     }
   };
 
+  const styles = getStyles();
+  const hasCustomColors = customColors?.primary;
+
   return (
-    <div className={`fixed top-4 right-4 z-50 max-w-sm w-full border rounded-lg p-4 shadow-lg transform transition-all duration-300 ease-in-out ${getStyles()}`}>
-      <div className="flex items-start">
+    <div
+      className={`fixed top-4 right-4 left-4 sm:left-auto z-50 max-w-sm sm:w-full w-auto border rounded-lg p-3 sm:p-4 shadow-lg transform transition-all duration-300 ease-in-out ${hasCustomColors ? '' : styles.className || ''}`}
+      style={hasCustomColors ? styles : undefined}
+    >
+      <div className="flex items-start gap-2 sm:gap-0">
         <div className="flex-shrink-0">
           {getIcon()}
         </div>
-        <div className="ml-3 flex-1">
-          <h3 className="text-sm font-medium">{title}</h3>
-          <p className="text-sm mt-1 opacity-90">{message}</p>
-        </div>
-        <div className="ml-4 flex-shrink-0">
-          <button
-            onClick={onClose}
-            className="inline-flex text-gray-400 hover:text-gray-600 focus:outline-none focus:text-gray-600 transition ease-in-out duration-150"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
+        <>
+          {hasCustomColors && (
+            <style>
+              {`
+                .customSecondaryImportant {
+                  color: ${customColors?.secondary} !important;
+                }
+                .customSecondaryImportant svg {
+                  color: ${customColors?.secondary} !important;
+                  opacity: 0.6;
+                }
+              `}
+            </style>
+          )}
+
+          <div className="ml-2 sm:ml-3 flex-1 min-w-0">
+            <h3
+              className={`text-xs sm:text-sm font-medium break-words ${
+                hasCustomColors ? 'customSecondaryImportant' : ''
+              }`}
+            >
+              {title}
+            </h3>
+            <p
+              className={`text-xs sm:text-sm mt-1 opacity-90 break-words ${
+                hasCustomColors ? 'customSecondaryImportant' : ''
+              }`}
+            >
+              {message}
+            </p>
+          </div>
+
+          <div className="ml-2 sm:ml-4 flex-shrink-0">
+            <button
+              onClick={onClose}
+              className={`inline-flex transition ease-in-out duration-150 ${
+                hasCustomColors ? 'customSecondaryImportant' : ''
+              }`}
+              style={!hasCustomColors ? { color: '#9ca3af' } : undefined}
+            >
+              <X className="w-3 h-3 sm:w-4 sm:h-4" />
+            </button>
+          </div>
+        </>
       </div>
     </div>
   );
