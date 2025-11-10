@@ -154,6 +154,7 @@ interface Translations {
   catDeleteImg: string;
   categoryActivatedDes: string;
   categoryDeactivatedDes: string;
+  viewMenu: string;
   
   // Customers
   customerManagement: string;
