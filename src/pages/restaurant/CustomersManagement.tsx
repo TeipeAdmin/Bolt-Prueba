@@ -421,7 +421,7 @@ if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${se
   const handleSaveCustomer = () => {
     if (!editingCustomer) return;
 
-    // Update customers in localStorage
+    // Update customers in orders
     const allOrders = loadFromStorage('orders') || [];
     const updatedOrders = allOrders.map((order: Order) => {
       if (order.customer.phone === editingCustomer.phone) {
@@ -441,26 +441,55 @@ if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${se
     });
     saveToStorage('orders', updatedOrders);
 
-    // Update local state
-    setCustomers(prevCustomers =>
-      prevCustomers.map(customer =>
-        customer.id === editingCustomer.id
-          ? {
-              ...customer,
-              name: editForm.name,
-              phone: editForm.phone,
-              email: editForm.email,
-              address: editForm.address,
-              delivery_instructions: editForm.delivery_instructions,
-              isVip: editForm.isVip,
-            }
-          : customer
-      )
-    );
+    // Update imported customers
+    const importedCustomers = loadFromStorage('importedCustomers') || [];
+    const updatedImportedCustomers = importedCustomers.map((c: any) => {
+      if (c.phone === editingCustomer.phone && c.restaurant_id === restaurant?.id) {
+        return {
+          ...c,
+          name: editForm.name,
+          phone: editForm.phone,
+          email: editForm.email,
+          address: editForm.address,
+          delivery_instructions: editForm.delivery_instructions,
+        };
+      }
+      return c;
+    });
+    saveToStorage('importedCustomers', updatedImportedCustomers);
 
+    // Update VIP status
+    const vipCustomers = loadFromStorage('vipCustomers') || [];
+    if (editForm.isVip && !editingCustomer.isVip) {
+      // Add to VIP
+      const newVipCustomer = {
+        restaurant_id: restaurant?.id,
+        phone: editForm.phone,
+        name: editForm.name,
+        created_at: new Date().toISOString(),
+      };
+      saveToStorage('vipCustomers', [...vipCustomers, newVipCustomer]);
+    } else if (!editForm.isVip && editingCustomer.isVip) {
+      // Remove from VIP
+      const updatedVipCustomers = vipCustomers.filter((vip: any) =>
+        !(vip.restaurant_id === restaurant?.id && vip.phone === editingCustomer.phone)
+      );
+      saveToStorage('vipCustomers', updatedVipCustomers);
+    } else if (editForm.isVip && editingCustomer.isVip && editForm.phone !== editingCustomer.phone) {
+      // Update VIP phone if changed
+      const updatedVipCustomers = vipCustomers.map((vip: any) => {
+        if (vip.restaurant_id === restaurant?.id && vip.phone === editingCustomer.phone) {
+          return { ...vip, phone: editForm.phone, name: editForm.name };
+        }
+        return vip;
+      });
+      saveToStorage('vipCustomers', updatedVipCustomers);
+    }
+
+    loadCustomersData();
     setShowEditModal(false);
     setEditingCustomer(null);
-    
+
     showToast(
       'success',
       t('customerUpdated'),
@@ -488,14 +517,21 @@ if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${se
   const deleteCustomerData = (customer: CustomerData) => {
     // Remove all orders from this customer
     const allOrders = loadFromStorage('orders') || [];
-    const updatedOrders = allOrders.filter((order: Order) => 
+    const updatedOrders = allOrders.filter((order: Order) =>
       order.customer.phone !== customer.phone
     );
     saveToStorage('orders', updatedOrders);
 
+    // Remove from imported customers if exists
+    const importedCustomers = loadFromStorage('importedCustomers') || [];
+    const updatedImportedCustomers = importedCustomers.filter((c: any) =>
+      !(c.restaurant_id === restaurant?.id && c.phone === customer.phone)
+    );
+    saveToStorage('importedCustomers', updatedImportedCustomers);
+
     // Remove from VIP customers if exists
     const vipCustomers = loadFromStorage('vipCustomers') || [];
-    const updatedVipCustomers = vipCustomers.filter((vip: any) => 
+    const updatedVipCustomers = vipCustomers.filter((vip: any) =>
       !(vip.restaurant_id === restaurant?.id && vip.phone === customer.phone)
     );
     saveToStorage('vipCustomers', updatedVipCustomers);
@@ -960,7 +996,7 @@ if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${se
     vipCustomers: customers.filter(c => c.isVip).length,
     frequentCustomers: customers.filter(c => c.totalOrders >= 5).length,
     regularCustomers: customers.filter(c => c.totalOrders >= 2 && c.totalOrders <= 4).length,
-    newCustomers: customers.filter(c => c.totalOrders === 1).length,
+    newCustomers: customers.filter(c => c.totalOrders === 1 || c.totalOrders === 0).length,
     activeCustomers: customers.filter(c => {
       const daysSinceLastOrder = Math.ceil((new Date().getTime() - new Date(c.lastOrderDate).getTime()) / (1000 * 60 * 60 * 24));
       return daysSinceLastOrder <= 30;
