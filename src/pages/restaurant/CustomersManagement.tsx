@@ -481,7 +481,7 @@ if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${se
     // Update customers in orders
     const allOrders = loadFromStorage('orders') || [];
     const updatedOrders = allOrders.map((order: Order) => {
-      if (order.customer.phone === editingCustomer.phone) {
+      if (order && order.customer && order.customer.phone === editingCustomer.phone) {
         return {
           ...order,
           customer: {
@@ -584,7 +584,7 @@ if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${se
     const allOrders = loadFromStorage('orders') || [];
     console.log('Total orders before delete:', allOrders.length);
     const updatedOrders = allOrders.filter((order: Order) =>
-      order.customer.phone !== customer.phone
+      !(order && order.customer && order.customer.phone === customer.phone)
     );
     console.log('Total orders after delete:', updatedOrders.length);
     saveToStorage('orders', updatedOrders);
