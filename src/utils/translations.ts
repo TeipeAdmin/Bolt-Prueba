@@ -1815,6 +1815,7 @@ const translations: Record<Language, Translations> = {
     productArchived: 'Product Archived',
     
     // Categories
+    viewMenu: 'View Menu',
     categoryManagement: 'Category Management',
     newCategory: 'New Category',
     categoryName: 'Category Name',
