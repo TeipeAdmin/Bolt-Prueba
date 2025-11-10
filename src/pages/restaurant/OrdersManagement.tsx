@@ -942,16 +942,13 @@ export const OrdersManagement: React.FC = () => {
 
     // Calculate extra cost from ingredients
     const ingredientsExtraCost = selectedIngredients.reduce((sum, ing) => sum + (ing.extra_cost || 0), 0);
-    const unitPrice = variation.price + ingredientsExtraCost;
-    const totalPrice = unitPrice * quantity;
+    const totalPrice = (variation.price + ingredientsExtraCost) * quantity;
 
-    const newItem: any = {
+    const newItem = {
       id: `${Date.now()}-${Math.random()}`,
-      product_id: product.id,
-      product: product,
-      variation: variation,
+      product: { id: product.id, name: product.name },
+      variation: { id: variation.id, name: variation.name, price: variation.price },
       quantity,
-      unit_price: unitPrice,
       selected_ingredients: selectedIngredients,
       special_notes: specialNotes || '',
       total_price: totalPrice,
