@@ -66,7 +66,7 @@ export const availablePlans = [
 ];
 
 // Mock users data
-export const mockUsers: User[] = [
+const mockUsers: User[] = [
   {
     id: 'super-1',
     email: 'admin@sistema.com',
@@ -89,7 +89,7 @@ export const mockUsers: User[] = [
 ];
 
 // Mock restaurants data
-export const mockRestaurants: Restaurant[] = [
+const mockRestaurants: Restaurant[] = [
   {
     id: 'rest-orlando',
     user_id: 'user-orlando',
@@ -175,7 +175,7 @@ export const mockRestaurants: Restaurant[] = [
 ];
 
 // Mock subscriptions
-export const mockSubscriptions: Subscription[] = [
+const mockSubscriptions: Subscription[] = [
   {
     id: 'sub-orlando',
     restaurant_id: 'rest-orlando',
@@ -190,14 +190,14 @@ export const mockSubscriptions: Subscription[] = [
 ];
 
 // Mock categories
-export const mockCategories: Category[] = [
+const mockCategories: Category[] = [
   // Restaurante Orlando
   { id: 'cat-1', restaurant_id: 'rest-orlando', name: 'Platos Principales', description: 'Nuestros platos principales', icon: '🍽️', order_position: 1, active: true, created_at: '2024-01-15T00:00:00Z' },
   { id: 'cat-2', restaurant_id: 'rest-orlando', name: 'Bebidas', description: 'Bebidas refrescantes', icon: '🥤', order_position: 2, active: true, created_at: '2024-01-15T00:00:00Z' },
 ];
 
 // Mock products
-export const mockProducts: Product[] = [
+const mockProducts: Product[] = [
   // Restaurante Orlando - Platos Principales
   {
     id: 'prod-1',
@@ -253,7 +253,7 @@ export const mockProducts: Product[] = [
 ];
 
 // Mock orders
-export const mockOrders: Order[] = [
+const mockOrders: Order[] = [
   {
     id: 'order-1',
     restaurant_id: 'rest-orlando',

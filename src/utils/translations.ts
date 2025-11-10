@@ -1,7 +1,7 @@
 // Translation system for the restaurant management app
 export type Language = 'es' | 'en';
 
-export interface Translations {
+interface Translations {
   // Common
   save: string;
   cancel: string;
@@ -328,7 +328,7 @@ export interface Translations {
   systemStatistics: string;
 }
 
-export const translations: Record<Language, Translations> = {
+const translations: Record<Language, Translations> = {
   es: {
     // Common
     suscription: 'Suscripción',

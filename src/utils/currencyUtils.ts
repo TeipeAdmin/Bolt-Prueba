@@ -38,7 +38,7 @@ export const formatCurrency = (amount: number, currency: string = 'USD'): string
   return `${symbol}${formattedAmount}`;
 };
 
-export const getCurrencyName = (currency: string): string => {
+const getCurrencyName = (currency: string): string => {
   const names: { [key: string]: string } = {
     USD: 'Dólar Estadounidense',
     EUR: 'Euro',

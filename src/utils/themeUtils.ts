@@ -20,7 +20,7 @@ export const getThemeColors = (theme: any) => {
   };
 };
 
-export const applyThemeToDocument = (theme: any) => {
+const applyThemeToDocument = (theme: any) => {
   if (!theme) return;
 
   const colors = getThemeColors(theme);

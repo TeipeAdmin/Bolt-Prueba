@@ -25,7 +25,7 @@ export interface ProductVariation {
   compare_at_price?: number;
 }
 
-export interface ProductIngredient {
+interface ProductIngredient {
   id: string;
   name: string;
   optional: boolean;
@@ -88,7 +88,7 @@ export interface Order {
   updated_at: string;
 }
 
-export interface OrderItem {
+interface OrderItem {
   id: string;
   product_id: string;
   product: Product;
@@ -108,13 +108,13 @@ export interface CartItem {
   special_notes?: string;
 }
 
-export interface UISettings {
+interface UISettings {
   layout_type: 'list' | 'grid' | 'editorial';
   show_search_bar: boolean;
   info_message: string;
 }
 
-export interface Theme {
+interface Theme {
   primary_color: string;
   secondary_color: string;
   menu_background_color: string;
@@ -140,7 +140,7 @@ export interface Theme {
   button_style: 'rounded' | 'square';
 }
 
-export interface SocialMedia {
+interface SocialMedia {
   facebook?: string;
   instagram?: string;
   twitter?: string;
@@ -148,7 +148,7 @@ export interface SocialMedia {
   website?: string;
 }
 
-export interface BusinessHours {
+interface BusinessHours {
   [key: string]: {
     open: string;
     close: string;
@@ -156,7 +156,7 @@ export interface BusinessHours {
   };
 }
 
-export interface DeliveryPricingTier {
+interface DeliveryPricingTier {
   id: string;
   name: string;
   min_order_amount: number;
@@ -164,7 +164,7 @@ export interface DeliveryPricingTier {
   cost: number;
 }
 
-export interface DeliverySettings {
+interface DeliverySettings {
   enabled: boolean;
   zones: string[];
   min_order_amount: number;
@@ -172,20 +172,20 @@ export interface DeliverySettings {
   pricing_tiers?: DeliveryPricingTier[];
 }
 
-export interface TableOrdersSettings {
+interface TableOrdersSettings {
   enabled: boolean;
   table_numbers: number;
   qr_codes: boolean;
   auto_assign: boolean;
 }
 
-export interface NotificationSettings {
+interface NotificationSettings {
   email: string;
   sound_enabled: boolean;
   whatsapp?: string;
 }
 
-export interface PromoSettings {
+interface PromoSettings {
   enabled: boolean;
   banner_image: string;
   vertical_promo_image?: string;
@@ -195,7 +195,7 @@ export interface PromoSettings {
   featured_product_ids?: string[];
 }
 
-export interface BillingSettings {
+interface BillingSettings {
   nombreComercial: string;
   razonSocial?: string;
   nit: string;
@@ -217,7 +217,7 @@ export interface BillingSettings {
   mensajeFinalTicket?: string;
 }
 
-export interface RestaurantSettings {
+interface RestaurantSettings {
   ui_settings: UISettings;
   theme: Theme;
   social_media: SocialMedia;
@@ -281,7 +281,7 @@ export interface SupportTicket {
   responseDate?: string;
   adminNotes?: string;
 }
-export interface PlanFeatures {
+interface PlanFeatures {
   max_products: number;
   max_categories: number;
   analytics: boolean;
