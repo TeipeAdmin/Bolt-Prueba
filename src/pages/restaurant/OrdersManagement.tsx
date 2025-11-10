@@ -1433,16 +1433,6 @@ export const OrdersManagement: React.FC = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            icon={Printer}
-                                            onClick={() => {
-                  setShowModal(false);
-                  printTicket(selectedOrder);
-                }}
-                            className="text-gray-600 hover:text-gray-700"
-                          />
-                          <Button
-                            variant="ghost"
-                            size="sm"
                             icon={MessageSquare}
                             onClick={() => sendWhatsAppMessage(order)}
                             className="text-green-600 hover:text-green-700"
