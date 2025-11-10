@@ -946,12 +946,14 @@ export const OrdersManagement: React.FC = () => {
 
     const newItem = {
       id: `${Date.now()}-${Math.random()}`,
-      product: { id: product.id, name: product.name },
+      product_id: product.id,
+      product: product,
       variation: { id: variation.id, name: variation.name, price: variation.price },
       quantity,
+      unit_price: variation.price + ingredientsExtraCost,
+      total_price: totalPrice,
       selected_ingredients: selectedIngredients,
       special_notes: specialNotes || '',
-      total_price: totalPrice,
     };
     setOrderItems(prev => [...prev, newItem]);
   };
@@ -967,7 +969,7 @@ export const OrdersManagement: React.FC = () => {
     }
     setOrderItems(prev => prev.map(item => {
       if (item.id === itemId) {
-        const newTotal = item.variation.price * quantity;
+        const newTotal = item.unit_price * quantity;
         return { ...item, quantity, total_price: newTotal };
       }
       return item;
