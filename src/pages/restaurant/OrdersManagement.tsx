@@ -1420,7 +1420,6 @@ export const OrdersManagement: React.FC = () => {
                             icon={Printer}
                             onClick={() => printOrder(order)}
                             className="text-gray-600 hover:text-gray-700"
-                            title={t('print')}
                           />
                           <Button
                             variant="ghost"
