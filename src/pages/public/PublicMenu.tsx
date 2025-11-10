@@ -325,11 +325,13 @@ useEffect(() => {
       ></Pathtop>{' '}
       {/*DF:PEGAR COMPLETO*/}
       {/* HEADER */}
-      <header onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        className={`sticky top-0 z-50 transition-transform duration-200 pb-5 pt-5 ${
-          showHeader || isHovered ? "translate-y-0" : "-translate-y-full"
-        }`}>
+<header
+  onMouseEnter={() => setIsHovered(true)}
+  onMouseLeave={() => setIsHovered(false)}
+  className={`sticky top-0 z-50 transition-transform duration-200 pb-5 pt-5 
+    ${showHeader || isHovered ? "translate-y-0 bg-white" : "-translate-y-full bg-transparent"}
+  `}
+>
         {' '}
         {/* DF: SE QUITÓ EL BLUR */}
         <div className="w-full mx-auto px-5 py-2">
