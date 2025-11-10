@@ -27,16 +27,16 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, onChe
   return (
     <>
       {/* Overlay */}
+      <div
+        className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity"
+        onClick={onClose}
+      />
+
+      {/* Sidebar */}
 <div
   className="fixed right-0 top-0 h-full w-[90%] md:w-96 shadow-xl z-50 transform transition-transform"
   style={{ backgroundColor: themeColors.background }}
-/>
-
-      {/* Sidebar */}
-      <div
-        className="fixed right-0 top-0 h-full w-96 shadow-xl z-50 transform transition-transform"
-        style={{ backgroundColor: themeColors.background }}
-      >
+>
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: '#e5e7eb' }}>
