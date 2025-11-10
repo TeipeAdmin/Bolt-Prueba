@@ -668,7 +668,7 @@ useEffect(() => {
               <List
                 className="w-5 h-5"
                 style={{
-                  color: viewMode === 'list' ? primaryColor : primaryColor,
+                  color: viewMode === 'list' ? primaryColor : textColor,
                 }}
               />
             </button>
