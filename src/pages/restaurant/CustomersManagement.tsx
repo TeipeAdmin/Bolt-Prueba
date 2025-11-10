@@ -300,23 +300,9 @@ export const CustomersManagement: React.FC = () => {
       return;
     }
 
-    // Validar que el nombre solo contenga letras y espacios
-    const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
-    if (!nameRegex.test(createForm.name.trim())) {
-      showToast('warning', t('validationError'), t('nameInvalid'), 3000);
-      return;
-    }
-
     // Validar teléfono
     if (!createForm.phone.trim()) {
       showToast('warning', t('validationError'), t('phoneRequiredError'), 3000);
-      return;
-    }
-
-    // Validar que el teléfono solo contenga números y algunos caracteres especiales
-    const phoneRegex = /^[\d\s\-\+\(\)]+$/;
-    if (!phoneRegex.test(createForm.phone.trim())) {
-      showToast('warning', t('validationError'), t('phoneInvalid'), 3000);
       return;
     }
 
@@ -462,7 +448,12 @@ if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${se
   };
 
   const handleSaveCustomer = () => {
-    if (!editingCustomer) return;
+    if (!editingCustomer) {
+      console.log('No editing customer');
+      return;
+    }
+
+    console.log('Saving customer:', editForm);
 
     // Validar nombre
     if (!editForm.name.trim()) {
@@ -470,23 +461,9 @@ if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${se
       return;
     }
 
-    // Validar que el nombre solo contenga letras y espacios
-    const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
-    if (!nameRegex.test(editForm.name.trim())) {
-      showToast('warning', t('validationError'), t('nameInvalid'), 3000);
-      return;
-    }
-
     // Validar teléfono
     if (!editForm.phone.trim()) {
       showToast('warning', t('validationError'), t('phoneRequiredError'), 3000);
-      return;
-    }
-
-    // Validar que el teléfono solo contenga números y algunos caracteres especiales
-    const phoneRegex = /^[\d\s\-\+\(\)]+$/;
-    if (!phoneRegex.test(editForm.phone.trim())) {
-      showToast('warning', t('validationError'), t('phoneInvalid'), 3000);
       return;
     }
 
@@ -498,6 +475,8 @@ if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${se
         return;
       }
     }
+
+    console.log('Validations passed, updating customer');
 
     // Update customers in orders
     const allOrders = loadFromStorage('orders') || [];
@@ -564,10 +543,12 @@ if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${se
       saveToStorage('vipCustomers', updatedVipCustomers);
     }
 
+    console.log('Reloading customers data after save');
     loadCustomersData();
     setShowEditModal(false);
     setEditingCustomer(null);
 
+    console.log('Showing success toast');
     showToast(
       'success',
       t('customerUpdated'),
@@ -585,26 +566,36 @@ if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${se
   };
 
   const confirmDeleteCustomer = () => {
-    if (!customerToDelete) return;
-    
+    if (!customerToDelete) {
+      console.log('No customer to delete');
+      return;
+    }
+
+    console.log('Deleting customer:', customerToDelete);
     deleteCustomerData(customerToDelete);
     setShowDeleteModal(false);
     setCustomerToDelete(null);
   };
 
   const deleteCustomerData = (customer: CustomerData) => {
+    console.log('deleteCustomerData called for:', customer);
+
     // Remove all orders from this customer
     const allOrders = loadFromStorage('orders') || [];
+    console.log('Total orders before delete:', allOrders.length);
     const updatedOrders = allOrders.filter((order: Order) =>
       order.customer.phone !== customer.phone
     );
+    console.log('Total orders after delete:', updatedOrders.length);
     saveToStorage('orders', updatedOrders);
 
     // Remove from imported customers if exists
     const importedCustomers = loadFromStorage('importedCustomers') || [];
+    console.log('Total imported customers before delete:', importedCustomers.length);
     const updatedImportedCustomers = importedCustomers.filter((c: any) =>
       !(c.restaurant_id === restaurant?.id && c.phone === customer.phone)
     );
+    console.log('Total imported customers after delete:', updatedImportedCustomers.length);
     saveToStorage('importedCustomers', updatedImportedCustomers);
 
     // Remove from VIP customers if exists
@@ -614,6 +605,7 @@ if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${se
     );
     saveToStorage('vipCustomers', updatedVipCustomers);
 
+    console.log('Reloading customers data');
     // Update local state by reloading data
     loadCustomersData();
     
