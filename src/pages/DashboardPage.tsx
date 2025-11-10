@@ -20,6 +20,7 @@ import { SupportTicketsManagement } from './superadmin/SupportTicketsManagement'
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const renderContent = () => {
     if (user?.role === 'super_admin') {
@@ -65,9 +66,17 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header onNavigateToSettings={() => setActiveTab('settings')} />
+      <Header
+        onNavigateToSettings={() => setActiveTab('settings')}
+        onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+      />
       <div className="flex">
-        <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+        <Sidebar
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
         <main className="flex-1 min-w-0">
           {renderContent()}
         </main>

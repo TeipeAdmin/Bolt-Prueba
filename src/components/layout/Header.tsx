@@ -1,14 +1,15 @@
 import React from 'react';
-import { LogOut, User, Settings, Store, ChefHat } from 'lucide-react';
+import { LogOut, User, Settings, Store, ChefHat, Menu } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Button } from '../ui/Button';
 
 interface HeaderProps {
   onNavigateToSettings?: () => void;
+  onToggleSidebar?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onNavigateToSettings }) => {
+export const Header: React.FC<HeaderProps> = ({ onNavigateToSettings, onToggleSidebar }) => {
   const { user, restaurant, logout } = useAuth();
   const { t } = useLanguage();
 
@@ -16,7 +17,16 @@ export const Header: React.FC<HeaderProps> = ({ onNavigateToSettings }) => {
     <header className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 shadow-lg border-b border-slate-700">
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <div className="flex items-center gap-4 flex-1 min-w-0">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            {/* Botón hamburguesa para móvil */}
+            <button
+              onClick={onToggleSidebar}
+              className="md:hidden p-2 text-white hover:bg-slate-800 rounded-lg transition-colors"
+              aria-label="Toggle menu"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+
             {user?.role === 'super_admin' && (
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-orange-400 rounded-xl flex items-center justify-center shadow-lg">

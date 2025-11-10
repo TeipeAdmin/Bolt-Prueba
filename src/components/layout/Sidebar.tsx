@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   BarChart3, 
   Store, 
@@ -20,9 +20,11 @@ import { Subscription } from '../../types';
 interface SidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isOpen, onClose }) => {
   const { user, restaurant } = useAuth();
   const { t } = useLanguage();
   
@@ -67,7 +69,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
   const tabs = user?.role === 'super_admin' ? superAdminTabs : restaurantTabs;
 
   return (
-    <aside className="w-64 bg-gray-50 min-h-screen border-r border-gray-200">
+    <>
+      {/* Overlay para móvil */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          onClick={onClose}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`
+        fixed md:static inset-y-0 left-0 z-50
+        w-64 bg-gray-50 min-h-screen border-r border-gray-200
+        transform transition-transform duration-300 ease-in-out
+        ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+      `}>
       <nav className="mt-8">
         <div className="px-4">
           <ul className="space-y-2">
@@ -76,7 +93,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
               return (
                 <li key={tab.id}>
                   <button
-                    onClick={() => onTabChange(tab.id)}
+                    onClick={() => {
+                      onTabChange(tab.id);
+                      onClose();
+                    }}
                     className={`
                       w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors
                       ${activeTab === tab.id
@@ -94,6 +114,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
           </ul>
         </div>
       </nav>
-    </aside>
+      </aside>
+    </>
   );
 };
