@@ -53,6 +53,15 @@ export const CustomersManagement: React.FC = () => {
     delivery_instructions: '',
     isVip: false,
   });
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    address: '',
+    delivery_instructions: '',
+    isVip: false,
+  });
 
   useEffect(() => {
     if (restaurant) {
@@ -248,10 +257,10 @@ export const CustomersManagement: React.FC = () => {
 
     showToast(
       'success',
-      customer.isVip ? 'Cliente VIP Removido' : 'Cliente VIP Agregado',
+      customer.isVip ? t('vipCustomerRemoved') : t('vipCustomerAdded'),
       customer.isVip 
-        ? `${customer.name} ya no es un cliente VIP.`
-        : `${customer.name} ahora es un cliente VIP.`,
+        ? `${customer.name} ${t('noLongerVipCustomer')}`
+        : `${customer.name} ${t('nowVipCustomer')}`,
       4000
     );
   };
@@ -276,10 +285,97 @@ export const CustomersManagement: React.FC = () => {
 
   const handleBulkEdit = () => {
     if (selectedCustomers.size === 0) {
-      showToast('warning', 'Sin selección', 'Selecciona al menos un cliente para editar.', 4000);
+      showToast('warning', t('noSelection'), t('selectAtLeastOneCustomer'), 4000);
       return;
     }
     setShowBulkEditModal(true);
+  };
+
+  const handleCreateCustomer = () => {
+    if (!restaurant) return;
+
+    // Validar nombre
+    if (!createForm.name.trim()) {
+      showToast('warning', t('validationError'), t('nameRequiredError'), 3000);
+      return;
+    }
+
+    // Validar que el nombre solo contenga letras y espacios
+    const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+    if (!nameRegex.test(createForm.name.trim())) {
+      showToast('warning', t('validationError'), t('nameInvalid'), 3000);
+      return;
+    }
+
+    // Validar teléfono
+    if (!createForm.phone.trim()) {
+      showToast('warning', t('validationError'), t('phoneRequiredError'), 3000);
+      return;
+    }
+
+    // Validar que el teléfono solo contenga números y algunos caracteres especiales
+    const phoneRegex = /^[\d\s\-\+\(\)]+$/;
+    if (!phoneRegex.test(createForm.phone.trim())) {
+      showToast('warning', t('validationError'), t('phoneInvalid'), 3000);
+      return;
+    }
+
+    // Validar email si se proporciona
+    if (createForm.email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(createForm.email.trim())) {
+        showToast('warning', t('validationError'), t('emailInvalid'), 3000);
+        return;
+      }
+    }
+
+    // Verificar si el cliente ya existe
+    const existingCustomers = loadFromStorage('importedCustomers') || [];
+    const customerExists = existingCustomers.some((c: any) =>
+      c.restaurant_id === restaurant.id && c.phone === createForm.phone.trim()
+    );
+
+    if (customerExists) {
+      showToast('warning', t('validationError'), t('customerAlreadyExists'), 3000);
+      return;
+    }
+
+    const newCustomer = {
+      restaurant_id: restaurant.id,
+      name: createForm.name.trim(),
+      phone: createForm.phone.trim(),
+      email: createForm.email.trim(),
+      address: createForm.address.trim(),
+      delivery_instructions: createForm.delivery_instructions.trim(),
+      created_at: new Date().toISOString(),
+    };
+
+    const importedCustomers = loadFromStorage('importedCustomers') || [];
+    saveToStorage('importedCustomers', [...importedCustomers, newCustomer]);
+
+    if (createForm.isVip) {
+      const vipCustomers = loadFromStorage('vipCustomers') || [];
+      const newVipCustomer = {
+        restaurant_id: restaurant.id,
+        phone: createForm.phone.trim(),
+        name: createForm.name.trim(),
+        created_at: new Date().toISOString(),
+      };
+      saveToStorage('vipCustomers', [...vipCustomers, newVipCustomer]);
+    }
+
+    loadCustomersData();
+    setShowCreateModal(false);
+    setCreateForm({
+      name: '',
+      phone: '',
+      email: '',
+      address: '',
+      delivery_instructions: '',
+      isVip: false,
+    });
+
+    showToast('success', 'Cliente creado', `${createForm.name} ha sido agregado exitosamente`, 4000);
   };
 
   const executeBulkEdit = () => {
@@ -313,7 +409,7 @@ export const CustomersManagement: React.FC = () => {
           )
         );
         
-        showToast('success', 'VIP Asignado', `${selectedCustomers.size} cliente${selectedCustomers.size !== 1 ? 's' : ''} marcado${selectedCustomers.size !== 1 ? 's' : ''} como VIP.`, 4000);
+        showToast('success', t('vipAssigned'), `${selectedCustomers.size} ${t('customerPlural', { count: selectedCustomers.size })} ${t('markedAsVip', { count: selectedCustomers.size })}`, 4000);
         break;
         
       case 'remove_vip':
@@ -333,17 +429,17 @@ export const CustomersManagement: React.FC = () => {
           )
         );
         
-        showToast('info', 'VIP Removido', `${selectedCustomers.size} cliente${selectedCustomers.size !== 1 ? 's' : ''} ya no ${selectedCustomers.size !== 1 ? 'son' : 'es'} VIP.`, 4000);
+        showToast('info', t('vipRemoved'), `${selectedCustomers.size} ${t('customerPlural', { count: selectedCustomers.size })} ${t('noLongerVip', { count: selectedCustomers.size })}`, 4000);
         break;
         
       case 'delete':
-        // Eliminar todos los seleccionados
-        if (confirm(`¿Estás seguro de que quieres eliminar ${selectedCustomers.size} cliente${selectedCustomers.size !== 1 ? 's' : ''}? Esta acción eliminará también todos sus pedidos y no se puede deshacer.`)) {
-          selectedCustomersList.forEach(customer => {
-            deleteCustomerData(customer);
-          });
+       // Eliminar todos los seleccionados
+if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${selectedCustomers.size !== 1 ? 's' : ''}? ${t('warningDeleteAction')}`)) {
+  selectedCustomersList.forEach(customer => {
+    deleteCustomerData(customer);
+  });
           
-          showToast('info', 'Clientes Eliminados', `${selectedCustomers.size} cliente${selectedCustomers.size !== 1 ? 's' : ''} eliminado${selectedCustomers.size !== 1 ? 's' : ''} exitosamente.`, 5000);
+          showToast('info', t('customersDeleted'), `${selectedCustomers.size} ${t('customerPlural', { count: selectedCustomers.size })} ${t('deletedSuccessfully', { count: selectedCustomers.size })}`, 5000);
         }
         break;
     }
@@ -368,7 +464,42 @@ export const CustomersManagement: React.FC = () => {
   const handleSaveCustomer = () => {
     if (!editingCustomer) return;
 
-    // Update customers in localStorage
+    // Validar nombre
+    if (!editForm.name.trim()) {
+      showToast('warning', t('validationError'), t('nameRequiredError'), 3000);
+      return;
+    }
+
+    // Validar que el nombre solo contenga letras y espacios
+    const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+    if (!nameRegex.test(editForm.name.trim())) {
+      showToast('warning', t('validationError'), t('nameInvalid'), 3000);
+      return;
+    }
+
+    // Validar teléfono
+    if (!editForm.phone.trim()) {
+      showToast('warning', t('validationError'), t('phoneRequiredError'), 3000);
+      return;
+    }
+
+    // Validar que el teléfono solo contenga números y algunos caracteres especiales
+    const phoneRegex = /^[\d\s\-\+\(\)]+$/;
+    if (!phoneRegex.test(editForm.phone.trim())) {
+      showToast('warning', t('validationError'), t('phoneInvalid'), 3000);
+      return;
+    }
+
+    // Validar email si se proporciona
+    if (editForm.email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(editForm.email.trim())) {
+        showToast('warning', t('validationError'), t('emailInvalid'), 3000);
+        return;
+      }
+    }
+
+    // Update customers in orders
     const allOrders = loadFromStorage('orders') || [];
     const updatedOrders = allOrders.map((order: Order) => {
       if (order.customer.phone === editingCustomer.phone) {
@@ -376,11 +507,11 @@ export const CustomersManagement: React.FC = () => {
           ...order,
           customer: {
             ...order.customer,
-            name: editForm.name,
-            phone: editForm.phone,
-            email: editForm.email,
-            address: editForm.address,
-            delivery_instructions: editForm.delivery_instructions,
+            name: editForm.name.trim(),
+            phone: editForm.phone.trim(),
+            email: editForm.email.trim(),
+            address: editForm.address.trim(),
+            delivery_instructions: editForm.delivery_instructions.trim(),
           }
         };
       }
@@ -388,30 +519,59 @@ export const CustomersManagement: React.FC = () => {
     });
     saveToStorage('orders', updatedOrders);
 
-    // Update local state
-    setCustomers(prevCustomers =>
-      prevCustomers.map(customer =>
-        customer.id === editingCustomer.id
-          ? {
-              ...customer,
-              name: editForm.name,
-              phone: editForm.phone,
-              email: editForm.email,
-              address: editForm.address,
-              delivery_instructions: editForm.delivery_instructions,
-              isVip: editForm.isVip,
-            }
-          : customer
-      )
-    );
+    // Update imported customers
+    const importedCustomers = loadFromStorage('importedCustomers') || [];
+    const updatedImportedCustomers = importedCustomers.map((c: any) => {
+      if (c.phone === editingCustomer.phone && c.restaurant_id === restaurant?.id) {
+        return {
+          ...c,
+          name: editForm.name.trim(),
+          phone: editForm.phone.trim(),
+          email: editForm.email.trim(),
+          address: editForm.address.trim(),
+          delivery_instructions: editForm.delivery_instructions.trim(),
+        };
+      }
+      return c;
+    });
+    saveToStorage('importedCustomers', updatedImportedCustomers);
 
+    // Update VIP status
+    const vipCustomers = loadFromStorage('vipCustomers') || [];
+    if (editForm.isVip && !editingCustomer.isVip) {
+      // Add to VIP
+      const newVipCustomer = {
+        restaurant_id: restaurant?.id,
+        phone: editForm.phone.trim(),
+        name: editForm.name.trim(),
+        created_at: new Date().toISOString(),
+      };
+      saveToStorage('vipCustomers', [...vipCustomers, newVipCustomer]);
+    } else if (!editForm.isVip && editingCustomer.isVip) {
+      // Remove from VIP
+      const updatedVipCustomers = vipCustomers.filter((vip: any) =>
+        !(vip.restaurant_id === restaurant?.id && vip.phone === editingCustomer.phone)
+      );
+      saveToStorage('vipCustomers', updatedVipCustomers);
+    } else if (editForm.isVip && editingCustomer.isVip && editForm.phone.trim() !== editingCustomer.phone) {
+      // Update VIP phone if changed
+      const updatedVipCustomers = vipCustomers.map((vip: any) => {
+        if (vip.restaurant_id === restaurant?.id && vip.phone === editingCustomer.phone) {
+          return { ...vip, phone: editForm.phone.trim(), name: editForm.name.trim() };
+        }
+        return vip;
+      });
+      saveToStorage('vipCustomers', updatedVipCustomers);
+    }
+
+    loadCustomersData();
     setShowEditModal(false);
     setEditingCustomer(null);
-    
+
     showToast(
       'success',
-      'Cliente Actualizado',
-      'La información del cliente ha sido actualizada exitosamente.',
+      t('customerUpdated'),
+      t('customerInfoUpdatedSuccessfully'),
       4000
     );
   };
@@ -435,14 +595,21 @@ export const CustomersManagement: React.FC = () => {
   const deleteCustomerData = (customer: CustomerData) => {
     // Remove all orders from this customer
     const allOrders = loadFromStorage('orders') || [];
-    const updatedOrders = allOrders.filter((order: Order) => 
+    const updatedOrders = allOrders.filter((order: Order) =>
       order.customer.phone !== customer.phone
     );
     saveToStorage('orders', updatedOrders);
 
+    // Remove from imported customers if exists
+    const importedCustomers = loadFromStorage('importedCustomers') || [];
+    const updatedImportedCustomers = importedCustomers.filter((c: any) =>
+      !(c.restaurant_id === restaurant?.id && c.phone === customer.phone)
+    );
+    saveToStorage('importedCustomers', updatedImportedCustomers);
+
     // Remove from VIP customers if exists
     const vipCustomers = loadFromStorage('vipCustomers') || [];
-    const updatedVipCustomers = vipCustomers.filter((vip: any) => 
+    const updatedVipCustomers = vipCustomers.filter((vip: any) =>
       !(vip.restaurant_id === restaurant?.id && vip.phone === customer.phone)
     );
     saveToStorage('vipCustomers', updatedVipCustomers);
@@ -452,8 +619,8 @@ export const CustomersManagement: React.FC = () => {
     
     showToast(
       'info',
-      'Cliente Eliminado',
-      `El cliente "${customer.name}" y todos sus pedidos han sido eliminados.`,
+      t('customerDeleted'),
+      t('customerAndOrdersDeleted', { name: customer.name }),
       5000
     );
   };
@@ -486,17 +653,15 @@ export const CustomersManagement: React.FC = () => {
 
   const getCustomerSegment = (totalSpent: number, totalOrders: number) => {
     const segments = [];
-    
-    if (totalOrders === 1) {
+
+    if (totalOrders === 0 || totalOrders === 1) {
       segments.push(<Badge key="new" variant="info">{t('newCustomer')}</Badge>);
     } else if (totalOrders >= 2 && totalOrders <= 4) {
       segments.push(<Badge key="regular" variant="gray">{t('regular')}</Badge>);
     } else if (totalOrders >= 5) {
       segments.push(<Badge key="frequent" variant="warning">{t('frequent')}</Badge>);
-    } else {
-      segments.push(<Badge key="default" variant="gray">{t('regular')}</Badge>);
     }
-    
+
     return (
       <div className="flex flex-wrap gap-1">
         {segments}
@@ -511,8 +676,8 @@ export const CustomersManagement: React.FC = () => {
     if (dataToExport.length === 0) {
       showToast(
         'warning',
-        'Sin datos para exportar',
-        'No hay clientes que coincidan con los filtros actuales.',
+        t('noDataToExport'),
+        t('noCustomersMatchFilters'),
         4000
       );
       return;
@@ -520,18 +685,18 @@ export const CustomersManagement: React.FC = () => {
 
     // Definir las columnas del CSV
     const headers = [
-      'Nombre',
-      'Teléfono',
-      'Email',
-      'Dirección',
-      'Total Pedidos',
-      'Total Gastado',
-      'Promedio por Pedido',
-      'Tipos de Pedido',
-      'Es VIP',
-      'Segmento',
-      'Último Pedido',
-      'Referencias de Entrega'
+      t('name'),
+      t('phone'),
+      t('email'),
+      t('address'),
+      t('totalOrders'),
+      t('totalSpent'),
+      t('averagePerOrder'),
+      t('orderTypes'),
+      t('isVip'),
+      t('segment'),
+      t('lastOrder'),
+      t('deliveryInstructions')
     ];
 
     // Función para obtener el segmento como texto
@@ -541,11 +706,11 @@ export const CustomersManagement: React.FC = () => {
       if (isVip) segments.push('VIP');
       
       if (totalOrders === 1) {
-        segments.push('Nuevo');
+        segments.push(t('new'));
       } else if (totalOrders >= 2 && totalOrders <= 4) {
-        segments.push('Regular');
+        segments.push(t('regular'));
       } else if (totalOrders >= 5) {
-        segments.push('Frecuente');
+        segments.push(t('frequent'));
       }
       
       return segments.join(', ');
@@ -561,7 +726,7 @@ export const CustomersManagement: React.FC = () => {
       formatCurrency(customer.totalSpent, currency),
       formatCurrency(customer.totalSpent / customer.totalOrders, currency),
       customer.orderTypes.join(', '),
-      customer.isVip ? 'Sí' : 'No',
+      customer.isVip ? t('yes') : t('no'),
       getSegmentText(customer.totalOrders, customer.isVip),
       new Date(customer.lastOrderDate).toLocaleDateString(),
       customer.delivery_instructions || ''
@@ -592,11 +757,11 @@ export const CustomersManagement: React.FC = () => {
       
       // Generar nombre de archivo con fecha y filtros aplicados
       const today = new Date().toISOString().split('T')[0];
-      let fileName = `clientes_${restaurant?.name?.replace(/[^a-zA-Z0-9]/g, '_')}_${today}`;
+      let fileName = `${t('customers')}_${restaurant?.name?.replace(/[^a-zA-Z0-9]/g, '_')}_${today}`;
       
       // Añadir información de filtros al nombre
       if (searchTerm) {
-        fileName += `_busqueda_${searchTerm.replace(/[^a-zA-Z0-9]/g, '_')}`;
+        fileName += `_${t('search')}_${searchTerm.replace(/[^a-zA-Z0-9]/g, '_')}`;
       }
       if (filterBy !== 'all') {
         fileName += `_${filterBy}`;
@@ -614,20 +779,20 @@ export const CustomersManagement: React.FC = () => {
 
     showToast(
       'success',
-      'CSV Exportado',
-      `Se han exportado ${dataToExport.length} cliente${dataToExport.length !== 1 ? 's' : ''} exitosamente.`,
+      t('csvExported'),
+      t('customersExportedSuccessfully', { count: dataToExport.length }),
       4000
     );
   };
 
   const downloadCSVTemplate = () => {
     const headers = [
-      'Nombre',
-      'Teléfono',
-      'Email',
-      'Dirección',
-      'Referencias de Entrega',
-      'Es VIP'
+      t('name'),
+      t('phone'),
+      t('email'),
+      t('address'),
+      t('deliveryInstructions'),
+      t('isVip')
     ];
 
     const exampleRows = [
@@ -636,16 +801,16 @@ export const CustomersManagement: React.FC = () => {
         '+573001234567',
         'juan.perez@email.com',
         'Calle 123 #45-67 Bogotá',
-        'Casa de dos pisos portón azul',
-        'Sí'
+        t('exampleDeliveryInstruction1'),
+        t('yes')
       ],
       [
         'María González',
         '+573009876543',
         'maria.gonzalez@email.com',
         'Carrera 45 #12-34 Medellín',
-        'Apartamento 301 edificio blanco',
-        'No'
+        t('exampleDeliveryInstruction2'),
+        t('no')
       ]
     ];
 
@@ -669,7 +834,7 @@ export const CustomersManagement: React.FC = () => {
     if (link.download !== undefined) {
       const url = URL.createObjectURL(blob);
       link.setAttribute('href', url);
-      link.setAttribute('download', 'plantilla_clientes.csv');
+      link.setAttribute('download', `${t('customersTemplate')}.csv`);
       link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();
@@ -678,8 +843,8 @@ export const CustomersManagement: React.FC = () => {
 
     showToast(
       'success',
-      'Plantilla Descargada',
-      'Usa esta plantilla como guía para importar clientes.',
+      t('templateDownloaded'),
+      t('useTemplateAsGuide'),
       4000
     );
   };
@@ -689,7 +854,7 @@ export const CustomersManagement: React.FC = () => {
     if (!file) return;
 
     if (!file.name.endsWith('.csv')) {
-      showToast('error', 'Archivo inválido', 'Por favor selecciona un archivo CSV válido.', 4000);
+      showToast('error', t('invalidFile'), t('pleaseSelectValidCSV'), 4000);
       return;
     }
 
@@ -699,14 +864,14 @@ export const CustomersManagement: React.FC = () => {
     reader.onload = (e) => {
       const text = e.target?.result as string;
       if (!text || text.trim() === '') {
-        showToast('error', 'Archivo vacío', 'El archivo CSV está vacío.', 4000);
+        showToast('error', t('emptyFile'), t('csvFileIsEmpty'), 4000);
         return;
       }
       parseCSV(text);
     };
 
     reader.onerror = () => {
-      showToast('error', 'Error de lectura', 'No se pudo leer el archivo. Por favor intenta de nuevo.', 4000);
+      showToast('error', t('readError'), t('couldNotReadFile'), 4000);
     };
 
     reader.readAsText(file, 'UTF-8');
@@ -749,18 +914,18 @@ export const CustomersManagement: React.FC = () => {
     const lines = text.split(/\r?\n/).filter(line => line.trim());
 
     if (lines.length < 2) {
-      setImportErrors(['El archivo CSV está vacío o no tiene datos.']);
+      setImportErrors([t('csvEmptyOrNoData')]);
       setShowImportModal(true);
       return;
     }
 
     const delimiter = detectDelimiter(text);
     const headers = parseCSVLine(lines[0], delimiter);
-    const requiredHeaders = ['Nombre', 'Teléfono'];
+    const requiredHeaders = [t('name'), t('phone')];
     const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
 
     if (missingHeaders.length > 0) {
-      setImportErrors([`Columnas requeridas faltantes: ${missingHeaders.join(', ')}. Columnas encontradas: ${headers.join(', ')}`]);
+      setImportErrors([t('missingRequiredColumns', { columns: missingHeaders.join(', '), found: headers.join(', ') })]);
       setShowImportModal(true);
       return;
     }
@@ -773,7 +938,7 @@ export const CustomersManagement: React.FC = () => {
       const values = parseCSVLine(line, delimiter);
 
       if (values.length !== headers.length) {
-        errors.push(`Línea ${i + 1}: Número incorrecto de columnas (esperado ${headers.length}, obtenido ${values.length}). Valores: [${values.join(' | ')}]`);
+        errors.push(t('lineIncorrectColumns', { line: i + 1, expected: headers.length, got: values.length, values: values.join(' | ') }));
         continue;
       }
 
@@ -782,44 +947,44 @@ export const CustomersManagement: React.FC = () => {
         row[header] = values[index];
       });
 
-      if (!row['Nombre'] || !row['Nombre'].trim()) {
-        errors.push(`Línea ${i + 1}: El nombre es requerido`);
+      if (!row[t('name')] || !row[t('name')].trim()) {
+        errors.push(t('lineNameRequired', { line: i + 1 }));
         continue;
       }
 
-      if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(row['Nombre'].trim())) {
-        errors.push(`Línea ${i + 1}: El nombre "${row['Nombre']}" solo puede contener letras y espacios`);
+      if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(row[t('name')].trim())) {
+        errors.push(t('lineNameOnlyLetters', { line: i + 1, name: row[t('name')] }));
         continue;
       }
 
-      if (!row['Teléfono'] || !row['Teléfono'].trim()) {
-        errors.push(`Línea ${i + 1}: El teléfono es requerido`);
+      if (!row[t('phone')] || !row[t('phone')].trim()) {
+        errors.push(t('linePhoneRequired', { line: i + 1 }));
         continue;
       }
 
-      if (!/^[\d+\s()-]+$/.test(row['Teléfono'].trim())) {
-        errors.push(`Línea ${i + 1}: El teléfono "${row['Teléfono']}" solo puede contener números y el símbolo +`);
+      if (!/^[\d+\s()-]+$/.test(row[t('phone')].trim())) {
+        errors.push(t('linePhoneOnlyNumbers', { line: i + 1, phone: row[t('phone')] }));
         continue;
       }
 
-      if (row['Email'] && row['Email'].trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row['Email'].trim())) {
-        errors.push(`Línea ${i + 1}: El email "${row['Email']}" no tiene un formato válido`);
+      if (row[t('email')] && row[t('email')].trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row[t('email')].trim())) {
+        errors.push(t('lineEmailInvalidFormat', { line: i + 1, email: row[t('email')] }));
         continue;
       }
 
-      const existingCustomer = customers.find(c => c.phone === row['Teléfono']);
+      const existingCustomer = customers.find(c => c.phone === row[t('phone')]);
       if (existingCustomer) {
-        errors.push(`Línea ${i + 1}: El cliente con teléfono ${row['Teléfono']} ya existe`);
+        errors.push(t('lineCustomerAlreadyExists', { line: i + 1, phone: row[t('phone')] }));
         continue;
       }
 
       preview.push({
-        name: row['Nombre'],
-        phone: row['Teléfono'],
-        email: row['Email'] || '',
-        address: row['Dirección'] || '',
-        delivery_instructions: row['Referencias de Entrega'] || '',
-        isVip: row['Es VIP']?.toLowerCase() === 'sí' || row['Es VIP']?.toLowerCase() === 'si' || row['Es VIP']?.toLowerCase() === 'yes',
+        name: row[t('name')],
+        phone: row[t('phone')],
+        email: row[t('email')] || '',
+        address: row[t('address')] || '',
+        delivery_instructions: row[t('deliveryInstructions')] || '',
+        isVip: row[t('isVip')]?.toLowerCase() === t('yes').toLowerCase() || row[t('isVip')]?.toLowerCase() === 'yes',
         lineNumber: i + 1
       });
     }
@@ -829,13 +994,13 @@ export const CustomersManagement: React.FC = () => {
     setShowImportModal(true);
 
     if (preview.length === 0 && errors.length === 0) {
-      showToast('error', 'Sin datos', 'El archivo no contiene datos para importar.', 4000);
+      showToast('error', t('noData'), t('fileContainsNoData'), 4000);
     } else if (preview.length === 0 && errors.length > 0) {
-      showToast('error', 'Errores de validación', `Se encontraron ${errors.length} error(es). Revisa el archivo y corrige los errores.`, 5000);
+      showToast('error', t('validationErrors'), t('errorsFoundReview', { count: errors.length }), 5000);
     } else if (preview.length > 0 && errors.length > 0) {
-      showToast('warning', 'Importación parcial', `${preview.length} registro(s) válido(s) y ${errors.length} error(es) encontrado(s).`, 5000);
+      showToast('warning', t('partialImport'), t('validRecordsAndErrors', { valid: preview.length, errors: errors.length }), 5000);
     } else {
-      showToast('success', 'Datos validados', `${preview.length} cliente(s) listo(s) para importar.`, 3000);
+      showToast('success', t('dataValidated'), t('customersReadyToImport', { count: preview.length }), 3000);
     }
   };
 
@@ -885,8 +1050,8 @@ export const CustomersManagement: React.FC = () => {
 
     showToast(
       'success',
-      'Importación Exitosa',
-      `Se importaron ${importPreview.length} cliente${importPreview.length !== 1 ? 's' : ''} exitosamente.`,
+      t('importSuccessful'),
+      t('customersImportedSuccessfully', { count: importPreview.length }),
       4000
     );
   };
@@ -901,12 +1066,13 @@ export const CustomersManagement: React.FC = () => {
       fileInputRef.current.value = '';
     }
   };
+  
   const stats = {
     totalCustomers: customers.length,
     vipCustomers: customers.filter(c => c.isVip).length,
     frequentCustomers: customers.filter(c => c.totalOrders >= 5).length,
     regularCustomers: customers.filter(c => c.totalOrders >= 2 && c.totalOrders <= 4).length,
-    newCustomers: customers.filter(c => c.totalOrders === 1).length,
+    newCustomers: customers.filter(c => c.totalOrders === 1 || c.totalOrders === 0).length,
     activeCustomers: customers.filter(c => {
       const daysSinceLastOrder = Math.ceil((new Date().getTime() - new Date(c.lastOrderDate).getTime()) / (1000 * 60 * 60 * 24));
       return daysSinceLastOrder <= 30;
@@ -934,7 +1100,7 @@ export const CustomersManagement: React.FC = () => {
               onClick={handleBulkEdit}
               className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
             >
-              Editar {selectedCustomers.size} seleccionado{selectedCustomers.size !== 1 ? 's' : ''}
+              {t('edit')} {selectedCustomers.size} {t('selectedPlural', { count: selectedCustomers.size })}
             </Button>
           )}
           <Button
@@ -944,7 +1110,7 @@ export const CustomersManagement: React.FC = () => {
             onClick={exportToCSV}
             className="text-green-600 hover:text-green-700 hover:bg-green-50"
           >
-            Exportar CSV
+            {t('exportCSV')}
           </Button>
           <Button
             variant="outline"
@@ -953,7 +1119,7 @@ export const CustomersManagement: React.FC = () => {
             onClick={() => fileInputRef.current?.click()}
             className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
           >
-            Importar CSV
+            {t('importCSV')}
           </Button>
           <input
             ref={fileInputRef}
@@ -969,7 +1135,13 @@ export const CustomersManagement: React.FC = () => {
             onClick={() => setShowFilters(!showFilters)}
             className={showFilters ? 'bg-blue-50 border-blue-200 text-blue-700' : ''}
           >
-            Filtros y Búsqueda
+            {t('filtersAndSearch')}
+          </Button>
+                    <Button
+            icon={UserPlus}
+            onClick={() => setShowCreateModal(true)}
+          >
+            {t('newCustomer')}
           </Button>
         </div>
       </div>
@@ -982,14 +1154,14 @@ export const CustomersManagement: React.FC = () => {
               <Users className="h-6 w-6 text-white" />
             </div>
             <div className="text-right">
-              <p className="text-sm font-medium text-blue-900 mb-1">Total Clientes</p>
+              <p className="text-sm font-medium text-blue-900 mb-1">{t('totalCustomers')}</p>
               <p className="text-3xl font-bold text-blue-900">{stats.totalCustomers}</p>
             </div>
           </div>
           <div className="flex items-center justify-between pt-3 border-t border-blue-200">
-            <span className="text-xs text-blue-700 font-medium">Base de clientes</span>
+            <span className="text-xs text-blue-700 font-medium">{t('customerBase')}</span>
             <span className="text-sm font-bold text-blue-800">
-              {stats.newCustomers} nuevos
+              {stats.newCustomers} {t('new')}
             </span>
           </div>
         </div>
@@ -1000,12 +1172,12 @@ export const CustomersManagement: React.FC = () => {
               <Star className="h-6 w-6 text-white" />
             </div>
             <div className="text-right">
-              <p className="text-sm font-medium text-purple-900 mb-1">Clientes VIP</p>
+              <p className="text-sm font-medium text-purple-900 mb-1">{t('vipCustomers')}</p>
               <p className="text-3xl font-bold text-purple-900">{stats.vipCustomers}</p>
             </div>
           </div>
           <div className="flex items-center justify-between pt-3 border-t border-purple-200">
-            <span className="text-xs text-purple-700 font-medium">Asignados manualmente</span>
+            <span className="text-xs text-purple-700 font-medium">{t('assignedManually')}</span>
             <span className="text-sm font-bold text-purple-800">
               {((stats.vipCustomers / stats.totalCustomers) * 100 || 0).toFixed(1)}%
             </span>
@@ -1018,12 +1190,12 @@ export const CustomersManagement: React.FC = () => {
               <UserCheck className="h-6 w-6 text-white" />
             </div>
             <div className="text-right">
-              <p className="text-sm font-medium text-green-900 mb-1">Frecuentes</p>
+              <p className="text-sm font-medium text-green-900 mb-1">{t('frequentCustomers')}</p>
               <p className="text-3xl font-bold text-green-900">{stats.frequentCustomers}</p>
             </div>
           </div>
           <div className="flex items-center justify-between pt-3 border-t border-green-200">
-            <span className="text-xs text-green-700 font-medium">5+ pedidos</span>
+            <span className="text-xs text-green-700 font-medium">{t('ordersPlus')}</span>
             <span className="text-sm font-bold text-green-800">
               {((stats.frequentCustomers / stats.totalCustomers) * 100 || 0).toFixed(1)}%
             </span>
@@ -1036,12 +1208,12 @@ export const CustomersManagement: React.FC = () => {
               <DollarSign className="h-6 w-6 text-white" />
             </div>
             <div className="text-right">
-              <p className="text-sm font-medium text-orange-900 mb-1">Gasto Promedio</p>
+              <p className="text-sm font-medium text-orange-900 mb-1">{t('averageSpending')}</p>
               <p className="text-3xl font-bold text-orange-900">{formatCurrency(stats.averageSpent, currency)}</p>
             </div>
           </div>
           <div className="flex items-center justify-between pt-3 border-t border-orange-200">
-            <span className="text-xs text-orange-700 font-medium">Por cliente</span>
+            <span className="text-xs text-orange-700 font-medium">{t('perCustomer')}</span>
             <span className="text-sm font-bold text-green-700">
               {formatCurrency(stats.totalRevenue, currency)}
             </span>
@@ -1057,7 +1229,7 @@ export const CustomersManagement: React.FC = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
-              placeholder={`${t('search')} clientes por nombre, teléfono o email...`}
+              placeholder={t('searchCustomersPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -1074,9 +1246,9 @@ export const CustomersManagement: React.FC = () => {
                 onChange={(e) => setStatusFilter(e.target.value as any)}
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0"
               >
-                <option value="all">Todos los estados</option>
-                <option value="active">Activos (últimos 30 días)</option>
-                <option value="inactive">Inactivos (+30 días)</option>
+                <option value="all">{t('allStatuses')}</option>
+                <option value="active">{t('activeLast30Days')}</option>
+                <option value="inactive">{t('inactivePlus30Days')}</option>
               </select>
             </div>
             
@@ -1088,11 +1260,11 @@ export const CustomersManagement: React.FC = () => {
                 onChange={(e) => setFilterBy(e.target.value as any)}
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0"
               >
-                <option value="all">Todos los segmentos</option>
-                <option value="vip">Solo VIP</option>
-                <option value="frequent">Solo Frecuentes (5+)</option>
-                <option value="regular">Solo Regular (2-4)</option>
-                <option value="new">Solo Nuevos (1)</option>
+                <option value="all">{t('allSegments')}</option>
+                <option value="vip">{t('onlyVip')}</option>
+                <option value="frequent">{t('onlyFrequent')}</option>
+                <option value="regular">{t('onlyRegular')}</option>
+                <option value="new">{t('onlyNew')}</option>
               </select>
             </div>
             
@@ -1104,10 +1276,10 @@ export const CustomersManagement: React.FC = () => {
                 onChange={(e) => setSortBy(e.target.value as any)}
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0"
               >
-                <option value="name">Ordenar por {t('name')}</option>
-                <option value="orders">Ordenar por {t('ordersCount')}</option>
-                <option value="spent">Ordenar por {t('totalSpent')}</option>
-                <option value="date">Ordenar por {t('date')}</option>
+                <option value="name">{t('sortByName')}</option>
+                <option value="orders">{t('sortByOrders')}</option>
+                <option value="spent">{t('sortBySpent')}</option>
+                <option value="date">{t('sortByDate')}</option>
               </select>
             </div>
             
@@ -1116,7 +1288,7 @@ export const CustomersManagement: React.FC = () => {
               <button
                 onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50 transition-colors flex items-center gap-1"
-                title={sortDirection === 'asc' ? 'Cambiar a descendente' : 'Cambiar a ascendente'}
+                title={sortDirection === 'asc' ? t('changeToDescending') : t('changeToAscending')}
               >
                 <ArrowUpDown className="w-4 h-4" />
                 {sortDirection === 'asc' ? '↑' : '↓'}
@@ -1131,12 +1303,12 @@ export const CustomersManagement: React.FC = () => {
         <div className="bg-white rounded-lg shadow p-12 text-center">
           <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            {customers.length === 0 ? 'No registered customers' : 'No customers found'}
+            {customers.length === 0 ? t('noRegisteredCustomers') : t('noCustomersFound')}
           </h3>
           <p className="text-gray-600">
             {customers.length === 0 
-              ? 'Customers will appear here once they place orders.'
-              : 'Try different search terms.'
+              ? t('customersWillAppear')
+              : t('tryDifferentSearch')
             }
           </p>
         </div>
@@ -1175,12 +1347,12 @@ export const CustomersManagement: React.FC = () => {
                       <Info className="w-3 h-3 ml-1 text-gray-400" />
                       <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 hidden group-hover:block bg-white text-gray-800 text-xs rounded-lg p-3 w-64 shadow-xl border border-gray-200 z-50">
                         <div className="space-y-1">
-                          <div><strong className="text-green-600">VIP:</strong> Asignado manualmente</div>
-                          <div><strong className="text-blue-600">Nuevo:</strong> 1 pedido</div>
-                          <div><strong className="text-gray-600">Regular:</strong> 2-4 pedidos</div>
-                          <div><strong className="text-orange-600">Frecuente:</strong> 5+ pedidos</div>
+                          <div><strong className="text-green-600">VIP:</strong> {t('segmentVipDescription')}</div>
+                          <div><strong className="text-blue-600">{t('new')}:</strong> {t('segmentNewDescription')}</div>
+                          <div><strong className="text-gray-600">{t('regular')}:</strong> {t('segmentRegularDescription')}</div>
+                          <div><strong className="text-orange-600">{t('frequent')}:</strong> {t('segmentFrequentDescription')}</div>
                           <div className="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-200">
-                            * Un cliente puede ser VIP y tener otro segmento
+                            {t('segmentNote')}
                           </div>
                         </div>
                         <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-white"></div>
@@ -1243,7 +1415,7 @@ export const CustomersManagement: React.FC = () => {
                         {customer.totalOrders}
                       </div>
                       <div className="text-sm text-gray-500">
-                        orders
+                        {t('orders')}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -1251,7 +1423,7 @@ export const CustomersManagement: React.FC = () => {
                         {formatCurrency(customer.totalSpent, currency)}
                       </div>
                       <div className="text-sm text-gray-500">
-                        {formatCurrency(customer.totalSpent / customer.totalOrders, currency)} avg
+                        {formatCurrency(customer.totalSpent / customer.totalOrders, currency)} {t('avg')}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -1276,7 +1448,7 @@ export const CustomersManagement: React.FC = () => {
                       <button
                         onClick={() => handleEditCustomer(customer)}
                         className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-colors bg-blue-100 text-blue-800 hover:bg-blue-200 mr-2"
-                        title="Editar cliente"
+                        title={t('editCustomer')}
                       >
                         <Edit className="w-3 h-3 mr-1" />
                       </button>
@@ -1287,14 +1459,14 @@ export const CustomersManagement: React.FC = () => {
                             ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
                             : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                         } mr-2`}
-                        title={customer.isVip ? 'Quitar VIP' : 'Hacer VIP'}
+                        title={customer.isVip ? t('removeVip') : t('makeVip')}
                       >
                         <Star className={`w-3 h-3 mr-1 ${customer.isVip ? 'fill-current' : ''}`} />
                       </button>
                       <button
                         onClick={() => handleDeleteCustomer(customer.id)}
                         className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-colors bg-red-100 text-red-800 hover:bg-red-200"
-                        title="Eliminar cliente"
+                        title={t('deleteCustomer')}
                       >
                         <Trash2 className="w-3 h-3 mr-1" />
                       </button>
@@ -1311,19 +1483,19 @@ export const CustomersManagement: React.FC = () => {
       <Modal
         isOpen={showEditModal}
         onClose={handleCloseEditModal}
-        title="Editar Cliente"
+        title={t('editCustomer')}
         size="lg"
       >
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
-              label="Nombre Completo*"
+              label={t('fullNameRequired')}
               value={editForm.name}
               onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="Nombre del cliente"
+              placeholder={t('customerName')}
             />
             <Input
-              label="Teléfono*"
+              label={t('phoneRequired')}
               value={editForm.phone}
               onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
               placeholder="+1 (555) 123-4567"
@@ -1331,7 +1503,7 @@ export const CustomersManagement: React.FC = () => {
           </div>
           
           <Input
-            label="Email"
+            label={t('email')}
             type="email"
             value={editForm.email}
             onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
@@ -1339,22 +1511,22 @@ export const CustomersManagement: React.FC = () => {
           />
           
           <Input
-            label="Dirección"
+            label={t('address')}
             value={editForm.address}
             onChange={(e) => setEditForm(prev => ({ ...prev, address: e.target.value }))}
-            placeholder="Dirección completa"
+            placeholder={t('fullAddress')}
           />
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Referencias de Entrega
+              {t('deliveryInstructions')}
             </label>
             <textarea
               value={editForm.delivery_instructions}
               onChange={(e) => setEditForm(prev => ({ ...prev, delivery_instructions: e.target.value }))}
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Referencias para encontrar la dirección..."
+              placeholder={t('deliveryInstructionsPlaceholder')}
             />
           </div>
           
@@ -1366,7 +1538,7 @@ export const CustomersManagement: React.FC = () => {
               className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mr-2"
             />
             <label className="text-sm font-medium text-gray-700">
-              Cliente VIP
+              {t('vipCustomer')}
             </label>
           </div>
 
@@ -1387,13 +1559,113 @@ export const CustomersManagement: React.FC = () => {
                 }
               }}
             >
-              Eliminar Cliente
+              {t('deleteCustomer')}
             </Button>
             <Button
               onClick={handleSaveCustomer}
               disabled={!editForm.name.trim() || !editForm.phone.trim()}
             >
-              Guardar Cambios
+              {t('saveChanges')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Create Customer Modal */}
+      <Modal
+        isOpen={showCreateModal}
+        onClose={() => {
+          setShowCreateModal(false);
+          setCreateForm({
+            name: '',
+            phone: '',
+            email: '',
+            address: '',
+            delivery_instructions: '',
+            isVip: false,
+          });
+        }}
+        title={t('newCustomer')}
+        size="lg"
+      >
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label={t('fullNameRequired')}
+              value={createForm.name}
+              onChange={(e) => setCreateForm(prev => ({ ...prev, name: e.target.value }))}
+              placeholder={t('customerName')}
+            />
+            <Input
+              label={t('phoneRequired')}
+              value={createForm.phone}
+              onChange={(e) => setCreateForm(prev => ({ ...prev, phone: e.target.value }))}
+              placeholder="+57 300 123 4567"
+            />
+          </div>
+
+          <Input
+            label={t('email')}
+            type="email"
+            value={createForm.email}
+            onChange={(e) => setCreateForm(prev => ({ ...prev, email: e.target.value }))}
+            placeholder="cliente@email.com"
+          />
+
+          <Input
+            label={t('address')}
+            value={createForm.address}
+            onChange={(e) => setCreateForm(prev => ({ ...prev, address: e.target.value }))}
+            placeholder={t('fullAddress')}
+          />
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {t('deliveryInstructions')}
+            </label>
+            <textarea
+              value={createForm.delivery_instructions}
+              onChange={(e) => setCreateForm(prev => ({ ...prev, delivery_instructions: e.target.value }))}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder={t('deliveryInstructionsPlaceholder')}
+            />
+          </div>
+
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              checked={createForm.isVip}
+              onChange={(e) => setCreateForm(prev => ({ ...prev, isVip: e.target.checked }))}
+              className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mr-2"
+            />
+            <label className="text-sm font-medium text-gray-700">
+              {t('vipCustomer')}
+            </label>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setShowCreateModal(false);
+                setCreateForm({
+                  name: '',
+                  phone: '',
+                  email: '',
+                  address: '',
+                  delivery_instructions: '',
+                  isVip: false,
+                });
+              }}
+            >
+              {t('cancel')}
+            </Button>
+            <Button
+              onClick={handleCreateCustomer}
+              disabled={!createForm.name.trim() || !createForm.phone.trim()}
+            >
+              {t('create')}
             </Button>
           </div>
         </div>
@@ -1406,7 +1678,7 @@ export const CustomersManagement: React.FC = () => {
           setShowDeleteModal(false);
           setCustomerToDelete(null);
         }}
-        title="Confirmar Eliminación"
+        title={t('confirmDeletion')}
         size="md"
       >
         {customerToDelete && (
@@ -1419,21 +1691,21 @@ export const CustomersManagement: React.FC = () => {
             
             <div className="text-center">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                ¿Eliminar cliente "{customerToDelete.name}"?
+                {t('deleteCustomerConfirm')} "{customerToDelete.name}"?
               </h3>
               <p className="text-gray-600 mb-4">
-                Esta acción eliminará permanentemente:
+                {t('actionWillDeletePermanently')}
               </p>
               <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
                 <ul className="text-sm text-red-800 space-y-1">
-                  <li>• Toda la información del cliente</li>
-                  <li>• {customerToDelete.totalOrders} pedido{customerToDelete.totalOrders !== 1 ? 's' : ''} asociado{customerToDelete.totalOrders !== 1 ? 's' : ''}</li>
-                  <li>• Historial de compras ({formatCurrency(customerToDelete.totalSpent, currency)})</li>
-                  {customerToDelete.isVip && <li>• Estado VIP del cliente</li>}
+                  <li>• {t('allCustomerInfo')}</li>
+                  <li>• {customerToDelete.totalOrders} {t('orderPlural', { count: customerToDelete.totalOrders })} {t('associated', { count: customerToDelete.totalOrders })}</li>
+                  <li>• {t('purchaseHistory')} ({formatCurrency(customerToDelete.totalSpent, currency)})</li>
+                  {customerToDelete.isVip && <li>• {t('customerVipStatus')}</li>}
                 </ul>
               </div>
               <p className="text-sm text-gray-500">
-                <strong>Esta acción no se puede deshacer.</strong>
+                <strong>{t('actionCannotBeUndone')}</strong>
               </p>
             </div>
 
@@ -1445,14 +1717,14 @@ export const CustomersManagement: React.FC = () => {
                   setCustomerToDelete(null);
                 }}
               >
-                Cancelar
+                {t('cancel')}
               </Button>
               <Button
                 variant="danger"
                 onClick={confirmDeleteCustomer}
                 icon={Trash2}
               >
-                Eliminar Cliente
+                {t('deleteCustomer')}
               </Button>
             </div>
           </div>
@@ -1466,7 +1738,7 @@ export const CustomersManagement: React.FC = () => {
           setShowBulkEditModal(false);
           setBulkEditAction('vip');
         }}
-        title="Edición Masiva"
+        title={t('bulkEdit')}
         size="md"
       >
         <div className="space-y-6">
@@ -1474,14 +1746,14 @@ export const CustomersManagement: React.FC = () => {
             <div className="flex items-center">
               <Users className="w-5 h-5 text-blue-600 mr-2" />
               <span className="text-sm font-medium text-blue-800">
-                {selectedCustomers.size} cliente{selectedCustomers.size !== 1 ? 's' : ''} seleccionado{selectedCustomers.size !== 1 ? 's' : ''}
+                {selectedCustomers.size} {t('customerPlural', { count: selectedCustomers.size })} {t('selectedPlural', { count: selectedCustomers.size })}
               </span>
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">
-              Selecciona la acción a realizar:
+              {t('selectActionToPerform')}
             </label>
             <div className="space-y-3">
               <label className="flex items-center">
@@ -1494,8 +1766,8 @@ export const CustomersManagement: React.FC = () => {
                   className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500 mr-3"
                 />
                 <div>
-                  <span className="text-sm font-medium text-gray-900">Marcar como VIP</span>
-                  <p className="text-xs text-gray-500">Agregar estado VIP a todos los clientes seleccionados</p>
+                  <span className="text-sm font-medium text-gray-900">{t('markAsVip')}</span>
+                  <p className="text-xs text-gray-500">{t('addVipStatusToSelected')}</p>
                 </div>
               </label>
               
@@ -1509,8 +1781,8 @@ export const CustomersManagement: React.FC = () => {
                   className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500 mr-3"
                 />
                 <div>
-                  <span className="text-sm font-medium text-gray-900">Remover VIP</span>
-                  <p className="text-xs text-gray-500">Quitar estado VIP de todos los clientes seleccionados</p>
+                  <span className="text-sm font-medium text-gray-900">{t('removeVip')}</span>
+                  <p className="text-xs text-gray-500">{t('removeVipStatusFromSelected')}</p>
                 </div>
               </label>
               
@@ -1524,8 +1796,8 @@ export const CustomersManagement: React.FC = () => {
                   className="h-4 w-4 text-red-600 border-gray-300 focus:ring-red-500 mr-3"
                 />
                 <div>
-                  <span className="text-sm font-medium text-red-900">Eliminar clientes</span>
-                  <p className="text-xs text-red-500">⚠️ Eliminar permanentemente todos los clientes y sus pedidos</p>
+                  <span className="text-sm font-medium text-red-900">{t('deleteCustomers')}</span>
+                  <p className="text-xs text-red-500">⚠️ {t('permanentlyDeleteAllCustomersAndOrders')}</p>
                 </div>
               </label>
             </div>
@@ -1545,9 +1817,9 @@ export const CustomersManagement: React.FC = () => {
               variant={bulkEditAction === 'delete' ? 'danger' : 'primary'}
               icon={bulkEditAction === 'delete' ? Trash2 : Users}
             >
-              {bulkEditAction === 'vip' && 'Marcar como VIP'}
-              {bulkEditAction === 'remove_vip' && 'Remover VIP'}
-              {bulkEditAction === 'delete' && 'Eliminar Clientes'}
+              {bulkEditAction === 'vip' && t('markAsVip')}
+              {bulkEditAction === 'remove_vip' && t('removeVip')}
+              {bulkEditAction === 'delete' && t('deleteCustomers')}
             </Button>
           </div>
         </div>
@@ -1557,7 +1829,7 @@ export const CustomersManagement: React.FC = () => {
       <Modal
         isOpen={showImportModal}
         onClose={cancelImport}
-        title="Importar Clientes desde CSV"
+        title={t('importCustomersFromCSV')}
         size="lg"
       >
         <div className="space-y-6">
@@ -1565,20 +1837,20 @@ export const CustomersManagement: React.FC = () => {
             <div className="flex items-start">
               <Info className="w-5 h-5 text-blue-600 mr-2 flex-shrink-0 mt-0.5" />
               <div className="text-sm text-blue-800">
-                <p className="font-medium mb-2">Formato del archivo CSV:</p>
+                <p className="font-medium mb-2">{t('csvFileFormat')}</p>
                 <ul className="list-disc list-inside space-y-1 text-xs">
-                  <li><strong>Nombre</strong> (requerido): Nombre completo del cliente</li>
-                  <li><strong>Teléfono</strong> (requerido): Número de teléfono único</li>
-                  <li><strong>Email</strong> (opcional): Correo electrónico</li>
-                  <li><strong>Dirección</strong> (opcional): Dirección completa</li>
-                  <li><strong>Referencias de Entrega</strong> (opcional): Indicaciones adicionales</li>
-                  <li><strong>Es VIP</strong> (opcional): "Sí" o "No"</li>
+                  <li><strong>{t('name')}</strong> ({t('required')}): {t('customerFullName')}</li>
+                  <li><strong>{t('phone')}</strong> ({t('required')}): {t('uniquePhoneNumber')}</li>
+                  <li><strong>{t('email')}</strong> ({t('optional')}): {t('emailAddress')}</li>
+                  <li><strong>{t('address')}</strong> ({t('optional')}): {t('fullAddress')}</li>
+                  <li><strong>{t('deliveryInstructions')}</strong> ({t('optional')}): {t('additionalDirections')}</li>
+                  <li><strong>{t('isVip')}</strong> ({t('optional')}): "{t('yes')}" {t('or')} "{t('no')}"</li>
                 </ul>
                 <button
                   onClick={downloadCSVTemplate}
                   className="mt-3 text-xs font-medium text-blue-700 hover:text-blue-800 underline"
                 >
-                  Descargar plantilla de ejemplo
+                  {t('downloadExampleTemplate')}
                 </button>
               </div>
             </div>
@@ -1589,7 +1861,7 @@ export const CustomersManagement: React.FC = () => {
               <div className="flex items-start">
                 <Info className="w-5 h-5 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-red-800 mb-2">Se encontraron {importErrors.length} error{importErrors.length !== 1 ? 'es' : ''}:</p>
+                  <p className="text-sm font-medium text-red-800 mb-2">{t('errorsFound', { count: importErrors.length })}</p>
                   <ul className="text-xs text-red-700 space-y-1 max-h-40 overflow-y-auto">
                     {importErrors.map((error, index) => (
                       <li key={index}>• {error}</li>
@@ -1603,7 +1875,7 @@ export const CustomersManagement: React.FC = () => {
           {importPreview.length > 0 && (
             <div>
               <h4 className="text-sm font-medium text-gray-900 mb-3">
-                Vista previa: {importPreview.length} cliente{importPreview.length !== 1 ? 's' : ''} válido{importPreview.length !== 1 ? 's' : ''}
+                {t('preview')}: {importPreview.length} {t('customerPlural', { count: importPreview.length })} {t('validPlural', { count: importPreview.length })}
               </h4>
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 max-h-80 overflow-y-auto">
                 <div className="space-y-3">
@@ -1635,7 +1907,7 @@ export const CustomersManagement: React.FC = () => {
                             )}
                           </div>
                         </div>
-                        <span className="text-xs text-gray-500">Línea {customer.lineNumber}</span>
+                        <span className="text-xs text-gray-500">{t('line')} {customer.lineNumber}</span>
                       </div>
                     </div>
                   ))}
@@ -1649,14 +1921,14 @@ export const CustomersManagement: React.FC = () => {
               variant="ghost"
               onClick={cancelImport}
             >
-              Cancelar
+              {t('cancel')}
             </Button>
             <Button
               onClick={executeImport}
               disabled={importPreview.length === 0}
               icon={Upload}
             >
-              Importar {importPreview.length} Cliente{importPreview.length !== 1 ? 's' : ''}
+              {t('import')} {importPreview.length} {t('customerPlural', { count: importPreview.length })}
             </Button>
           </div>
         </div>
