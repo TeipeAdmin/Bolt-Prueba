@@ -531,7 +531,7 @@ useEffect(() => {
               >
                 <ShoppingCart
                   className="w-5 h-5"
-                  style={{ color: primaryTextColor, stroke: primaryTextColor }}
+                  style={{ color: primaryColor, stroke: primaryColor }}
                 />
                 {cartItemsCount > 0 && (
                   <span
