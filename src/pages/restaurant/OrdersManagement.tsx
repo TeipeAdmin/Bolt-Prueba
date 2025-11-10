@@ -433,18 +433,20 @@ export const OrdersManagement: React.FC = () => {
   const generateOrderNumber = () => {
     // Get all existing orders for this restaurant
     const allOrders = loadFromStorage('orders') || [];
-    const restaurantOrders = allOrders.filter((order: Order) => 
+    const restaurantOrders = allOrders.filter((order: Order) =>
       order.restaurant_id === restaurant.id
     );
     // Find the highest order number
     let maxNumber = 1000;
     restaurantOrders.forEach((order: Order) => {
       // Extract number from format #RES-XXXX
-      const match = order.order_number.match(/#RES-(\d+)/);
-      if (match) {
-        const orderNum = parseInt(match[1]);
-        if (!isNaN(orderNum) && orderNum > maxNumber) {
-          maxNumber = orderNum;
+      if (order.order_number && typeof order.order_number === 'string') {
+        const match = order.order_number.match(/#RES-(\d+)/);
+        if (match) {
+          const orderNum = parseInt(match[1]);
+          if (!isNaN(orderNum) && orderNum > maxNumber) {
+            maxNumber = orderNum;
+          }
         }
       }
     });
