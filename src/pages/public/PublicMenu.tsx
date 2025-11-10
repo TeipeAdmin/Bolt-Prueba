@@ -656,7 +656,7 @@ useEffect(() => {
             <button
               onClick={() => setViewMode('list')}
               className={`p-2 rounded-lg transition-all ${
-                viewMode === 'list' ? 'bg-white shadow-md' : cardBackgroundColor
+                viewMode === 'list' ? cardBackgroundColor : cardBackgroundColor
               }`}
               style={{
                 borderRadius:
