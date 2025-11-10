@@ -626,6 +626,7 @@ const translations: Record<Language, Translations> = {
     productArchived: 'Producto Archivado',
     
     // Categories
+    viewMenu: 'Ver Menú'
     categoryManagement: 'Gestión de Categorías',
     newCategory: 'Nueva Categoría',
     categoryName: 'Nombre de la Categoría',
