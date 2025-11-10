@@ -326,7 +326,7 @@ useEffect(() => {
       {/*DF:PEGAR COMPLETO*/}
       {/* HEADER */}
       <header onMouseEnter={() => setIsHovered(true)}
-
+>
         {' '}
         {/* DF: SE QUITÓ EL BLUR */}
         <div className="w-full mx-auto px-5 py-2">
