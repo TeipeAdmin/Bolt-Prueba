@@ -327,9 +327,7 @@ useEffect(() => {
       {/* HEADER */}
       <header onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className={`sticky top-0 z-50 transition-transform duration-300 pb-5 pt-5 ${
-          showHeader || isHovered ? "translate-y-0" : "-translate-y-full"
-        }`}>
+        className={`sticky top-0 z-50 transition-transform duration-300 pb-5 pt-5 }>
         {' '}
         {/* DF: SE QUITÓ EL BLUR */}
         <div className="w-full mx-auto px-5 py-2">
