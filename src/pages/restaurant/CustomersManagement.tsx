@@ -292,18 +292,61 @@ export const CustomersManagement: React.FC = () => {
   };
 
   const handleCreateCustomer = () => {
-    if (!restaurant || !createForm.name.trim() || !createForm.phone.trim()) {
-      showToast('warning', 'Campos requeridos', 'El nombre y teléfono son obligatorios', 3000);
+    if (!restaurant) return;
+
+    // Validar nombre
+    if (!createForm.name.trim()) {
+      showToast('warning', t('validationError'), t('nameRequiredError'), 3000);
+      return;
+    }
+
+    // Validar que el nombre solo contenga letras y espacios
+    const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+    if (!nameRegex.test(createForm.name.trim())) {
+      showToast('warning', t('validationError'), t('nameInvalid'), 3000);
+      return;
+    }
+
+    // Validar teléfono
+    if (!createForm.phone.trim()) {
+      showToast('warning', t('validationError'), t('phoneRequiredError'), 3000);
+      return;
+    }
+
+    // Validar que el teléfono solo contenga números y algunos caracteres especiales
+    const phoneRegex = /^[\d\s\-\+\(\)]+$/;
+    if (!phoneRegex.test(createForm.phone.trim())) {
+      showToast('warning', t('validationError'), t('phoneInvalid'), 3000);
+      return;
+    }
+
+    // Validar email si se proporciona
+    if (createForm.email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(createForm.email.trim())) {
+        showToast('warning', t('validationError'), t('emailInvalid'), 3000);
+        return;
+      }
+    }
+
+    // Verificar si el cliente ya existe
+    const existingCustomers = loadFromStorage('importedCustomers') || [];
+    const customerExists = existingCustomers.some((c: any) =>
+      c.restaurant_id === restaurant.id && c.phone === createForm.phone.trim()
+    );
+
+    if (customerExists) {
+      showToast('warning', t('validationError'), t('customerAlreadyExists'), 3000);
       return;
     }
 
     const newCustomer = {
       restaurant_id: restaurant.id,
-      name: createForm.name,
-      phone: createForm.phone,
-      email: createForm.email,
-      address: createForm.address,
-      delivery_instructions: createForm.delivery_instructions,
+      name: createForm.name.trim(),
+      phone: createForm.phone.trim(),
+      email: createForm.email.trim(),
+      address: createForm.address.trim(),
+      delivery_instructions: createForm.delivery_instructions.trim(),
       created_at: new Date().toISOString(),
     };
 
@@ -314,8 +357,8 @@ export const CustomersManagement: React.FC = () => {
       const vipCustomers = loadFromStorage('vipCustomers') || [];
       const newVipCustomer = {
         restaurant_id: restaurant.id,
-        phone: createForm.phone,
-        name: createForm.name,
+        phone: createForm.phone.trim(),
+        name: createForm.name.trim(),
         created_at: new Date().toISOString(),
       };
       saveToStorage('vipCustomers', [...vipCustomers, newVipCustomer]);
@@ -421,6 +464,41 @@ if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${se
   const handleSaveCustomer = () => {
     if (!editingCustomer) return;
 
+    // Validar nombre
+    if (!editForm.name.trim()) {
+      showToast('warning', t('validationError'), t('nameRequiredError'), 3000);
+      return;
+    }
+
+    // Validar que el nombre solo contenga letras y espacios
+    const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+    if (!nameRegex.test(editForm.name.trim())) {
+      showToast('warning', t('validationError'), t('nameInvalid'), 3000);
+      return;
+    }
+
+    // Validar teléfono
+    if (!editForm.phone.trim()) {
+      showToast('warning', t('validationError'), t('phoneRequiredError'), 3000);
+      return;
+    }
+
+    // Validar que el teléfono solo contenga números y algunos caracteres especiales
+    const phoneRegex = /^[\d\s\-\+\(\)]+$/;
+    if (!phoneRegex.test(editForm.phone.trim())) {
+      showToast('warning', t('validationError'), t('phoneInvalid'), 3000);
+      return;
+    }
+
+    // Validar email si se proporciona
+    if (editForm.email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(editForm.email.trim())) {
+        showToast('warning', t('validationError'), t('emailInvalid'), 3000);
+        return;
+      }
+    }
+
     // Update customers in orders
     const allOrders = loadFromStorage('orders') || [];
     const updatedOrders = allOrders.map((order: Order) => {
@@ -429,11 +507,11 @@ if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${se
           ...order,
           customer: {
             ...order.customer,
-            name: editForm.name,
-            phone: editForm.phone,
-            email: editForm.email,
-            address: editForm.address,
-            delivery_instructions: editForm.delivery_instructions,
+            name: editForm.name.trim(),
+            phone: editForm.phone.trim(),
+            email: editForm.email.trim(),
+            address: editForm.address.trim(),
+            delivery_instructions: editForm.delivery_instructions.trim(),
           }
         };
       }
@@ -447,11 +525,11 @@ if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${se
       if (c.phone === editingCustomer.phone && c.restaurant_id === restaurant?.id) {
         return {
           ...c,
-          name: editForm.name,
-          phone: editForm.phone,
-          email: editForm.email,
-          address: editForm.address,
-          delivery_instructions: editForm.delivery_instructions,
+          name: editForm.name.trim(),
+          phone: editForm.phone.trim(),
+          email: editForm.email.trim(),
+          address: editForm.address.trim(),
+          delivery_instructions: editForm.delivery_instructions.trim(),
         };
       }
       return c;
@@ -464,8 +542,8 @@ if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${se
       // Add to VIP
       const newVipCustomer = {
         restaurant_id: restaurant?.id,
-        phone: editForm.phone,
-        name: editForm.name,
+        phone: editForm.phone.trim(),
+        name: editForm.name.trim(),
         created_at: new Date().toISOString(),
       };
       saveToStorage('vipCustomers', [...vipCustomers, newVipCustomer]);
@@ -475,11 +553,11 @@ if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${se
         !(vip.restaurant_id === restaurant?.id && vip.phone === editingCustomer.phone)
       );
       saveToStorage('vipCustomers', updatedVipCustomers);
-    } else if (editForm.isVip && editingCustomer.isVip && editForm.phone !== editingCustomer.phone) {
+    } else if (editForm.isVip && editingCustomer.isVip && editForm.phone.trim() !== editingCustomer.phone) {
       // Update VIP phone if changed
       const updatedVipCustomers = vipCustomers.map((vip: any) => {
         if (vip.restaurant_id === restaurant?.id && vip.phone === editingCustomer.phone) {
-          return { ...vip, phone: editForm.phone, name: editForm.name };
+          return { ...vip, phone: editForm.phone.trim(), name: editForm.name.trim() };
         }
         return vip;
       });
@@ -575,17 +653,15 @@ if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${se
 
   const getCustomerSegment = (totalSpent: number, totalOrders: number) => {
     const segments = [];
-    
-    if (totalOrders === 1) {
+
+    if (totalOrders === 0 || totalOrders === 1) {
       segments.push(<Badge key="new" variant="info">{t('newCustomer')}</Badge>);
     } else if (totalOrders >= 2 && totalOrders <= 4) {
       segments.push(<Badge key="regular" variant="gray">{t('regular')}</Badge>);
     } else if (totalOrders >= 5) {
       segments.push(<Badge key="frequent" variant="warning">{t('frequent')}</Badge>);
-    } else {
-      segments.push(<Badge key="default" variant="gray">{t('regular')}</Badge>);
     }
-    
+
     return (
       <div className="flex flex-wrap gap-1">
         {segments}
