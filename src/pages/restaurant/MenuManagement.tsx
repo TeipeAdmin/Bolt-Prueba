@@ -13,7 +13,8 @@ import {
   ArrowUp,
   ArrowDown,
   Copy,
-  GripVertical
+  GripVertical,
+  ExternalLink
 } from 'lucide-react';
 import { Category, Product, Restaurant, Subscription } from '../../types';
 import { loadFromStorage, saveToStorage, availablePlans } from '../../data/mockData';
@@ -406,15 +407,31 @@ export const MenuManagement: React.FC = () => {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">{t('productManagement')}</h1>
-        <Button
-          icon={Plus}
-          onClick={() => {
-            setEditingProduct(null);
-            setShowProductModal(true);
-          }}
-        >
-          {t('newProduct')}
-        </Button>
+        <div className="flex gap-3">
+          <Button
+            variant="outline"
+            icon={ExternalLink}
+            onClick={() => {
+              if (restaurant?.slug) {
+                window.open(`/${restaurant.slug}`, '_blank');
+              } else {
+                showToast('warning', 'No disponible', 'El menú público aún no está disponible', 3000);
+              }
+            }}
+            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+          >
+            {t('viewMenu')}
+          </Button>
+          <Button
+            icon={Plus}
+            onClick={() => {
+              setEditingProduct(null);
+              setShowProductModal(true);
+            }}
+          >
+            {t('newProduct')}
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}

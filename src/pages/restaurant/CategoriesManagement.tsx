@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, GripVertical, Eye, EyeOff,ArrowUp, ArrowDown, Search, Image as ImageIcon, FolderOpen } from 'lucide-react';
+import { Plus, Pencil, Trash2, GripVertical, Eye, EyeOff,ArrowUp, ArrowDown, Search, Image as ImageIcon, FolderOpen, ExternalLink } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Category, Subscription } from '../../types';
 import { loadFromStorage, saveToStorage, availablePlans } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -15,6 +16,7 @@ export const CategoriesManagement: React.FC = () => {
   const { restaurant } = useAuth();
   const { showToast } = useToast();
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
   const [currentSubscription, setCurrentSubscription] = useState<Subscription | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -261,12 +263,28 @@ export const CategoriesManagement: React.FC = () => {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">{t('categoryManagement')}</h1>
-        <Button
-          icon={Plus}
-          onClick={() => setShowModal(true)}
-        >
-          {t('newCategory')}
-        </Button>
+        <div className="flex gap-3">
+          <Button
+            variant="outline"
+            icon={ExternalLink}
+            onClick={() => {
+              if (restaurant?.slug) {
+                window.open(`/${restaurant.slug}`, '_blank');
+              } else {
+                showToast('warning', 'No disponible', 'El menú público aún no está disponible', 3000);
+              }
+            }}
+            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+          >
+            {t('viewMenu')}
+          </Button>
+          <Button
+            icon={Plus}
+            onClick={() => setShowModal(true)}
+          >
+            {t('newCategory')}
+          </Button>
+        </div>
       </div>
 
       {/* Stats and Search Bar */}

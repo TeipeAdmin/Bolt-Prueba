@@ -53,6 +53,15 @@ export const CustomersManagement: React.FC = () => {
     delivery_instructions: '',
     isVip: false,
   });
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    address: '',
+    delivery_instructions: '',
+    isVip: false,
+  });
 
   useEffect(() => {
     if (restaurant) {
@@ -280,6 +289,50 @@ export const CustomersManagement: React.FC = () => {
       return;
     }
     setShowBulkEditModal(true);
+  };
+
+  const handleCreateCustomer = () => {
+    if (!restaurant || !createForm.name.trim() || !createForm.phone.trim()) {
+      showToast('warning', 'Campos requeridos', 'El nombre y teléfono son obligatorios', 3000);
+      return;
+    }
+
+    const newCustomer = {
+      restaurant_id: restaurant.id,
+      name: createForm.name,
+      phone: createForm.phone,
+      email: createForm.email,
+      address: createForm.address,
+      delivery_instructions: createForm.delivery_instructions,
+      created_at: new Date().toISOString(),
+    };
+
+    const importedCustomers = loadFromStorage('importedCustomers') || [];
+    saveToStorage('importedCustomers', [...importedCustomers, newCustomer]);
+
+    if (createForm.isVip) {
+      const vipCustomers = loadFromStorage('vipCustomers') || [];
+      const newVipCustomer = {
+        restaurant_id: restaurant.id,
+        phone: createForm.phone,
+        name: createForm.name,
+        created_at: new Date().toISOString(),
+      };
+      saveToStorage('vipCustomers', [...vipCustomers, newVipCustomer]);
+    }
+
+    loadCustomersData();
+    setShowCreateModal(false);
+    setCreateForm({
+      name: '',
+      phone: '',
+      email: '',
+      address: '',
+      delivery_instructions: '',
+      isVip: false,
+    });
+
+    showToast('success', 'Cliente creado', `${createForm.name} ha sido agregado exitosamente`, 4000);
   };
 
   const executeBulkEdit = () => {
@@ -964,6 +1017,12 @@ if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${se
             className="hidden"
           />
           <Button
+            icon={UserPlus}
+            onClick={() => setShowCreateModal(true)}
+          >
+            {t('newCustomer')}
+          </Button>
+          <Button
             variant="outline"
             size="sm"
             icon={Filter}
@@ -1395,6 +1454,106 @@ if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${se
               disabled={!editForm.name.trim() || !editForm.phone.trim()}
             >
               {t('saveChanges')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Create Customer Modal */}
+      <Modal
+        isOpen={showCreateModal}
+        onClose={() => {
+          setShowCreateModal(false);
+          setCreateForm({
+            name: '',
+            phone: '',
+            email: '',
+            address: '',
+            delivery_instructions: '',
+            isVip: false,
+          });
+        }}
+        title={t('newCustomer')}
+        size="lg"
+      >
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label={t('fullNameRequired')}
+              value={createForm.name}
+              onChange={(e) => setCreateForm(prev => ({ ...prev, name: e.target.value }))}
+              placeholder={t('customerName')}
+            />
+            <Input
+              label={t('phoneRequired')}
+              value={createForm.phone}
+              onChange={(e) => setCreateForm(prev => ({ ...prev, phone: e.target.value }))}
+              placeholder="+57 300 123 4567"
+            />
+          </div>
+
+          <Input
+            label={t('email')}
+            type="email"
+            value={createForm.email}
+            onChange={(e) => setCreateForm(prev => ({ ...prev, email: e.target.value }))}
+            placeholder="cliente@email.com"
+          />
+
+          <Input
+            label={t('address')}
+            value={createForm.address}
+            onChange={(e) => setCreateForm(prev => ({ ...prev, address: e.target.value }))}
+            placeholder={t('fullAddress')}
+          />
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {t('deliveryInstructions')}
+            </label>
+            <textarea
+              value={createForm.delivery_instructions}
+              onChange={(e) => setCreateForm(prev => ({ ...prev, delivery_instructions: e.target.value }))}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder={t('deliveryInstructionsPlaceholder')}
+            />
+          </div>
+
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              checked={createForm.isVip}
+              onChange={(e) => setCreateForm(prev => ({ ...prev, isVip: e.target.checked }))}
+              className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mr-2"
+            />
+            <label className="text-sm font-medium text-gray-700">
+              {t('vipCustomer')}
+            </label>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setShowCreateModal(false);
+                setCreateForm({
+                  name: '',
+                  phone: '',
+                  email: '',
+                  address: '',
+                  delivery_instructions: '',
+                  isVip: false,
+                });
+              }}
+            >
+              {t('cancel')}
+            </Button>
+            <Button
+              onClick={handleCreateCustomer}
+              disabled={!createForm.name.trim() || !createForm.phone.trim()}
+            >
+              {t('create')}
             </Button>
           </div>
         </div>
