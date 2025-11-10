@@ -836,18 +836,22 @@ export const OrdersManagement: React.FC = () => {
           <div class="section">
             <div class="section-title">${t('productsSectionTitle')}</div>
             <div class="items-table">
-              ${order.items.map(item => `
+              ${order.items.map(item => {
+                const unitPrice = item.total_price / item.quantity;
+                return `
                 <div class="item-row">
                   <div class="item-name">
                     ${item.product.name}<br>
                     <small style="font-size: 9px; color: #666;">${item.variation.name}</small>
+                    ${item.selected_ingredients && item.selected_ingredients.length > 0 ? `<br><small style="font-size: 9px; color: #0066cc;">+ ${item.selected_ingredients.map(ing => ing.name).join(', ')}</small>` : ''}
                     ${item.special_notes ? `<br><small style="font-size: 9px; color: #666;">${t('noteLabel')}: ${item.special_notes}</small>` : ''}
                   </div>
                   <div class="item-qty">${item.quantity}</div>
-                  <div class="item-price">${formatCurrency(item.variation.price, currency)}</div>
-                  <div class="item-total">${formatCurrency(item.variation.price * item.quantity, currency)}</div>
+                  <div class="item-price">${formatCurrency(unitPrice, currency)}</div>
+                  <div class="item-total">${formatCurrency(item.total_price, currency)}</div>
                 </div>
-              `).join('')}
+              `;
+              }).join('')}
             </div>
           </div>
 
