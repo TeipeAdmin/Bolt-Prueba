@@ -1017,12 +1017,6 @@ if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${se
             className="hidden"
           />
           <Button
-            icon={UserPlus}
-            onClick={() => setShowCreateModal(true)}
-          >
-            {t('newCustomer')}
-          </Button>
-          <Button
             variant="outline"
             size="sm"
             icon={Filter}
@@ -1030,6 +1024,12 @@ if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${se
             className={showFilters ? 'bg-blue-50 border-blue-200 text-blue-700' : ''}
           >
             {t('filtersAndSearch')}
+          </Button>
+                    <Button
+            icon={UserPlus}
+            onClick={() => setShowCreateModal(true)}
+          >
+            {t('newCustomer')}
           </Button>
         </div>
       </div>
