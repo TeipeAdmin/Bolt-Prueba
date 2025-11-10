@@ -147,8 +147,8 @@ export const RestaurantSettings: React.FC = () => {
 
       showToast(
         'success',
-        'Configuración Guardada',
-        'Los cambios han sido guardados exitosamente.',
+        t('config_saved_title'),
+        t('changes_saved_success'),
         4000
       );
     } catch (error) {
@@ -282,13 +282,13 @@ Fecha: ${new Date().toLocaleString()}
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
-        return <Badge variant="warning">Pendiente</Badge>;
+        return <Badge variant="warning">{t('status_pending')}</Badge>;
       case 'in_progress':
-        return <Badge variant="info">En Progreso</Badge>;
+        return <Badge variant="info">{t('status_in_progress')}</Badge>;
       case 'resolved':
-        return <Badge variant="success">Resuelto</Badge>;
+        return <Badge variant="success">{t('status_resolved')}</Badge>;
       case 'closed':
-        return <Badge variant="gray">Cerrado</Badge>;
+        return <Badge variant="gray">{t('status_closed_simple')}</Badge>;
       default:
         return <Badge variant="gray">Desconocido</Badge>;
     }
@@ -297,15 +297,15 @@ Fecha: ${new Date().toLocaleString()}
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
       case 'urgent':
-        return <Badge variant="error">Urgente</Badge>;
+        return <Badge variant="error">{t('priority_urgent')}</Badge>;
       case 'high':
-        return <Badge variant="warning">Alta</Badge>;
+        return <Badge variant="warning">{t('priority_high')}</Badge>;
       case 'medium':
-        return <Badge variant="info">Media</Badge>;
+        return <Badge variant="info">{t('priority_medium')}</Badge>;
       case 'low':
-        return <Badge variant="gray">Baja</Badge>;
+        return <Badge variant="gray">{t('priority_low')}</Badge>;
       default:
-        return <Badge variant="gray">Media</Badge>;
+        return <Badge variant="gray">{t('priority_medium')}</Badge>;
     }
   };
 
@@ -395,8 +395,8 @@ Fecha: ${new Date().toLocaleString()}
                       <ImageIcon className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-bold text-gray-900">Identidad Visual</h3>
-                      <p className="text-sm text-gray-600">Logo de tu restaurante</p>
+                      <h3 className="text-lg font-bold text-gray-900">{t('visual_identity_title')}</h3>
+                      <p className="text-sm text-gray-600">{t('logo_subtitle')}</p>
                     </div>
                   </div>
                 </div>
@@ -415,7 +415,7 @@ Fecha: ${new Date().toLocaleString()}
                           ) : (
                             <div className="text-center p-4">
                               <Store className="w-16 h-16 text-gray-300 mx-auto mb-2" />
-                              <p className="text-xs text-gray-400 font-medium">Sin logo</p>
+                              <p className="text-xs text-gray-400 font-medium">{t('no_logo')}</p>
                             </div>
                           )}
                         </div>
@@ -440,7 +440,7 @@ Fecha: ${new Date().toLocaleString()}
                                 const file = e.target.files?.[0];
                                 if (file) {
                                   if (file.size > 5 * 1024 * 1024) {
-                                    showToast('error', 'Archivo muy grande', 'El tamaño máximo es 5MB', 3000);
+                                    showToast('error', t('file_too_large_title'), t('max_size_5mb_error'), 3000);
                                     return;
                                   }
                                   const reader = new FileReader();
@@ -455,7 +455,7 @@ Fecha: ${new Date().toLocaleString()}
                             />
                             <span className="inline-flex items-center justify-center w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-sm font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg">
                               <Upload className="w-4 h-4 mr-2" />
-                              {formData.logo ? 'Cambiar Logo' : 'Subir Logo'}
+                              {formData.logo ? t('change_logo_button') : t('upload_logo_button')}
                             </span>
                           </label>
 
@@ -464,7 +464,7 @@ Fecha: ${new Date().toLocaleString()}
                               onClick={() => updateFormData('logo', '')}
                               className="inline-flex items-center px-6 py-3 bg-red-50 border-2 border-red-200 rounded-xl text-sm font-semibold text-red-700 hover:bg-red-100 hover:border-red-300 transition-all"
                             >
-                              Eliminar
+                              {t('delete_button')}
                             </button>
                           )}
                         </div>
@@ -477,23 +477,23 @@ Fecha: ${new Date().toLocaleString()}
                               </svg>
                             </div>
                             <div className="flex-1">
-                              <p className="text-sm font-semibold text-gray-900 mb-2">Especificaciones recomendadas</p>
+                              <p className="text-sm font-semibold text-gray-900 mb-2">{t('recommended_specs_title')}</p>
                               <ul className="space-y-1.5 text-xs text-gray-700">
                                 <li className="flex items-center gap-2">
                                   <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
-                                  Formatos aceptados: JPG, PNG o GIF
+                                  {t('accepted_formats_list')}
                                 </li>
                                 <li className="flex items-center gap-2">
                                   <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
-                                  Dimensiones óptimas: 500x500px o superior
+                                  {t('optimal_dimensions_list')}
                                 </li>
                                 <li className="flex items-center gap-2">
                                   <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
-                                  Tamaño máximo: 5MB
+                                  {t('max_size_list')}
                                 </li>
                                 <li className="flex items-center gap-2">
                                   <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
-                                  Preferible fondo transparente (PNG)
+                                  {t('prefer_transparent_bg_list')}
                                 </li>
                               </ul>
                             </div>
@@ -514,7 +514,7 @@ Fecha: ${new Date().toLocaleString()}
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-gray-900">{t('restaurantInfo')}</h3>
-                      <p className="text-sm text-gray-600">Información de contacto y ubicación</p>
+                      <p className="text-sm text-gray-600">{t('contact_location_subtitle')}</p>
                     </div>
                   </div>
                 </div>
@@ -531,7 +531,7 @@ Fecha: ${new Date().toLocaleString()}
                         value={formData.name}
                         onChange={(e) => updateFormData('name', e.target.value)}
                         className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all font-medium"
-                        placeholder="Ej: Restaurante El Buen Sabor"
+                        placeholder={t('restaurant_name_placeholder')}
                       />
                     </div>
 
@@ -561,13 +561,13 @@ Fecha: ${new Date().toLocaleString()}
                         value={formData.phone || ''}
                         onChange={(e) => updateFormData('phone', e.target.value)}
                         className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all font-medium"
-                        placeholder="+57 300 123 4567"
+                        placeholder={t('whatsapp_placeholder')}
                       />
                       <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
                         <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                         </svg>
-                        Necesario para recibir pedidos por WhatsApp
+                        {t('required_for_whatsapp')}
                       </p>
                     </div>
 
@@ -581,7 +581,7 @@ Fecha: ${new Date().toLocaleString()}
                         value={formData.address || ''}
                         onChange={(e) => updateFormData('address', e.target.value)}
                         className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all"
-                        placeholder="Calle 123 #45-67, Bogotá"
+                        placeholder={t('address_placeholder')}
                       />
                     </div>
                   </div>
@@ -596,9 +596,9 @@ Fecha: ${new Date().toLocaleString()}
                       onChange={(e) => updateFormData('description', e.target.value)}
                       rows={4}
                       className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all resize-none"
-                      placeholder="Describe tu restaurante: especialidad, ambiente, historia, qué te hace único..."
+                      placeholder={t('description_placeholder')}
                     />
-                    <p className="text-xs text-gray-500 mt-2">Máximo 500 caracteres</p>
+                    <p className="text-xs text-gray-500 mt-2">{t('max_500_chars_hint')}</p>
                   </div>
                 </div>
               </div>
@@ -612,7 +612,7 @@ Fecha: ${new Date().toLocaleString()}
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-gray-900">{t('regionalSettings')}</h3>
-                      <p className="text-sm text-gray-600">Idioma y moneda del sistema</p>
+                      <p className="text-sm text-gray-600">{t('language_currency_subtitle')}</p>
                     </div>
                   </div>
                 </div>
@@ -631,11 +631,11 @@ Fecha: ${new Date().toLocaleString()}
                         }}
                         className="w-full px-4 py-3 bg-white border-2 border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all font-medium"
                       >
-                        <option value="es">🇪🇸 Español</option>
-                        <option value="en">🇺🇸 English</option>
+                        <option value="es">{t('language_es_option')}</option>
+                        <option value="en">{t('language_en_option')}</option>
                       </select>
                       <p className="text-xs text-gray-600 mt-2">
-                        Define el idioma de la interfaz de administración
+                        {t('language_selector_hint')}
                       </p>
                     </div>
 
@@ -649,16 +649,16 @@ Fecha: ${new Date().toLocaleString()}
                         onChange={(e) => updateFormData('settings.currency', e.target.value)}
                         className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all font-medium"
                       >
-                        <option value="COP">🇨🇴 Peso Colombiano (COP)</option>
-                        <option value="USD">🇺🇸 Dólar (USD)</option>
-                        <option value="EUR">🇪🇺 Euro (EUR)</option>
-                        <option value="MXN">🇲🇽 Peso Mexicano (MXN)</option>
-                        <option value="ARS">🇦🇷 Peso Argentino (ARS)</option>
-                        <option value="CLP">🇨🇱 Peso Chileno (CLP)</option>
-                        <option value="PEN">🇵🇪 Sol Peruano (PEN)</option>
+                        <option value="COP">{t('currency_cop_option')}</option>
+                        <option value="USD">{t('currency_usd_option')}</option>
+                        <option value="EUR">{t('currency_eur_option')}</option>
+                        <option value="MXN">{t('currency_mxn_option')}</option>
+                        <option value="ARS">{t('currency_ars_option')}</option>
+                        <option value="CLP">{t('currency_clp_option')}</option>
+                        <option value="PEN">{t('currency_pen_option')}</option>
                       </select>
                       <p className="text-xs text-gray-600 mt-2">
-                        Moneda para mostrar precios en tu menú
+                        {t('currency_selector_hint')}
                       </p>
                     </div>
                   </div>
@@ -724,24 +724,24 @@ Fecha: ${new Date().toLocaleString()}
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">{t('businessHours')}</h3>
-                  <p className="text-sm text-gray-600">Configura los horarios de atención de tu restaurante</p>
+                  <p className="text-sm text-gray-600">{t('config_hours_subtitle')}</p>
                 </div>
               </div>
 
               <div className="bg-gradient-to-br from-blue-50 to-white rounded-xl p-6 border border-blue-100 shadow-sm">
                 <h4 className="text-md font-semibold text-gray-900 mb-4 flex items-center gap-2">
                   <Clock className="w-5 h-5 text-blue-600" />
-                  Tiempo de Preparación
+                  {t('preparation_time_title')}
                 </h4>
                 <div className="space-y-3">
                   <Input
-                    label="Tiempo estimado de preparación"
+                    label={t('prep_time_label')}
                     value={formData.settings.preparation_time || '30-45 minutos'}
                     onChange={(e) => updateFormData('settings.preparation_time', e.target.value)}
-                    placeholder="Ej: 30-45 minutos"
+                    placeholder={t('prep_time_placeholder')}
                   />
                   <p className="text-xs text-gray-500">
-                    Este es el tiempo que se mostrará a los clientes como estimación de preparación de sus pedidos
+                    {t('prep_time_hint')}
                   </p>
                 </div>
               </div>
@@ -749,7 +749,7 @@ Fecha: ${new Date().toLocaleString()}
               <div className="bg-gradient-to-br from-blue-50 to-white rounded-xl p-6 border border-blue-100 shadow-sm">
                 <h4 className="text-md font-semibold text-gray-900 mb-4 flex items-center gap-2">
                   <Calendar className="w-5 h-5 text-blue-600" />
-                  Horarios de Atención
+                  {t('opening_hours_section')}
                 </h4>
                 <div className="space-y-3">
                   {Object.entries(formData.settings.business_hours).map(([day, hours]) => (
@@ -771,7 +771,7 @@ Fecha: ${new Date().toLocaleString()}
                         {hours.is_open ? (
                           <div className="flex items-center gap-3 flex-1">
                             <div className="flex-1">
-                              <label className="block text-xs font-medium text-gray-600 mb-1">Apertura</label>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">{t('hours_open_label')}</label>
                               <input
                                 type="time"
                                 value={hours.open}
@@ -781,7 +781,7 @@ Fecha: ${new Date().toLocaleString()}
                             </div>
                             <div className="text-gray-400 mt-5">—</div>
                             <div className="flex-1">
-                              <label className="block text-xs font-medium text-gray-600 mb-1">Cierre</label>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">{t('hours_close_label')}</label>
                               <input
                                 type="time"
                                 value={hours.close}
@@ -792,7 +792,7 @@ Fecha: ${new Date().toLocaleString()}
                           </div>
                         ) : (
                           <div className="flex-1">
-                            <Badge variant="gray">Cerrado</Badge>
+                            <Badge variant="gray">{t('closed')}</Badge>
                           </div>
                         )}
                       </div>
@@ -805,11 +805,11 @@ Fecha: ${new Date().toLocaleString()}
                 <div className="flex items-start gap-2">
                   <Clock className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm text-blue-800 font-medium">Información importante:</p>
+                    <p className="text-sm text-blue-800 font-medium">{t('important_info')}</p>
                     <ul className="text-xs text-blue-700 mt-2 space-y-1 list-disc list-inside">
-                      <li>Los horarios se muestran en tu menú público</li>
-                      <li>Los clientes verán si estás abierto o cerrado</li>
-                      <li>Puedes configurar diferentes horarios para cada día</li>
+                      <li>{t('hours_show_public')}</li>
+                      <li>{t('hours_show_status')}</li>
+                      <li>{t('hours_different_days')}</li>
                     </ul>
                   </div>
                 </div>
@@ -824,9 +824,9 @@ Fecha: ${new Date().toLocaleString()}
                   <Globe className="w-6 h-6 text-gray-700" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Redes Sociales</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">{t('socialMedia')}</h3>
                   <p className="text-sm text-gray-600">
-                    Conecta tus redes sociales para aparecer en tu menú público
+                    {t('social_media_subtitle')}
                   </p>
                 </div>
               </div>
@@ -845,7 +845,7 @@ Fecha: ${new Date().toLocaleString()}
                         type="url"
                         value={formData.settings.social_media?.facebook || ''}
                         onChange={(e) => updateFormData('settings.social_media.facebook', e.target.value)}
-                        placeholder="https://facebook.com/tu-restaurante"
+                        placeholder={t('facebook_placeholder')}
                         className="pl-10 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                       />
                     </div>
@@ -863,7 +863,7 @@ Fecha: ${new Date().toLocaleString()}
                         type="url"
                         value={formData.settings.social_media?.instagram || ''}
                         onChange={(e) => updateFormData('settings.social_media.instagram', e.target.value)}
-                        placeholder="https://instagram.com/tu-restaurante"
+                        placeholder={t('instagram_placeholder')}
                         className="pl-10 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                       />
                     </div>
@@ -881,7 +881,7 @@ Fecha: ${new Date().toLocaleString()}
                         type="url"
                         value={formData.settings.social_media?.twitter || ''}
                         onChange={(e) => updateFormData('settings.social_media.twitter', e.target.value)}
-                        placeholder="https://twitter.com/tu-restaurante"
+                        placeholder={t('twitter_placeholder')}
                         className="pl-10 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                       />
                     </div>
@@ -917,14 +917,14 @@ Fecha: ${new Date().toLocaleString()}
                         type="url"
                         value={formData.settings.social_media?.tiktok || ''}
                         onChange={(e) => updateFormData('settings.social_media.tiktok', e.target.value)}
-                        placeholder="https://tiktok.com/@tu-restaurante"
+                        placeholder={t('tiktok_placeholder')}
                         className="pl-10 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700">Sitio Web</label>
+                    <label className="block text-sm font-medium text-gray-700">{t('website_label')}</label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <Globe className="w-5 h-5 text-gray-400" />
@@ -933,7 +933,7 @@ Fecha: ${new Date().toLocaleString()}
                         type="url"
                         value={formData.settings.social_media?.website || ''}
                         onChange={(e) => updateFormData('settings.social_media.website', e.target.value)}
-                        placeholder="https://tu-restaurante.com"
+                        placeholder={t('website_placeholder')}
                         className="pl-10 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                       />
                     </div>
@@ -945,12 +945,12 @@ Fecha: ${new Date().toLocaleString()}
                 <div className="flex items-start gap-2">
                   <Globe className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm text-purple-800 font-medium">Sobre las redes sociales:</p>
+                    <p className="text-sm text-purple-800 font-medium">{t('about_social_media')}</p>
                     <ul className="text-xs text-purple-700 mt-2 space-y-1 list-disc list-inside">
-                      <li>Los enlaces aparecerán en el footer de tu menú público</li>
-                      <li>Asegúrate de usar URLs completas (https://...)</li>
-                      <li>Para WhatsApp, usa el formato internacional (+código país + número)</li>
-                      <li>Los iconos se mostrarán automáticamente según la red social</li>
+                      <li>{t('social_footer_hint')}</li>
+                      <li>{t('social_full_urls')}</li>
+                      <li>{t('social_whatsapp_format')}</li>
+                      <li>{t('social_auto_icons')}</li>
                     </ul>
                   </div>
                 </div>
@@ -978,13 +978,13 @@ Fecha: ${new Date().toLocaleString()}
               {formData.settings.delivery.enabled && (
                 <div className="space-y-6">
                   <div>
-                    <h4 className="text-md font-medium text-gray-900 mb-4">Tarifas de Delivery</h4>
+                    <h4 className="text-md font-medium text-gray-900 mb-4">{t('delivery_rates_title')}</h4>
                     <div className="space-y-4">
                       {(formData.settings.delivery.pricing_tiers || []).map((tier, index) => (
                         <div key={index} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
                           <div className="flex-1">
                             <Input
-                              label="Nombre de la Tarifa"
+                              label={t('rate_name_label')}
                               value={tier.name || ''}
                               onChange={(e) => {
                                 const newTiers = [...(formData.settings.delivery.pricing_tiers || [])];
@@ -1763,7 +1763,7 @@ Fecha: ${new Date().toLocaleString()}
                         value={formData.settings.billing?.nombreComercial || ''}
                         onChange={(e) => updateFormData('settings.billing.nombreComercial', e.target.value)}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                        placeholder="Restaurante Orlando"
+                        placeholder={t('commercial_name_placeholder')}
                         required
                       />
                       <p className="text-xs text-gray-500">El nombre que aparecerá en los tickets</p>
@@ -1778,7 +1778,7 @@ Fecha: ${new Date().toLocaleString()}
                         value={formData.settings.billing?.razonSocial || ''}
                         onChange={(e) => updateFormData('settings.billing.razonSocial', e.target.value)}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                        placeholder="Orlando SAS"
+                        placeholder={t('social_reason_placeholder')}
                       />
                       <p className="text-xs text-gray-500">Opcional - Nombre legal de la empresa</p>
                     </div>
@@ -1801,7 +1801,7 @@ Fecha: ${new Date().toLocaleString()}
                             ? 'border-red-300 bg-red-50'
                             : 'border-gray-300'
                         }`}
-                        placeholder="900123456-7"
+                        placeholder={t('nit_placeholder')}
                         maxLength={11}
                         required
                       />
@@ -1886,7 +1886,7 @@ Fecha: ${new Date().toLocaleString()}
                         value={formData.settings.billing?.telefono || ''}
                         onChange={(e) => updateFormData('settings.billing.telefono', e.target.value)}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                        placeholder="+57 300 123 4567"
+                        placeholder={t('whatsapp_placeholder')}
                         required
                       />
                     </div>
@@ -2450,7 +2450,7 @@ Fecha: ${new Date().toLocaleString()}
                       value={supportForm.subject}
                       onChange={(e) => setSupportForm(prev => ({ ...prev, subject: e.target.value }))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Describe brevemente tu consulta"
+                      placeholder={t('subject_placeholder')}
                       required
                     />
                   </div>
