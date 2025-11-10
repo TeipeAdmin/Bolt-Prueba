@@ -661,7 +661,6 @@ useEffect(() => {
   }`}
   style={{
     backgroundColor: viewMode === 'list' ? cardBackgroundColor : 'rgba(255,255,255,0.5)',
-    color: primaryColor,
     borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
     transition: 'background-color 0.3s ease, color 0.3s ease',
   }}
