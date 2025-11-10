@@ -1433,7 +1433,6 @@ export const OrdersManagement: React.FC = () => {
                             size="sm"
                             icon={Printer}
                                             onClick={() => {
-                  setShowModal(false);
                   printTicket(selectedOrder);
                 }}
                             className="text-gray-600 hover:text-gray-700"
