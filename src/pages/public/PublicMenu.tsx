@@ -653,17 +653,16 @@ useEffect(() => {
           {/* w-full mt-4 en móvil para ocupar el ancho debajo de las categorías.
                md:w-auto md:mt-0 en desktop para volver a su ancho y alinearse a la derecha. */}
           <div className="flex justify-end gap-2 w-full md:w-auto mt-4 md:mt-0">
-<button
-  onClick={() => setViewMode('list')}
-  className={`p-2 rounded-lg transition-all ${
-    viewMode === 'list' ? 'shadow-md' : 'opacity-80'
-  }`}
-  style={{
-    backgroundColor: viewMode === 'list' ? cardBackgroundColor : 'bg-white/50',
-    color: primaryColor,
-    borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
-  }}
->
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-2 rounded-lg transition-all ${
+                viewMode === 'list' ? 'bg-white shadow-md' : cardBackgroundColor
+              }`}
+              style={{
+                borderRadius:
+                  theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
+              }}
+            >
               <List
                 className="w-5 h-5"
                 style={{
