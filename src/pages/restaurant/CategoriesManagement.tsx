@@ -24,7 +24,6 @@ export const CategoriesManagement: React.FC = () => {
     name: '',
     description: '',
     icon: '',
-    image: '',
   });
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; categoryId: string; categoryName: string }>({
     show: false,
@@ -129,7 +128,6 @@ export const CategoriesManagement: React.FC = () => {
       name: category.name,
       description: category.description || '',
       icon: category.icon || '',
-      image: category.image || '',
     });
     setShowModal(true);
   };
@@ -186,7 +184,6 @@ export const CategoriesManagement: React.FC = () => {
       name: '',
       description: '',
       icon: '',
-      image: '',
     });
   };
 
@@ -372,15 +369,9 @@ export const CategoriesManagement: React.FC = () => {
                   : 'border-gray-200 hover:shadow-md hover:border-blue-300'
               }`}
             >
-              {/* Category Image/Icon Header */}
+              {/* Category Icon Header */}
               <div className="relative h-60 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
-                {category.image ? (
-                  <img
-                    src={category.image}
-                    alt={category.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : category.icon ? (
+                {category.icon ? (
                   <span className="text-5xl">{category.icon}</span>
                 ) : (
                   <FolderOpen className="w-12 h-12 text-gray-300" />
@@ -489,80 +480,25 @@ export const CategoriesManagement: React.FC = () => {
             </div>
           </div>
 
-          {/* Visual Options Section */}
+          {/* Icon Section */}
           <div className="bg-gray-50 rounded-lg p-5 space-y-4">
             <h4 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
               <ImageIcon className="w-4 h-4 text-gray-600" />
               {t('categoryAppearance')}
             </h4>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Icon Section */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  {t('catIconSec')}
-                </label>
-                <Input
-                  value={formData.icon}
-                  onChange={(e) => setFormData(prev => ({ ...prev, icon: e.target.value }))}
-                  placeholder="🍕 🥤 🍰"
-                />
-                <p className="text-xs text-gray-500">
-                  {t('catIconDes')}
-                </p>
-              </div>
-
-              {/* Image Section */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  {t('catImg')}
-                </label>
-                {formData.image ? (
-                  <div className="relative">
-                    <img
-                      src={formData.image}
-                      alt="Category"
-                      className="w-full h-24 object-cover rounded-lg border border-gray-300"
-                    />
-                    <button
-                      onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
-                      className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-lg hover:bg-red-600 transition-colors shadow-md"
-                      title={t('catDeleteImg')}
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  </div>
-                ) : (
-                  <label className="block w-full h-24 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 transition-colors cursor-pointer">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          if (file.size > 5 * 1024 * 1024) {
-                            showToast('error', 'Archivo muy grande', 'El tamaño máximo es 5MB', 3000);
-                            return;
-                          }
-                          const reader = new FileReader();
-                          reader.onloadend = () => {
-                            setFormData(prev => ({ ...prev, image: reader.result as string }));
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
-                      className="hidden"
-                    />
-                    <div className="flex flex-col items-center justify-center h-full text-gray-500">
-                      <ImageIcon className="w-6 h-6 mb-1" />
-                      <span className="text-xs">{t('catUpImg')}</span>
-                    </div>
-                  </label>
-                )}
-                <p className="text-xs text-gray-500">
-                  {t('catImgRec')}
-                </p>
-              </div>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                {t('catIconSec')}
+              </label>
+              <Input
+                value={formData.icon}
+                onChange={(e) => setFormData(prev => ({ ...prev, icon: e.target.value }))}
+                placeholder="🍕 🥤 🍰"
+              />
+              <p className="text-xs text-gray-500">
+                {t('catIconDes')}
+              </p>
             </div>
           </div>
 
