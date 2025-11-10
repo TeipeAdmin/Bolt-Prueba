@@ -249,29 +249,46 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
 
     await new Promise(resolve => setTimeout(resolve, 1500));
 
+    const orderType = deliveryMode === 'pickup' ? 'pickup' :
+                      deliveryMode === 'dine-in' ? 'table' :
+                      'delivery';
+
     const newOrder = {
       id: `ord-${Date.now()}`,
       restaurant_id: restaurant.id,
-      customer_name: customerInfo.name,
-      customer_phone: customerInfo.phone,
-      customer_email: customerInfo.email,
-      delivery_mode: deliveryMode,
-      delivery_address: deliveryMode === 'delivery' ? `${customerInfo.address}, ${customerInfo.city}` : null,
+      order_number: `#PUB-${Date.now()}`,
+      customer: {
+        name: customerInfo.name,
+        phone: customerInfo.phone,
+        email: customerInfo.email,
+        address: customerInfo.address,
+        delivery_instructions: customerInfo.notes
+      },
+      order_type: orderType,
+      delivery_address: deliveryMode === 'delivery' ? `${customerInfo.address}, ${customerInfo.city}` : '',
+      table_number: deliveryMode === 'dine-in' ? customerInfo.tableNumber : '',
       items: items.map(item => ({
-        product_id: item.product.id,
-        product_name: item.product.name,
-        variation_id: item.variation.id,
-        variation_name: item.variation.name,
+        id: `item-${Date.now()}-${Math.random()}`,
+        product: {
+          id: item.product.id,
+          name: item.product.name
+        },
+        variation: {
+          id: item.variation.id,
+          name: item.variation.name,
+          price: item.variation.price
+        },
         quantity: item.quantity,
-        price: item.variation.price,
-        special_notes: item.special_notes,
-        selected_ingredients: item.selected_ingredients
+        selected_ingredients: item.selected_ingredients || [],
+        special_notes: item.special_notes || '',
+        total_price: item.variation.price * item.quantity
       })),
-      notes: customerInfo.notes,
-      table_number: deliveryMode === 'dine-in' ? customerInfo.tableNumber : undefined,
+      special_instructions: customerInfo.notes,
+      subtotal: getTotal(),
       delivery_cost: deliveryMode === 'delivery' ? deliveryCost : 0,
       total: getTotal() + (deliveryMode === 'delivery' ? deliveryCost : 0),
       status: 'pending',
+      whatsapp_sent: false,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
