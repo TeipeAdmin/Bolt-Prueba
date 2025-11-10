@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Globe, Clock, Truck, QrCode, Palette, Bell, MapPin, HelpCircle, Send, Eye, Calendar, Mail, Phone, Building, Store, Megaphone, Upload, Image as ImageIcon, FileText, DollarSign, Star } from 'lucide-react';
+import { Save, Globe, Clock, Truck, QrCode, Palette, Bell, MapPin, HelpCircle, Send, Eye, Calendar, Mail, Phone, Building, Store, Megaphone, Upload, Image as ImageIcon, FileText, DollarSign, Star, ChevronDown } from 'lucide-react';
 import { colombianDepartments, colombianCitiesByDepartment, validateNIT, formatNIT } from '../../utils/colombianCities';
 import { Restaurant } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
@@ -345,13 +345,14 @@ Fecha: ${new Date().toLocaleString()}
   }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">{t('settings')}</h1>
+    <div className="p-4 md:p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 md:mb-6">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900">{t('settings')}</h1>
         <Button
           onClick={handleSave}
           loading={loading}
           icon={Save}
+          className="w-full sm:w-auto"
         >
           {t('save')} {t('settings')}
         </Button>
@@ -360,20 +361,39 @@ Fecha: ${new Date().toLocaleString()}
       <div className="bg-white rounded-lg shadow">
         {/* Tabs */}
         <div className="border-b border-gray-200">
-          <nav className="flex space-x-8 px-6">
+          {/* Mobile Dropdown */}
+          <div className="block md:hidden px-4 py-3">
+            <div className="relative">
+              <select
+                value={activeTab}
+                onChange={(e) => setActiveTab(e.target.value)}
+                className="w-full appearance-none bg-white border border-gray-300 rounded-lg px-4 py-3 pr-10 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                {tabs.map((tab) => (
+                  <option key={tab.id} value={tab.id}>
+                    {tab.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+            </div>
+          </div>
+
+          {/* Desktop Tabs */}
+          <nav className="hidden md:flex md:space-x-4 lg:space-x-8 px-4 lg:px-6 overflow-x-auto">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
+                  className={`py-4 px-2 lg:px-1 border-b-2 font-medium text-xs lg:text-sm flex items-center gap-1.5 lg:gap-2 whitespace-nowrap flex-shrink-0 ${
                     activeTab === tab.id
                       ? 'border-blue-500 text-blue-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
                   {tab.name}
                 </button>
               );
@@ -382,30 +402,30 @@ Fecha: ${new Date().toLocaleString()}
         </div>
 
         {/* Tab Content */}
-        <div className="p-6">
+        <div className="p-4 md:p-6">
           {activeTab === 'general' && (
             <div className="space-y-6">
 
 
               {/* Logo Section - Modern Card */}
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
+              <div className="bg-white rounded-xl md:rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-4 md:px-6 py-3 md:py-4 border-b border-gray-200">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
                       <ImageIcon className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-bold text-gray-900">{t('visual_identity_title')}</h3>
+                      <h3 className="text-base md:text-lg font-bold text-gray-900">{t('visual_identity_title')}</h3>
                       <p className="text-sm text-gray-600">{t('logo_subtitle')}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="p-6">
-                  <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+                <div className="p-4 md:p-6">
+                  <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-6">
                     <div className="flex-shrink-0">
                       <div className="relative group">
-                        <div className="w-40 h-40 rounded-2xl border-4 border-gray-100 shadow-xl bg-gradient-to-br from-gray-50 to-white overflow-hidden flex items-center justify-center transition-transform group-hover:scale-105">
+                        <div className="w-32 h-32 md:w-40 md:h-40 rounded-xl md:rounded-2xl border-2 md:border-4 border-gray-100 shadow-xl bg-gradient-to-br from-gray-50 to-white overflow-hidden flex items-center justify-center transition-transform group-hover:scale-105">
                           {formData.logo ? (
                             <img
                               src={formData.logo}
@@ -413,8 +433,8 @@ Fecha: ${new Date().toLocaleString()}
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <div className="text-center p-4">
-                              <Store className="w-16 h-16 text-gray-300 mx-auto mb-2" />
+                            <div className="text-center p-2 md:p-4">
+                              <Store className="w-12 h-12 md:w-16 md:h-16 text-gray-300 mx-auto mb-2" />
                               <p className="text-xs text-gray-400 font-medium">{t('no_logo')}</p>
                             </div>
                           )}
@@ -431,7 +451,7 @@ Fecha: ${new Date().toLocaleString()}
 
                     <div className="flex-1 w-full">
                       <div className="space-y-4">
-                        <div className="flex flex-wrap gap-3">
+                        <div className="flex flex-col sm:flex-row flex-wrap gap-3">
                           <label className="relative cursor-pointer flex-1 min-w-[200px]">
                             <input
                               type="file"
@@ -506,21 +526,21 @@ Fecha: ${new Date().toLocaleString()}
               </div>
 
               {/* Restaurant Info Section - Modern Grid */}
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
+              <div className="bg-white rounded-xl md:rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-4 md:px-6 py-3 md:py-4 border-b border-gray-200">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md">
                       <Store className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-bold text-gray-900">{t('restaurantInfo')}</h3>
+                      <h3 className="text-base md:text-lg font-bold text-gray-900">{t('restaurantInfo')}</h3>
                       <p className="text-sm text-gray-600">{t('contact_location_subtitle')}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="p-6 space-y-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="p-4 md:p-6 space-y-4 md:space-y-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                         <Building className="w-4 h-4 text-gray-500" />
@@ -550,7 +570,7 @@ Fecha: ${new Date().toLocaleString()}
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                         <Phone className="w-4 h-4 text-gray-500" />
@@ -604,22 +624,22 @@ Fecha: ${new Date().toLocaleString()}
               </div>
 
               {/* Regional Settings Section - Modern Design */}
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
+              <div className="bg-white rounded-xl md:rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-4 md:px-6 py-3 md:py-4 border-b border-gray-200">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-md">
                       <Globe className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-bold text-gray-900">{t('regionalSettings')}</h3>
+                      <h3 className="text-base md:text-lg font-bold text-gray-900">{t('regionalSettings')}</h3>
                       <p className="text-sm text-gray-600">{t('language_currency_subtitle')}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="p-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-5 border-2 border-purple-100">
+                <div className="p-4 md:p-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg md:rounded-xl p-4 md:p-5 border-2 border-purple-100">
                       <label className="block text-sm font-semibold text-gray-900 mb-3">
                         {t('language')}
                       </label>
@@ -673,7 +693,7 @@ Fecha: ${new Date().toLocaleString()}
                   </div>
 
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Menú Público</h3>
+                    <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-2">Menú Público</h3>
                     <p className="text-sm text-gray-600 mb-4">
                       Comparte este enlace con tus clientes para que puedan ver tu menú y realizar pedidos
                     </p>
@@ -717,20 +737,20 @@ Fecha: ${new Date().toLocaleString()}
           )}
 
           {activeTab === 'hours' && (
-            <div className="space-y-6">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+            <div className="space-y-4 md:space-y-6">
+              <div className="flex items-center gap-3 mb-4 md:mb-6">
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-100 rounded-lg md:rounded-xl flex items-center justify-center">
                   <Clock className="w-6 h-6 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">{t('businessHours')}</h3>
+                  <h3 className="text-base md:text-lg font-semibold text-gray-900">{t('businessHours')}</h3>
                   <p className="text-sm text-gray-600">{t('config_hours_subtitle')}</p>
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-blue-50 to-white rounded-xl p-6 border border-blue-100 shadow-sm">
-                <h4 className="text-md font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-blue-600" />
+              <div className="bg-gradient-to-br from-blue-50 to-white rounded-lg md:rounded-xl p-4 md:p-6 border border-blue-100 shadow-sm">
+                <h4 className="text-sm md:text-md font-semibold text-gray-900 mb-3 md:mb-4 flex items-center gap-2">
+                  <Clock className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
                   {t('preparation_time_title')}
                 </h4>
                 <div className="space-y-3">
@@ -746,14 +766,14 @@ Fecha: ${new Date().toLocaleString()}
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-blue-50 to-white rounded-xl p-6 border border-blue-100 shadow-sm">
-                <h4 className="text-md font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-blue-600" />
+              <div className="bg-gradient-to-br from-blue-50 to-white rounded-lg md:rounded-xl p-4 md:p-6 border border-blue-100 shadow-sm">
+                <h4 className="text-sm md:text-md font-semibold text-gray-900 mb-3 md:mb-4 flex items-center gap-2">
+                  <Calendar className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
                   {t('opening_hours_section')}
                 </h4>
                 <div className="space-y-3">
                   {Object.entries(formData.settings.business_hours).map(([day, hours]) => (
-                    <div key={day} className="bg-white rounded-lg p-4 border border-blue-200 hover:border-blue-300 transition-all">
+                    <div key={day} className="bg-white rounded-lg p-3 md:p-4 border border-blue-200 hover:border-blue-300 transition-all">
                       <div className="flex flex-col md:flex-row md:items-center gap-4">
                         <div className="flex items-center gap-3 md:w-40">
                           <input
@@ -818,21 +838,21 @@ Fecha: ${new Date().toLocaleString()}
           )}
 
           {activeTab === 'social' && (
-            <div className="space-y-6">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
+            <div className="space-y-4 md:space-y-6">
+              <div className="flex items-center gap-3 mb-4 md:mb-6">
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-100 rounded-lg md:rounded-xl flex items-center justify-center">
                   <Globe className="w-6 h-6 text-gray-700" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">{t('socialMedia')}</h3>
+                  <h3 className="text-base md:text-lg font-semibold text-gray-900">{t('socialMedia')}</h3>
                   <p className="text-sm text-gray-600">
                     {t('social_media_subtitle')}
                   </p>
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-white rounded-lg md:rounded-xl p-4 md:p-6 border border-gray-200 shadow-sm">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">Facebook</label>
                     <div className="relative">
@@ -959,9 +979,9 @@ Fecha: ${new Date().toLocaleString()}
           )}
 
           {activeTab === 'delivery' && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium text-gray-900">{t('deliverySettings')}</h3>
+            <div className="space-y-4 md:space-y-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <h3 className="text-base md:text-lg font-medium text-gray-900">{t('deliverySettings')}</h3>
                 <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
@@ -976,12 +996,12 @@ Fecha: ${new Date().toLocaleString()}
               </div>
 
               {formData.settings.delivery.enabled && (
-                <div className="space-y-6">
+                <div className="space-y-4 md:space-y-6">
                   <div>
-                    <h4 className="text-md font-medium text-gray-900 mb-4">{t('delivery_rates_title')}</h4>
-                    <div className="space-y-4">
+                    <h4 className="text-sm md:text-md font-medium text-gray-900 mb-3 md:mb-4">{t('delivery_rates_title')}</h4>
+                    <div className="space-y-3 md:space-y-4">
                       {(formData.settings.delivery.pricing_tiers || []).map((tier, index) => (
-                        <div key={index} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                        <div key={index} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 md:gap-4 p-3 md:p-4 border border-gray-200 rounded-lg bg-gray-50">
                           <div className="flex-1">
                             <Input
                               label={t('rate_name_label')}
@@ -1070,9 +1090,9 @@ Fecha: ${new Date().toLocaleString()}
           )}
 
           {activeTab === 'tables' && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium text-gray-900">Pedidos en Mesa</h3>
+            <div className="space-y-4 md:space-y-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <h3 className="text-base md:text-lg font-medium text-gray-900">Pedidos en Mesa</h3>
                 <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
@@ -1087,8 +1107,8 @@ Fecha: ${new Date().toLocaleString()}
               </div>
               
               {formData.settings.table_orders?.enabled && (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4 md:space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <Input
                       label="Número de Mesas"
                       type="number"
@@ -1105,7 +1125,7 @@ Fecha: ${new Date().toLocaleString()}
                       Los códigos QR permiten a los clientes acceder directamente al menú desde su mesa.
                     </p>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
                       {Array.from({ length: formData.settings.table_orders?.table_numbers || 10 }, (_, i) => {
                         const tableNum = i + 1;
                         const qrUrl = `${window.location.origin}/${formData.domain}?table=${tableNum}`;
@@ -1240,9 +1260,9 @@ Fecha: ${new Date().toLocaleString()}
           )}
 
           {activeTab === 'theme' && (
-            <div className="space-y-8">
+            <div className="space-y-4 md:space-y-6 lg:space-y-8">
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-1 flex items-center gap-2">
+                <h3 className="text-base md:text-lg font-medium text-gray-900 mb-1 flex items-center gap-2">
                   <Palette className="w-5 h-5 text-purple-600" />
                   Personalización de Tema
                 </h3>
@@ -1251,11 +1271,11 @@ Fecha: ${new Date().toLocaleString()}
                 </p>
               </div>
 
-              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-100">
-                <h4 className="text-md font-semibold text-gray-900 mb-4">Plantillas de Colores</h4>
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg md:rounded-xl p-4 md:p-6 border border-purple-100">
+                <h4 className="text-sm md:text-md font-semibold text-gray-900 mb-3 md:mb-4">Plantillas de Colores</h4>
                 <p className="text-sm text-gray-600 mb-4">Selecciona una plantilla predefinida o personaliza tus colores manualmente</p>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-3 mb-4 md:mb-6">
                   <button
                     type="button"
                     onClick={() => {
@@ -1522,7 +1542,7 @@ Fecha: ${new Date().toLocaleString()}
                 </div>
 
                 <h4 className="text-md font-semibold text-gray-900 mb-4">Personalización Manual</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                   <div className="space-y-3">
                     <label className="block text-sm font-medium text-gray-700">
                       Color Primario
@@ -1666,7 +1686,7 @@ Fecha: ${new Date().toLocaleString()}
               <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-6 border border-blue-100">
                 <h4 className="text-md font-semibold text-gray-900 mb-4">Tipografía</h4>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-6">
                   <div className="space-y-3">
                     <label className="block text-sm font-medium text-gray-700">
                       Fuente Principal
@@ -1732,13 +1752,13 @@ Fecha: ${new Date().toLocaleString()}
           )}
 
           {activeTab === 'billing' && (
-            <div className="space-y-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+            <div className="space-y-4 md:space-y-6 lg:space-y-8">
+              <div className="flex items-center gap-3 mb-4 md:mb-6">
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-green-100 rounded-lg md:rounded-xl flex items-center justify-center">
                   <FileText className="w-6 h-6 text-green-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Configuración de Facturación</h3>
+                  <h3 className="text-base md:text-lg font-semibold text-gray-900">Configuración de Facturación</h3>
                   <p className="text-sm text-gray-600">
                     Información legal y fiscal para la generación de tickets de pedido válidos en Colombia
                   </p>
@@ -1746,8 +1766,8 @@ Fecha: ${new Date().toLocaleString()}
               </div>
 
               {/* Información del Restaurante */}
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border border-green-100">
-                <h4 className="text-md font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg md:rounded-xl p-4 md:p-6 border border-green-100">
+                <h4 className="text-sm md:text-md font-semibold text-gray-900 mb-3 md:mb-4 flex items-center gap-2">
                   <Store className="w-5 h-5 text-green-600" />
                   Información del Restaurante
                 </h4>
@@ -1993,7 +2013,7 @@ Fecha: ${new Date().toLocaleString()}
                     <div className="bg-white rounded-lg p-4 border border-blue-200 space-y-4">
                       <h5 className="text-sm font-semibold text-gray-900">Datos de la Resolución DIAN</h5>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                         <div className="space-y-2">
                           <label className="block text-sm font-medium text-gray-700">
                             Número de Resolución *
@@ -2020,7 +2040,7 @@ Fecha: ${new Date().toLocaleString()}
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                         <div className="space-y-2">
                           <label className="block text-sm font-medium text-gray-700">
                             Rango de Numeración - Desde *
@@ -2232,9 +2252,9 @@ Fecha: ${new Date().toLocaleString()}
           )}
 
           {activeTab === 'promo' && (
-            <div className="space-y-6">
-              <div className="mb-6">
-                <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
+            <div className="space-y-4 md:space-y-6">
+              <div className="mb-4 md:mb-6">
+                <h3 className="text-base md:text-lg font-medium text-gray-900 flex items-center gap-2">
                   <Megaphone className="w-5 h-5 text-orange-600" />
                   Configuración Promocional
                 </h3>
@@ -2244,7 +2264,7 @@ Fecha: ${new Date().toLocaleString()}
               </div>
 
               {/* Vertical Promo Image */}
-              <div className="space-y-3 bg-white border border-gray-200 rounded-lg p-6">
+              <div className="space-y-3 bg-white border border-gray-200 rounded-lg p-4 md:p-6">
                 <div className="flex items-center gap-2 mb-2">
                   <ImageIcon className="w-5 h-5 text-orange-600" />
                   <label className="block text-sm font-medium text-gray-700">
@@ -2414,17 +2434,17 @@ Fecha: ${new Date().toLocaleString()}
           )}
 
           {activeTab === 'support' && (
-            <div className="space-y-6">
-              <div className="text-center mb-6">
-                <HelpCircle className="w-16 h-16 text-blue-600 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Centro de Soporte</h3>
+            <div className="space-y-4 md:space-y-6">
+              <div className="text-center mb-4 md:mb-6">
+                <HelpCircle className="w-12 h-12 md:w-16 md:h-16 text-blue-600 mx-auto mb-3 md:mb-4" />
+                <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2">Centro de Soporte</h3>
                 <p className="text-gray-600">
                   ¿Necesitas ayuda? Completa el formulario y nuestro equipo te contactará pronto.
                 </p>
               </div>
 
               {supportSuccess && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 md:p-4 mb-4 md:mb-6">
                   <div className="flex items-center">
                     <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center mr-3">
                       <span className="text-white text-sm">✓</span>
@@ -2439,8 +2459,8 @@ Fecha: ${new Date().toLocaleString()}
                 </div>
               )}
 
-              <form onSubmit={handleSupportSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <form onSubmit={handleSupportSubmit} className="space-y-4 md:space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Asunto *
@@ -2627,11 +2647,11 @@ Fecha: ${new Date().toLocaleString()}
         size="lg"
       >
         {selectedTicket && (
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
             {/* Header */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-lg font-semibold text-gray-900">{selectedTicket.subject}</h3>
+            <div className="bg-gray-50 rounded-lg p-3 md:p-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-2">
+                <h3 className="text-base md:text-lg font-semibold text-gray-900">{selectedTicket.subject}</h3>
                 <div className="flex gap-2">
                   {getPriorityBadge(selectedTicket.priority)}
                   {getStatusBadge(selectedTicket.status)}
@@ -2643,9 +2663,9 @@ Fecha: ${new Date().toLocaleString()}
             </div>
 
             {/* Ticket Info */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <div>
-                <h4 className="text-md font-medium text-gray-900 mb-3">Información del Ticket</h4>
+                <h4 className="text-sm md:text-md font-medium text-gray-900 mb-2 md:mb-3">Información del Ticket</h4>
                 <div className="space-y-2 text-sm">
                   <div>
                     <span className="text-gray-600">Categoría:</span> {getCategoryName(selectedTicket.category)}
