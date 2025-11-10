@@ -28,7 +28,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, onChe
     <>
       {/* Overlay */}
 <div
-  className="fixed right-0 top-0 h-full w-[90%] sm:w-96 shadow-xl z-50 transform transition-transform"
+  className="fixed right-0 top-0 h-full w-[90%] sm:w-96 shadow-xl z-50 transform transition-transform"a
   style={{ backgroundColor: themeColors.background }}
 >
 
