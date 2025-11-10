@@ -677,34 +677,32 @@ useEffect(() => {
               className={`p-2 rounded-lg transition-all ${
                 viewMode === 'grid' ? 'shadow-md' : 'opacity-80'
               }`}
-                style={{
-                  backgroundColor: viewMode === 'list' ? cardBackgroundColor : 'rgba(255,255,255,0.4)',
-                  borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
-                  transition: 'background-color 0.3s ease, color 0.3s ease',
-                }}
+              style={{
+                borderRadius:
+                  theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
+              }}
             >
               <Grid3x3
                 className="w-5 h-5"
                 style={{
-                  color: viewMode === 'list' ? primaryColor : textColor,
+                  color: viewMode === 'grid' ? primaryColor : textColor,
                 }}
               />
             </button>
             <button
               onClick={() => setViewMode('editorial')}
               className={`p-2 rounded-lg transition-all flex items-center gap-2 ${
-                viewMode === 'editorial' ? 'shadow-md' : 'opacity-80'
+                viewMode === 'editorial' ? 'bg-white shadow-md' : 'bg-white/50'
               }`}
-                style={{
-                  backgroundColor: viewMode === 'list' ? cardBackgroundColor : 'rgba(255,255,255,0.4)',
-                  borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
-                  transition: 'background-color 0.3s ease, color 0.3s ease',
-                }}
+              style={{
+                borderRadius:
+                  theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
+              }}
             >
               <AlignLeft
                 className="w-5 h-5"
                 style={{
-                  color: viewMode === 'list' ? primaryColor : textColor,
+                  color: viewMode === 'editorial' ? primaryColor : textColor,
                 }}
               />
             </button>
