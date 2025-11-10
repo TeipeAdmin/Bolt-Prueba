@@ -942,13 +942,16 @@ export const OrdersManagement: React.FC = () => {
 
     // Calculate extra cost from ingredients
     const ingredientsExtraCost = selectedIngredients.reduce((sum, ing) => sum + (ing.extra_cost || 0), 0);
-    const totalPrice = (variation.price + ingredientsExtraCost) * quantity;
+    const unitPrice = variation.price + ingredientsExtraCost;
+    const totalPrice = unitPrice * quantity;
 
-    const newItem = {
+    const newItem: any = {
       id: `${Date.now()}-${Math.random()}`,
-      product: { id: product.id, name: product.name },
-      variation: { id: variation.id, name: variation.name, price: variation.price },
+      product_id: product.id,
+      product: product,
+      variation: variation,
       quantity,
+      unit_price: unitPrice,
       selected_ingredients: selectedIngredients,
       special_notes: specialNotes || '',
       total_price: totalPrice,
@@ -1674,8 +1677,10 @@ export const OrdersManagement: React.FC = () => {
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
               <Button
                 variant="outline"
+                onClick={() => {
                   setShowModal(false);
                   printTicket(selectedOrder);
+                }}
                 icon={Printer}
               >
                 {t('printTicket')}
