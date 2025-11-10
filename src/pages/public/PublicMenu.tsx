@@ -675,34 +675,36 @@ useEffect(() => {
             <button
               onClick={() => setViewMode('grid')}
               className={`p-2 rounded-lg transition-all ${
-                viewMode === 'grid' ? 'bg-white shadow-md' : 'bg-white/50'
+                viewMode === 'grid' ? 'shadow-md' : 'opacity-80'
               }`}
-              style={{
-                borderRadius:
-                  theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
-              }}
+                style={{
+                  backgroundColor: viewMode === 'list' ? cardBackgroundColor : 'rgba(255,255,255,0.4)',
+                  borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
+                  transition: 'background-color 0.3s ease, color 0.3s ease',
+                }}
             >
               <Grid3x3
                 className="w-5 h-5"
                 style={{
-                  color: viewMode === 'grid' ? primaryColor : textColor,
+                  color: viewMode === 'list' ? primaryColor : textColor,
                 }}
               />
             </button>
             <button
               onClick={() => setViewMode('editorial')}
               className={`p-2 rounded-lg transition-all flex items-center gap-2 ${
-                viewMode === 'editorial' ? 'bg-white shadow-md' : 'bg-white/50'
+                viewMode === 'editorial' ? 'shadow-md' : 'opacity-80'
               }`}
-              style={{
-                borderRadius:
-                  theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
-              }}
+                style={{
+                  backgroundColor: viewMode === 'list' ? cardBackgroundColor : 'rgba(255,255,255,0.4)',
+                  borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
+                  transition: 'background-color 0.3s ease, color 0.3s ease',
+                }}
             >
               <AlignLeft
                 className="w-5 h-5"
                 style={{
-                  color: viewMode === 'editorial' ? primaryColor : textColor,
+                  color: viewMode === 'list' ? primaryColor : textColor,
                 }}
               />
             </button>
