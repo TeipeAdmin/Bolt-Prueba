@@ -1191,7 +1191,7 @@ export const OrdersManagement: React.FC = () => {
 
       {/* Search and Bulk Actions */}
       <div className="flex items-center justify-between mb-6">
-        <div className="relative max-w-md w-full">
+        <div className="relative max-w-full w-full">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
