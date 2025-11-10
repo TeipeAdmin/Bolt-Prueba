@@ -7,7 +7,7 @@ import { formatCurrency } from '../../utils/currencyUtils';
 interface OrderProductSelectorProps {
   products: Product[];
   orderItems: Order['items'];
-  onAddItem: (product: Product, variationId: string, quantity: number, specialNotes?: string) => void;
+  onAddItem: (product: Product, variationId: string, quantity: number, ingredientIds?: string[], specialNotes?: string) => void;
   onRemoveItem: (itemId: string) => void;
   onUpdateQuantity: (itemId: string, newQuantity: number) => void;
   onShowToast: (type: 'success' | 'error', title: string, message: string, duration: number) => void;
@@ -38,7 +38,7 @@ export const OrderProductSelector: React.FC<OrderProductSelectorProps> = ({
 
     const product = products.find(p => p.id === selectedProductId);
     if (product) {
-      onAddItem(product, selectedVariationId, quantity);
+      onAddItem(product, selectedVariationId, quantity, selectedIngredients);
       setSelectedProductId('');
       setSelectedVariationId('');
       setQuantity(1);
@@ -147,6 +147,11 @@ export const OrderProductSelector: React.FC<OrderProductSelectorProps> = ({
               <div className="flex-1">
                 <p className="font-medium text-sm">{item.product.name}</p>
                 <p className="text-xs text-gray-600">{item.variation.name}</p>
+                {item.selected_ingredients && item.selected_ingredients.length > 0 && (
+                  <p className="text-xs text-blue-600 mt-1">
+                    + {item.selected_ingredients.map(ing => ing.name).join(', ')}
+                  </p>
+                )}
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">

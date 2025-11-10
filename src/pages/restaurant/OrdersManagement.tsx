@@ -927,17 +927,27 @@ export const OrdersManagement: React.FC = () => {
     setOrderItems([]);
   };
 
-  const addItemToOrder = (product: Product, variationId: string, quantity: number, specialNotes?: string) => {
+  const addItemToOrder = (product: Product, variationId: string, quantity: number, ingredientIds?: string[], specialNotes?: string) => {
     const variation = product.variations.find(v => v.id === variationId);
     if (!variation) return;
+
+    // Get selected ingredients
+    const selectedIngredients = ingredientIds
+      ? product.ingredients?.filter(ing => ingredientIds.includes(ing.id)) || []
+      : [];
+
+    // Calculate extra cost from ingredients
+    const ingredientsExtraCost = selectedIngredients.reduce((sum, ing) => sum + (ing.extra_cost || 0), 0);
+    const totalPrice = (variation.price + ingredientsExtraCost) * quantity;
 
     const newItem = {
       id: `${Date.now()}-${Math.random()}`,
       product: { id: product.id, name: product.name },
       variation: { id: variation.id, name: variation.name, price: variation.price },
       quantity,
+      selected_ingredients: selectedIngredients,
       special_notes: specialNotes || '',
-      total_price: variation.price * quantity,
+      total_price: totalPrice,
     };
     setOrderItems(prev => [...prev, newItem]);
   };
@@ -1604,6 +1614,11 @@ export const OrdersManagement: React.FC = () => {
                     <div className="flex-1">
                       <h4 className="font-medium text-gray-900">{item.product.name}</h4>
                       <p className="text-sm text-gray-600">{item.variation.name}</p>
+                      {item.selected_ingredients && item.selected_ingredients.length > 0 && (
+                        <p className="text-sm text-blue-600 mt-1">
+                          + {item.selected_ingredients.map(ing => ing.name).join(', ')}
+                        </p>
+                      )}
                       {item.special_notes && (
                         <p className="text-sm text-blue-600 mt-1">
                           <em>{t('noteLabel')}: {item.special_notes}</em>
