@@ -1415,12 +1415,12 @@ export const OrdersManagement: React.FC = () => {
                             title={t('delete')}
                           />
                           <Button
-                            variant="ghost"
-                            size="sm"
-                            icon={Printer}
-                            onClick={() => printOrder(order)}
-                            className="text-gray-600 hover:text-gray-700"
-                            title={t('print')}
+                variant="outline"
+                onClick={() => {
+                  setShowModal(false);
+                  printTicket(selectedOrder);
+                }}
+                icon={Printer}
                           />
                           <Button
                             variant="ghost"
