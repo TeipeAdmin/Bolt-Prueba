@@ -264,20 +264,21 @@ export const CategoriesManagement: React.FC = () => {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">{t('categoryManagement')}</h1>
         <div className="flex gap-3">
-          <Button
-            variant="outline"
-            icon={ExternalLink}
-            onClick={() => {
-              if (restaurant?.slug) {
-                window.open(`/${restaurant.slug}`, '_blank');
-              } else {
+          <a
+            href={restaurant?.slug ? `/${restaurant.slug}` : '#'}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => {
+              if (!restaurant?.slug) {
+                e.preventDefault();
                 showToast('warning', 'No disponible', 'El menú público aún no está disponible', 3000);
               }
             }}
-            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg text-sm font-medium hover:from-green-700 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg"
           >
+            <ExternalLink className="w-4 h-4" />
             {t('viewMenu')}
-          </Button>
+          </a>
           <Button
             icon={Plus}
             onClick={() => setShowModal(true)}
@@ -370,7 +371,7 @@ export const CategoriesManagement: React.FC = () => {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="space-y-3">
           {filteredCategories.map((category, index) => (
             <div
               key={category.id}
@@ -379,7 +380,7 @@ export const CategoriesManagement: React.FC = () => {
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, category)}
               onDragEnd={handleDragEnd}
-              className={`bg-white rounded-xl shadow-sm border-2 transition-all overflow-hidden ${
+              className={`bg-white rounded-lg shadow-sm border-2 transition-all ${
                 searchTerm === '' ? 'cursor-move' : ''
               } ${
                 draggedCategory?.id === category.id
@@ -387,79 +388,86 @@ export const CategoriesManagement: React.FC = () => {
                   : 'border-gray-200 hover:shadow-md hover:border-blue-300'
               }`}
             >
-              {/* Category Icon Header */}
-              <div className="relative h-60 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
-                {category.icon ? (
-                  <span className="text-5xl">{category.icon}</span>
-                ) : (
-                  <FolderOpen className="w-12 h-12 text-gray-300" />
+              <div className="flex items-center gap-4 p-4">
+                {/* Drag Handle */}
+                {searchTerm === '' && (
+                  <div className="flex-shrink-0">
+                    <GripVertical className="w-5 h-5 text-gray-400" />
+                  </div>
                 )}
 
-                {/* Order Badge */}
-                <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm rounded-lg px-2 py-1 flex items-center gap-1 shadow-sm">
-                  <GripVertical className="w-3 h-3 text-gray-400" />
-                  <span className="text-xs font-medium text-gray-700">#{category.order_position}</span>
+                {/* Order Number */}
+                <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <span className="text-sm font-bold text-blue-600">#{category.order_position}</span>
                 </div>
 
-                {/* Status Badge */}
-                <div className="absolute top-2 right-2">
-                  <Badge variant={category.active ? 'success' : 'gray'}>
-                    {category.active ? t('active') : t('inactive')}
-                  </Badge>
+                {/* Category Icon */}
+                <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg flex items-center justify-center">
+                  {category.icon ? (
+                    <span className="text-3xl">{category.icon}</span>
+                  ) : (
+                    <FolderOpen className="w-8 h-8 text-gray-300" />
+                  )}
                 </div>
-              </div>
 
-              {/* Category Content */}
-              <div className="p-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2 truncate">
-                  {category.name}
-                </h3>
-                <p className="text-sm text-gray-600 line-clamp-2 min-h-[40px]">
-                  {category.description || 'Sin descripción'}
-                </p>
-                <p className="text-xs text-gray-400 mb-4">
-                  {t('categoriesCreated')}: {new Date(category.created_at).toLocaleDateString()}
-                </p>
+                {/* Category Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-lg font-semibold text-gray-900 truncate">
+                      {category.name}
+                    </h3>
+                    <Badge variant={category.active ? 'success' : 'gray'}>
+                      {category.active ? t('active') : t('inactive')}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-gray-600 line-clamp-1">
+                    {category.description || 'Sin descripción'}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {t('categoriesCreated')}: {new Date(category.created_at).toLocaleDateString()}
+                  </p>
+                </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-shrink-0">
                   <button
                     onClick={() => moveCategory(category.id, 'up')}
                     disabled={index === 0 || searchTerm !== ''}
-                    className="flex-1 px-3 py-2 hover:text-blue-700 rounded-lg text-sm font-medium hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1"
+                    className="p-2 hover:bg-gray-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     title={searchTerm !== '' ? 'Clear search to reorder' : 'Move up'}
                   >
-                    <ArrowUp className="w-4 h-4" />
+                    <ArrowUp className="w-4 h-4 text-gray-600" />
                   </button>
                   <button
                     onClick={() => moveCategory(category.id, 'down')}
                     disabled={index === filteredCategories.length - 1 || searchTerm !== ''}
-                    className="flex-1 px-3 py-2  hover:text-blue-700 rounded-lg text-sm font-medium hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="p-2 hover:bg-gray-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     title={searchTerm !== '' ? 'Clear search to reorder' : 'Move down'}
                   >
-                    <ArrowDown className="w-4 h-4" />
+                    <ArrowDown className="w-4 h-4 text-gray-600" />
                   </button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    icon={Pencil}
+                  <button
                     onClick={() => handleEdit(category)}
-                    className="flex-1"
-                  />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    icon={category.active ? EyeOff : Eye}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <Pencil className="w-4 h-4 text-blue-600" />
+                  </button>
+                  <button
                     onClick={() => toggleActive(category.id)}
-                    className={`flex-1 ${category.active ? 'text-orange-600 hover:text-orange-700' : 'text-green-600 hover:text-green-700'}`}
-                  />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    icon={Trash2}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    {category.active ? (
+                      <EyeOff className="w-4 h-4 text-orange-600" />
+                    ) : (
+                      <Eye className="w-4 h-4 text-green-600" />
+                    )}
+                  </button>
+                  <button
                     onClick={() => openDeleteConfirm(category)}
-                    className="flex-1 text-red-600 hover:text-red-700"
-                  />
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4 text-red-600" />
+                  </button>
                 </div>
               </div>
             </div>

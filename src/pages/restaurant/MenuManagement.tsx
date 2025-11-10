@@ -408,20 +408,21 @@ export const MenuManagement: React.FC = () => {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">{t('productManagement')}</h1>
         <div className="flex gap-3">
-          <Button
-            variant="outline"
-            icon={ExternalLink}
-            onClick={() => {
-              if (restaurant?.slug) {
-                window.open(`/${restaurant.slug}`, '_blank');
-              } else {
+          <a
+            href={restaurant?.slug ? `/${restaurant.slug}` : '#'}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => {
+              if (!restaurant?.slug) {
+                e.preventDefault();
                 showToast('warning', 'No disponible', 'El menú público aún no está disponible', 3000);
               }
             }}
-            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg text-sm font-medium hover:from-green-700 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg"
           >
+            <ExternalLink className="w-4 h-4" />
             {t('viewMenu')}
-          </Button>
+          </a>
           <Button
             icon={Plus}
             onClick={() => {
