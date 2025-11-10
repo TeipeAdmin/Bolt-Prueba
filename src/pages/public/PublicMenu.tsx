@@ -659,7 +659,7 @@ useEffect(() => {
     viewMode === 'list' ? 'shadow-md' : 'opacity-80'
   }`}
   style={{
-    backgroundColor: viewMode === 'list' ? cardBackgroundColor : 'transparent',
+    backgroundColor: viewMode === 'list' ? cardBackgroundColor : 'bg-white/50',
     color: primaryColor,
     borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
   }}
