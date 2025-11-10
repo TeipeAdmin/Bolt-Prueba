@@ -1,1299 +1,1666 @@
-import React, { useState, useEffect } from 'react';
-import {
-  ShoppingCart,
-  Search,
-  Gift,
-  Star,
-  X,
-  Grid3x3,
-  List,
-  Clock,
-  MapPin,
-  Phone,
-  TikTok,
-  Facebook,
-  Instagram,
-  Globe,
-  AlignLeft,
-} from 'lucide-react';
-import { useParams } from 'react-router-dom';
-import { Category, Product, Restaurant, Subscription } from '../../types';
-import { loadFromStorage } from '../../data/mockData';
-import { useCart } from '../../contexts/CartContext';
-import { ProductDetail } from '../../components/public/ProductDetail';
-import { CartSidebar } from '../../components/public/CartSidebar';
-import { CheckoutModal } from '../../components/public/CheckoutModal';
+import React, { useState, useEffect, useRef } from 'react';
+import { User, Phone, Mail, MapPin, Calendar, ShoppingBag, Filter, Search, Star, Pencil as Edit, ArrowUpDown, Trash2, Info, Download, CheckSquare, Square, Users, DollarSign, TrendingUp, UserCheck, UserPlus, Upload } from 'lucide-react';
+import { Order, Customer, Subscription } from '../../types';
+import { loadFromStorage, saveToStorage } from '../../data/mockData';
+import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { useToast } from '../../hooks/useToast';
+import { Badge } from '../../components/ui/Badge';
+import { Input } from '../../components/ui/Input';
+import { Button } from '../../components/ui/Button';
+import { Modal } from '../../components/ui/Modal';
 import { formatCurrency } from '../../utils/currencyUtils';
-import { AnimatedCarousel } from '../../components/public/AnimatedCarousel'; /*DF:componenetes carousel*/
-import Pathtop from '../../components/public/Pathformtop.tsx'; /*DF:componenetes pathform*/
-import Pathbottom from '../../components/public/Pathformbottom.tsx'; /*DF:componenetes pathform*/
-import Pathleft from '../../components/public/Pathformleft.tsx'; /*DF:componenetes pathform*/
-import { FloatingFooter } from '../../components/public/FloatingFooter.tsx'; /*DF:componenetes pathform*/
 
-export const PublicMenu: React.FC = () => {
-  const { slug } = useParams<{ slug: string }>();
-  const { items: cartItems } = useCart();
-  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+interface CustomerData extends Customer {
+  id: string;
+  totalOrders: number;
+  totalSpent: number;
+  lastOrderDate: string;
+  orderTypes: string[];
+  isVip: boolean;
+}
+
+export const CustomersManagement: React.FC = () => {
+  const { restaurant } = useAuth();
+  const { t } = useLanguage();
+  const { showToast } = useToast();
+  const currency = restaurant?.settings?.currency || 'USD';
+  const [customers, setCustomers] = useState<CustomerData[]>([]);
+  const [filteredCustomers, setFilteredCustomers] = useState<CustomerData[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [showCart, setShowCart] = useState(false);
-  const [showCheckout, setShowCheckout] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [showPromoModal, setShowPromoModal] = useState(false);
-  const [featuredSlideIndex, setFeaturedSlideIndex] = useState(0);
-  const [viewMode, setViewMode] = useState<'list' | 'grid' | 'editorial'>(
-    'list'
-  );
-  const [showHoursModal, setShowHoursModal] = useState(false);
-  // --- Scroll hide header ---
-const [showHeader, setShowHeader] = useState(true);
-const [lastScrollY, setLastScrollY] = useState(0);
-const [isHovered, setIsHovered] = useState(false);
-const [isScrolled, setIsScrolled] = useState(false);
-
-useEffect(() => {
-  const handleScroll = () => {
-    const currentScrollY = window.scrollY;
-
-    // Detectar si hay desplazamiento para aplicar blur
-    setIsScrolled(currentScrollY > 0);
-
-    if (currentScrollY > lastScrollY && currentScrollY > 80) {
-      // Scrolling hacia abajo y pasó un poco
-      setShowHeader(false);
-    } else {
-      // Scrolling hacia arriba o en top
-      setShowHeader(true);
-    }
-
-    setLastScrollY(currentScrollY);
-  };
-
-  window.addEventListener("scroll", handleScroll);
-  return () => window.removeEventListener("scroll", handleScroll);
-}, [lastScrollY]);
-
-
-
-  const loadMenuData = () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const restaurants = loadFromStorage('restaurants', []);
-      const restaurantData = restaurants.find(
-        (r: Restaurant) => r.slug === slug || r.id === slug || r.domain === slug
-      );
-
-      if (!restaurantData) {
-        setError(`Restaurante no encontrado: ${slug}`);
-        setLoading(false);
-        return;
-      }
-
-      const subscriptions = loadFromStorage('subscriptions', []);
-      const subscription = subscriptions.find(
-        (s: Subscription) => s.restaurant_id === restaurantData.id
-      );
-
-      if (!subscription || subscription.status !== 'active') {
-        setError(
-          'Este restaurante no está disponible en este momento. Suscripción inactiva o vencida.'
-        );
-        setLoading(false);
-        return;
-      }
-
-      setRestaurant(restaurantData);
-
-      const allCategories = loadFromStorage('categories', []);
-      const allProducts = loadFromStorage('products', []);
-
-      const restaurantCategories = allCategories
-        .filter(
-          (cat: Category) =>
-            cat.restaurant_id === restaurantData.id && cat.active
-        )
-        .sort(
-          (a: Category, b: Category) =>
-            (a.order_position || 0) - (b.order_position || 0)
-        );
-
-      const restaurantProducts = allProducts.filter(
-        (prod: Product) =>
-          prod.restaurant_id === restaurantData.id && prod.status === 'active'
-      );
-
-      setCategories(restaurantCategories);
-      setProducts(restaurantProducts);
-      setLoading(false);
-    } catch (err) {
-      setError('Error al cargar el menú');
-      setLoading(false);
-    }
-  };
+  const [sortBy, setSortBy] = useState<'name' | 'orders' | 'spent' | 'date'>('name');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [filterBy, setFilterBy] = useState<'all' | 'vip' | 'frequent' | 'regular' | 'new'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [showFilters, setShowFilters] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState<CustomerData | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [customerToDelete, setCustomerToDelete] = useState<CustomerData | null>(null);
+  const [selectedCustomers, setSelectedCustomers] = useState<Set<string>>(new Set());
+  const [showBulkEditModal, setShowBulkEditModal] = useState(false);
+  const [bulkEditAction, setBulkEditAction] = useState<'vip' | 'remove_vip' | 'delete'>('vip');
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importPreview, setImportPreview] = useState<any[]>([]);
+  const [importErrors, setImportErrors] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    address: '',
+    delivery_instructions: '',
+    isVip: false,
+  });
 
   useEffect(() => {
-    if (slug) {
-      loadMenuData();
-    } else {
-      setError('No se proporcionó un identificador de restaurante');
-      setLoading(false);
+    if (restaurant) {
+      loadCustomersData();
     }
-  }, [slug]);
+  }, [restaurant]);
 
-  const filteredProducts = products
-    .filter((product) => {
-      const matchesCategory =
-        selectedCategory === 'all' || product.category_id === selectedCategory;
+  useEffect(() => {
+    filterAndSortCustomers();
+  }, [customers, searchTerm, sortBy, sortDirection, filterBy, statusFilter]);
 
-      if (!matchesCategory) return false;
+  const loadCustomersData = () => {
+    if (!restaurant) return;
 
-      if (searchTerm === '') return true;
+    const allOrders = loadFromStorage('orders') || [];
+    const vipCustomers = loadFromStorage('vipCustomers') || [];
+    const importedCustomers = loadFromStorage('importedCustomers') || [];
+    const restaurantOrders = allOrders.filter((order: Order) =>
+      order &&
+      order.restaurant_id === restaurant.id &&
+      order.order_number &&
+      order.status &&
+      order.items
+    );
 
-      const searchLower = searchTerm.toLowerCase();
-      return (
-        product.name.toLowerCase().includes(searchLower) ||
-        (product.description &&
-          product.description.toLowerCase().includes(searchLower))
+    const customerMap = new Map<string, CustomerData>();
+
+    restaurantOrders.forEach((order: Order) => {
+      if (!order.customer || !order.customer.phone) return;
+
+      const customerKey = order.customer.phone;
+
+      if (customerMap.has(customerKey)) {
+        const existing = customerMap.get(customerKey)!;
+        existing.totalOrders += 1;
+        existing.totalSpent += order.status === 'delivered' ? order.total : 0;
+        existing.lastOrderDate = order.created_at > existing.lastOrderDate ? order.created_at : existing.lastOrderDate;
+        if (!existing.orderTypes.includes(order.order_type)) {
+          existing.orderTypes.push(order.order_type);
+        }
+        existing.name = order.customer.name || existing.name;
+        existing.email = order.customer.email || existing.email;
+        existing.address = order.customer.address || existing.address;
+        existing.delivery_instructions = order.customer.delivery_instructions || existing.delivery_instructions;
+      } else {
+        const isVip = vipCustomers.some((vip: any) =>
+          vip.restaurant_id === restaurant.id && vip.phone === order.customer.phone
+        );
+        customerMap.set(customerKey, {
+          id: order.customer.phone,
+          name: order.customer.name || 'N/A',
+          phone: order.customer.phone,
+          email: order.customer.email,
+          address: order.customer.address,
+          delivery_instructions: order.customer.delivery_instructions,
+          totalOrders: 1,
+          totalSpent: order.status === 'delivered' ? order.total : 0,
+          lastOrderDate: order.created_at,
+          orderTypes: [order.order_type],
+          isVip: isVip,
+        });
+      }
+    });
+
+    importedCustomers.forEach((customer: any) => {
+      if (!customer.phone || customer.restaurant_id !== restaurant.id) return;
+
+      const customerKey = customer.phone;
+
+      if (!customerMap.has(customerKey)) {
+        const isVip = vipCustomers.some((vip: any) =>
+          vip.restaurant_id === restaurant.id && vip.phone === customer.phone
+        );
+        customerMap.set(customerKey, {
+          id: customer.phone,
+          name: customer.name || 'N/A',
+          phone: customer.phone,
+          email: customer.email,
+          address: customer.address,
+          delivery_instructions: customer.delivery_instructions,
+          totalOrders: 0,
+          totalSpent: 0,
+          lastOrderDate: customer.created_at,
+          orderTypes: [],
+          isVip: isVip,
+        });
+      }
+    });
+
+    setCustomers(Array.from(customerMap.values()));
+  };
+
+  const filterAndSortCustomers = () => {
+    let filtered = customers.filter(customer =>
+      customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.phone.includes(searchTerm) ||
+      (customer.email && customer.email.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+
+    // Apply segment filter
+    if (filterBy !== 'all') {
+      filtered = filtered.filter(customer => {
+        switch (filterBy) {
+          case 'vip':
+            return customer.isVip;
+          case 'frequent':
+            return customer.totalOrders >= 5;
+          case 'regular':
+            return customer.totalOrders >= 2 && customer.totalOrders <= 4;
+          case 'new':
+            return customer.totalOrders === 1 || customer.totalOrders === 0;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(customer => {
+        if (customer.totalOrders === 0) {
+          return statusFilter === 'inactive';
+        }
+        const daysSinceLastOrder = Math.ceil((new Date().getTime() - new Date(customer.lastOrderDate).getTime()) / (1000 * 60 * 60 * 24));
+        const isActive = daysSinceLastOrder <= 30;
+
+        if (statusFilter === 'active') {
+          return isActive;
+        } else if (statusFilter === 'inactive') {
+          return !isActive;
+        }
+        return true;
+      });
+    }
+
+    // Sort customers
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      switch (sortBy) {
+        case 'name':
+          comparison = a.name.localeCompare(b.name);
+          break;
+        case 'orders':
+          comparison = a.totalOrders - b.totalOrders;
+          break;
+        case 'spent':
+          comparison = a.totalSpent - b.totalSpent;
+          break;
+        case 'date':
+          comparison = new Date(a.lastOrderDate).getTime() - new Date(b.lastOrderDate).getTime();
+          break;
+        default:
+          comparison = 0;
+      }
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+
+    setFilteredCustomers(filtered);
+  };
+
+  const toggleVipStatus = (customerId: string) => {
+    const customer = customers.find(c => c.id === customerId);
+    if (!customer) return;
+
+    // Update VIP customers in localStorage
+    const vipCustomers = loadFromStorage('vipCustomers') || [];
+    
+    if (customer.isVip) {
+      // Remove from VIP list
+      const updatedVipCustomers = vipCustomers.filter((vip: any) => 
+        !(vip.restaurant_id === restaurant?.id && vip.phone === customer.phone)
       );
-    })
-    .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
-
-  const getFeaturedProducts = () => {
-    if (!restaurant?.settings.promo?.featured_product_ids?.length) {
-      return products.filter((p) => p.is_featured).slice(0, 5);
+      saveToStorage('vipCustomers', updatedVipCustomers);
+    } else {
+      // Add to VIP list
+      const newVipCustomer = {
+        restaurant_id: restaurant?.id,
+        phone: customer.phone,
+        name: customer.name,
+        created_at: new Date().toISOString(),
+      };
+      saveToStorage('vipCustomers', [...vipCustomers, newVipCustomer]);
     }
 
-    const featuredIds = restaurant.settings.promo.featured_product_ids;
-    return products.filter((p) => featuredIds.includes(p.id)).slice(0, 5);
-  };
+    // Update local state
+    setCustomers(prevCustomers =>
+      prevCustomers.map(c =>
+        c.id === customerId
+          ? { ...c, isVip: !c.isVip }
+          : c
+      )
+    );
 
-  const featuredProducts = getFeaturedProducts();
-  const cartItemsCount = cartItems.reduce(
-    (sum, item) => sum + item.quantity,
-    0
-  );
-
-  const nextSlide = () => {
-    setFeaturedSlideIndex(
-      (prev) => (prev + 1) % Math.max(1, featuredProducts.length)
+    showToast(
+      'success',
+      customer.isVip ? 'Cliente VIP Removido' : 'Cliente VIP Agregado',
+      customer.isVip 
+        ? `${customer.name} ya no es un cliente VIP.`
+        : `${customer.name} ahora es un cliente VIP.`,
+      4000
     );
   };
 
-  const prevSlide = () => {
-    setFeaturedSlideIndex(
-      (prev) =>
-        (prev - 1 + featuredProducts.length) %
-        Math.max(1, featuredProducts.length)
+  const toggleCustomerSelection = (customerId: string) => {
+    const newSelected = new Set(selectedCustomers);
+    if (newSelected.has(customerId)) {
+      newSelected.delete(customerId);
+    } else {
+      newSelected.add(customerId);
+    }
+    setSelectedCustomers(newSelected);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedCustomers.size === filteredCustomers.length) {
+      setSelectedCustomers(new Set());
+    } else {
+      setSelectedCustomers(new Set(filteredCustomers.map(c => c.id)));
+    }
+  };
+
+  const handleBulkEdit = () => {
+    if (selectedCustomers.size === 0) {
+      showToast('warning', 'Sin selección', 'Selecciona al menos un cliente para editar.', 4000);
+      return;
+    }
+    setShowBulkEditModal(true);
+  };
+
+  const executeBulkEdit = () => {
+    const selectedCustomersList = customers.filter(c => selectedCustomers.has(c.id));
+    
+    switch (bulkEditAction) {
+      case 'vip':
+        // Agregar VIP a todos los seleccionados
+        const vipCustomers = loadFromStorage('vipCustomers') || [];
+        const newVipCustomers = [...vipCustomers];
+        
+        selectedCustomersList.forEach(customer => {
+          if (!customer.isVip) {
+            newVipCustomers.push({
+              restaurant_id: restaurant?.id,
+              phone: customer.phone,
+              name: customer.name,
+              created_at: new Date().toISOString(),
+            });
+          }
+        });
+        
+        saveToStorage('vipCustomers', newVipCustomers);
+        
+        // Update local state
+        setCustomers(prevCustomers =>
+          prevCustomers.map(c =>
+            selectedCustomers.has(c.id)
+              ? { ...c, isVip: true }
+              : c
+          )
+        );
+        
+        showToast('success', 'VIP Asignado', `${selectedCustomers.size} cliente${selectedCustomers.size !== 1 ? 's' : ''} marcado${selectedCustomers.size !== 1 ? 's' : ''} como VIP.`, 4000);
+        break;
+        
+      case 'remove_vip':
+        // Remover VIP de todos los seleccionados
+        const allVipCustomers = loadFromStorage('vipCustomers') || [];
+        const updatedVipCustomers = allVipCustomers.filter((vip: any) => 
+          !(vip.restaurant_id === restaurant?.id && selectedCustomersList.some(c => c.phone === vip.phone))
+        );
+        saveToStorage('vipCustomers', updatedVipCustomers);
+        
+        // Update local state
+        setCustomers(prevCustomers =>
+          prevCustomers.map(c =>
+            selectedCustomers.has(c.id)
+              ? { ...c, isVip: false }
+              : c
+          )
+        );
+        
+        showToast('info', 'VIP Removido', `${selectedCustomers.size} cliente${selectedCustomers.size !== 1 ? 's' : ''} ya no ${selectedCustomers.size !== 1 ? 'son' : 'es'} VIP.`, 4000);
+        break;
+        
+      case 'delete':
+        // Eliminar todos los seleccionados
+        if (confirm(`¿Estás seguro de que quieres eliminar ${selectedCustomers.size} cliente${selectedCustomers.size !== 1 ? 's' : ''}? Esta acción eliminará también todos sus pedidos y no se puede deshacer.`)) {
+          selectedCustomersList.forEach(customer => {
+            deleteCustomerData(customer);
+          });
+          
+          showToast('info', 'Clientes Eliminados', `${selectedCustomers.size} cliente${selectedCustomers.size !== 1 ? 's' : ''} eliminado${selectedCustomers.size !== 1 ? 's' : ''} exitosamente.`, 5000);
+        }
+        break;
+    }
+    
+    setSelectedCustomers(new Set());
+    setShowBulkEditModal(false);
+  };
+
+  const handleEditCustomer = (customer: CustomerData) => {
+    setEditingCustomer(customer);
+    setEditForm({
+      name: customer.name,
+      phone: customer.phone,
+      email: customer.email || '',
+      address: customer.address || '',
+      delivery_instructions: customer.delivery_instructions || '',
+      isVip: customer.isVip,
+    });
+    setShowEditModal(true);
+  };
+
+  const handleSaveCustomer = () => {
+    if (!editingCustomer) return;
+
+    // Update customers in localStorage
+    const allOrders = loadFromStorage('orders') || [];
+    const updatedOrders = allOrders.map((order: Order) => {
+      if (order.customer.phone === editingCustomer.phone) {
+        return {
+          ...order,
+          customer: {
+            ...order.customer,
+            name: editForm.name,
+            phone: editForm.phone,
+            email: editForm.email,
+            address: editForm.address,
+            delivery_instructions: editForm.delivery_instructions,
+          }
+        };
+      }
+      return order;
+    });
+    saveToStorage('orders', updatedOrders);
+
+    // Update local state
+    setCustomers(prevCustomers =>
+      prevCustomers.map(customer =>
+        customer.id === editingCustomer.id
+          ? {
+              ...customer,
+              name: editForm.name,
+              phone: editForm.phone,
+              email: editForm.email,
+              address: editForm.address,
+              delivery_instructions: editForm.delivery_instructions,
+              isVip: editForm.isVip,
+            }
+          : customer
+      )
+    );
+
+    setShowEditModal(false);
+    setEditingCustomer(null);
+    
+    showToast(
+      'success',
+      'Cliente Actualizado',
+      'La información del cliente ha sido actualizada exitosamente.',
+      4000
     );
   };
 
-  if (loading) {
+  const handleDeleteCustomer = (customerId: string) => {
+    const customer = customers.find(c => c.id === customerId);
+    if (!customer) return;
+    
+    setCustomerToDelete(customer);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteCustomer = () => {
+    if (!customerToDelete) return;
+    
+    deleteCustomerData(customerToDelete);
+    setShowDeleteModal(false);
+    setCustomerToDelete(null);
+  };
+
+  const deleteCustomerData = (customer: CustomerData) => {
+    // Remove all orders from this customer
+    const allOrders = loadFromStorage('orders') || [];
+    const updatedOrders = allOrders.filter((order: Order) => 
+      order.customer.phone !== customer.phone
+    );
+    saveToStorage('orders', updatedOrders);
+
+    // Remove from VIP customers if exists
+    const vipCustomers = loadFromStorage('vipCustomers') || [];
+    const updatedVipCustomers = vipCustomers.filter((vip: any) => 
+      !(vip.restaurant_id === restaurant?.id && vip.phone === customer.phone)
+    );
+    saveToStorage('vipCustomers', updatedVipCustomers);
+
+    // Update local state by reloading data
+    loadCustomersData();
+    
+    showToast(
+      'info',
+      'Cliente Eliminado',
+      `El cliente "${customer.name}" y todos sus pedidos han sido eliminados.`,
+      5000
+    );
+  };
+
+  const handleCloseEditModal = () => {
+    setShowEditModal(false);
+    setEditingCustomer(null);
+    setEditForm({
+      name: '',
+      phone: '',
+      email: '',
+      address: '',
+      delivery_instructions: '',
+      isVip: false,
+    });
+  };
+
+  const getOrderTypeBadge = (orderType: string) => {
+    switch (orderType) {
+      case 'delivery':
+        return <Badge variant="info" size="sm">{t('delivery')}</Badge>;
+      case 'pickup':
+        return <Badge variant="gray" size="sm">{t('pickup')}</Badge>;
+      case 'table':
+        return <Badge variant="warning" size="sm">{t('mesa')}</Badge>;
+      default:
+        return <Badge variant="gray" size="sm">{orderType}</Badge>;
+    }
+  };
+
+  const getCustomerSegment = (totalSpent: number, totalOrders: number) => {
+    const segments = [];
+    
+    if (totalOrders === 1) {
+      segments.push(<Badge key="new" variant="info">{t('newCustomer')}</Badge>);
+    } else if (totalOrders >= 2 && totalOrders <= 4) {
+      segments.push(<Badge key="regular" variant="gray">{t('regular')}</Badge>);
+    } else if (totalOrders >= 5) {
+      segments.push(<Badge key="frequent" variant="warning">{t('frequent')}</Badge>);
+    } else {
+      segments.push(<Badge key="default" variant="gray">{t('regular')}</Badge>);
+    }
+    
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 text-lg">Cargando menú...</p>
-        </div>
+      <div className="flex flex-wrap gap-1">
+        {segments}
       </div>
     );
-  }
+  };
 
-  if (error || !restaurant) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <div className="text-center max-w-md">
-          <div className="text-6xl mb-4">🍽️</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Restaurante no encontrado
-          </h2>
-          <p className="text-gray-600 mb-4">
-            {error || 'El menú que buscas no está disponible.'}
-          </p>
-        </div>
-      </div>
+  const exportToCSV = () => {
+    // Usar los clientes filtrados actuales
+    const dataToExport = filteredCustomers;
+    
+    if (dataToExport.length === 0) {
+      showToast(
+        'warning',
+        'Sin datos para exportar',
+        'No hay clientes que coincidan con los filtros actuales.',
+        4000
+      );
+      return;
+    }
+
+    // Definir las columnas del CSV
+    const headers = [
+      'Nombre',
+      'Teléfono',
+      'Email',
+      'Dirección',
+      'Total Pedidos',
+      'Total Gastado',
+      'Promedio por Pedido',
+      'Tipos de Pedido',
+      'Es VIP',
+      'Segmento',
+      'Último Pedido',
+      'Referencias de Entrega'
+    ];
+
+    // Función para obtener el segmento como texto
+    const getSegmentText = (totalOrders: number, isVip: boolean) => {
+      const segments = [];
+      
+      if (isVip) segments.push('VIP');
+      
+      if (totalOrders === 1) {
+        segments.push('Nuevo');
+      } else if (totalOrders >= 2 && totalOrders <= 4) {
+        segments.push('Regular');
+      } else if (totalOrders >= 5) {
+        segments.push('Frecuente');
+      }
+      
+      return segments.join(', ');
+    };
+
+    // Convertir datos a formato CSV
+    const csvData = dataToExport.map(customer => [
+      customer.name,
+      customer.phone,
+      customer.email || '',
+      customer.address || '',
+      customer.totalOrders,
+      formatCurrency(customer.totalSpent, currency),
+      formatCurrency(customer.totalSpent / customer.totalOrders, currency),
+      customer.orderTypes.join(', '),
+      customer.isVip ? 'Sí' : 'No',
+      getSegmentText(customer.totalOrders, customer.isVip),
+      new Date(customer.lastOrderDate).toLocaleDateString(),
+      customer.delivery_instructions || ''
+    ]);
+
+    // Crear contenido CSV con punto y coma como delimitador
+    const delimiter = ';';
+    const BOM = '\uFEFF';
+    const csvContent = [
+      headers.join(delimiter),
+      ...csvData.map(row =>
+        row.map(field =>
+          // Escapar comillas y envolver en comillas si contiene el delimitador, saltos de línea o comillas
+          typeof field === 'string' && (field.includes(delimiter) || field.includes('\n') || field.includes('"'))
+            ? `"${field.replace(/"/g, '""')}"`
+            : field
+        ).join(delimiter)
+      )
+    ].join('\n');
+
+    // Crear y descargar archivo con BOM para UTF-8
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      
+      // Generar nombre de archivo con fecha y filtros aplicados
+      const today = new Date().toISOString().split('T')[0];
+      let fileName = `clientes_${restaurant?.name?.replace(/[^a-zA-Z0-9]/g, '_')}_${today}`;
+      
+      // Añadir información de filtros al nombre
+      if (searchTerm) {
+        fileName += `_busqueda_${searchTerm.replace(/[^a-zA-Z0-9]/g, '_')}`;
+      }
+      if (filterBy !== 'all') {
+        fileName += `_${filterBy}`;
+      }
+      if (statusFilter !== 'all') {
+        fileName += `_${statusFilter}`;
+      }
+      
+      link.setAttribute('download', `${fileName}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    showToast(
+      'success',
+      'CSV Exportado',
+      `Se han exportado ${dataToExport.length} cliente${dataToExport.length !== 1 ? 's' : ''} exitosamente.`,
+      4000
     );
-  }
+  };
 
-  const theme = restaurant.settings.theme;
-  const primaryColor = theme.primary_color || '#FFC700';
-  const secondaryColor = theme.secondary_color || '#f3f4f6';
-  const menuBackgroundColor = theme.menu_background_color || '#ffffff';
-  const cardBackgroundColor = theme.card_background_color || '#f9fafb';
-  const primaryTextColor = theme.primary_text_color || '#111827';
-  const secondaryTextColor = theme.secondary_text_color || '#6b7280';
-  const textColor = theme.primary_text_color || '#111827';
-  const hasPromo =
-    restaurant.settings.promo?.enabled &&
-    restaurant.settings.promo?.vertical_promo_image;
+  const downloadCSVTemplate = () => {
+    const headers = [
+      'Nombre',
+      'Teléfono',
+      'Email',
+      'Dirección',
+      'Referencias de Entrega',
+      'Es VIP'
+    ];
+
+    const exampleRows = [
+      [
+        'Juan Pérez',
+        '+573001234567',
+        'juan.perez@email.com',
+        'Calle 123 #45-67 Bogotá',
+        'Casa de dos pisos portón azul',
+        'Sí'
+      ],
+      [
+        'María González',
+        '+573009876543',
+        'maria.gonzalez@email.com',
+        'Carrera 45 #12-34 Medellín',
+        'Apartamento 301 edificio blanco',
+        'No'
+      ]
+    ];
+
+    const delimiter = ';';
+
+    const csvContent = [
+      headers.join(delimiter),
+      ...exampleRows.map(row =>
+        row.map(field =>
+          typeof field === 'string' && (field.includes(delimiter) || field.includes('\n') || field.includes('"'))
+            ? `"${field.replace(/"/g, '""')}"`
+            : field
+        ).join(delimiter)
+      )
+    ].join('\n');
+
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'plantilla_clientes.csv');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    showToast(
+      'success',
+      'Plantilla Descargada',
+      'Usa esta plantilla como guía para importar clientes.',
+      4000
+    );
+  };
+
+  const handleImportFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.csv')) {
+      showToast('error', 'Archivo inválido', 'Por favor selecciona un archivo CSV válido.', 4000);
+      return;
+    }
+
+    setImportFile(file);
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      if (!text || text.trim() === '') {
+        showToast('error', 'Archivo vacío', 'El archivo CSV está vacío.', 4000);
+        return;
+      }
+      parseCSV(text);
+    };
+
+    reader.onerror = () => {
+      showToast('error', 'Error de lectura', 'No se pudo leer el archivo. Por favor intenta de nuevo.', 4000);
+    };
+
+    reader.readAsText(file, 'UTF-8');
+  };
+
+  const detectDelimiter = (text: string): string => {
+    const firstLine = text.split(/\r?\n/)[0];
+    const commaCount = (firstLine.match(/,/g) || []).length;
+    const semicolonCount = (firstLine.match(/;/g) || []).length;
+    return semicolonCount > commaCount ? ';' : ',';
+  };
+
+  const parseCSVLine = (line: string, delimiter: string): string[] => {
+    const result: string[] = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      const nextChar = line[i + 1];
+
+      if (char === '"' && inQuotes && nextChar === '"') {
+        current += '"';
+        i++;
+      } else if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === delimiter && !inQuotes) {
+        result.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    result.push(current.trim());
+    return result;
+  };
+
+  const parseCSV = (text: string) => {
+    text = text.replace(/^\uFEFF/, '');
+    const lines = text.split(/\r?\n/).filter(line => line.trim());
+
+    if (lines.length < 2) {
+      setImportErrors(['El archivo CSV está vacío o no tiene datos.']);
+      setShowImportModal(true);
+      return;
+    }
+
+    const delimiter = detectDelimiter(text);
+    const headers = parseCSVLine(lines[0], delimiter);
+    const requiredHeaders = ['Nombre', 'Teléfono'];
+    const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+
+    if (missingHeaders.length > 0) {
+      setImportErrors([`Columnas requeridas faltantes: ${missingHeaders.join(', ')}. Columnas encontradas: ${headers.join(', ')}`]);
+      setShowImportModal(true);
+      return;
+    }
+
+    const errors: string[] = [];
+    const preview: any[] = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i];
+      const values = parseCSVLine(line, delimiter);
+
+      if (values.length !== headers.length) {
+        errors.push(`Línea ${i + 1}: Número incorrecto de columnas (esperado ${headers.length}, obtenido ${values.length}). Valores: [${values.join(' | ')}]`);
+        continue;
+      }
+
+      const row: any = {};
+      headers.forEach((header, index) => {
+        row[header] = values[index];
+      });
+
+      if (!row['Nombre'] || !row['Nombre'].trim()) {
+        errors.push(`Línea ${i + 1}: El nombre es requerido`);
+        continue;
+      }
+
+      if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(row['Nombre'].trim())) {
+        errors.push(`Línea ${i + 1}: El nombre "${row['Nombre']}" solo puede contener letras y espacios`);
+        continue;
+      }
+
+      if (!row['Teléfono'] || !row['Teléfono'].trim()) {
+        errors.push(`Línea ${i + 1}: El teléfono es requerido`);
+        continue;
+      }
+
+      if (!/^[\d+\s()-]+$/.test(row['Teléfono'].trim())) {
+        errors.push(`Línea ${i + 1}: El teléfono "${row['Teléfono']}" solo puede contener números y el símbolo +`);
+        continue;
+      }
+
+      if (row['Email'] && row['Email'].trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row['Email'].trim())) {
+        errors.push(`Línea ${i + 1}: El email "${row['Email']}" no tiene un formato válido`);
+        continue;
+      }
+
+      const existingCustomer = customers.find(c => c.phone === row['Teléfono']);
+      if (existingCustomer) {
+        errors.push(`Línea ${i + 1}: El cliente con teléfono ${row['Teléfono']} ya existe`);
+        continue;
+      }
+
+      preview.push({
+        name: row['Nombre'],
+        phone: row['Teléfono'],
+        email: row['Email'] || '',
+        address: row['Dirección'] || '',
+        delivery_instructions: row['Referencias de Entrega'] || '',
+        isVip: row['Es VIP']?.toLowerCase() === 'sí' || row['Es VIP']?.toLowerCase() === 'si' || row['Es VIP']?.toLowerCase() === 'yes',
+        lineNumber: i + 1
+      });
+    }
+
+    setImportErrors(errors);
+    setImportPreview(preview);
+    setShowImportModal(true);
+
+    if (preview.length === 0 && errors.length === 0) {
+      showToast('error', 'Sin datos', 'El archivo no contiene datos para importar.', 4000);
+    } else if (preview.length === 0 && errors.length > 0) {
+      showToast('error', 'Errores de validación', `Se encontraron ${errors.length} error(es). Revisa el archivo y corrige los errores.`, 5000);
+    } else if (preview.length > 0 && errors.length > 0) {
+      showToast('warning', 'Importación parcial', `${preview.length} registro(s) válido(s) y ${errors.length} error(es) encontrado(s).`, 5000);
+    } else {
+      showToast('success', 'Datos validados', `${preview.length} cliente(s) listo(s) para importar.`, 3000);
+    }
+  };
+
+  const executeImport = () => {
+    if (importPreview.length === 0) return;
+
+    const importedCustomers = loadFromStorage('importedCustomers') || [];
+    const vipCustomers = loadFromStorage('vipCustomers') || [];
+
+    importPreview.forEach((customer) => {
+      importedCustomers.push({
+        restaurant_id: restaurant?.id,
+        name: customer.name,
+        phone: customer.phone,
+        email: customer.email,
+        address: customer.address,
+        delivery_instructions: customer.delivery_instructions,
+        created_at: new Date().toISOString(),
+      });
+
+      if (customer.isVip) {
+        const existingVip = vipCustomers.find((v: any) => v.phone === customer.phone && v.restaurant_id === restaurant?.id);
+        if (!existingVip) {
+          vipCustomers.push({
+            restaurant_id: restaurant?.id,
+            phone: customer.phone,
+            name: customer.name,
+            created_at: new Date().toISOString(),
+          });
+        }
+      }
+    });
+
+    saveToStorage('importedCustomers', importedCustomers);
+    saveToStorage('vipCustomers', vipCustomers);
+
+    loadCustomersData();
+
+    setShowImportModal(false);
+    setImportFile(null);
+    setImportPreview([]);
+    setImportErrors([]);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+
+    showToast(
+      'success',
+      'Importación Exitosa',
+      `Se importaron ${importPreview.length} cliente${importPreview.length !== 1 ? 's' : ''} exitosamente.`,
+      4000
+    );
+  };
+
+  const cancelImport = () => {
+    setShowImportModal(false);
+    setImportFile(null);
+    setImportPreview([]);
+    setImportErrors([]);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+  const stats = {
+    totalCustomers: customers.length,
+    vipCustomers: customers.filter(c => c.isVip).length,
+    frequentCustomers: customers.filter(c => c.totalOrders >= 5).length,
+    regularCustomers: customers.filter(c => c.totalOrders >= 2 && c.totalOrders <= 4).length,
+    newCustomers: customers.filter(c => c.totalOrders === 1).length,
+    activeCustomers: customers.filter(c => {
+      const daysSinceLastOrder = Math.ceil((new Date().getTime() - new Date(c.lastOrderDate).getTime()) / (1000 * 60 * 60 * 24));
+      return daysSinceLastOrder <= 30;
+    }).length,
+    inactiveCustomers: customers.filter(c => {
+      const daysSinceLastOrder = Math.ceil((new Date().getTime() - new Date(c.lastOrderDate).getTime()) / (1000 * 60 * 60 * 24));
+      return daysSinceLastOrder > 30;
+    }).length,
+    totalRevenue: customers.reduce((sum, c) => sum + c.totalSpent, 0),
+    averageSpent: customers.length > 0 ? customers.reduce((sum, c) => sum + c.totalSpent, 0) / customers.length : 0,
+    topCustomerSpent: customers.length > 0 ? Math.max(...customers.map(c => c.totalSpent)) : 0,
+    totalOrders: customers.reduce((sum, c) => sum + c.totalOrders, 0),
+  };
 
   return (
-    <div
-      className="min-h-screen relative p-1 gap-1" /*DF:NECESITO QUE VERIFIQUEMOS ESTO*/
-      style={
-        {
-          backgroundColor: menuBackgroundColor,
-          '--primary-color': primaryColor,
-          '--secondary-color': secondaryColor,
-          '--menu-bg-color': menuBackgroundColor,
-          '--card-bg-color': cardBackgroundColor,
-          '--primary-text-color': primaryTextColor,
-          '--secondary-text-color': secondaryTextColor,
-          '--text-color': textColor,
-          '--primary-font': theme.primary_font || 'Inter',
-          '--secondary-font': theme.secondary_font || 'Poppins',
-        } as React.CSSProperties
-      }
-    >
-      <style>{`p, span { color: ${primaryTextColor} !important; }`}</style>
-      {/*<LeftShape color={primaryColor} />*/}
-      {/* DECORATIVE ORGANIC SHAPES - MATCHING REFERENCE */}
-      {/*SE AGREGARON TODOS LOS SVG*/}
-      <Pathleft
-        color={primaryColor}
-        className="
-          absolute   
-          opacity-90
-          w-[160px] 
-          h-[400px]
-          translate-y-[30%]
-          -translate-x-[10%]
-          /*VERSION DESKTOP*/
-          md:-top-20
-          md:w-[320px]
-          md:h-[800px]
-          md:-translate-y-[15%]
-          md:-translate-x-[10%]
-        "
-      ></Pathleft>
-      <Pathbottom
-        color={primaryColor}
-        className="
-          /* Versión móvil */
-          absolute 
-          top-0 
-          right-0 
-          opacity-90 
-          w-[150px]
-          h-[150px]
-          -translate-y-[25%]
-          translate-x-[0%] 
-            
-          /* Versión escritorio */
-          md:absolute 
-          md:top-0 
-          md:right-0 
-          md:opacity-90
-          md:w-[300px]
-          md:h-[300px]
-          -translate-y-[25%]
-          translate-x-[0%]
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">{t('customerManagement')}</h1>
+        <div className="flex gap-3">
+          {selectedCustomers.size > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              icon={Users}
+              onClick={handleBulkEdit}
+              className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+            >
+              Editar {selectedCustomers.size} seleccionado{selectedCustomers.size !== 1 ? 's' : ''}
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            icon={Download}
+            onClick={exportToCSV}
+            className="text-green-600 hover:text-green-700 hover:bg-green-50"
+          >
+            Exportar CSV
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            icon={Upload}
+            onClick={() => fileInputRef.current?.click()}
+            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+          >
+            Importar CSV
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv"
+            onChange={handleImportFile}
+            className="hidden"
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            icon={Filter}
+            onClick={() => setShowFilters(!showFilters)}
+            className={showFilters ? 'bg-blue-50 border-blue-200 text-blue-700' : ''}
+          >
+            Filtros y Búsqueda
+          </Button>
+        </div>
+      </div>
 
-        "
-      ></Pathbottom>
-      <Pathtop
-        color={primaryColor}
-        className="
-          /* Versión móvil */
-          md:absolute 
-          md:-bottom-20 
-          md:right-0 
-          md:opacity-90 
-          md:w-[300px]
-          md:h-[300px]
-          md:-translate-y-[27%]
-          md:translate-x-[0%] 
-          md:rotate-90  
-        
-          /* Versión escritorio */
-          absolute 
-          -bottom-20 
-          right-0 
-          opacity-90 
-          w-[150px]
-          h-[150px]
-          -translate-y-[54%]
-          translate-x-[0%] 
-          rotate-90
-          
-        "
-      ></Pathtop>{' '}
-      {/*DF:PEGAR COMPLETO*/}
-      {/* HEADER */}
-      <header onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        className={`sticky top-0 z-50 transition-transform duration-300 pb-5 pt-5 ${
-          showHeader || isHovered ? "translate-y-0" : "-translate-y-full"
-        }`}>
-        {' '}
-        {/* DF: SE QUITÓ EL BLUR */}
-        <div className="w-full mx-auto px-5 py-2">
-          {' '}
-          {/* DF: SE REDUJO EL PADDING PARA QUE QUEDE MAS DELGADO */}
-          <div className="flex items-center justify-between gap-4">
-            {/* Search Bar */}
-            <div className="flex-1 max-w-xs shadow-lg rounded-lg">
-              <div className="relative">
-                {/* Icono de lupa */}
-                <Search
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5"
-                  style={{ color: primaryTextColor, stroke: primaryTextColor }}
-                />
-                <input
-                  type="text"
-                  placeholder="Buscar..."
-                  value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    if (e.target.value) {
-                      setTimeout(() => {
-                        document.getElementById(
-                          'products-section'
-                        ); /*DF:se quita scrooll intoview para que quite la section de featured*/
-                      }, 100);
-                    }
-                  }}
-                  className="w-full pl-10 pr-4 py-3 rounded-lg focus:ring-2 focus:outline-none transition-colors placeholder-opacity-70 custom-placeholder"
-                  style={{
-                    backgroundColor: cardBackgroundColor,
-                    borderColor: cardBackgroundColor,
-                    borderWidth: '1px',
-                    borderStyle: 'solid',
-                    borderRadius:
-                      theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
-                    color: primaryTextColor,
-                    caretColor: primaryTextColor,
-                  }}
-                  onFocus={(e) =>
-                    (e.target.style.borderColor = primaryTextColor)
-                  }
-                  onBlur={(e) =>
-                    (e.target.style.borderColor = cardBackgroundColor)
-                  }
-                />
-
-                {/* CSS dinámico para el placeholder*/}
-                <style>{`
-                  .custom-placeholder::placeholder {
-                    color: ${primaryTextColor} !important;
-                    opacity: 0.7;
-                  }
-                `}</style>
-              </div>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-md border border-blue-200 hover:shadow-lg transition-shadow">
+          <div className="flex items-start justify-between mb-4">
+            <div className="p-3 bg-blue-600 rounded-lg">
+              <Users className="h-6 w-6 text-white" />
             </div>
-
-            {/* Logo */}
-            <div className="flex-shrink-0 text-center">
-              {restaurant.logo ? (
-                <img
-                  src={restaurant.logo}
-                  alt={restaurant.name}
-                  className="h-16 mx-auto"
-                />
-              ) : (
-                <div
-                  className="text-3xl font-bold"
-                  style={{
-                    color: primaryColor,
-                    fontFamily: theme.secondary_font || 'Poppins',
-                  }}
-                >
-                  {restaurant.name.substring(0, 2).toUpperCase()}
-                </div>
-              )}
+            <div className="text-right">
+              <p className="text-sm font-medium text-blue-900 mb-1">Total Clientes</p>
+              <p className="text-3xl font-bold text-blue-900">{stats.totalCustomers}</p>
             </div>
-
-            {/* Action Buttons */}
-
-            <div className="flex items-center gap-2 flex-1 justify-end max-w-xs">
-              {/* DF:OPEN/CLOSED STATUS BUTTON */}
-              <button
-                onClick={() => setShowHoursModal(true)}
-                className="hidden  md:flex  md:h-[45px] items-center gap-2 p-3 rounded-lg transition-all hover:opacity-90 shadow-lg" /*DF:PARA QUE EL BOTON DE ABIERTO SOLO APAREZCA EN EL HEADER EN VERSION PC*/
-                style={{
-                  backgroundColor: (() => {
-                    const now = new Date();
-                    const dayNames = [
-                      'sunday',
-                      'monday',
-                      'tuesday',
-                      'wednesday',
-                      'thursday',
-                      'friday',
-                      'saturday',
-                    ];
-                    const currentDay = dayNames[now.getDay()];
-                    const hours =
-                      restaurant.settings.business_hours?.[currentDay];
-                    if (!hours?.is_open) return '#fcaeae'; // cerrado = rojo
-                    const currentTime = now.getHours() * 60 + now.getMinutes();
-                    const [openH, openM] = hours.open.split(':').map(Number);
-                    const [closeH, closeM] = hours.close.split(':').map(Number);
-                    const openTime = openH * 60 + openM;
-                    const closeTime = closeH * 60 + closeM;
-                    return currentTime >= openTime && currentTime <= closeTime
-                      ? '#AFFEBF'
-                      : '#fcaeae'; // abierto o cerrado
-                  })(),
-                }}
-              >
-                {(() => {
-                  const now = new Date();
-                  const dayNames = [
-                    'sunday',
-                    'monday',
-                    'tuesday',
-                    'wednesday',
-                    'thursday',
-                    'friday',
-                    'saturday',
-                  ];
-                  const currentDay = dayNames[now.getDay()];
-                  const hours =
-                    restaurant.settings.business_hours?.[currentDay];
-                  const isOpen = (() => {
-                    if (!hours?.is_open) return false;
-                    const currentTime = now.getHours() * 60 + now.getMinutes();
-                    const [openH, openM] = hours.open.split(':').map(Number);
-                    const [closeH, closeM] = hours.close.split(':').map(Number);
-                    const openTime = openH * 60 + openM;
-                    const closeTime = closeH * 60 + closeM;
-                    return currentTime >= openTime && currentTime <= closeTime;
-                  })();
-
-                  // 🎨 Cambia estos valores según los colores que prefieras
-                  const textColor = isOpen ? '#1d4b40' : '#491c1c'; // texto verde oscuro si abierto, blanco si cerrado
-                  const iconColor = isOpen ? '#1d4b40' : '#491c1c'; // mismo color para el ícono
-
-                  return (
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-5 h-5" style={{ color: iconColor }} />
-                      <div className="text-right">
-                        <h5
-                          className="font-bold text-sm"
-                          style={{
-                            color: textColor,
-                            fontFamily: theme.primary_font || 'Poppins',
-                            textTransform: 'uppercase',
-                          }}
-                        >
-                          {isOpen ? 'Abierto' : 'Cerrado'}
-                        </h5>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </button>
-              {hasPromo && (
-                <button
-                  onClick={() => setShowPromoModal(true)}
-                  className="p-3 rounded-lg border transition-colors relative hover:opacity-90 shadow-lg"
-                  style={{
-                    backgroundColor: cardBackgroundColor,
-                    borderColor: cardBackgroundColor,
-                    borderRadius:
-                      theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
-                  }}
-                >
-                  <Gift
-                    className="w-5 h-5"
-                    style={{
-                      color: secondaryTextColor,
-                    }}
-                  />
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: '-4px', // antes 6px → negativo para que quede encima del borde
-                      right: '-4px', // antes 6px → negativo para que sobresalga del borde
-                      width: '17px',
-                      height: '17px',
-                      backgroundColor: secondaryColor,
-                      borderRadius: '50%',
-                    }}
-                  />
-                </button>
-              )}
-              <button
-                onClick={() => setShowCart(true)}
-                className="p-3 rounded-lg border hover:opacity-90 transition-colors relative shadow-lg"
-                style={{
-                  backgroundColor: cardBackgroundColor,
-                  borderColor: cardBackgroundColor,
-                  borderRadius:
-                    theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
-                }}
-              >
-                <ShoppingCart
-                  className="w-5 h-5"
-                  style={{ color: primaryTextColor, stroke: primaryTextColor }}
-                />
-                {cartItemsCount > 0 && (
-                  <span
-                    className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white"
-                    style={{ backgroundColor: secondaryColor }}
-                  >
-                    {cartItemsCount}
-                  </span>
-                )}
-              </button>
-            </div>
+          </div>
+          <div className="flex items-center justify-between pt-3 border-t border-blue-200">
+            <span className="text-xs text-blue-700 font-medium">Base de clientes</span>
+            <span className="text-sm font-bold text-blue-800">
+              {stats.newCustomers} nuevos
+            </span>
           </div>
         </div>
-      </header>
-      {!searchTerm && featuredProducts.length > 0 && (
-        <div className="text-left px-[15px]  md:px-[210px] md:-mt-[9px] md:-mb-[30px] scale-[0.85]">
-          {' '}
-          {/*DF:pasar toda esta seccion completa*/}
-          <p
-            className="text-xl"
-            style={{
-              color: textColor,
-              fontFamily: theme.secondary_font || 'Poppins',
-            }}
-          >
-            Te presentamos nuestros
-          </p>
-          <h2
-            className="text-5xl font-bold "
-            style={{
-              color: textColor,
-              fontFamily: theme.primary_font || 'Poppins',
-            }}
-          >
-            DESTACADOS
-          </h2>
-          <div className="flex items-left justify-left gap-1">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <Star
-                key={i}
-                className="w-5 h-5 fill-current"
-                style={{ color: primaryColor }}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-      {/* ANIMATED CAROUSEL */}
-      {!searchTerm && featuredProducts.length > 0 && (
-        <AnimatedCarousel
-          products={featuredProducts}
-          primaryColor={primaryColor}
-          textColor={textColor}
-          cardBackgroundColor={cardBackgroundColor}
-          fontFamily={theme.secondary_font || 'Poppins'}
-          onProductClick={setSelectedProduct}
-        />
-      )}
-      {/* PRODUCTS LIST */}
-      <main
-        className="max-w-6xl mx-auto pb-[74px] md:-mt-[20px] md:pb-[125px] py-1  relative z-10 "
-        id="products-section"
-      >
-        {' '}
-        {/*DF:Se disminuye padding para que quede todo mas pegado*/}
-        {/* CATEGORIES TABS - CENTERED */}
-        <div className="flex flex-col justify-center items-center w-full max-w-7xl mx-auto py-4 relative z-20 md:items-center md:flex-row  md:justify-between ">
-          {/* 1. SECCIÓN DE CATEGORÍAS (Izquierda en móvil / Centro en desktop) */}
-          {/* w-full md:w-auto md:mx-auto permite el scroll en móvil y centra en desktop. */}
-          <div className="w-full  md:mx-auto">
-            <div className="flex gap-2 py-[2px] overflow-x-auto scrollbar-hide justify-start ;">
-              {' '}
-              {/* Eliminamos justify-center de aquí */}
-              {/* Botón 'Todos' */}
-              <button
-                onClick={() => setSelectedCategory('all')}
-                className="px-6 py-2 whitespace-nowrap transition-all font-medium text-sm flex-shrink-0"
-                style={{
-                  backgroundColor:
-                    selectedCategory === 'all' ? primaryColor : 'transparent',
-                  color:
-                    selectedCategory === 'all' ? secondaryTextColor : primaryColor,
-                  border: `1px solid ${primaryColor}`,
-                  borderRadius:
-                    theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
-                  fontFamily: theme.primary_font || 'Inter',
-                }}
-              >
-                Todos
-              </button>
-              {/* Mapeo de Categorías */}
-              {categories.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => setSelectedCategory(category.id)}
-                  className="px-6 py-2 whitespace-nowrap transition-all font-medium text-sm flex-shrink-0"
-                  style={{
-                    backgroundColor:
-                      selectedCategory === category.id
-                        ? primaryColor
-                        : 'transparent',
-                    color:
-                      selectedCategory === category.id
-                        ? secondaryTextColor
-                        : primaryColor,
-                    border: `1px solid ${primaryColor}`,
-                    borderRadius:
-                      theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
-                    fontFamily: theme.primary_font || 'Inter',
-                  }}
-                >
-                  {category.name}
-                </button>
-              ))}
+
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl shadow-md border border-purple-200 hover:shadow-lg transition-shadow">
+          <div className="flex items-start justify-between mb-4">
+            <div className="p-3 bg-purple-600 rounded-lg">
+              <Star className="h-6 w-6 text-white" />
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-medium text-purple-900 mb-1">Clientes VIP</p>
+              <p className="text-3xl font-bold text-purple-900">{stats.vipCustomers}</p>
             </div>
           </div>
-
-          {/* 2. SELECTOR DE VISTA (Derecha en móvil y desktop) */}
-          {/* w-full mt-4 en móvil para ocupar el ancho debajo de las categorías.
-               md:w-auto md:mt-0 en desktop para volver a su ancho y alinearse a la derecha. */}
-          <div className="flex justify-end gap-2 w-full md:w-auto mt-4 md:mt-0">
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 rounded-lg transition-all ${
-                viewMode === 'list' ? 'bg-white shadow-md' : 'bg-white/50'
-              }`}
-              style={{
-                borderRadius:
-                  theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
-              }}
-            >
-              <List
-                className="w-5 h-5"
-                style={{
-                  color: viewMode === 'list' ? textColor : primaryColor,
-                }}
-              />
-            </button>
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-lg transition-all ${
-                viewMode === 'grid' ? 'bg-white shadow-md' : 'bg-white/50'
-              }`}
-              style={{
-                borderRadius:
-                  theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
-              }}
-            >
-              <Grid3x3
-                className="w-5 h-5"
-                style={{
-                  color: viewMode === 'grid' ? primaryColor : textColor,
-                }}
-              />
-            </button>
-            <button
-              onClick={() => setViewMode('editorial')}
-              className={`p-2 rounded-lg transition-all flex items-center gap-2 ${
-                viewMode === 'editorial' ? 'bg-white shadow-md' : 'bg-white/50'
-              }`}
-              style={{
-                borderRadius:
-                  theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
-              }}
-            >
-              <AlignLeft
-                className="w-5 h-5"
-                style={{
-                  color: viewMode === 'editorial' ? primaryColor : textColor,
-                }}
-              />
-            </button>
+          <div className="flex items-center justify-between pt-3 border-t border-purple-200">
+            <span className="text-xs text-purple-700 font-medium">Asignados manualmente</span>
+            <span className="text-sm font-bold text-purple-800">
+              {((stats.vipCustomers / stats.totalCustomers) * 100 || 0).toFixed(1)}%
+            </span>
           </div>
         </div>
-        {/* View Mode Selector */}
-        {filteredProducts.length === 0 ? (
-          <div className="text-center py-12">
-            <p
-              className="text-gray-600"
-              style={{ fontFamily: theme.primary_font || 'Inter' }}
-            >
-              No se encontraron productos
-            </p>
+
+        <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-md border border-green-200 hover:shadow-lg transition-shadow">
+          <div className="flex items-start justify-between mb-4">
+            <div className="p-3 bg-green-600 rounded-lg">
+              <UserCheck className="h-6 w-6 text-white" />
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-medium text-green-900 mb-1">Frecuentes</p>
+              <p className="text-3xl font-bold text-green-900">{stats.frequentCustomers}</p>
+            </div>
           </div>
-        ) : (
-          <div
-            className={
-              viewMode === 'list'
-                ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' /*DF: agregar scale para reducir un poco el tamaño*/
-                : viewMode === 'grid'
-                ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'
-                : 'space-y-2'
-            }
-          >
-            {filteredProducts.map((product) => {
-              const minPrice =
-                product.variations.length > 0
-                  ? Math.min(...product.variations.map((v) => v.price))
-                  : 0;
-
-              if (viewMode === 'editorial') {
-                return (
-                  <div
-                    key={product.id}
-                    className="rounded-xl shadow-sm hover:shadow-lg transition-all cursor-pointer overflow-hidden"
-                    onClick={() => setSelectedProduct(product)}
-                    style={{
-                      borderRadius:
-                        theme.button_style === 'rounded'
-                          ? '0.75rem'
-                          : '0.25rem',
-                      backgroundColor: cardBackgroundColor,
-                    }}
-                  >
-                    <div className="flex flex-col md:flex-row gap-2 ">
-                      {' '}
-                      {/*DF:Se quito el pading*/}
-                      {product.images[0] && (
-                        <img
-                          src={product.images[0]}
-                          alt={product.name}
-                          className={`
-                            w-full md:w-[164px] md:h-[154px] object-cover flex-shrink-0
-                            ${
-                              theme.button_style === 'rounded'
-                                ? 'md:rounded-lg md:rounded-tr-none md:rounded-br-none'
-                                : 'md:rounded-sm md:rounded-tr-none md:rounded-br-none'
-                            }
-                          `}
-                        />
-                      )}
-                      <div className="flex-1 flex flex-col justify-center p-2">
-                        <h2
-                          className="font-bold mb-3 text-2xl"
-                          style={{
-                            fontFamily: theme.primary_font || 'Poppins',
-                            color: primaryColor,
-                          }}
-                        >
-                          {product.name}
-                        </h2>
-                        <p
-                          className="mb-4 text-base leading-relaxed line-clamp-2"
-                          style={{
-                            fontFamily: theme.secondary_font  || 'Inter',
-                            color: secondaryTextColor,
-                          }}
-                        >
-                          {product.description}
-                        </p>
-                        <span
-                          className="font-bold text-2xl"
-                          style={{
-                            fontFamily: theme.secondary_font || 'Poppins',
-                            cssText: `color: ${primaryColor} !important;`,
-                          }}
-                        >
-                          {formatCurrency(
-                          minPrice,
-                          restaurant.settings.currency || 'USD'
-                        )}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-
-              if (viewMode === 'grid') {
-                return (
-                  <div
-                    key={product.id}
-                    className="rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden"
-                    onClick={() => setSelectedProduct(product)}
-                    style={{
-                      borderRadius:
-                        theme.button_style === 'rounded'
-                          ? '0.75rem'
-                          : '0.25rem',
-                      backgroundColor: cardBackgroundColor,
-                    }}
-                  >
-                    {product.images[0] && (
-                      <img
-                        src={product.images[0]}
-                        alt={product.name}
-                        className="aspect-[4/3] w-full  object-cover" /*DF:SE AGREGA ASPECT PARA QUE SE VEAN DEL MISMO TAMAÑO*/
-                      />
-                    )}
-                    <div className="p-2 ">
-                      <h2
-                        className="font-bold line-clamp-1"
-                        style={{
-                          fontSize: '16px',
-                          fontFamily: theme.primary_font || 'Poppins',
-                          color: primaryColor,
-                        }}
-                      >
-                        {product.name}
-                      </h2>
-                      <p
-                        className=" text-base leading-relaxed line-clamp-2" /*DF: SE LE AGREGO LINE-CLAMP 2 PARA QUE SE VIERA LA DESCRIPCION*/
-                        style={{
-                          fontFamily: theme.secondary_font || 'Inter',
-                          color: secondaryTextColor,
-                        }}
-                      >
-                        {product.description}
-                      </p>
-                      <span
-                        className="font-bold text-lg"
-                        style={{
-                          fontFamily: theme.secondary_font || 'Poppins',
-                          cssText: `color: ${primaryColor} !important;`,
-                        }}
-                      >
-                        {formatCurrency(
-                          minPrice,
-                          restaurant.settings.currency || 'USD'
-                        )}
-                      </span>
-                    </div>
-                  </div>
-                );
-              }
-
-              return (
-                <div
-                  key={product.id}
-                  className="rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer flex items-left gap-4 p-4 pl-0 py-0"
-                  onClick={() => setSelectedProduct(product)}
-                  style={{
-                    borderRadius:
-                      theme.button_style === 'rounded' ? '0.75rem' : '0.25rem',
-                    display: 'flex',
-                    backgroundColor: cardBackgroundColor,
-                  }}
-                >
-                  {product.images[0] && (
-                    <img
-                      src={product.images[0]}
-                      alt={product.name}
-                      className="object-cover rounded-xl flex-shrink-0 " /*DF: agregue el rounded-xl para que se vea cuadrada la imagen*/
-                      style={{
-                        width: '150px',
-                        height: '150px',
-                        objectFit: 'cover',
-                        flexShrink: 0,
-                        borderTopRightRadius: '0px',
-                        borderBottomRightRadius:
-                          '0px' /*DF:configurar las imagenes para que vayan al borde*/,
-                      }}
-                    />
-                  )}
-                  <div className="flex-1 min-w-0 p-4">
-                    <h2
-                      className="font-bold mb-1 truncate"
-                      style={{
-                        fontSize: '16px',
-                        fontFamily: theme.primary_font || 'Poppins',
-                        color: primaryColor,
-                      }}
-                    >
-                      {product.name}
-                    </h2>
-                    <p
-                      className="text-gray-600 text-sm mb-2 line-clamp-2"
-                      style={{ fontFamily: theme.secondary_font || 'Inter',}}
-                    >
-                      {product.description}
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <span
-                        className="font-bold text-lg"
-                        style={{
-                          fontFamily: theme.secondary_font || 'Poppins',
-                          cssText: `color: ${primaryColor} !important;`,
-                        }}
-                      >
-                        {formatCurrency(
-                          minPrice,
-                          restaurant.settings.currency || 'USD'
-                        )}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="flex items-center justify-between pt-3 border-t border-green-200">
+            <span className="text-xs text-green-700 font-medium">5+ pedidos</span>
+            <span className="text-sm font-bold text-green-800">
+              {((stats.frequentCustomers / stats.totalCustomers) * 100 || 0).toFixed(1)}%
+            </span>
           </div>
-        )}
-      </main>
-      {/* PROMOTIONAL MODAL */}
-      {showPromoModal && hasPromo && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4"
-          onClick={() => setShowPromoModal(false)}
-        >
-          <div
-            className="relative max-w-2xl max-h-[90vh] bg-white rounded-lg overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              borderRadius:
-                theme.button_style === 'rounded' ? '1rem' : '0.5rem',
-            }}
-          >
-            <button
-              onClick={() => setShowPromoModal(false)}
-              className="absolute top-4 right-4 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 z-10"
-              style={{
-                borderRadius:
-                  theme.button_style === 'rounded' ? '9999px' : '0.5rem',
-              }}
-            >
-              <X className="w-6 h-6 text-gray-600" />
-            </button>
-            <img
-              src={restaurant.settings.promo.vertical_promo_image}
-              alt="Promoción"
-              className="w-full h-auto object-contain"
+        </div>
+
+        <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl shadow-md border border-orange-200 hover:shadow-lg transition-shadow">
+          <div className="flex items-start justify-between mb-4">
+            <div className="p-3 bg-orange-600 rounded-lg">
+              <DollarSign className="h-6 w-6 text-white" />
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-medium text-orange-900 mb-1">Gasto Promedio</p>
+              <p className="text-3xl font-bold text-orange-900">{formatCurrency(stats.averageSpent, currency)}</p>
+            </div>
+          </div>
+          <div className="flex items-center justify-between pt-3 border-t border-orange-200">
+            <span className="text-xs text-orange-700 font-medium">Por cliente</span>
+            <span className="text-sm font-bold text-green-700">
+              {formatCurrency(stats.totalRevenue, currency)}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Collapsible Filters and Search */}
+      {showFilters && (
+        <div className="bg-white rounded-lg shadow p-4 mb-6 space-y-4">
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder={`${t('search')} clientes por nombre, teléfono o email...`}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-        </div>
-      )}
-      {/* PRODUCT DETAIL MODAL */}
-      {selectedProduct && (
-        <ProductDetail
-          product={selectedProduct}
-          restaurant={restaurant}
-          onClose={() => setSelectedProduct(null)}
-        />
-      )}
-      {/* CART SIDEBAR */}
-      <CartSidebar
-        isOpen={showCart}
-        onClose={() => setShowCart(false)}
-        onCheckout={() => {
-          setShowCart(false);
-          setShowCheckout(true);
-        }}
-        restaurant={restaurant}
-      />
-      {/* CHECKOUT MODAL */}
-      <CheckoutModal
-        isOpen={showCheckout}
-        onClose={() => setShowCheckout(false)}
-        restaurant={restaurant}
-      />
-      {/* HOURS MODAL */}
-      {showHoursModal && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4"
-          onClick={() => setShowHoursModal(false)}
-        >
-          <div
-            className="relative max-w-md w-full rounded-lg overflow-hidden p-6"
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              backgroundColor: cardBackgroundColor,
-              borderRadius:
-                theme.button_style === 'rounded' ? '1rem' : '0.5rem',
-            }}
-          >
-            <button
-              onClick={() => setShowHoursModal(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-            >
-              <X
-                className="w-5 h-5"
-                style={{ color: primaryTextColor, stroke: primaryTextColor }}
-              />
-            </button>
-            <h3
-              className="text-xl font-bold mb-4"
-              style={{
-                color: textColor,
-                fontFamily: theme.secondary_font || 'Poppins',
-              }}
-            >
-              Horarios de Atención
-            </h3>
-            <div className="space-y-3">
-              {restaurant.settings.business_hours &&
-                Object.entries(restaurant.settings.business_hours).map(
-                  ([day, hours]: [string, any]) => {
-                    const dayNames: Record<string, string> = {
-                      monday: 'Lunes',
-                      tuesday: 'Martes',
-                      wednesday: 'Miércoles',
-                      thursday: 'Jueves',
-                      friday: 'Viernes',
-                      saturday: 'Sábado',
-                      sunday: 'Domingo',
-                    };
-                    return (
-                      <div
-                        key={day}
-                        className="flex justify-between items-center py-2 border-b "
-                        style={{ borderColor: textColor }}
-                      >
-                        <span
-                          className="font-medium"
-                          style={{
-                            color: textColor,
-                            fontFamily: theme.primary_font || 'Inter',
-                          }}
-                        >
-                          {dayNames[day]}
-                        </span>
-                        <span
-                          className="text-gray-600"
-                          style={{ fontFamily: theme.text_color || 'Inter' }}
-                        >
-                          {hours.is_open
-                            ? `${hours.open} - ${hours.close}`
-                            : 'Cerrado'}
-                        </span>
-                      </div>
-                    );
-                  }
-                )}
+          
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* Status Filter */}
+            <div className="flex items-center gap-2 whitespace-nowrap">
+              <Filter className="w-4 h-4 text-gray-500 flex-shrink-0" />
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as any)}
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0"
+              >
+                <option value="all">Todos los estados</option>
+                <option value="active">Activos (últimos 30 días)</option>
+                <option value="inactive">Inactivos (+30 días)</option>
+              </select>
+            </div>
+            
+            {/* Segment Filter */}
+            <div className="flex items-center gap-2 whitespace-nowrap">
+              <Filter className="w-4 h-4 text-gray-500 flex-shrink-0" />
+              <select
+                value={filterBy}
+                onChange={(e) => setFilterBy(e.target.value as any)}
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0"
+              >
+                <option value="all">Todos los segmentos</option>
+                <option value="vip">Solo VIP</option>
+                <option value="frequent">Solo Frecuentes (5+)</option>
+                <option value="regular">Solo Regular (2-4)</option>
+                <option value="new">Solo Nuevos (1)</option>
+              </select>
+            </div>
+            
+            {/* Sort Filter */}
+            <div className="flex items-center gap-2 whitespace-nowrap">
+              <Filter className="w-4 h-4 text-gray-500 flex-shrink-0" />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0"
+              >
+                <option value="name">Ordenar por {t('name')}</option>
+                <option value="orders">Ordenar por {t('ordersCount')}</option>
+                <option value="spent">Ordenar por {t('totalSpent')}</option>
+                <option value="date">Ordenar por {t('date')}</option>
+              </select>
+            </div>
+            
+            {/* Sort Direction Arrow Button */}
+            <div className="flex items-center gap-2 whitespace-nowrap">
+              <button
+                onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50 transition-colors flex items-center gap-1"
+                title={sortDirection === 'asc' ? 'Cambiar a descendente' : 'Cambiar a ascendente'}
+              >
+                <ArrowUpDown className="w-4 h-4" />
+                {sortDirection === 'asc' ? '↑' : '↓'}
+              </button>
             </div>
           </div>
         </div>
       )}
-      {/* FLOATING FOOTER BAR */}      
-      <div
-        className="hidden md:block fixed bottom-2 rounded-b-xl rounded-tr-xl  left-[24px] right-[24px]  md:left-4 md:right-4 md:rounded-b-xl md:rounded-t-xl  md:left-4 md:right-4 py-1 shadow-lg z-40 " /* DF: se le agregar este codigo para los bordes redondeados y padding a los lados*/
-        style={{ backgroundColor: primaryColor }}
+
+      {/* Customers Table */}
+      {filteredCustomers.length === 0 ? (
+        <div className="bg-white rounded-lg shadow p-12 text-center">
+          <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            {customers.length === 0 ? 'No registered customers' : 'No customers found'}
+          </h3>
+          <p className="text-gray-600">
+            {customers.length === 0 
+              ? 'Customers will appear here once they place orders.'
+              : 'Try different search terms.'
+            }
+          </p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <input
+                      type="checkbox"
+                      checked={selectedCustomers.size === filteredCustomers.length && filteredCustomers.length > 0}
+                      onChange={toggleSelectAll}
+                      className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('customer')}
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('contact')}
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('ordersCount')}
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('totalSpent')}
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('orderTypes')}
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider relative group">
+                    <div className="flex items-center relative">
+                      {t('segment')}
+                      <Info className="w-3 h-3 ml-1 text-gray-400" />
+                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 hidden group-hover:block bg-white text-gray-800 text-xs rounded-lg p-3 w-64 shadow-xl border border-gray-200 z-50">
+                        <div className="space-y-1">
+                          <div><strong className="text-green-600">VIP:</strong> Asignado manualmente</div>
+                          <div><strong className="text-blue-600">Nuevo:</strong> 1 pedido</div>
+                          <div><strong className="text-gray-600">Regular:</strong> 2-4 pedidos</div>
+                          <div><strong className="text-orange-600">Frecuente:</strong> 5+ pedidos</div>
+                          <div className="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-200">
+                            * Un cliente puede ser VIP y tener otro segmento
+                          </div>
+                        </div>
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-white"></div>
+                      </div>
+                    </div>
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('lastOrder')}
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('actions')}
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredCustomers.map((customer) => (
+                  <tr key={customer.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <input
+                        type="checkbox"
+                        checked={selectedCustomers.has(customer.id)}
+                        onChange={() => toggleCustomerSelection(customer.id)}
+                        className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-10 w-10">
+                          <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                            <User className="h-5 w-5 text-blue-600" />
+                          </div>
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">
+                            {customer.name}
+                          </div>
+                          {customer.address && (
+                            <div className="text-sm text-gray-500 flex items-center">
+                              <MapPin className="w-3 h-3 mr-1" />
+                              {customer.address.substring(0, 30)}...
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 flex items-center">
+                        <Phone className="w-3 h-3 mr-1" />
+                        {customer.phone}
+                      </div>
+                      {customer.email && (
+                        <div className="text-sm text-gray-500 flex items-center">
+                          <Mail className="w-3 h-3 mr-1" />
+                          {customer.email}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">
+                        {customer.totalOrders}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        orders
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">
+                        {formatCurrency(customer.totalSpent, currency)}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {formatCurrency(customer.totalSpent / customer.totalOrders, currency)} avg
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex flex-wrap gap-1">
+                        {customer.orderTypes.map(type => (
+                          <div key={type}>
+                            {getOrderTypeBadge(type)}
+                          </div>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex flex-wrap gap-1">
+                        {customer.isVip && <Badge variant="success">VIP</Badge>}
+                        {getCustomerSegment(customer.totalSpent, customer.totalOrders)}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {new Date(customer.lastOrderDate).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <button
+                        onClick={() => handleEditCustomer(customer)}
+                        className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-colors bg-blue-100 text-blue-800 hover:bg-blue-200 mr-2"
+                        title="Editar cliente"
+                      >
+                        <Edit className="w-3 h-3 mr-1" />
+                      </button>
+                      <button
+                        onClick={() => toggleVipStatus(customer.id)}
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                          customer.isVip
+                            ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+                            : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                        } mr-2`}
+                        title={customer.isVip ? 'Quitar VIP' : 'Hacer VIP'}
+                      >
+                        <Star className={`w-3 h-3 mr-1 ${customer.isVip ? 'fill-current' : ''}`} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteCustomer(customer.id)}
+                        className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-colors bg-red-100 text-red-800 hover:bg-red-200"
+                        title="Eliminar cliente"
+                      >
+                        <Trash2 className="w-3 h-3 mr-1" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Customer Modal */}
+      <Modal
+        isOpen={showEditModal}
+        onClose={handleCloseEditModal}
+        title="Editar Cliente"
+        size="lg"
       >
-        <div className="max-w-7xl mx-auto px-4 py-2">
-          <div className="flex flex-col md:flex-row items-center justify-center md:justify-between gap-4 text-center">
-            {/* OPEN/CLOSED STATUS BUTTON */}
-            <button
-              onClick={() => setShowHoursModal(true)}
-              className="fixed md:hidden left-[24px]  bottom-[82px] transform -translate-y-1/2 shadow-lg px-3 py-3 hover:shadow-xl z-10 rounded-t-xl"
-              style={{
-                backgroundColor: (() => {
-                  const now = new Date();
-                  const dayNames = [
-                    'sunday',
-                    'monday',
-                    'tuesday',
-                    'wednesday',
-                    'thursday',
-                    'friday',
-                    'saturday',
-                  ];
-                  const currentDay = dayNames[now.getDay()];
-                  const hours =
-                    restaurant.settings.business_hours?.[currentDay];
-                  if (!hours?.is_open) return '#fcaeae'; // cerrado = rojo
-                  const currentTime = now.getHours() * 60 + now.getMinutes();
-                  const [openH, openM] = hours.open.split(':').map(Number);
-                  const [closeH, closeM] = hours.close.split(':').map(Number);
-                  const openTime = openH * 60 + openM;
-                  const closeTime = closeH * 60 + closeM;
-                  return currentTime >= openTime && currentTime <= closeTime
-                    ? '#AFFEBF'
-                    : '#fcaeae'; // abierto o cerrado
-                })(),
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label="Nombre Completo*"
+              value={editForm.name}
+              onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+              placeholder="Nombre del cliente"
+            />
+            <Input
+              label="Teléfono*"
+              value={editForm.phone}
+              onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
+              placeholder="+1 (555) 123-4567"
+            />
+          </div>
+          
+          <Input
+            label="Email"
+            type="email"
+            value={editForm.email}
+            onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
+            placeholder="cliente@email.com"
+          />
+          
+          <Input
+            label="Dirección"
+            value={editForm.address}
+            onChange={(e) => setEditForm(prev => ({ ...prev, address: e.target.value }))}
+            placeholder="Dirección completa"
+          />
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Referencias de Entrega
+            </label>
+            <textarea
+              value={editForm.delivery_instructions}
+              onChange={(e) => setEditForm(prev => ({ ...prev, delivery_instructions: e.target.value }))}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Referencias para encontrar la dirección..."
+            />
+          </div>
+          
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              checked={editForm.isVip}
+              onChange={(e) => setEditForm(prev => ({ ...prev, isVip: e.target.checked }))}
+              className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mr-2"
+            />
+            <label className="text-sm font-medium text-gray-700">
+              Cliente VIP
+            </label>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <Button
+              variant="ghost"
+              onClick={handleCloseEditModal}
+            >
+              {t('cancel')}
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                if (editingCustomer) {
+                  setCustomerToDelete(editingCustomer);
+                  setShowDeleteModal(true);
+                  handleCloseEditModal();
+                }
               }}
             >
-              {(() => {
-                const now = new Date();
-                const dayNames = [
-                  'sunday',
-                  'monday',
-                  'tuesday',
-                  'wednesday',
-                  'thursday',
-                  'friday',
-                  'saturday',
-                ];
-                const currentDay = dayNames[now.getDay()];
-                const hours = restaurant.settings.business_hours?.[currentDay];
-                const isOpen = (() => {
-                  if (!hours?.is_open) return false;
-                  const currentTime = now.getHours() * 60 + now.getMinutes();
-                  const [openH, openM] = hours.open.split(':').map(Number);
-                  const [closeH, closeM] = hours.close.split(':').map(Number);
-                  const openTime = openH * 60 + openM;
-                  const closeTime = closeH * 60 + closeM;
-                  return currentTime >= openTime && currentTime <= closeTime;
-                })();
+              Eliminar Cliente
+            </Button>
+            <Button
+              onClick={handleSaveCustomer}
+              disabled={!editForm.name.trim() || !editForm.phone.trim()}
+            >
+              Guardar Cambios
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
-                // 🎨 Cambia estos valores según los colores que prefieras
-                const textColor = isOpen ? '#1d4b40' : '#491c1c'; // texto verde oscuro si abierto, blanco si cerrado
-                const iconColor = isOpen ? '#1d4b40' : '#491c1c'; // mismo color para el ícono
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setCustomerToDelete(null);
+        }}
+        title="Confirmar Eliminación"
+        size="md"
+      >
+        {customerToDelete && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-center mb-6">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 className="w-8 h-8 text-red-600" />
+              </div>
+            </div>
+            
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                ¿Eliminar cliente "{customerToDelete.name}"?
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Esta acción eliminará permanentemente:
+              </p>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                <ul className="text-sm text-red-800 space-y-1">
+                  <li>• Toda la información del cliente</li>
+                  <li>• {customerToDelete.totalOrders} pedido{customerToDelete.totalOrders !== 1 ? 's' : ''} asociado{customerToDelete.totalOrders !== 1 ? 's' : ''}</li>
+                  <li>• Historial de compras ({formatCurrency(customerToDelete.totalSpent, currency)})</li>
+                  {customerToDelete.isVip && <li>• Estado VIP del cliente</li>}
+                </ul>
+              </div>
+              <p className="text-sm text-gray-500">
+                <strong>Esta acción no se puede deshacer.</strong>
+              </p>
+            </div>
 
-                return (
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-5 h-5" style={{ color: iconColor }} />
-                    <div className="text-right">
-                      <h5
-                        className="font-bold text-sm"
-                        style={{
-                          color: textColor,
-                          fontFamily: theme.secondary_font || 'Poppins',
-                        }}
-                      >
-                        {isOpen ? 'Abierto' : 'Cerrado'}
-                      </h5>
-                    </div>
-                  </div>
-                );
-              })()}
-            </button>
-            <div className="flex items-center gap-2 text-sm">
-              <MapPin
-                className="w-4 h-4"
-                style={{
-                  color: secondaryTextColor,
-                  stroke: secondaryTextColor,
-                }}
-              />
-              <span
-                className="font-medium"
-                style={{
-                  fontFamily: theme.primary_font || 'Inter',
-                  cssText: `color: ${secondaryTextColor} !important;`,
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setCustomerToDelete(null);
                 }}
               >
-                {restaurant.address}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              {restaurant.settings.social_media?.website && (
-                <a
-                  href={restaurant.settings.social_media.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 hover:opacity-90 transition-colors rounded-lg"
-                  style={{
-                    backgroundColor: cardBackgroundColor,
-                    borderRadius:
-                      theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
-                  }}
-                >
-                  <Globe
-                    className="w-5 h-5"
-                    style={{ color: primaryColor, stroke: primaryColor }}
-                  />
-                </a>
-              )}
-              {restaurant.settings.social_media?.tiktok && (
-                <a
-                  href={restaurant.settings.social_media.tiktok}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 hover:opacity-90 transition-colors rounded-lg"
-                  style={{
-                    backgroundColor: cardBackgroundColor,
-                    borderRadius:
-                      theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
-                  }}
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill={primaryColor}
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0011.14-4.02v-6.95a8.16 8.16 0 004.65 1.46v-3.4a4.84 4.84 0 01-1.2-.5z" />
-                  </svg>
-                </a>
-              )}
-
-              {restaurant.settings.social_media?.twitter && (
-                <a
-                  href={restaurant.settings.social_media.twitter}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 hover:opacity-90 transition-colors rounded-lg"
-                  style={{
-                    backgroundColor: cardBackgroundColor,
-                    borderRadius:
-                      theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
-                  }}
-                >
-                  <svg
-                    className="w-5 h-5 "
-                    fill={primaryColor}
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                  </svg>
-                  {/*<Twitter className="w-5 h-5" style={{ color: primaryColor, stroke: primaryColor }} />*/}
-                </a>
-              )}
-              {restaurant.settings.social_media?.facebook && (
-                <a
-                  href={restaurant.settings.social_media.facebook}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 hover:opacity-90 transition-colors rounded-lg"
-                  style={{
-                    backgroundColor: cardBackgroundColor,
-                    borderRadius:
-                      theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
-                  }}
-                >
-                  <Facebook
-                    className="w-5 h-5"
-                    style={{ color: primaryColor, stroke: primaryColor }}
-                  />
-                </a>
-              )}
-              {restaurant.settings.social_media?.instagram && (
-                <a
-                  href={restaurant.settings.social_media.instagram}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 hover:opacity-90 transition-colors rounded-lg"
-                  style={{
-                    backgroundColor: cardBackgroundColor,
-                    borderRadius:
-                      theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
-                  }}
-                >
-                  <Instagram
-                    className="w-5 h-5"
-                    style={{ color: primaryColor, stroke: primaryColor }}
-                  />
-                </a>
-              )}
-              {restaurant.settings.social_media?.whatsapp && (
-                <a
-                  href={restaurant.settings.social_media.phone}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 hover:opacity-90 transition-colors rounded-lg"
-                  style={{
-                    backgroundColor: cardBackgroundColor,
-                    borderRadius:
-                      theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
-                  }}
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill={primaryColor}
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
-                  </svg>
-                  {/*<Phone className="w-5 h-5" style={{ color: primaryColor, stroke: primaryColor }} />*/}
-                </a>
-              )}
+                Cancelar
+              </Button>
+              <Button
+                variant="danger"
+                onClick={confirmDeleteCustomer}
+                icon={Trash2}
+              >
+                Eliminar Cliente
+              </Button>
             </div>
           </div>
+        )}
+      </Modal>
+
+      {/* Bulk Edit Modal */}
+      <Modal
+        isOpen={showBulkEditModal}
+        onClose={() => {
+          setShowBulkEditModal(false);
+          setBulkEditAction('vip');
+        }}
+        title="Edición Masiva"
+        size="md"
+      >
+        <div className="space-y-6">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center">
+              <Users className="w-5 h-5 text-blue-600 mr-2" />
+              <span className="text-sm font-medium text-blue-800">
+                {selectedCustomers.size} cliente{selectedCustomers.size !== 1 ? 's' : ''} seleccionado{selectedCustomers.size !== 1 ? 's' : ''}
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Selecciona la acción a realizar:
+            </label>
+            <div className="space-y-3">
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="bulkAction"
+                  value="vip"
+                  checked={bulkEditAction === 'vip'}
+                  onChange={(e) => setBulkEditAction(e.target.value as any)}
+                  className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500 mr-3"
+                />
+                <div>
+                  <span className="text-sm font-medium text-gray-900">Marcar como VIP</span>
+                  <p className="text-xs text-gray-500">Agregar estado VIP a todos los clientes seleccionados</p>
+                </div>
+              </label>
+              
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="bulkAction"
+                  value="remove_vip"
+                  checked={bulkEditAction === 'remove_vip'}
+                  onChange={(e) => setBulkEditAction(e.target.value as any)}
+                  className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500 mr-3"
+                />
+                <div>
+                  <span className="text-sm font-medium text-gray-900">Remover VIP</span>
+                  <p className="text-xs text-gray-500">Quitar estado VIP de todos los clientes seleccionados</p>
+                </div>
+              </label>
+              
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="bulkAction"
+                  value="delete"
+                  checked={bulkEditAction === 'delete'}
+                  onChange={(e) => setBulkEditAction(e.target.value as any)}
+                  className="h-4 w-4 text-red-600 border-gray-300 focus:ring-red-500 mr-3"
+                />
+                <div>
+                  <span className="text-sm font-medium text-red-900">Eliminar clientes</span>
+                  <p className="text-xs text-red-500">⚠️ Eliminar permanentemente todos los clientes y sus pedidos</p>
+                </div>
+              </label>
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setShowBulkEditModal(false);
+                setBulkEditAction('vip');
+              }}
+            >
+              {t('cancel')}
+            </Button>
+            <Button
+              onClick={executeBulkEdit}
+              variant={bulkEditAction === 'delete' ? 'danger' : 'primary'}
+              icon={bulkEditAction === 'delete' ? Trash2 : Users}
+            >
+              {bulkEditAction === 'vip' && 'Marcar como VIP'}
+              {bulkEditAction === 'remove_vip' && 'Remover VIP'}
+              {bulkEditAction === 'delete' && 'Eliminar Clientes'}
+            </Button>
+          </div>
         </div>
-      </div>
-      {/* ✅ SOLO MÓVIL */}
-      <div className="block md:hidden">
-        <FloatingFooter
-          textColor={primaryTextColor}
-          restaurant={restaurant}
-          primaryColor={primaryColor}
-          secondaryTextColor={secondaryTextColor}
-          cardBackgroundColor={cardBackgroundColor}
-          theme={theme}
-        />
-      </div>
+      </Modal>
+
+      {/* Import CSV Modal */}
+      <Modal
+        isOpen={showImportModal}
+        onClose={cancelImport}
+        title="Importar Clientes desde CSV"
+        size="lg"
+      >
+        <div className="space-y-6">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start">
+              <Info className="w-5 h-5 text-blue-600 mr-2 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-blue-800">
+                <p className="font-medium mb-2">Formato del archivo CSV:</p>
+                <ul className="list-disc list-inside space-y-1 text-xs">
+                  <li><strong>Nombre</strong> (requerido): Nombre completo del cliente</li>
+                  <li><strong>Teléfono</strong> (requerido): Número de teléfono único</li>
+                  <li><strong>Email</strong> (opcional): Correo electrónico</li>
+                  <li><strong>Dirección</strong> (opcional): Dirección completa</li>
+                  <li><strong>Referencias de Entrega</strong> (opcional): Indicaciones adicionales</li>
+                  <li><strong>Es VIP</strong> (opcional): "Sí" o "No"</li>
+                </ul>
+                <button
+                  onClick={downloadCSVTemplate}
+                  className="mt-3 text-xs font-medium text-blue-700 hover:text-blue-800 underline"
+                >
+                  Descargar plantilla de ejemplo
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {importErrors.length > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-start">
+                <Info className="w-5 h-5 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-red-800 mb-2">Se encontraron {importErrors.length} error{importErrors.length !== 1 ? 'es' : ''}:</p>
+                  <ul className="text-xs text-red-700 space-y-1 max-h-40 overflow-y-auto">
+                    {importErrors.map((error, index) => (
+                      <li key={index}>• {error}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {importPreview.length > 0 && (
+            <div>
+              <h4 className="text-sm font-medium text-gray-900 mb-3">
+                Vista previa: {importPreview.length} cliente{importPreview.length !== 1 ? 's' : ''} válido{importPreview.length !== 1 ? 's' : ''}
+              </h4>
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 max-h-80 overflow-y-auto">
+                <div className="space-y-3">
+                  {importPreview.map((customer, index) => (
+                    <div key={index} className="bg-white rounded-lg p-3 border border-gray-200">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <User className="w-4 h-4 text-gray-600" />
+                            <span className="font-medium text-gray-900">{customer.name}</span>
+                            {customer.isVip && <Badge variant="success" size="sm">VIP</Badge>}
+                          </div>
+                          <div className="text-xs text-gray-600 space-y-1">
+                            <div className="flex items-center gap-1">
+                              <Phone className="w-3 h-3" />
+                              {customer.phone}
+                            </div>
+                            {customer.email && (
+                              <div className="flex items-center gap-1">
+                                <Mail className="w-3 h-3" />
+                                {customer.email}
+                              </div>
+                            )}
+                            {customer.address && (
+                              <div className="flex items-center gap-1">
+                                <MapPin className="w-3 h-3" />
+                                {customer.address}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <span className="text-xs text-gray-500">Línea {customer.lineNumber}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <Button
+              variant="ghost"
+              onClick={cancelImport}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={executeImport}
+              disabled={importPreview.length === 0}
+              icon={Upload}
+            >
+              Importar {importPreview.length} Cliente{importPreview.length !== 1 ? 's' : ''}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
