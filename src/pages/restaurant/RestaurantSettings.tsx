@@ -687,51 +687,52 @@ Fecha: ${new Date().toLocaleString()}
 
               {/* Public Menu Section */}
               <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-100 p-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Globe className="w-6 h-6 text-green-600" />
-                  </div>
+<div className="flex flex-col sm:flex-row items-start gap-4">
+  <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+    <Globe className="w-6 h-6 text-green-600" />
+  </div>
 
-                  <div className="flex-1">
-                    <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-2">Menú Público</h3>
-                    <p className="text-sm text-gray-600 mb-4">
-                      Comparte este enlace con tus clientes para que puedan ver tu menú y realizar pedidos
-                    </p>
+  <div className="flex-1 w-full">
+    <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-2">Menú Público</h3>
+    <p className="text-sm text-gray-600 mb-4">
+      Comparte este enlace con tus clientes para que puedan ver tu menú y realizar pedidos
+    </p>
 
-                    <div className="bg-white rounded-lg p-4 border border-green-200 w-[80%]">
-                      <div className="flex items-center justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-gray-500 mb-1">Tu URL personalizada:</p>
-                          <p className="text-sm font-mono text-gray-900 truncate">
-                            {window.location.origin}/{formData.domain}
-                          </p>
-                        </div>
+    <div className="bg-white rounded-lg p-4 border border-green-200 w-full">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="text-xs text-gray-500 mb-1">Tu URL personalizada:</p>
+          <p className="text-sm font-mono text-gray-900 truncate">
+            {window.location.origin}/{formData.domain}
+          </p>
+        </div>
 
-                        <div className="flex gap-2 flex-shrink-0">
-                          <button
-                            onClick={() => {
-                              navigator.clipboard.writeText(`${window.location.origin}/${formData.domain}`);
-                              showToast('success', 'Copiado', 'URL copiada al portapapeles', 2000);
-                            }}
-                            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
-                          >
-                            Copiar
-                          </button>
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-start sm:justify-end">
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(`${window.location.origin}/${formData.domain}`);
+              showToast('success', 'Copiado', 'URL copiada al portapapeles', 2000);
+            }}
+            className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors w-full sm:w-auto"
+          >
+            Copiar
+          </button>
 
-                          <a
-                            href={`${window.location.origin}/${formData.domain}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
-                          >
-                            <Eye className="w-4 h-4 mr-2" />
-                            Ver Menú
-                          </a>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+          <a
+            href={`${window.location.origin}/${formData.domain}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors w-full sm:w-auto"
+          >
+            <Eye className="w-4 h-4 mr-2" />
+            Ver Menú
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
               </div>
             </div>
           )}
