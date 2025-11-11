@@ -2106,7 +2106,7 @@ Fecha: ${new Date().toLocaleString()}
                             name="aplicaPropina"
                             checked={formData.settings.billing?.aplicaPropina === true}
                             onChange={() => updateFormData('settings.billing.aplicaPropina', true)}
-                            className="w-4 h-4 text-yellow-600 border-gray-300 focus:ring-yellow-500"
+                            className="w-4 h-4 text-gray-600 border-gray-300 focus:ring-gray-500"
                           />
                           <span className="text-sm text-gray-700">Sí (10% del subtotal)</span>
                         </label>
@@ -2116,7 +2116,7 @@ Fecha: ${new Date().toLocaleString()}
                             name="aplicaPropina"
                             checked={formData.settings.billing?.aplicaPropina === false}
                             onChange={() => updateFormData('settings.billing.aplicaPropina', false)}
-                            className="w-4 h-4 text-yellow-600 border-gray-300 focus:ring-yellow-500"
+                            className="w-4 h-4 text-gray-600 border-gray-300 focus:ring-gray-500"
                           />
                           <span className="text-sm text-gray-700">No</span>
                         </label>
