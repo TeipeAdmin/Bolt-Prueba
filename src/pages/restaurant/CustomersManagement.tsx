@@ -1081,62 +1081,66 @@ if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${se
 
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">{t('customerManagement')}</h1>
-        <div className="flex gap-3">
-          {selectedCustomers.size > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              icon={Users}
-              onClick={handleBulkEdit}
-              className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
-            >
-              {t('edit')} {selectedCustomers.size} {t('selectedPlural', { count: selectedCustomers.size })}
-            </Button>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            icon={Download}
-            onClick={exportToCSV}
-            className="text-green-600 hover:text-green-700 hover:bg-green-50"
-          >
-            {t('exportCSV')}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            icon={Upload}
-            onClick={() => fileInputRef.current?.click()}
-            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-          >
-            {t('importCSV')}
-          </Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".csv"
-            onChange={handleImportFile}
-            className="hidden"
-          />
-          <Button
-            variant="outline"
-            size="sm"
-            icon={Filter}
-            onClick={() => setShowFilters(!showFilters)}
-            className={showFilters ? 'bg-blue-50 border-blue-200 text-blue-700' : ''}
-          >
-            {t('filtersAndSearch')}
-          </Button>
-                    <Button
-            icon={UserPlus}
-            onClick={() => setShowCreateModal(true)}
-          >
-            {t('newCustomer')}
-          </Button>
-        </div>
-      </div>
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
+  {/* Título */}
+  <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+    {t('customerManagement')}
+  </h1>
+
+  {/* Botones */}
+  <div className="flex flex-wrap justify-start md:justify-end gap-2 w-full md:w-auto">
+    {selectedCustomers.size > 0 && (
+      <Button
+        variant="outline"
+        size="sm"
+        icon={Users}
+        onClick={handleBulkEdit}
+        className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+      >
+        {t('edit')} {selectedCustomers.size}{' '}
+        {t('selectedPlural', { count: selectedCustomers.size })}
+      </Button>
+    )}
+    <Button
+      variant="outline"
+      size="sm"
+      icon={Download}
+      onClick={exportToCSV}
+      className="text-green-600 hover:text-green-700 hover:bg-green-50"
+    >
+      {t('exportCSV')}
+    </Button>
+    <Button
+      variant="outline"
+      size="sm"
+      icon={Upload}
+      onClick={() => fileInputRef.current?.click()}
+      className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+    >
+      {t('importCSV')}
+    </Button>
+    <input
+      ref={fileInputRef}
+      type="file"
+      accept=".csv"
+      onChange={handleImportFile}
+      className="hidden"
+    />
+    <Button
+      variant="outline"
+      size="sm"
+      icon={Filter}
+      onClick={() => setShowFilters(!showFilters)}
+      className={showFilters ? 'bg-blue-50 border-blue-200 text-blue-700' : ''}
+    >
+      {t('filtersAndSearch')}
+    </Button>
+    <Button icon={UserPlus} onClick={() => setShowCreateModal(true)}>
+      {t('newCustomer')}
+    </Button>
+  </div>
+</div>
+
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
