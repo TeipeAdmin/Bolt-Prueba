@@ -254,7 +254,7 @@ export const SubscriptionPlans: React.FC = () => {
               {/* Plan Header */}
               <div className="text-center mb-6">
 <div
-  className={`inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-gray-500 to-gray-600 shadow-md mb-4 ${getPlanColor(plan.id)}`}
+  className={`inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 shadow-md mb-4 ${getPlanColor(plan.id)}`}
 >
   {getPlanIcon(plan.id)}
 </div>
