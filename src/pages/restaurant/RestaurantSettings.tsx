@@ -688,8 +688,8 @@ Fecha: ${new Date().toLocaleString()}
               {/* Public Menu Section */}
               <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-100 p-6">
 <div className="flex flex-col sm:flex-row items-start gap-4">
-  <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
-    <Globe className="w-6 h-6 text-green-600" />
+  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
+    <Globe className="w-6 h-6 text-white" />
   </div>
 
   <div className="flex-1 w-full">
