@@ -1758,7 +1758,6 @@ Fecha: ${new Date().toLocaleString()}
                       <li>Los cambios se aplicarán automáticamente en tu menú público</li>
                       <li>Puedes previsualizar los cambios guardando la configuración</li>
                       <li>Asegúrate de que los colores tengan buen contraste para legibilidad</li>
-                      <li>Los tamaños de fuente aceptan valores CSS (px, rem, em)</li>
                     </ul>
                   </div>
                 </div>
