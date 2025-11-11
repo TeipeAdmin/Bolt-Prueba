@@ -69,6 +69,7 @@ export const DashboardPage: React.FC = () => {
       <Header
         onNavigateToSettings={() => setActiveTab('settings')}
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+        onNavigateToDashboard={() => setActiveTab('dashboard')}
       />
       <div className="flex">
         <Sidebar

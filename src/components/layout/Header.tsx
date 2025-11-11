@@ -7,9 +7,10 @@ import { Button } from '../ui/Button';
 interface HeaderProps {
   onNavigateToSettings?: () => void;
   onToggleSidebar?: () => void;
+  onNavigateToDashboard?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onNavigateToSettings, onToggleSidebar }) => {
+export const Header: React.FC<HeaderProps> = ({ onNavigateToSettings, onToggleSidebar, onNavigateToDashboard }) => {
   const { user, restaurant, logout } = useAuth();
   const { t } = useLanguage();
 
@@ -28,7 +29,10 @@ export const Header: React.FC<HeaderProps> = ({ onNavigateToSettings, onToggleSi
             </button>
 
             {user?.role === 'super_admin' && (
-              <div className="flex items-center gap-3">
+              <button
+                onClick={onNavigateToDashboard}
+                className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
+              >
                 <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-orange-400 rounded-xl flex items-center justify-center shadow-lg">
                 <img
                   src="/PLATYO FAVICON BLANCO.svg"
@@ -40,24 +44,28 @@ export const Header: React.FC<HeaderProps> = ({ onNavigateToSettings, onToggleSi
                   <h1 className="text-lg font-bold text-white truncate">Platyo</h1>
                   <p className="text-xs text-slate-400 truncate">Panel de Administración</p>
                 </div>
-              </div>
-            )}
-            {restaurant?.logo && user?.role !== 'super_admin' && (
-              <img
-                src={restaurant.logo}
-                alt={restaurant.name}
-                className="h-10 w-10 rounded-xl object-cover flex-shrink-0 shadow-md"
-              />
-            )}
-            {!restaurant?.logo && user?.role === 'restaurant_owner' && (
-              <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
-                <Store className="h-6 w-6 text-white" />
-              </div>
+              </button>
             )}
             {user?.role !== 'super_admin' && (
-              <h1 className="text-base md:text-xl font-semibold text-white truncate min-w-0">
-                {restaurant?.name}
-              </h1>
+              <button
+                onClick={onNavigateToDashboard}
+                className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
+              >
+                {restaurant?.logo ? (
+                  <img
+                    src={restaurant.logo}
+                    alt={restaurant.name}
+                    className="h-10 w-10 rounded-xl object-cover flex-shrink-0 shadow-md"
+                  />
+                ) : (
+                  <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
+                    <Store className="h-6 w-6 text-white" />
+                  </div>
+                )}
+                <h1 className="text-base md:text-xl font-semibold text-white truncate min-w-0">
+                  {restaurant?.name}
+                </h1>
+              </button>
             )}
           </div>
 
