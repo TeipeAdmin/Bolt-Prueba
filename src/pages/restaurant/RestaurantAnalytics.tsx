@@ -427,29 +427,37 @@ export const RestaurantAnalytics: React.FC = () => {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">{t('analyticsPageTitle')}</h1>
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            icon={Download}
-            onClick={exportToCSV}
-            className="text-green-600 hover:text-green-700 hover:bg-green-50"
-          >
-            {t('btnExportCSV')}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            icon={Filter}
-            onClick={() => setShowFilters(!showFilters)}
-            className={showFilters ? 'bg-blue-50 border-blue-200 text-blue-700' : ''}
-          >
-            {t('btnAdvancedFilters')} {getActiveFiltersCount() > 0 && `(${getActiveFiltersCount()})`}
-          </Button>
-        </div>
-      </div>
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
+        {/* Título */}
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+          {t('analyticsPageTitle')}
+        </h1>
+      
+        {/* Controles */}
+        <div className="flex flex-wrap justify-start md:justify-end items-center gap-2 w-full md:w-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            icon={Download}
+            onClick={exportToCSV}
+            className="text-green-600 hover:text-green-700 hover:bg-green-50"
+          >
+            {t('btnExportCSV')}
+          </Button>
+      
+          <Button
+            variant="outline"
+            size="sm"
+            icon={Filter}
+            onClick={() => setShowFilters(!showFilters)}
+            className={showFilters ? 'bg-blue-50 border-blue-200 text-blue-700' : ''}
+          >
+            {t('btnAdvancedFilters')}
+            {getActiveFiltersCount() > 0 && ` (${getActiveFiltersCount()})`}
+          </Button>
+        </div>
+      </div>
+
 
       {/* Advanced Filters */}
       {showFilters && (
