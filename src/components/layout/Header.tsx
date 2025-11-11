@@ -55,10 +55,9 @@ export const Header: React.FC<HeaderProps> = ({ onNavigateToSettings, onToggleSi
               </div>
             )}
             {user?.role !== 'super_admin' && (
-<h1 className="text-lg md:text-xl font-semibold text-white truncate min-w-0">
-  {restaurant?.name}
-</h1>
-
+              <h1 className="text-base md:text-xl font-semibold text-white truncate min-w-0">
+                {restaurant?.name}
+              </h1>
             )}
           </div>
 
