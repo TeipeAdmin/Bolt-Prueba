@@ -1286,7 +1286,7 @@ Fecha: ${new Date().toLocaleString()}
                 </p>
               </div>
 
-              <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-lg md:rounded-xl p-4 md:p-6 border border-purple-100">
+              <div className="bg-gradient-to-br from-red-50 to-red-50 rounded-lg md:rounded-xl p-4 md:p-6 border border-purple-100">
                 <h4 className="text-sm md:text-md font-semibold text-gray-900 mb-3 md:mb-4">Plantillas de Colores</h4>
                 <p className="text-sm text-gray-600 mb-4">Selecciona una plantilla predefinida o personaliza tus colores manualmente</p>
 
