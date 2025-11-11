@@ -475,8 +475,8 @@ export const MenuManagement: React.FC = () => {
 
         <div className="bg-gradient-to-br from-gray-50 to-slate-50 rounded-lg p-4 border border-gray-200">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-              <Archive className="w-5 h-5 text-gray-600" />
+            <div className="w-10 h-10 bg-gradient-to-br from-gray-400 to-gray-600 rounded-xl flex items-center justify-center shadow-md">
+              <Archive className="w-5 h-5 text-white" />
             </div>
             <div>
               <p className="text-sm text-gray-600">{t('archived')}</p>
