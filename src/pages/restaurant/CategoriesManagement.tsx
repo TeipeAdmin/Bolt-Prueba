@@ -371,108 +371,108 @@ export const CategoriesManagement: React.FC = () => {
           )}
         </div>
       ) : (
-<div className="space-y-3">
-  {filteredCategories.map((category, index) => (
-    <div
-      key={category.id}
-      draggable={searchTerm === ''}
-      onDragStart={(e) => handleDragStart(e, category)}
-      onDragOver={handleDragOver}
-      onDrop={(e) => handleDrop(e, category)}
-      onDragEnd={handleDragEnd}
-      className={`bg-white rounded-lg shadow-sm border-2 transition-all ${
-        searchTerm === '' ? 'cursor-move' : ''
-      } ${
-        draggedCategory?.id === category.id
-          ? 'opacity-50 scale-95 border-blue-400'
-          : 'border-gray-200 hover:shadow-md hover:border-blue-300'
-      }`}
-    >
-      <div className="flex flex-wrap md:flex-nowrap items-center gap-4 p-4 overflow-hidden">
-        {/* Drag Handle */}
-        {searchTerm === '' && (
-          <div className="flex-shrink-0">
-            <GripVertical className="w-5 h-5 text-gray-400" />
+      <div className="space-y-3">
+        {filteredCategories.map((category, index) => (
+          <div
+            key={category.id}
+            draggable={searchTerm === ''}
+            onDragStart={(e) => handleDragStart(e, category)}
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, category)}
+            onDragEnd={handleDragEnd}
+            className={`bg-white rounded-lg shadow-sm border-2 transition-all ${
+              searchTerm === '' ? 'cursor-move' : ''
+            } ${
+              draggedCategory?.id === category.id
+                ? 'opacity-50 scale-95 border-blue-400'
+                : 'border-gray-200 hover:shadow-md hover:border-blue-300'
+            }`}
+          >
+            <div className="flex flex-wrap md:flex-nowrap items-center gap-4 p-4 overflow-hidden">
+              {/* Drag Handle */}
+              {searchTerm === '' && (
+                <div className="flex-shrink-0">
+                  <GripVertical className="w-5 h-5 text-gray-400" />
+                </div>
+              )}
+      
+              {/* Order Number */}
+              <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <span className="text-sm font-bold text-blue-600">#{category.order_position}</span>
+              </div>
+      
+              {/* Category Icon */}
+              <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg flex items-center justify-center">
+                {category.icon ? (
+                  <span className="text-3xl">{category.icon}</span>
+                ) : (
+                  <FolderOpen className="w-8 h-8 text-gray-300" />
+                )}
+              </div>
+      
+              {/* Category Info */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <h3 className="text-lg font-semibold text-gray-900 truncate">
+                    {category.name}
+                  </h3>
+                  <Badge variant={category.active ? 'success' : 'gray'}>
+                    {category.active ? t('active') : t('inactive')}
+                  </Badge>
+                </div>
+                <p className="text-sm text-gray-600 line-clamp-1">
+                  {category.description || 'Sin descripción'}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  {t('categoriesCreated')}: {new Date(category.created_at).toLocaleDateString()}
+                </p>
+              </div>
+      
+              {/* Actions */}
+              <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end w-full md:w-auto mt-2 md:mt-0">
+                <button
+                  onClick={() => moveCategory(category.id, 'up')}
+                  disabled={index === 0 || searchTerm !== ''}
+                  className="p-2 hover:bg-gray-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  title={searchTerm !== '' ? 'Clear search to reorder' : 'Move up'}
+                >
+                  <ArrowUp className="w-4 h-4 text-gray-600" />
+                </button>
+                <button
+                  onClick={() => moveCategory(category.id, 'down')}
+                  disabled={index === filteredCategories.length - 1 || searchTerm !== ''}
+                  className="p-2 hover:bg-gray-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  title={searchTerm !== '' ? 'Clear search to reorder' : 'Move down'}
+                >
+                  <ArrowDown className="w-4 h-4 text-gray-600" />
+                </button>
+                <button
+                  onClick={() => handleEdit(category)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <Pencil className="w-4 h-4 text-blue-600" />
+                </button>
+                <button
+                  onClick={() => toggleActive(category.id)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  {category.active ? (
+                    <EyeOff className="w-4 h-4 text-orange-600" />
+                  ) : (
+                    <Eye className="w-4 h-4 text-green-600" />
+                  )}
+                </button>
+                <button
+                  onClick={() => openDeleteConfirm(category)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <Trash2 className="w-4 h-4 text-red-600" />
+                </button>
+              </div>
+            </div>
           </div>
-        )}
-
-        {/* Order Number */}
-        <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-          <span className="text-sm font-bold text-blue-600">#{category.order_position}</span>
-        </div>
-
-        {/* Category Icon */}
-        <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg flex items-center justify-center">
-          {category.icon ? (
-            <span className="text-3xl">{category.icon}</span>
-          ) : (
-            <FolderOpen className="w-8 h-8 text-gray-300" />
-          )}
-        </div>
-
-        {/* Category Info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <h3 className="text-lg font-semibold text-gray-900 truncate">
-              {category.name}
-            </h3>
-            <Badge variant={category.active ? 'success' : 'gray'}>
-              {category.active ? t('active') : t('inactive')}
-            </Badge>
-          </div>
-          <p className="text-sm text-gray-600 line-clamp-1">
-            {category.description || 'Sin descripción'}
-          </p>
-          <p className="text-xs text-gray-400 mt-1">
-            {t('categoriesCreated')}: {new Date(category.created_at).toLocaleDateString()}
-          </p>
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end w-full md:w-auto mt-2 md:mt-0">
-          <button
-            onClick={() => moveCategory(category.id, 'up')}
-            disabled={index === 0 || searchTerm !== ''}
-            className="p-2 hover:bg-gray-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            title={searchTerm !== '' ? 'Clear search to reorder' : 'Move up'}
-          >
-            <ArrowUp className="w-4 h-4 text-gray-600" />
-          </button>
-          <button
-            onClick={() => moveCategory(category.id, 'down')}
-            disabled={index === filteredCategories.length - 1 || searchTerm !== ''}
-            className="p-2 hover:bg-gray-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            title={searchTerm !== '' ? 'Clear search to reorder' : 'Move down'}
-          >
-            <ArrowDown className="w-4 h-4 text-gray-600" />
-          </button>
-          <button
-            onClick={() => handleEdit(category)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <Pencil className="w-4 h-4 text-blue-600" />
-          </button>
-          <button
-            onClick={() => toggleActive(category.id)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            {category.active ? (
-              <EyeOff className="w-4 h-4 text-orange-600" />
-            ) : (
-              <Eye className="w-4 h-4 text-green-600" />
-            )}
-          </button>
-          <button
-            onClick={() => openDeleteConfirm(category)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <Trash2 className="w-4 h-4 text-red-600" />
-          </button>
-        </div>
+        ))}
       </div>
-    </div>
-  ))}
-</div>
 
       )}
 
