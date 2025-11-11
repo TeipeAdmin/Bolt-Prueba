@@ -304,7 +304,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       </div>
 
       {/* Product Variations */}
-      <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6 border border-green-100">
+      <div className="bg-gradient-to-br from-blue-50 to-ble-50 rounded-xl p-6 border border-green-100">
         <div className="flex items-center justify-between mb-4">
           <label className="block text-sm font-medium text-gray-900 flex items-center gap-2">
             <DollarSign className="w-5 h-5 text-green-600" />
