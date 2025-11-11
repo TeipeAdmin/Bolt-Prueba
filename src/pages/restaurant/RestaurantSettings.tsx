@@ -667,7 +667,7 @@ Fecha: ${new Date().toLocaleString()}
                       <select
                         value={formData.settings.currency || 'COP'}
                         onChange={(e) => updateFormData('settings.currency', e.target.value)}
-                        className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all font-medium"
+                        className="w-full px-4 py-3 bg-white border-2 border-purple-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-purple-500 transition-all font-medium"
                       >
                         <option value="COP">{t('currency_cop_option')}</option>
                         <option value="USD">{t('currency_usd_option')}</option>
