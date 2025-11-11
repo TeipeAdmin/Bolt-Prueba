@@ -31,7 +31,7 @@ export const Header: React.FC<HeaderProps> = ({ onNavigateToSettings, onToggleSi
             {user?.role === 'super_admin' && (
 <button
   onClick={onNavigateToDashboard}
-  className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer p-0"
+  className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer p-0 pl-0"
 >
   <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-orange-400 rounded-xl flex items-center justify-center shadow-lg">
     <img
@@ -45,6 +45,7 @@ export const Header: React.FC<HeaderProps> = ({ onNavigateToSettings, onToggleSi
     <p className="text-xs text-slate-400 truncate m-0 p-0">Panel de Administración</p>
   </div>
 </button>
+
             )}
             {user?.role !== 'super_admin' && (
               <button
