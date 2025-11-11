@@ -1780,7 +1780,7 @@ Fecha: ${new Date().toLocaleString()}
               </div>
 
               {/* Información del Restaurante */}
-              <div className="bg-gradient-to-br from-gray-50 to-gray-50 rounded-lg md:rounded-xl p-4 md:p-6 border border-green-100">
+              <div className="bg-gradient-to-br from-gray-50 to-gray-50 rounded-lg md:rounded-xl p-4 md:p-6 border border-gray-100">
                 <h4 className="text-sm md:text-md font-semibold text-gray-900 mb-3 md:mb-4 flex items-center gap-2">
                   <Store className="w-5 h-5 text-green-600" />
                   Información del Restaurante
