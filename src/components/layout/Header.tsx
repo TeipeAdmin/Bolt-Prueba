@@ -42,18 +42,13 @@ export const Header: React.FC<HeaderProps> = ({ onNavigateToSettings, onToggleSi
                 </div>
               </div>
             )}
-{restaurant?.logo && user?.role !== 'super_admin' && (
-  <img
-    src={restaurant.logo}
-    alt={restaurant.name}
-    onClick={() => {
-      onTabChange('dashboard');
-      onClose();
-    }}
-    className="h-10 w-10 rounded-xl object-cover flex-shrink-0 shadow-md cursor-pointer hover:opacity-90 transition"
-  />
-)}
-
+            {restaurant?.logo && user?.role !== 'super_admin' && (
+              <img
+                src={restaurant.logo}
+                alt={restaurant.name}
+                className="h-10 w-10 rounded-xl object-cover flex-shrink-0 shadow-md"
+              />
+            )}
             {!restaurant?.logo && user?.role === 'restaurant_owner' && (
               <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
                 <Store className="h-6 w-6 text-white" />
