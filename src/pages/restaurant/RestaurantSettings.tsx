@@ -2304,13 +2304,13 @@ Fecha: ${new Date().toLocaleString()}
                         <p className="text-sm font-medium text-gray-900">Imagen promocional actual</p>
                         <p className="text-xs text-gray-500">Se mostrará al hacer clic en el botón de promoción</p>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => updateFormData('settings.promo.vertical_promo_image', '')}
-                        className="text-red-600 hover:text-red-700 text-sm font-medium"
-                      >
-                        Eliminar
-                      </button>
+                    <button
+                      type="button"
+                      onClick={() => updateFormData('settings.promo.vertical_promo_image', '')}
+                      className="bg-gradient-to-br from-red-500 to-rose-600 text-white text-sm font-medium px-3 py-1.5 rounded-lg shadow-md hover:opacity-90 transition"
+                    >
+                      Eliminar
+                    </button>
                     </div>
                   )}
                   <label className="cursor-pointer">
