@@ -1142,6 +1142,7 @@ export const OrdersManagement: React.FC = () => {
           variant="outline"
           onClick={() => setShowFilters(!showFilters)}
           icon={Filter}
+          className="bg-gray-600 text-white hover:bg-gray-700 transition-colors"
         >
           {t('filtersTitle')}
         </Button>
