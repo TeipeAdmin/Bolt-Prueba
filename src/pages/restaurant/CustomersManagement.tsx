@@ -1115,7 +1115,7 @@ if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${se
       size="sm"
       icon={Upload}
       onClick={() => fileInputRef.current?.click()}
-      className="bg-gray-600 text-white hover:bg-gray-700 transition-colors"
+      className="bg-orange-600 text-white hover:bg-orange-700 transition-colors"
     >
       {t('importCSV')}
     </Button>
