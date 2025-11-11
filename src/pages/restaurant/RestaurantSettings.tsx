@@ -1068,17 +1068,17 @@ Fecha: ${new Date().toLocaleString()}
                               }}
                             />
                           </div>
-                          <Button
-                            variant="outline"
-                            onClick={() => {
-                              const newTiers = [...(formData.settings.delivery.pricing_tiers || [])];
-                              newTiers.splice(index, 1);
-                              updateFormData('settings.delivery.pricing_tiers', newTiers);
-                            }}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            Eliminar
-                          </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            const newTiers = [...(formData.settings.delivery.pricing_tiers || [])];
+                            newTiers.splice(index, 1);
+                            updateFormData('settings.delivery.pricing_tiers', newTiers);
+                          }}
+                          className="bg-red-600 text-white hover:bg-red-700 transition-colors"
+                        >
+                          Eliminar
+                        </Button>
                         </div>
                       ))}
                       
