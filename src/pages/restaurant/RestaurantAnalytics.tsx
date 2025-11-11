@@ -435,26 +435,29 @@ export const RestaurantAnalytics: React.FC = () => {
       
         {/* Controles */}
         <div className="flex flex-wrap justify-start md:justify-end items-center gap-2 w-full md:w-auto">
-<Button
-  variant="outline"
-  size="sm"
-  icon={Download}
-  onClick={exportToCSV}
-  className="bg-green-600 text-white hover:bg-green-700 transition-colors"
->
-  {t('btnExportCSV')}
-</Button>
-      
-          <Button
-            variant="outline"
-            size="sm"
-            icon={Filter}
-            onClick={() => setShowFilters(!showFilters)}
-            className={showFilters ? 'bg-blue-50 border-blue-200 text-blue-700' : ''}
-          >
-            {t('btnAdvancedFilters')}
-            {getActiveFiltersCount() > 0 && ` (${getActiveFiltersCount()})`}
-          </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          icon={Download}
+          onClick={exportToCSV}
+          className="bg-green-600 text-white hover:bg-green-700 transition-colors"
+        >
+          {t('btnExportCSV')}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          icon={Filter}
+          onClick={() => setShowFilters(!showFilters)}
+          className={
+            showFilters
+              ? 'bg-gray-700 text-white'
+              : 'bg-gray-600 text-white hover:bg-gray-700 transition-colors'
+          }
+        >
+          {t('btnAdvancedFilters')}
+          {getActiveFiltersCount() > 0 && ` (${getActiveFiltersCount()})`}
+        </Button>
         </div>
       </div>
 
