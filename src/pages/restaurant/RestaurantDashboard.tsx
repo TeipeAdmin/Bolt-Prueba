@@ -149,9 +149,9 @@ export const RestaurantDashboard: React.FC = () => {
                 </span>
               </div>
             </div>
-            <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
-              <Menu className="h-6 w-6 md:h-7 md:w-7 text-white" />
-            </div>
+          <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
+            <Menu className="h-6 w-6 md:h-7 md:w-7 text-white" />
+          </div>
           </div>
         </div>
 
@@ -166,9 +166,9 @@ export const RestaurantDashboard: React.FC = () => {
                 </span>
               </div>
             </div>
-            <div className="w-12 h-12 md:w-14 md:h-14 bg-green-200 rounded-lg md:rounded-xl flex items-center justify-center flex-shrink-0">
-              <ShoppingBag className="h-6 w-6 md:h-7 md:w-7 text-green-700" />
-            </div>
+          <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
+            <ShoppingBag className="h-6 w-6 md:h-7 md:w-7 text-white" />
+          </div>
           </div>
         </div>
 
