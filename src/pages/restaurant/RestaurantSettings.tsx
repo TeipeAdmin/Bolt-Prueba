@@ -2437,7 +2437,7 @@ Fecha: ${new Date().toLocaleString()}
                   <div>
                     <p className="text-sm text-blue-800 font-medium">Consejos para promociones:</p>
                     <ul className="text-xs text-blue-700 mt-2 space-y-1 list-disc list-inside">
-                      <li>La imagen promocional vertical aparecerá al hacer clic en el botón de regalo</li>
+                      <li>La imagen promocional aparecerá al hacer clic en el botón de regalo</li>
                       <li>Los productos destacados aparecerán en un carrusel en la parte superior del menú</li>
                       <li>Usa imágenes atractivas y de alta calidad de tus productos destacados</li>
                       <li>Selecciona tus mejores productos o los que tengan promociones especiales</li>
