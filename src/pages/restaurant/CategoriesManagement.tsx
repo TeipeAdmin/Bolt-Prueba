@@ -397,9 +397,9 @@ export const CategoriesManagement: React.FC = () => {
               )}
       
               {/* Order Number */}
-<div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
-  <span className="text-sm font-bold text-white">#{category.order_position}</span>
-</div>
+              <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <span className="text-sm font-bold text-blue-600">#{category.order_position}</span>
+              </div>
       
               {/* Category Icon */}
               <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg flex items-center justify-center">
