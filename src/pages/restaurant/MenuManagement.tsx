@@ -463,8 +463,8 @@ export const MenuManagement: React.FC = () => {
 
         <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-lg p-4 border border-orange-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-              <AlertCircle className="w-5 h-5 text-orange-600" />
+            <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl flex items-center justify-center shadow-md">
+              <AlertCircle className="w-5 h-5 text-white" />
             </div>
             <div>
               <p className="text-sm text-gray-600">{t('outOfStock')}</p>
