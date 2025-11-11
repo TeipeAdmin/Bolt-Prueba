@@ -740,8 +740,8 @@ Fecha: ${new Date().toLocaleString()}
           {activeTab === 'hours' && (
             <div className="space-y-4 md:space-y-6">
               <div className="flex items-center gap-3 mb-4 md:mb-6">
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-100 rounded-lg md:rounded-xl flex items-center justify-center">
-                  <Clock className="w-6 h-6 text-blue-600" />
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
+                  <Clock className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <h3 className="text-base md:text-lg font-semibold text-gray-900">{t('businessHours')}</h3>
