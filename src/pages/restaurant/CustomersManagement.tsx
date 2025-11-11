@@ -1146,9 +1146,9 @@ if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${se
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-md border border-blue-200 hover:shadow-lg transition-shadow">
           <div className="flex items-start justify-between mb-4">
-<div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
-  <Users className="h-6 w-6 text-white" />
-</div>
+            <div className="p-3 bg-blue-600 rounded-lg">
+              <Users className="h-6 w-6 text-white" />
+            </div>
             <div className="text-right">
               <p className="text-sm font-medium text-blue-900 mb-1">{t('totalCustomers')}</p>
               <p className="text-3xl font-bold text-blue-900">{stats.totalCustomers}</p>
