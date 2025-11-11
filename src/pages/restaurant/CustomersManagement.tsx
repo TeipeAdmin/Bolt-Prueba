@@ -1106,7 +1106,7 @@ if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${se
       size="sm"
       icon={Download}
       onClick={exportToCSV}
-      className="text-green-600 hover:text-green-700 hover:bg-green-50"
+      className="bg-green-600 text-white hover:bg-green-700 transition-colors"
     >
       {t('exportCSV')}
     </Button>
