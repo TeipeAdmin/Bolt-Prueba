@@ -185,9 +185,9 @@ export const RestaurantDashboard: React.FC = () => {
                 </span>
               </div>
                                     </div>
-            <div className="w-12 h-12 md:w-14 md:h-14 bg-teal-200 rounded-lg md:rounded-xl flex items-center justify-center flex-shrink-0">
-              <TrendingUp className="h-6 w-6 md:h-7 md:w-7 text-teal-700" />
-            </div>
+          <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
+            <TrendingUp className="h-6 w-6 md:h-7 md:w-7 text-white" />
+          </div>
           </div>
         </div>
 
