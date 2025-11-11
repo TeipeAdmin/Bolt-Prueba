@@ -1090,16 +1090,16 @@ if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${se
   {/* Botones */}
   <div className="flex flex-wrap justify-start md:justify-end gap-2 w-full md:w-auto">
     {selectedCustomers.size > 0 && (
-      <Button
-        variant="outline"
-        size="sm"
-        icon={Users}
-        onClick={handleBulkEdit}
-        className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
-      >
-        {t('edit')} {selectedCustomers.size}{' '}
-        {t('selectedPlural', { count: selectedCustomers.size })}
-      </Button>
+    <Button
+      variant="outline"
+      size="sm"
+      icon={Users}
+      onClick={handleBulkEdit}
+      className="bg-purple-600 text-white hover:bg-purple-700 transition-colors"
+    >
+      {t('edit')} {selectedCustomers.size}{' '}
+      {t('selectedPlural', { count: selectedCustomers.size })}
+    </Button>
     )}
     <Button
       variant="outline"
