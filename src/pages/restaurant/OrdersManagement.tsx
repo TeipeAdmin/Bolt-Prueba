@@ -1130,12 +1130,12 @@ export const OrdersManagement: React.FC = () => {
         </Button>
     
         {selectedOrders.length > 0 && (
-          <Button
-            variant="outline"
-            onClick={() => setShowBulkActions(!showBulkActions)}
-          >
-            {t('bulkActions')} ({selectedOrders.length})
-          </Button>
+        <Button
+          onClick={() => setShowBulkActions(!showBulkActions)}
+          className="bg-gradient-to-br from-purple-500 to-violet-600 text-white shadow-md hover:opacity-90 transition"
+        >
+          {t('bulkActions')} ({selectedOrders.length})
+        </Button>
         )}
     
         <Button
