@@ -1260,7 +1260,6 @@ export const OrdersManagement: React.FC = () => {
   )}
 </div>
 
-      </div>
 
       {/* Filters */}
       {showFilters && (
