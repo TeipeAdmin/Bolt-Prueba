@@ -398,17 +398,18 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ isOpen, onClose })
           </div>
         </div>
 
-<div className="flex flex-wrap items-center justify-between gap-3 pt-6 border-t-2 border-gray-200 w-full max-w-full overflow-hidden">
+<div className="flex items-center justify-between pt-6 border-t-2 border-gray-200">
   <button
     onClick={handlePrev}
     disabled={currentStep === 0}
-    className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-all font-medium flex-shrink-0"
+    className="flex items-center gap-2 px-5 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-all font-medium"
   >
     <ChevronLeft className="w-5 h-5" />
     Anterior
   </button>
 
-  <div className="flex flex-wrap justify-center gap-2 flex-1 min-w-0">
+  {/* Oculto en móvil, visible desde md */}
+  <div className="hidden md:flex flex-wrap justify-center gap-2 flex-1 min-w-0">
     {tutorialSteps.map((_, index) => (
       <button
         key={index}
@@ -426,7 +427,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ isOpen, onClose })
   {currentStep < tutorialSteps.length - 1 ? (
     <button
       onClick={handleNext}
-      className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-medium shadow-md hover:shadow-lg flex-shrink-0"
+      className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-medium shadow-md hover:shadow-lg"
     >
       Siguiente
       <ChevronRight className="w-5 h-5" />
@@ -434,10 +435,10 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ isOpen, onClose })
   ) : (
     <button
       onClick={handleClose}
-      className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all font-medium shadow-md hover:shadow-lg flex-shrink-0"
+      className="flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all font-medium shadow-md hover:shadow-lg"
     >
       <BookOpen className="w-5 h-5" />
-      Finalizar
+      Finalizar Tutorial
     </button>
   )}
 </div>
