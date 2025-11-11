@@ -40,10 +40,10 @@ export const Header: React.FC<HeaderProps> = ({ onNavigateToSettings, onToggleSi
                   className="w-10 h-10 flex-shrink-0"
                 />
                 </div>
-                <div className="min-w-0">
-                  <h1 className="text-lg font-bold text-white truncate">Platyo</h1>
-                  <p className="text-xs text-slate-400 truncate">Panel de Administración</p>
-                </div>
+<div className="min-w-0 text-left">
+  <h1 className="text-lg font-bold text-white truncate">Platyo</h1>
+  <p className="text-xs text-slate-400 truncate">Panel de Administración</p>
+</div>
               </button>
             )}
             {user?.role !== 'super_admin' && (
