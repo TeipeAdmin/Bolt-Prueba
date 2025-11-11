@@ -2125,7 +2125,7 @@ Fecha: ${new Date().toLocaleString()}
                   </div>
 
                   {formData.settings.billing?.aplicaPropina && (
-                    <div className="bg-white rounded-lg p-4 border border-yellow-200">
+                    <div className="bg-white rounded-lg p-4 border border-gray-200">
                       <p className="text-sm text-gray-600">
                         La propina sugerida se calculará automáticamente como el 10% del subtotal y se mostrará al final del ticket. El cliente puede decidir si desea incluirla o no.
                       </p>
