@@ -659,7 +659,7 @@ Fecha: ${new Date().toLocaleString()}
                       </p>
                     </div>
 
-                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-5 border-2 border-green-100">
+                    <div className="bg-gradient-to-br from-purple-50 to-emerald-50 rounded-xl p-5 border-2 border-green-100">
                       <label className="block text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
                         <DollarSign className="w-4 h-4" />
                         {t('currency')}
