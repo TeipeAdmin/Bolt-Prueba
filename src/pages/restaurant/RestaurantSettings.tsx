@@ -2630,7 +2630,7 @@ Fecha: ${new Date().toLocaleString()}
                 </div>
               </form>
 
-              <div className="mt-8 bg-gray-50 rounded-lg p-6">
+              <div className="mt-8 bg-blue-50 rounded-lg p-6">
                 <h4 className="text-gray-900 font-medium mb-3">Otros canales de soporte:</h4>
                 <div className="space-y-2 text-sm text-gray-600">
                   <p>📧 Email directo: <a href="mailto:admin@digitalfenixpro.com" className="text-blue-600 hover:text-blue-700">admin@digitalfenixpro.com</a></p>
