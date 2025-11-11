@@ -855,8 +855,8 @@ Fecha: ${new Date().toLocaleString()}
           {activeTab === 'social' && (
             <div className="space-y-4 md:space-y-6">
               <div className="flex items-center gap-3 mb-4 md:mb-6">
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-100 rounded-lg md:rounded-xl flex items-center justify-center">
-                  <Globe className="w-6 h-6 text-gray-700" />
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-gray-400 to-gray-600 rounded-xl flex items-center justify-center shadow-md">
+                  <Globe className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <h3 className="text-base md:text-lg font-semibold text-gray-900">{t('socialMedia')}</h3>
