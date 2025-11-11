@@ -2087,7 +2087,7 @@ Fecha: ${new Date().toLocaleString()}
               </div>
 
               {/* Propina */}
-              <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-6 border border-yellow-100">
+              <div className="bg-gradient-to-br from-gray-50 to-gray-50 rounded-xl p-6 border border-gray-100">
                 <h4 className="text-md font-semibold text-gray-900 mb-4 flex items-center gap-2">
                   <DollarSign className="w-5 h-5 text-yellow-600" />
                   Configuración de Propina
