@@ -790,27 +790,41 @@ Fecha: ${new Date().toLocaleString()}
                         </div>
 
                         {hours.is_open ? (
-                          <div className="flex items-center gap-3 flex-1">
-                            <div className="flex-1">
-                              <label className="block text-xs font-medium text-gray-600 mb-1">{t('hours_open_label')}</label>
-                              <input
-                                type="time"
-                                value={hours.open}
-                                onChange={(e) => updateFormData(`settings.business_hours.${day}.open`, e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                              />
-                            </div>
-                            <div className="text-gray-400 mt-5">—</div>
-                            <div className="flex-1">
-                              <label className="block text-xs font-medium text-gray-600 mb-1">{t('hours_close_label')}</label>
-                              <input
-                                type="time"
-                                value={hours.close}
-                                onChange={(e) => updateFormData(`settings.business_hours.${day}.close`, e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                              />
-                            </div>
+                        <div className="flex flex-col md:flex-row md:items-center gap-3 flex-1 w-full">
+                          {/* Hora de apertura */}
+                          <div className="flex-1 w-full">
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              {t('hours_open_label')}
+                            </label>
+                            <input
+                              type="time"
+                              value={hours.open}
+                              onChange={(e) =>
+                                updateFormData(`settings.business_hours.${day}.open`, e.target.value)
+                              }
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                            />
                           </div>
+                        
+                          {/* Separador */}
+                          <div className="text-gray-400 text-center md:mt-5">—</div>
+                        
+                          {/* Hora de cierre */}
+                          <div className="flex-1 w-full">
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              {t('hours_close_label')}
+                            </label>
+                            <input
+                              type="time"
+                              value={hours.close}
+                              onChange={(e) =>
+                                updateFormData(`settings.business_hours.${day}.close`, e.target.value)
+                              }
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                            />
+                          </div>
+                        </div>
+
                         ) : (
                           <div className="flex-1">
                             <Badge variant="gray">{t('closed')}</Badge>
