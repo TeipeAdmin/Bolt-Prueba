@@ -439,7 +439,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ isOpen, onClose })
               <BookOpen className="w-5 h-5" />
               Finalizar Tutorial
             </button>
-          )}a
+          )}
         </div>
       </div>
     </Modal>
