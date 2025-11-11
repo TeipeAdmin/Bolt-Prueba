@@ -2271,7 +2271,9 @@ Fecha: ${new Date().toLocaleString()}
             <div className="space-y-4 md:space-y-6">
               <div className="mb-4 md:mb-6">
                 <h3 className="text-base md:text-lg font-medium text-gray-900 flex items-center gap-2">
-                  <Megaphone className="w-5 h-5 text-orange-600" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl flex items-center justify-center shadow-md">
+                    <Megaphone className="w-5 h-5 text-white" />
+                  </div>
                   Configuración Promocional
                 </h3>
                 <p className="text-sm text-gray-600 mt-1">
