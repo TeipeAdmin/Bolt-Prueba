@@ -1278,7 +1278,9 @@ Fecha: ${new Date().toLocaleString()}
             <div className="space-y-4 md:space-y-6 lg:space-y-8">
               <div>
                 <h3 className="text-base md:text-lg font-medium text-gray-900 mb-1 flex items-center gap-2">
-                  <Palette className="w-5 h-5 text-purple-600" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl flex items-center justify-center shadow-md">
+                    <Palette className="w-5 h-5 text-white" />
+                  </div>
                   Personalización de Tema
                 </h3>
                 <p className="text-sm text-gray-600">
