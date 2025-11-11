@@ -2189,13 +2189,13 @@ Fecha: ${new Date().toLocaleString()}
                             <p className="text-sm font-medium text-gray-900">Logo actual</p>
                             <p className="text-xs text-gray-500">Click para cambiar</p>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => updateFormData('settings.billing.logoTicket', '')}
-                            className="text-red-600 hover:text-red-700 text-sm font-medium"
-                          >
-                            Eliminar
-                          </button>
+                        <button
+                          type="button"
+                          onClick={() => updateFormData('settings.billing.logoTicket', '')}
+                          className="bg-gradient-to-br from-red-500 to-rose-600 text-white text-sm font-medium px-3 py-1.5 rounded-lg shadow-md hover:opacity-90 transition"
+                        >
+                          Eliminar
+                        </button>
                         </div>
                       )}
 
