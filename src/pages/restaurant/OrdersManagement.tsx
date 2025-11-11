@@ -1116,23 +1116,38 @@ export const OrdersManagement: React.FC = () => {
 
   return (
     <div className="p-6">
-      {/* Header and Controls */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">{t('orderManagement')}</h1>
-        <div className="flex items-center gap-3">
-          <Button icon={Plus} onClick={() => setShowCreateOrderModal(true)} >
-            {t('createOrder')}
+    {/* Header and Controls */}
+    <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
+      {/* Título */}
+      <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+        {t('orderManagement')}
+      </h1>
+    
+      {/* Controles */}
+      <div className="flex flex-wrap justify-start md:justify-end items-center gap-2 w-full md:w-auto">
+        <Button icon={Plus} onClick={() => setShowCreateOrderModal(true)}>
+          {t('createOrder')}
+        </Button>
+    
+        {selectedOrders.length > 0 && (
+          <Button
+            variant="outline"
+            onClick={() => setShowBulkActions(!showBulkActions)}
+          >
+            {t('bulkActions')} ({selectedOrders.length})
           </Button>
-          {selectedOrders.length > 0 && (
-            <Button variant="outline" onClick={() => setShowBulkActions(!showBulkActions)} >
-              {t('bulkActions')} ({selectedOrders.length})
-            </Button>
-          )}
-          <Button variant="outline" onClick={() => setShowFilters(!showFilters)} icon={Filter} >
-            {t('filtersTitle')}
-          </Button>
-        </div>
+        )}
+    
+        <Button
+          variant="outline"
+          onClick={() => setShowFilters(!showFilters)}
+          icon={Filter}
+        >
+          {t('filtersTitle')}
+        </Button>
       </div>
+    </div>
+
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
