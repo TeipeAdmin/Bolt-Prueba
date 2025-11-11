@@ -1221,30 +1221,47 @@ export const OrdersManagement: React.FC = () => {
         </div>
         
         {/* Bulk Actions Menu */}
-        {showBulkActions && (
-          <div className="flex items-center space-x-2 bg-white p-2 rounded-lg shadow border">
-            <span className="text-sm font-medium text-gray-700">{t('bulkActionLabel')}:</span>
-            <select
-              value={bulkAction}
-              onChange={(e) => setBulkAction(e.target.value)}
-              className="border border-gray-300 rounded-lg px-2 py-1 text-sm"
-            >
-              <option value="">{t('selectActionPlaceholder')}</option>
-              <option value="confirmed">{t('markAsConfirmed')}</option>
-              <option value="preparing">{t('markAsPreparing')}</option>
-              <option value="ready">{t('markAsReady')}</option>
-              <option value="delivered">{t('markAsDelivered')}</option>
-              <option value="cancelled">{t('cancel')}</option>
-            </select>
-            <Button size="sm" onClick={handleBulkAction} disabled={!bulkAction} >
-              {t('apply')}
-            </Button>
-            <Button size="sm" variant="ghost" onClick={() => { setSelectedOrders([]); setShowBulkActions(false);
-            }} >
-              {t('cancel')}
-            </Button>
-          </div>
-        )}
+{showBulkActions && (
+  <div className="flex flex-wrap md:flex-nowrap items-center gap-2 bg-white p-2 rounded-lg shadow border w-full max-w-full overflow-hidden">
+    <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
+      {t('bulkActionLabel')}:
+    </span>
+
+    <select
+      value={bulkAction}
+      onChange={(e) => setBulkAction(e.target.value)}
+      className="border border-gray-300 rounded-lg px-2 py-1 text-sm flex-shrink-0"
+    >
+      <option value="">{t('selectActionPlaceholder')}</option>
+      <option value="confirmed">{t('markAsConfirmed')}</option>
+      <option value="preparing">{t('markAsPreparing')}</option>
+      <option value="ready">{t('markAsReady')}</option>
+      <option value="delivered">{t('markAsDelivered')}</option>
+      <option value="cancelled">{t('cancel')}</option>
+    </select>
+
+    <div className="flex gap-2 flex-shrink-0 mt-2 md:mt-0">
+      <Button
+        size="sm"
+        onClick={handleBulkAction}
+        disabled={!bulkAction}
+      >
+        {t('apply')}
+      </Button>
+      <Button
+        size="sm"
+        variant="ghost"
+        onClick={() => {
+          setSelectedOrders([]);
+          setShowBulkActions(false);
+        }}
+      >
+        {t('cancel')}
+      </Button>
+    </div>
+  </div>
+)}
+
       </div>
 
       {/* Filters */}
