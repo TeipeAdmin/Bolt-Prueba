@@ -205,7 +205,7 @@ export const TermsAndConditions: React.FC<TermsAndConditionsProps> = ({ onAccept
         <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
           <Button
             onClick={onAccept}
-            className="bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700"
+            className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700"
           >
             Aceptar Términos y Condiciones
           </Button>
