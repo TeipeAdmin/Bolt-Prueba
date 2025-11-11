@@ -1131,7 +1131,11 @@ if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${se
       size="sm"
       icon={Filter}
       onClick={() => setShowFilters(!showFilters)}
-      className={showFilters ? 'bg-blue-50 border-blue-200 text-blue-700' : ''}
+      className={
+        showFilters
+          ? 'bg-gray-700 text-white'
+          : 'bg-gray-600 text-white hover:bg-gray-700 transition-colors'
+      }
     >
       {t('filtersAndSearch')}
     </Button>
