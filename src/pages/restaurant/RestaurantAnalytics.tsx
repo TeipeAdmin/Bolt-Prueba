@@ -435,15 +435,15 @@ export const RestaurantAnalytics: React.FC = () => {
       
         {/* Controles */}
         <div className="flex flex-wrap justify-start md:justify-end items-center gap-2 w-full md:w-auto">
-          <Button
-            variant="outline"
-            size="sm"
-            icon={Download}
-            onClick={exportToCSV}
-            className="text-green-600 hover:text-green-700 hover:bg-green-50"
-          >
-            {t('btnExportCSV')}
-          </Button>
+<Button
+  variant="outline"
+  size="sm"
+  icon={Download}
+  onClick={exportToCSV}
+  className="bg-green-600 text-white hover:bg-green-700 transition-colors"
+>
+  {t('btnExportCSV')}
+</Button>
       
           <Button
             variant="outline"
