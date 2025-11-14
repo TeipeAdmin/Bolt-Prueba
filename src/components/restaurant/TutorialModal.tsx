@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, ChevronLeft, ChevronRight, Home, ShoppingBag, Grid3x3, Users, BarChart3, Settings, CreditCard, BookOpen } from 'lucide-react';
 import { Modal } from '../ui/Modal';
-import { useLanguage } from '../../contexts/LanguageContext';
+import { useLanguage } from '../../hooks/useLanguage';
 
 interface TutorialModalProps {
   isOpen: boolean;

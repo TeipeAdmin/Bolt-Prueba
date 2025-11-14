@@ -3,7 +3,7 @@ import { Mail, Check } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
-import { useLanguage } from '../../contexts/LanguageContext';
+import { useLanguage } from '../../hooks/useLanguage';
 
 interface ForgotPasswordModalProps {
   isOpen: boolean;
