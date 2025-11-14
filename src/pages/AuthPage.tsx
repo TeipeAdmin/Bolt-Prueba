@@ -3,7 +3,7 @@ import { LoginForm } from '../components/auth/LoginForm';
 import { RegisterForm } from '../components/auth/RegisterForm';
 import { ChangePasswordModal } from '../components/auth/ChangePasswordModal';
 import { useAuth } from '../contexts/AuthContext';
-import { useLanguage } from '../contexts/LanguageContext';
+import { useLanguage } from '../hooks/useLanguage';
 import { ChefHat, TrendingUp, Smartphone, Users, Clock, BarChart3, Shield, Zap, Receipt, Eye, Globe } from 'lucide-react';
 import { Language } from '../utils/translations';
 

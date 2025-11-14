@@ -3,7 +3,7 @@ import { User, Phone, Mail, MapPin, Calendar, ShoppingBag, Filter, Search, Star,
 import { Order, Customer, Subscription } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
-import { useLanguage } from '../../contexts/LanguageContext';
+import { useLanguage } from '../../hooks/useLanguage';
 import { useToast } from '../../hooks/useToast';
 import { Badge } from '../../components/ui/Badge';
 import { Input } from '../../components/ui/Input';

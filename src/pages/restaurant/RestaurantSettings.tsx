@@ -4,7 +4,7 @@ import { colombianDepartments, colombianCitiesByDepartment, validateNIT, formatN
 import { Restaurant } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
-import { useLanguage } from '../../contexts/LanguageContext';
+import { useLanguage } from '../../hooks/useLanguage';
 import { useToast } from '../../hooks/useToast';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
