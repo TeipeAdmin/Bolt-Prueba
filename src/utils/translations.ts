@@ -5,7 +5,7 @@ interface Translations {
   // Common
   save: string;
   cancel: string;
-  eadit: string;
+  edit: string;
   delete: string;
   create: string;
   update: string;
