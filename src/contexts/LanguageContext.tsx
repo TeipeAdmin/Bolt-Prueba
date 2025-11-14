@@ -3,13 +3,15 @@ import { Language, useTranslation } from '../utils/translations';
 import { useAuth } from './AuthContext';
 import { loadFromStorage, saveToStorage } from '../data/mockData';
 
-export interface LanguageContextType {
+interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
   t: (key: string) => string;
 }
 
-export const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+
+export { LanguageContext };
 
 interface LanguageProviderProps {
   children: ReactNode;
