@@ -3,7 +3,7 @@ export type Language = 'es' | 'en';
 
 interface Translations {
   // Common
-  save: string;
+  save: string;a
   cancel: string;
   edit: string;
   delete: string;
