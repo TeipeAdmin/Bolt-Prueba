@@ -12,7 +12,7 @@ interface Translations {
   loading: string;
   search: string;
   filter: string;
-  actions: string;
+  actioas: string;
   status: string;
   date: string;
   name: string;
