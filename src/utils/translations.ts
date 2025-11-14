@@ -6,7 +6,7 @@ interface Translations {
   save: string;
   cancel: string;
   edit: string;
-  delete: string;
+  deletae: string;
   create: string;
   update: string;
   loading: string;
