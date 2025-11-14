@@ -13,7 +13,7 @@ import {
   HelpCircle
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { useLanguage } from '../../hooks/useLanguage';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { loadFromStorage } from '../../data/mockData';
 import { Subscription } from '../../types';
 

@@ -3,7 +3,7 @@ import { BarChart3, ShoppingBag, Menu, Eye, TrendingUp, HelpCircle } from 'lucid
 import { Product, Order, Category, Subscription } from '../../types';
 import { loadFromStorage, availablePlans } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
-import { useLanguage } from '../../hooks/useLanguage';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { Badge } from '../../components/ui/Badge';
 import { formatCurrency } from '../../utils/currencyUtils';
 import { TutorialModal } from '../../components/restaurant/TutorialModal';

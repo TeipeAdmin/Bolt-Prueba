@@ -3,7 +3,7 @@ import { Eye, Pencil as Edit, Trash2, Clock, Phone, MapPin, User, Filter, Search
 import { Order, Product, Category } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
-import { useLanguage } from '../../hooks/useLanguage';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { useToast } from '../../hooks/useToast';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';

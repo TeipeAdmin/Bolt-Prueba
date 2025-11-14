@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Save, X, Plus, Trash2, Upload, Image as ImageIcon, DollarSign } from 'lucide-react';
 import { Category, Product } from '../../types';
-import { useLanguage } from '../../hooks/useLanguage';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 

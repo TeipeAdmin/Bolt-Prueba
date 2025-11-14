@@ -3,7 +3,7 @@ import { Trash2 } from 'lucide-react';
 import { Product, Order } from '../../types';
 import { Button } from '../ui/Button';
 import { formatCurrency } from '../../utils/currencyUtils';
-import { useLanguage } from '../../hooks/useLanguage';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface OrderProductSelectorProps {
   products: Product[];

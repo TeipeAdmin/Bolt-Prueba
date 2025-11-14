@@ -1,7 +1,7 @@
 import React from 'react';
 import { LogOut, User, Settings, Store, ChefHat, Menu } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { useLanguage } from '../../hooks/useLanguage';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { Button } from '../ui/Button';
 
 interface HeaderProps {

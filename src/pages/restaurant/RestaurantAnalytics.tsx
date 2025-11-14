@@ -3,7 +3,7 @@ import { BarChart3, TrendingUp, ShoppingBag, DollarSign, Calendar, Users, Filter
 import { Product, Order, Category } from '../../types';
 import { loadFromStorage } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
-import { useLanguage } from '../../hooks/useLanguage'; // IMPORTACIÓN AÑADIDA
+import { useLanguage } from '../../contexts/LanguageContext'; // IMPORTACIÓN AÑADIDA
 import { Badge } from '../../components/ui/Badge';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
