@@ -379,7 +379,7 @@ export const OrdersManagement: React.FC = () => {
           
           <div class="order-info">
             <p><strong>${t('customerLabel')}:</strong> ${order.customer.name}</p>
-            <p><strong>${t('phoneLabel')}:</strong> ${order.customer.phone}</p>
+            <p><strong>${t('phone_label')}:</strong> ${order.customer.phone}</p>
             <p><strong>${t('orderType')}:</strong> ${order.order_type}</p>
             ${order.delivery_address ?
             `<p><strong>${t('addressLabel')}:</strong> ${order.delivery_address}</p>` : ''}
@@ -464,7 +464,7 @@ export const OrdersManagement: React.FC = () => {
     
     message += `*${t('customerSectionTitle')}:*\n`;
     message += `- *${t('nameLabel')}:* ${order.customer.name}\n`;
-    message += `- *${t('phoneLabel')}:* ${order.customer.phone}\n`;
+    message += `- *${t('phone_label')}:* ${order.customer.phone}\n`;
     if (order.customer.email) {
       message += `- *${t('emailLabel')}:* ${order.customer.email}\n`;
     }
@@ -769,7 +769,7 @@ export const OrdersManagement: React.FC = () => {
             ${billing?.ciudad && billing?.departamento ?
             `<div class="info-line">${billing.ciudad}, ${billing.departamento}</div>` : billing?.ciudad ? `<div class="info-line">${billing.ciudad}</div>` : ''}
             ${billing?.telefono ?
-            `<div class="info-line">${t('phoneLabel')}: ${billing.telefono}</div>` : ''}
+            `<div class="info-line">${t('phone_label')}: ${billing.telefono}</div>` : ''}
             ${billing?.correo ?
             `<div class="info-line">${t('emailLabel')}: ${billing.correo}</div>` : ''}
 
@@ -821,7 +821,7 @@ export const OrdersManagement: React.FC = () => {
               <span>${order.customer.name}</span>
             </div>
             <div class="order-info-line">
-              <span><strong>${t('phoneLabel')}:</strong></span>
+              <span><strong>${t('phone_label')}:</strong></span>
               <span>${order.customer.phone}</span>
             </div>
             ${order.delivery_address ?
