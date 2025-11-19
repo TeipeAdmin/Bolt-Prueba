@@ -758,6 +758,68 @@ interface Translations {
   usersManagement: string;
   subscriptionsManagement: string;
   systemStatistics: string;
+
+  // Landing Page
+  navFeatures: string;
+  navPricing: string;
+  navTestimonials: string;
+  heroTitle: string;
+  heroSubtitle: string;
+  startFreeTrial: string;
+  learnMore: string;
+  featuresTitle: string;
+  featuresSubtitle: string;
+  howItWorksTitle: string;
+  howItWorksSubtitle: string;
+  step1Title: string;
+  step1Desc: string;
+  step2Title: string;
+  step2Desc: string;
+  step3Title: string;
+  step3Desc: string;
+  pricingTitle: string;
+  pricingSubtitle: string;
+  planFree: string;
+  planFreeDesc: string;
+  planFreeFeature1: string;
+  planFreeFeature2: string;
+  planFreeFeature3: string;
+  planFreeFeature4: string;
+  planFreeFeature5: string;
+  perMonth: string;
+  planBasicDesc: string;
+  planBasicFeature1: string;
+  planBasicFeature2: string;
+  planBasicFeature3: string;
+  planBasicFeature4: string;
+  planBasicFeature5: string;
+  planProDesc: string;
+  planProFeature1: string;
+  planProFeature2: string;
+  planProFeature3: string;
+  planProFeature4: string;
+  planProFeature5: string;
+  planBusinessDesc: string;
+  planBusinessFeature1: string;
+  planBusinessFeature2: string;
+  planBusinessFeature3: string;
+  planBusinessFeature4: string;
+  planBusinessFeature5: string;
+  getStarted: string;
+  testimonialsTitle: string;
+  testimonialsSubtitle: string;
+  testimonial1: string;
+  testimonial2: string;
+  testimonial3: string;
+  ctaTitle: string;
+  ctaSubtitle: string;
+  startNow: string;
+  footerDescription: string;
+  footerQuickLinks: string;
+  footerContact: string;
+  footerEmail: string;
+  footerPhone: string;
+  footerRights: string;
 }
 
 const translations: Record<Language, Translations> = {
@@ -2306,6 +2368,68 @@ const translations: Record<Language, Translations> = {
     usersManagement: 'Gestión de Usuarios',
     subscriptionsManagement: 'Gestión de Suscripciones',
     systemStatistics: 'Estadísticas del Sistema',
+
+    // Landing Page
+    navFeatures: 'Características',
+    navPricing: 'Planes',
+    navTestimonials: 'Testimonios',
+    heroTitle: 'Transforma tu Restaurante con Tecnología Digital',
+    heroSubtitle: 'Gestiona pedidos, menú digital, clientes y ventas en una sola plataforma. Aumenta tus ventas hasta un 40% con Platyo.',
+    startFreeTrial: 'Comenzar Gratis',
+    learnMore: 'Conoce Más',
+    featuresTitle: 'Todo lo que necesitas para gestionar tu restaurante',
+    featuresSubtitle: 'Una plataforma completa con todas las herramientas para hacer crecer tu negocio',
+    howItWorksTitle: '¿Cómo funciona?',
+    howItWorksSubtitle: 'Comienza a recibir pedidos en minutos',
+    step1Title: 'Regístrate Gratis',
+    step1Desc: 'Crea tu cuenta sin necesidad de tarjeta de crédito. Comienza con el plan gratuito.',
+    step2Title: 'Configura tu Menú',
+    step2Desc: 'Añade tus productos, categorías y personaliza tu menú digital con tus colores de marca.',
+    step3Title: 'Recibe Pedidos',
+    step3Desc: 'Comparte tu link único y comienza a recibir pedidos en tiempo real desde cualquier dispositivo.',
+    pricingTitle: 'Elige el plan perfecto para tu negocio',
+    pricingSubtitle: 'Planes flexibles que crecen contigo. Cambia o cancela en cualquier momento.',
+    planFree: 'Gratis',
+    planFreeDesc: 'Perfecto para comenzar',
+    planFreeFeature1: 'Hasta 10 productos',
+    planFreeFeature2: 'Hasta 3 categorías',
+    planFreeFeature3: 'Menú digital público',
+    planFreeFeature4: 'Gestión de pedidos ilimitados',
+    planFreeFeature5: 'Soporte por email',
+    perMonth: 'mes',
+    planBasicDesc: 'Para restaurantes en crecimiento',
+    planBasicFeature1: 'Hasta 50 productos',
+    planBasicFeature2: 'Hasta 10 categorías',
+    planBasicFeature3: 'Personalización completa de temas',
+    planBasicFeature4: 'Múltiples imágenes por producto',
+    planBasicFeature5: 'Soporte prioritario',
+    planProDesc: 'Para restaurantes establecidos',
+    planProFeature1: 'Hasta 200 productos',
+    planProFeature2: 'Hasta 20 categorías',
+    planProFeature3: 'Analytics avanzadas',
+    planProFeature4: 'Facturación POS avanzada',
+    planProFeature5: 'Soporte 24/7',
+    planBusinessDesc: 'Para cadenas y franquicias',
+    planBusinessFeature1: 'Productos ilimitados',
+    planBusinessFeature2: 'Categorías ilimitadas',
+    planBusinessFeature3: 'API para integraciones',
+    planBusinessFeature4: 'White label completo',
+    planBusinessFeature5: 'Soporte dedicado',
+    getStarted: 'Comenzar Ahora',
+    testimonialsTitle: 'Lo que dicen nuestros clientes',
+    testimonialsSubtitle: 'Miles de restaurantes confían en Platyo para gestionar su negocio',
+    testimonial1: 'Platyo transformó completamente mi restaurante. Los pedidos aumentaron un 50% en el primer mes. ¡Increíble!',
+    testimonial2: 'La mejor inversión que hemos hecho. El sistema es muy fácil de usar y nuestros clientes aman el menú digital.',
+    testimonial3: 'Excelente plataforma. El soporte es fantástico y la facturación POS nos ha ahorrado mucho tiempo.',
+    ctaTitle: '¿Listo para transformar tu restaurante?',
+    ctaSubtitle: 'Únete a cientos de restaurantes que ya están creciendo con Platyo. Sin tarjeta de crédito requerida.',
+    startNow: 'Comenzar Ahora',
+    footerDescription: 'La plataforma todo-en-uno para la gestión moderna de restaurantes. Menú digital, pedidos, facturación y más.',
+    footerQuickLinks: 'Enlaces Rápidos',
+    footerContact: 'Contacto',
+    footerEmail: 'Email',
+    footerPhone: 'Teléfono',
+    footerRights: 'Todos los derechos reservados.',
   },
   
   en: {
@@ -3854,6 +3978,68 @@ const translations: Record<Language, Translations> = {
     usersManagement: 'User Management',
     subscriptionsManagement: 'Subscription Management',
     systemStatistics: 'System Statistics',
+
+    // Landing Page
+    navFeatures: 'Features',
+    navPricing: 'Pricing',
+    navTestimonials: 'Testimonials',
+    heroTitle: 'Transform Your Restaurant with Digital Technology',
+    heroSubtitle: 'Manage orders, digital menu, customers and sales on a single platform. Increase your sales by up to 40% with Platyo.',
+    startFreeTrial: 'Start Free Trial',
+    learnMore: 'Learn More',
+    featuresTitle: 'Everything you need to manage your restaurant',
+    featuresSubtitle: 'A complete platform with all the tools to grow your business',
+    howItWorksTitle: 'How it works?',
+    howItWorksSubtitle: 'Start receiving orders in minutes',
+    step1Title: 'Sign Up Free',
+    step1Desc: 'Create your account without a credit card. Start with the free plan.',
+    step2Title: 'Configure Your Menu',
+    step2Desc: 'Add your products, categories and customize your digital menu with your brand colors.',
+    step3Title: 'Receive Orders',
+    step3Desc: 'Share your unique link and start receiving orders in real-time from any device.',
+    pricingTitle: 'Choose the perfect plan for your business',
+    pricingSubtitle: 'Flexible plans that grow with you. Change or cancel anytime.',
+    planFree: 'Free',
+    planFreeDesc: 'Perfect to get started',
+    planFreeFeature1: 'Up to 10 products',
+    planFreeFeature2: 'Up to 3 categories',
+    planFreeFeature3: 'Public digital menu',
+    planFreeFeature4: 'Unlimited order management',
+    planFreeFeature5: 'Email support',
+    perMonth: 'month',
+    planBasicDesc: 'For growing restaurants',
+    planBasicFeature1: 'Up to 50 products',
+    planBasicFeature2: 'Up to 10 categories',
+    planBasicFeature3: 'Full theme customization',
+    planBasicFeature4: 'Multiple images per product',
+    planBasicFeature5: 'Priority support',
+    planProDesc: 'For established restaurants',
+    planProFeature1: 'Up to 200 products',
+    planProFeature2: 'Up to 20 categories',
+    planProFeature3: 'Advanced analytics',
+    planProFeature4: 'Advanced POS invoicing',
+    planProFeature5: '24/7 support',
+    planBusinessDesc: 'For chains and franchises',
+    planBusinessFeature1: 'Unlimited products',
+    planBusinessFeature2: 'Unlimited categories',
+    planBusinessFeature3: 'API for integrations',
+    planBusinessFeature4: 'Complete white label',
+    planBusinessFeature5: 'Dedicated support',
+    getStarted: 'Get Started Now',
+    testimonialsTitle: 'What our customers say',
+    testimonialsSubtitle: 'Thousands of restaurants trust Platyo to manage their business',
+    testimonial1: 'Platyo completely transformed my restaurant. Orders increased by 50% in the first month. Amazing!',
+    testimonial2: 'The best investment we have made. The system is very easy to use and our customers love the digital menu.',
+    testimonial3: 'Excellent platform. The support is fantastic and POS invoicing has saved us a lot of time.',
+    ctaTitle: 'Ready to transform your restaurant?',
+    ctaSubtitle: 'Join hundreds of restaurants that are already growing with Platyo. No credit card required.',
+    startNow: 'Start Now',
+    footerDescription: 'The all-in-one platform for modern restaurant management. Digital menu, orders, billing and more.',
+    footerQuickLinks: 'Quick Links',
+    footerContact: 'Contact',
+    footerEmail: 'Email',
+    footerPhone: 'Phone',
+    footerRights: 'All rights reserved.',
   },
 };
 

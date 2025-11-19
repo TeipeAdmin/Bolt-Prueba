@@ -7,6 +7,7 @@ import { ToastProvider } from './hooks/useToast';
 import { AuthPage } from './pages/AuthPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { PublicMenu } from './pages/public/PublicMenu';
+import { LandingPage } from './pages/LandingPage';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, loading, restaurant } = useAuth();
@@ -45,7 +46,8 @@ const AppRoutes: React.FC = () => {
 
   return (
     <Routes>
-      <Route 
+      <Route path="/" element={<LandingPage />} />
+      <Route
         path="/login"
         element={
           loading ? (
@@ -80,6 +82,14 @@ const AppRoutes: React.FC = () => {
         }
       />
       <Route
+        path="/menu/:slug"
+        element={
+          <CartProvider>
+            <PublicMenu />
+          </CartProvider>
+        }
+      />
+      <Route
         path="/:slug"
         element={
           <CartProvider>
@@ -87,7 +97,6 @@ const AppRoutes: React.FC = () => {
           </CartProvider>
         }
       />
-      <Route path="/" element={<Navigate to="/login" />} />
     </Routes>
   );
 };
