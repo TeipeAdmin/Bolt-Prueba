@@ -628,7 +628,7 @@ export const LandingPage: React.FC = () => {
               <h3 className="text-white font-bold mb-4">{t('footerContact')}</h3>
               <ul className="space-y-2">
                 <li className="text-gray-400">
-                  {t('footerEmail')}: info@platyo.com
+                  {t('footerEmail')}: admin@digitalfenixpro.com
                 </li>
                 <li className="text-gray-400">
                   {t('footerPhone')}: +57 302 709 9669
