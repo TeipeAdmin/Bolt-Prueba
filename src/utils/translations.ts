@@ -1503,6 +1503,7 @@ const translations: Record<Language, Translations> = {
     addressLabel: 'Dirección',
     dateLabel: 'Fecha',
     subtotalLabel: 'Subtotal',
+    totalLabel: 'Total',
     
     // Products
     productManagement: 'Gestión de Menú',
@@ -3110,6 +3111,7 @@ const translations: Record<Language, Translations> = {
     addressLabel: 'Address',
     dateLabel: 'Date',
     subtotalLabel: 'Subtotal',
+    totalLabel: 'Total',
 
     
     // Products
