@@ -320,9 +320,43 @@ export const LandingPage: React.FC = () => {
         {/* Background Gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-orange-50 via-red-50 to-white -z-10"></div>
 
+        {/* Geometric Pattern Background */}
+        <div className="absolute inset-0 -z-10 opacity-30">
+          <svg className="absolute w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="hero-pattern" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
+                <circle cx="25" cy="25" r="2" fill="#FF6B35" opacity="0.3"/>
+                <circle cx="75" cy="75" r="2" fill="#E63946" opacity="0.3"/>
+                <circle cx="75" cy="25" r="1.5" fill="#FF6B35" opacity="0.2"/>
+                <circle cx="25" cy="75" r="1.5" fill="#E63946" opacity="0.2"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#hero-pattern)"/>
+          </svg>
+        </div>
+
         {/* Decorative Elements */}
         <div className="absolute top-20 right-10 w-72 h-72 bg-orange-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
         <div className="absolute top-40 left-10 w-72 h-72 bg-red-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-20 right-1/4 w-64 h-64 bg-orange-300 rounded-full mix-blend-multiply filter blur-xl opacity-15 animate-blob animation-delay-4000"></div>
+
+        {/* Decorative Grid Lines */}
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute top-1/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-orange-200 to-transparent"></div>
+          <div className="absolute top-1/2 left-0 w-full h-px bg-gradient-to-r from-transparent via-red-200 to-transparent"></div>
+          <div className="absolute top-3/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-orange-200 to-transparent"></div>
+        </div>
+
+        {/* Floating Icons */}
+        <div className="absolute top-32 left-10 md:left-20 opacity-10">
+          <ChefHat className="w-16 h-16 text-orange-500 animate-float" />
+        </div>
+        <div className="absolute top-48 right-10 md:right-32 opacity-10">
+          <Smartphone className="w-12 h-12 text-red-500 animate-float animation-delay-2000" />
+        </div>
+        <div className="absolute bottom-32 left-1/4 opacity-10">
+          <BarChart3 className="w-14 h-14 text-orange-500 animate-float animation-delay-4000" />
+        </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-4xl mx-auto">
@@ -666,6 +700,16 @@ export const LandingPage: React.FC = () => {
         }
         .animation-delay-2000 {
           animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+          animation-delay: 4s;
+        }
+        @keyframes float {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-20px) rotate(5deg); }
+        }
+        .animate-float {
+          animation: float 6s ease-in-out infinite;
         }
       `}</style>
     </div>
