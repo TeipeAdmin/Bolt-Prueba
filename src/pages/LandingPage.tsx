@@ -317,53 +317,57 @@ export const LandingPage: React.FC = () => {
 
       {/* Hero Section */}
       <section className="relative pt-24 md:pt-32 pb-16 md:pb-24 overflow-hidden">
-        {/* Background Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-50 via-red-50 to-white -z-10"></div>
+        {/* Background Gradient - More vibrant */}
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-100 via-red-100 to-orange-50 -z-10"></div>
 
-        {/* Geometric Pattern Background */}
-        <div className="absolute inset-0 -z-10 opacity-30">
+        {/* Geometric Pattern Background - More visible */}
+        <div className="absolute inset-0 -z-10 opacity-60">
           <svg className="absolute w-full h-full" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <pattern id="hero-pattern" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
-                <circle cx="25" cy="25" r="2" fill="#FF6B35" opacity="0.3"/>
-                <circle cx="75" cy="75" r="2" fill="#E63946" opacity="0.3"/>
-                <circle cx="75" cy="25" r="1.5" fill="#FF6B35" opacity="0.2"/>
-                <circle cx="25" cy="75" r="1.5" fill="#E63946" opacity="0.2"/>
+              <pattern id="hero-pattern" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
+                <circle cx="20" cy="20" r="3" fill="#FF6B35" opacity="0.5"/>
+                <circle cx="60" cy="60" r="3" fill="#E63946" opacity="0.5"/>
+                <circle cx="60" cy="20" r="2" fill="#FF6B35" opacity="0.4"/>
+                <circle cx="20" cy="60" r="2" fill="#E63946" opacity="0.4"/>
+                <circle cx="40" cy="40" r="1.5" fill="#FF8C42" opacity="0.3"/>
               </pattern>
             </defs>
             <rect width="100%" height="100%" fill="url(#hero-pattern)"/>
           </svg>
         </div>
 
-        {/* Decorative Elements */}
-        <div className="absolute top-20 right-10 w-72 h-72 bg-orange-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
-        <div className="absolute top-40 left-10 w-72 h-72 bg-red-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute bottom-20 right-1/4 w-64 h-64 bg-orange-300 rounded-full mix-blend-multiply filter blur-xl opacity-15 animate-blob animation-delay-4000"></div>
+        {/* Large Decorative Shapes - More visible */}
+        <div className="absolute top-10 right-0 w-96 h-96 bg-gradient-to-br from-orange-300 to-red-300 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob"></div>
+        <div className="absolute top-32 left-0 w-96 h-96 bg-gradient-to-br from-red-300 to-orange-400 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-10 left-1/3 w-80 h-80 bg-gradient-to-br from-orange-400 to-red-300 rounded-full mix-blend-multiply filter blur-3xl opacity-35 animate-blob animation-delay-4000"></div>
 
-        {/* Decorative Grid Lines */}
+        {/* Decorative Grid Lines - More visible */}
         <div className="absolute inset-0 -z-10">
-          <div className="absolute top-1/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-orange-200 to-transparent"></div>
-          <div className="absolute top-1/2 left-0 w-full h-px bg-gradient-to-r from-transparent via-red-200 to-transparent"></div>
-          <div className="absolute top-3/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-orange-200 to-transparent"></div>
+          <div className="absolute top-1/4 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-orange-300 to-transparent opacity-60"></div>
+          <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-red-300 to-transparent opacity-60"></div>
+          <div className="absolute top-3/4 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-orange-300 to-transparent opacity-60"></div>
         </div>
 
-        {/* Floating Icons */}
-        <div className="absolute top-32 left-10 md:left-20 opacity-10">
-          <ChefHat className="w-16 h-16 text-orange-500 animate-float" />
+        {/* Floating Icons - More visible */}
+        <div className="absolute top-28 left-10 md:left-24 opacity-25">
+          <ChefHat className="w-20 h-20 text-orange-600 animate-float" />
         </div>
-        <div className="absolute top-48 right-10 md:right-32 opacity-10">
-          <Smartphone className="w-12 h-12 text-red-500 animate-float animation-delay-2000" />
+        <div className="absolute top-40 right-10 md:right-28 opacity-25">
+          <Smartphone className="w-16 h-16 text-red-600 animate-float animation-delay-2000" />
         </div>
-        <div className="absolute bottom-32 left-1/4 opacity-10">
-          <BarChart3 className="w-14 h-14 text-orange-500 animate-float animation-delay-4000" />
+        <div className="absolute bottom-28 left-1/4 opacity-25">
+          <BarChart3 className="w-18 h-18 text-orange-600 animate-float animation-delay-4000" />
+        </div>
+        <div className="absolute top-1/2 right-16 md:right-40 opacity-20">
+          <Receipt className="w-14 h-14 text-red-500 animate-float animation-delay-3000" />
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-4xl mx-auto">
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight relative z-10">
               {t('heroTitle')}
             </h1>
-            <p className="text-xl md:text-2xl text-gray-600 mb-10 leading-relaxed">
+            <p className="text-xl md:text-2xl text-gray-700 mb-10 leading-relaxed relative z-10">
               {t('heroSubtitle')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
