@@ -174,7 +174,7 @@ export const LandingPage: React.FC = () => {
       {/* Navigation */}
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isScrolled ? 'bg-white shadow-lg' : 'bg-transparent'
+          isScrolled ? 'bg-white/80 backdrop-blur-lg shadow-lg' : 'bg-white/10 backdrop-blur-md'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -215,7 +215,7 @@ export const LandingPage: React.FC = () => {
               </button>
 
               {/* Language Selector */}
-              <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+              <div className="flex items-center gap-2 bg-white/40 backdrop-blur-sm rounded-lg p-1 border border-white/60">
                 <button
                   onClick={() => setLanguage('es')}
                   className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
@@ -259,7 +259,7 @@ export const LandingPage: React.FC = () => {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden bg-white border-t border-gray-200 shadow-lg">
+          <div className="md:hidden bg-white/80 backdrop-blur-lg border-t border-gray-200 shadow-lg">
             <div className="px-4 py-4 space-y-3">
               <button
                 onClick={() => scrollToSection('features')}
@@ -281,7 +281,7 @@ export const LandingPage: React.FC = () => {
               </button>
 
               {/* Language Selector Mobile */}
-              <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+              <div className="flex items-center gap-2 bg-white/40 backdrop-blur-sm rounded-lg p-1 border border-white/60">
                 <button
                   onClick={() => setLanguage('es')}
                   className={`flex-1 px-3 py-2 rounded text-sm font-medium transition-colors ${
