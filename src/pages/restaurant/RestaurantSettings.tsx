@@ -1752,15 +1752,162 @@ Fecha: ${new Date().toLocaleString()}
 
               </div>
               <div className="bg-gradient-to-br from-gray-50 to-gray-50 border rounded-lg p-4">
+              {/* 🔸 Selector de Diseño de Menú */}
+              <div className="bg-gradient-to-br from-gray-50 to-gray-50 rounded-lg md:rounded-xl p-4 md:p-6 border border-purple-100">
+                <h4 className="text-sm md:text-md font-semibold text-gray-900 mb-3 md:mb-4">Diseño del Menú Público</h4>
+                <p className="text-sm text-gray-600 mb-4">Selecciona el estilo de presentación para tu menú público</p>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Modern Design */}
+                  <button
+                    type="button"
+                    onClick={() => updateFormData('settings.theme.menu_layout_style', 'modern')}
+                    className={`relative p-4 rounded-lg border-2 transition-all hover:shadow-lg ${
+                      (formData.settings.theme?.menu_layout_style || 'modern') === 'modern'
+                        ? 'border-purple-500 bg-purple-50'
+                        : 'border-gray-200 hover:border-purple-300'
+                    }`}
+                  >
+                    <div className="absolute top-2 right-2">
+                      {(formData.settings.theme?.menu_layout_style || 'modern') === 'modern' && (
+                        <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="mb-3">
+                      <div className="w-full h-32 bg-white rounded border border-gray-200 p-2 flex flex-col gap-1">
+                        <div className="flex gap-1 mb-1">
+                          <div className="flex-1 h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded"></div>
+                          <div className="w-8 h-2 bg-gray-200 rounded"></div>
+                        </div>
+                        <div className="flex gap-1">
+                          <div className="w-12 h-10 bg-gray-300 rounded"></div>
+                          <div className="flex-1 space-y-1">
+                            <div className="h-2 bg-gray-200 rounded w-3/4"></div>
+                            <div className="h-1 bg-gray-100 rounded w-full"></div>
+                          </div>
+                        </div>
+                        <div className="flex gap-1">
+                          <div className="w-12 h-10 bg-gray-300 rounded"></div>
+                          <div className="flex-1 space-y-1">
+                            <div className="h-2 bg-gray-200 rounded w-3/4"></div>
+                            <div className="h-1 bg-gray-100 rounded w-full"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <h5 className="font-semibold text-gray-900 mb-1">Moderno</h5>
+                    <p className="text-xs text-gray-600">Diseño dinámico con carousel de destacados, vistas flexibles y elementos decorativos</p>
+                  </button>
+
+                  {/* Minimal Design */}
+                  <button
+                    type="button"
+                    onClick={() => updateFormData('settings.theme.menu_layout_style', 'minimal')}
+                    className={`relative p-4 rounded-lg border-2 transition-all hover:shadow-lg ${
+                      formData.settings.theme?.menu_layout_style === 'minimal'
+                        ? 'border-purple-500 bg-purple-50'
+                        : 'border-gray-200 hover:border-purple-300'
+                    }`}
+                  >
+                    <div className="absolute top-2 right-2">
+                      {formData.settings.theme?.menu_layout_style === 'minimal' && (
+                        <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="mb-3">
+                      <div className="w-full h-32 bg-white rounded border border-gray-200 p-2">
+                        <div className="flex justify-between items-center mb-2 pb-1 border-b border-gray-200">
+                          <div className="h-2 w-16 bg-gray-300 rounded"></div>
+                          <div className="h-2 w-6 bg-gray-200 rounded"></div>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center pb-2 border-b border-gray-100">
+                            <div className="flex-1">
+                              <div className="h-2 bg-gray-300 rounded w-2/3 mb-1"></div>
+                              <div className="h-1 bg-gray-100 rounded w-full"></div>
+                            </div>
+                            <div className="w-8 h-8 bg-gray-200 rounded ml-2"></div>
+                          </div>
+                          <div className="flex justify-between items-center pb-2 border-b border-gray-100">
+                            <div className="flex-1">
+                              <div className="h-2 bg-gray-300 rounded w-2/3 mb-1"></div>
+                              <div className="h-1 bg-gray-100 rounded w-full"></div>
+                            </div>
+                            <div className="w-8 h-8 bg-gray-200 rounded ml-2"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <h5 className="font-semibold text-gray-900 mb-1">Minimalista</h5>
+                    <p className="text-xs text-gray-600">Diseño limpio y simple, enfocado en el contenido sin distracciones</p>
+                  </button>
+
+                  {/* Elegant Design */}
+                  <button
+                    type="button"
+                    onClick={() => updateFormData('settings.theme.menu_layout_style', 'elegant')}
+                    className={`relative p-4 rounded-lg border-2 transition-all hover:shadow-lg ${
+                      formData.settings.theme?.menu_layout_style === 'elegant'
+                        ? 'border-purple-500 bg-purple-50'
+                        : 'border-gray-200 hover:border-purple-300'
+                    }`}
+                  >
+                    <div className="absolute top-2 right-2">
+                      {formData.settings.theme?.menu_layout_style === 'elegant' && (
+                        <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="mb-3">
+                      <div className="w-full h-32 bg-white rounded border border-gray-200 p-2">
+                        <div className="text-center mb-2">
+                          <div className="h-3 w-12 bg-gray-300 rounded mx-auto mb-1"></div>
+                          <div className="h-1 w-16 bg-gray-100 rounded mx-auto"></div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-1">
+                          <div className="bg-gray-50 rounded p-1">
+                            <div className="w-full h-8 bg-gray-300 rounded mb-1"></div>
+                            <div className="h-1 bg-gray-200 rounded w-3/4 mx-auto"></div>
+                          </div>
+                          <div className="bg-gray-50 rounded p-1">
+                            <div className="w-full h-8 bg-gray-300 rounded mb-1"></div>
+                            <div className="h-1 bg-gray-200 rounded w-3/4 mx-auto"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <h5 className="font-semibold text-gray-900 mb-1">Elegante</h5>
+                    <p className="text-xs text-gray-600">Diseño sofisticado con espaciado generoso y presentación tipo revista</p>
+                  </button>
+                </div>
+              </div>
+
               {/* 🔸 Bloque para activar o desactivar PathForms */}
               <div className="flex flex-col gap-2">
                   <h2 className="text-sm text-black-800 font-medium">
                     Activar o desactivar PathForms
                   </h2>
                   <p className="text-sm text-black-500 ">
-                    Habilita esta opción para mostrar las formas decorativas que aparecen en el fondo de la página. 
+                    Habilita esta opción para mostrar las formas decorativas que aparecen en el fondo de la página (solo disponible en diseño Moderno).
                   </p>
-              
+
                   <div className="flex items-center gap-3">
                     {/* 🔹 Checkbox controlado */}
                     <input
@@ -1769,7 +1916,8 @@ Fecha: ${new Date().toLocaleString()}
                       onChange={(e) =>
                         updateFormData('settings.theme.pathform', e.target.checked)
                       }
-                      className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" 
+                      disabled={(formData.settings.theme?.menu_layout_style || 'modern') !== 'modern'}
+                      className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <label className="text-sm font-medium text-gray-700">
                       {formData.settings.theme?.pathform ? 'Activado' : 'Desactivado'}

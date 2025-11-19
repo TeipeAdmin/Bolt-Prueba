@@ -24,11 +24,13 @@ import { ProductDetail } from '../../components/public/ProductDetail';
 import { CartSidebar } from '../../components/public/CartSidebar';
 import { CheckoutModal } from '../../components/public/CheckoutModal';
 import { formatCurrency } from '../../utils/currencyUtils';
-import { AnimatedCarousel } from '../../components/public/AnimatedCarousel'; /*DF:componenetes carousel*/
-import Pathtop from '../../components/public/Pathformtop.tsx'; /*DF:componenetes pathform*/
-import Pathbottom from '../../components/public/Pathformbottom.tsx'; /*DF:componenetes pathform*/
-import Pathleft from '../../components/public/Pathformleft.tsx'; /*DF:componenetes pathform*/
-import { FloatingFooter } from '../../components/public/FloatingFooter.tsx'; /*DF:componenetes pathform*/
+import { AnimatedCarousel } from '../../components/public/AnimatedCarousel';
+import Pathtop from '../../components/public/Pathformtop.tsx';
+import Pathbottom from '../../components/public/Pathformbottom.tsx';
+import Pathleft from '../../components/public/Pathformleft.tsx';
+import { FloatingFooter } from '../../components/public/FloatingFooter.tsx';
+import { PublicMenuMinimal } from './PublicMenuMinimal';
+import { PublicMenuElegant } from './PublicMenuElegant';
 
 export const PublicMenu: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -49,14 +51,9 @@ export const PublicMenu: React.FC = () => {
     'list'
   );
   const [showHoursModal, setShowHoursModal] = useState(false);
-  // --- Scroll hide header ---
-// Estado para controlar si el header debe mostrarse (scroll up o hover)
   const [showHeader, setShowHeader] = useState(true);
-  // Estado para controlar la posición de scroll (para el fondo)
   const [scrolled, setScrolled] = useState(false);
-  // Estado para controlar el hover (ya lo tenías)
   const [isHovered, setIsHovered] = useState(false);
-  // Estado para guardar la última posición de scroll para detectar la dirección
   const [lastScrollY, setLastScrollY] = useState(0);
 
 // --- Lógica del Scroll ---
@@ -235,6 +232,32 @@ export const PublicMenu: React.FC = () => {
   }
 
   const theme = restaurant.settings.theme;
+  const menuLayoutStyle = theme.menu_layout_style || 'modern';
+
+  // Si el diseño no es "modern", renderizar el componente correspondiente
+  if (menuLayoutStyle === 'minimal') {
+    return (
+      <PublicMenuMinimal
+        restaurant={restaurant}
+        categories={categories}
+        products={products}
+        theme={theme}
+      />
+    );
+  }
+
+  if (menuLayoutStyle === 'elegant') {
+    return (
+      <PublicMenuElegant
+        restaurant={restaurant}
+        categories={categories}
+        products={products}
+        theme={theme}
+      />
+    );
+  }
+
+  // Si es "modern" o no está definido, continuar con el diseño actual (modern)
   const primaryColor = theme.primary_color || '#FFC700';
   const secondaryColor = theme.secondary_color || '#f3f4f6';
   const menuBackgroundColor = theme.menu_background_color || '#ffffff';
@@ -246,14 +269,11 @@ export const PublicMenu: React.FC = () => {
     restaurant.settings.promo?.enabled &&
     restaurant.settings.promo?.vertical_promo_image;
   const internalDivStyle = scrolled ? {
-    // 1. Fondo semi-transparente
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    // 2. Aplicación del Glassmorphism (blur al fondo de lo que hay detrás)
     backdropFilter: 'blur(10px)',
-    WebkitBackdropFilter: 'blur(10px)', // Para compatibilidad
-    transition: 'background-color 300ms, backdrop-filter 300ms' 
+    WebkitBackdropFilter: 'blur(10px)',
+    transition: 'background-color 300ms, backdrop-filter 300ms'
   } : {
-    // Transparente cuando está en la parte superior
     backgroundColor: 'transparent',
     backdropFilter: 'none',
     WebkitBackdropFilter: 'none',

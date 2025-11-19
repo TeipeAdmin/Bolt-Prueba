@@ -138,6 +138,8 @@ interface Theme {
     bold: number;
   };
   button_style: 'rounded' | 'square';
+  menu_layout_style?: 'modern' | 'minimal' | 'elegant';
+  pathform?: boolean;
 }
 
 interface SocialMedia {
