@@ -10,6 +10,8 @@ import {
   Facebook,
   Instagram,
   ChevronRight,
+  Star,
+  Gift,
 } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { Category, Product, Restaurant, Subscription } from '../../types';
@@ -40,6 +42,8 @@ export const PublicMenuMinimal: React.FC<PublicMenuMinimalProps> = ({
   const [showCart, setShowCart] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [showHoursModal, setShowHoursModal] = useState(false);
+  const [showPromoModal, setShowPromoModal] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   const primaryColor = theme.primary_color || '#000000';
   const secondaryColor = theme.secondary_color || '#f3f4f6';
@@ -47,6 +51,18 @@ export const PublicMenuMinimal: React.FC<PublicMenuMinimalProps> = ({
   const cardBackgroundColor = theme.card_background_color || '#f9fafb';
   const primaryTextColor = theme.primary_text_color || '#111827';
   const secondaryTextColor = theme.secondary_text_color || '#6b7280';
+
+  const hasPromo =
+    restaurant.settings.promo?.enabled &&
+    restaurant.settings.promo?.vertical_promo_image;
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const filteredProducts = products
     .filter((product) => {
@@ -63,6 +79,15 @@ export const PublicMenuMinimal: React.FC<PublicMenuMinimalProps> = ({
     })
     .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
 
+  const getFeaturedProducts = () => {
+    if (!restaurant?.settings.promo?.featured_product_ids?.length) {
+      return products.filter((p) => p.is_featured).slice(0, 4);
+    }
+    const featuredIds = restaurant.settings.promo.featured_product_ids;
+    return products.filter((p) => featuredIds.includes(p.id)).slice(0, 4);
+  };
+
+  const featuredProducts = getFeaturedProducts();
   const cartItemsCount = cartItems.reduce(
     (sum, item) => sum + item.quantity,
     0
@@ -70,129 +95,194 @@ export const PublicMenuMinimal: React.FC<PublicMenuMinimalProps> = ({
 
   return (
     <div
-      className="min-h-screen"
+      className="min-h-screen relative overflow-hidden"
       style={{
-        backgroundColor: menuBackgroundColor,
+        background: `linear-gradient(135deg, ${menuBackgroundColor} 0%, ${cardBackgroundColor} 100%)`,
         fontFamily: theme.secondary_font || 'Inter',
       }}
     >
-      {/* Header Simple y Fijo */}
+      {/* Animated Background Gradient Orbs */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div
+          className="absolute top-0 -left-20 w-96 h-96 rounded-full blur-3xl opacity-20 animate-pulse"
+          style={{
+            background: `radial-gradient(circle, ${primaryColor} 0%, transparent 70%)`,
+            animation: 'float 20s ease-in-out infinite',
+          }}
+        />
+        <div
+          className="absolute bottom-0 -right-20 w-96 h-96 rounded-full blur-3xl opacity-20 animate-pulse"
+          style={{
+            background: `radial-gradient(circle, ${primaryColor} 0%, transparent 70%)`,
+            animation: 'float 25s ease-in-out infinite reverse',
+          }}
+        />
+      </div>
+
+      <style>{`
+        @keyframes float {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(30px, -30px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+
+        .glass-effect {
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .glass-card {
+          background: rgba(255, 255, 255, 0.7);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+          background: rgba(255, 255, 255, 0.9);
+          transform: translateY(-2px);
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
+
+      {/* Header con Glassmorfismo */}
       <header
-        className="sticky top-0 z-50 border-b"
+        className={`sticky top-0 z-50 transition-all duration-300 ${
+          scrolled ? 'glass-effect shadow-lg' : ''
+        }`}
         style={{
-          backgroundColor: menuBackgroundColor,
-          borderColor: primaryTextColor + '20',
+          backgroundColor: scrolled
+            ? 'rgba(255, 255, 255, 0.1)'
+            : 'transparent',
         }}
       >
-        <div className="max-w-5xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex-1 max-w-xs">
-              <div className="relative">
-                <Search
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4"
-                  style={{ color: secondaryTextColor }}
-                />
-                <input
-                  type="text"
-                  placeholder="Buscar..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 text-sm border-0 focus:outline-none"
-                  style={{
-                    backgroundColor: 'transparent',
-                    color: primaryTextColor,
-                    fontFamily: theme.secondary_font || 'Inter',
-                  }}
-                />
-              </div>
-            </div>
-
-            {restaurant.logo && (
+        <div className="max-w-6xl mx-auto px-4 md:px-6 py-4">
+          <div className="flex items-center justify-between gap-4 mb-4">
+            {restaurant.logo ? (
               <img
                 src={restaurant.logo}
                 alt={restaurant.name}
-                className="h-10"
+                className="h-12 md:h-14"
               />
+            ) : (
+              <h1
+                className="text-2xl md:text-3xl font-bold"
+                style={{
+                  color: primaryTextColor,
+                  fontFamily: theme.primary_font || 'Inter',
+                }}
+              >
+                {restaurant.name}
+              </h1>
             )}
 
-            <button
-              onClick={() => setShowCart(true)}
-              className="relative p-2"
-              style={{ color: primaryTextColor }}
-            >
-              <ShoppingCart className="w-5 h-5" />
-              {cartItemsCount > 0 && (
-                <span
-                  className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white"
-                  style={{ backgroundColor: primaryColor }}
+            <div className="flex items-center gap-2">
+              {hasPromo && (
+                <button
+                  onClick={() => setShowPromoModal(true)}
+                  className="glass-card p-3 rounded-full hover:scale-110 transition-transform"
+                  style={{ color: primaryColor }}
                 >
-                  {cartItemsCount}
-                </span>
+                  <Gift className="w-5 h-5" />
+                </button>
               )}
-            </button>
+              <button
+                onClick={() => setShowCart(true)}
+                className="glass-card relative p-3 rounded-full hover:scale-110 transition-transform"
+                style={{ color: primaryColor }}
+              >
+                <ShoppingCart className="w-5 h-5" />
+                {cartItemsCount > 0 && (
+                  <span
+                    className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    {cartItemsCount}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Search Bar con Glassmorfismo */}
+          <div className="glass-card rounded-full overflow-hidden">
+            <div className="relative">
+              <Search
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5"
+                style={{ color: secondaryTextColor }}
+              />
+              <input
+                type="text"
+                placeholder="Buscar productos..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 bg-transparent focus:outline-none text-sm md:text-base"
+                style={{
+                  color: primaryTextColor,
+                  fontFamily: theme.secondary_font || 'Inter',
+                }}
+              />
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Categorías como menú horizontal simple */}
-      <div
-        className="sticky top-[73px] z-40 border-b"
-        style={{
-          backgroundColor: menuBackgroundColor,
-          borderColor: primaryTextColor + '20',
-        }}
-      >
-        <div className="max-w-5xl mx-auto px-4 overflow-x-auto scrollbar-hide">
-          <div className="flex gap-6 py-3">
-            <button
-              onClick={() => setSelectedCategory('all')}
-              className="whitespace-nowrap text-sm font-medium pb-1 border-b-2 transition-colors"
+      {/* Featured Products Carousel con Glassmorfismo */}
+      {!searchTerm && featuredProducts.length > 0 && (
+        <section className="max-w-6xl mx-auto px-4 md:px-6 py-8 relative z-10">
+          <div className="flex items-center gap-2 mb-6">
+            <Star
+              className="w-6 h-6 fill-current"
+              style={{ color: primaryColor }}
+            />
+            <h2
+              className="text-2xl md:text-3xl font-bold"
               style={{
-                color: selectedCategory === 'all' ? primaryColor : secondaryTextColor,
-                borderColor: selectedCategory === 'all' ? primaryColor : 'transparent',
+                color: primaryTextColor,
+                fontFamily: theme.primary_font || 'Inter',
               }}
             >
-              Todo
-            </button>
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className="whitespace-nowrap text-sm font-medium pb-1 border-b-2 transition-colors"
-                style={{
-                  color: selectedCategory === category.id ? primaryColor : secondaryTextColor,
-                  borderColor: selectedCategory === category.id ? primaryColor : 'transparent',
-                }}
-              >
-                {category.name}
-              </button>
-            ))}
+              Destacados
+            </h2>
           </div>
-        </div>
-      </div>
 
-      {/* Lista de productos - diseño minimalista */}
-      <main className="max-w-5xl mx-auto px-4 py-8">
-        <div className="space-y-1">
-          {filteredProducts.map((product) => {
-            const minPrice =
-              product.variations.length > 0
-                ? Math.min(...product.variations.map((v) => v.price))
-                : 0;
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {featuredProducts.map((product) => {
+              const minPrice =
+                product.variations.length > 0
+                  ? Math.min(...product.variations.map((v) => v.price))
+                  : 0;
 
-            return (
-              <div
-                key={product.id}
-                className="group cursor-pointer py-6 border-b transition-colors hover:bg-gray-50/50"
-                onClick={() => setSelectedProduct(product)}
-                style={{
-                  borderColor: primaryTextColor + '10',
-                }}
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
+              return (
+                <div
+                  key={product.id}
+                  className="glass-card rounded-2xl overflow-hidden cursor-pointer group"
+                  onClick={() => setSelectedProduct(product)}
+                >
+                  {product.images[0] && (
+                    <div className="relative overflow-hidden aspect-square">
+                      <img
+                        src={product.images[0]}
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  )}
+                  <div className="p-4">
                     <h3
-                      className="text-base font-medium mb-1"
+                      className="font-semibold mb-1 line-clamp-1"
                       style={{
                         color: primaryTextColor,
                         fontFamily: theme.primary_font || 'Inter',
@@ -200,54 +290,154 @@ export const PublicMenuMinimal: React.FC<PublicMenuMinimalProps> = ({
                     >
                       {product.name}
                     </h3>
-                    {product.description && (
-                      <p
-                        className="text-sm mb-2 line-clamp-2"
-                        style={{ color: secondaryTextColor }}
-                      >
-                        {product.description}
-                      </p>
-                    )}
-                    <span
-                      className="text-sm font-semibold"
+                    <p
+                      className="text-sm font-bold"
                       style={{ color: primaryColor }}
                     >
                       {formatCurrency(
                         minPrice,
                         restaurant.settings.currency || 'USD'
                       )}
-                    </span>
+                    </p>
                   </div>
-                  {product.images[0] && (
-                    <img
-                      src={product.images[0]}
-                      alt={product.name}
-                      className="w-20 h-20 object-cover flex-shrink-0"
-                      style={{ borderRadius: '4px' }}
-                    />
-                  )}
-                  <ChevronRight
-                    className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                    style={{ color: secondaryTextColor }}
-                  />
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* Categorías con Glassmorfismo */}
+      <div className="sticky top-[140px] z-40 mb-8">
+        <div className="max-w-6xl mx-auto px-4 md:px-6">
+          <div className="glass-card rounded-full p-2 overflow-x-auto scrollbar-hide">
+            <div className="flex gap-2 min-w-max">
+              <button
+                onClick={() => setSelectedCategory('all')}
+                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                  selectedCategory === 'all' ? 'shadow-lg' : 'opacity-70'
+                }`}
+                style={{
+                  backgroundColor:
+                    selectedCategory === 'all' ? primaryColor : 'transparent',
+                  color:
+                    selectedCategory === 'all'
+                      ? '#ffffff'
+                      : primaryTextColor,
+                }}
+              >
+                Todos
+              </button>
+              {categories.map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => setSelectedCategory(category.id)}
+                  className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                    selectedCategory === category.id
+                      ? 'shadow-lg'
+                      : 'opacity-70'
+                  }`}
+                  style={{
+                    backgroundColor:
+                      selectedCategory === category.id
+                        ? primaryColor
+                        : 'transparent',
+                    color:
+                      selectedCategory === category.id
+                        ? '#ffffff'
+                        : primaryTextColor,
+                  }}
+                >
+                  {category.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Lista de productos con Glassmorfismo */}
+      <main className="max-w-6xl mx-auto px-4 md:px-6 pb-12 relative z-10">
+        <div className="space-y-3">
+          {filteredProducts.length === 0 ? (
+            <div className="text-center py-12">
+              <p
+                className="text-lg"
+                style={{ color: secondaryTextColor }}
+              >
+                No se encontraron productos
+              </p>
+            </div>
+          ) : (
+            filteredProducts.map((product) => {
+              const minPrice =
+                product.variations.length > 0
+                  ? Math.min(...product.variations.map((v) => v.price))
+                  : 0;
+
+              return (
+                <div
+                  key={product.id}
+                  className="glass-card rounded-2xl p-4 cursor-pointer group"
+                  onClick={() => setSelectedProduct(product)}
+                >
+                  <div className="flex items-start gap-4">
+                    {product.images[0] && (
+                      <div className="relative overflow-hidden rounded-xl flex-shrink-0">
+                        <img
+                          src={product.images[0]}
+                          alt={product.name}
+                          className="w-24 h-24 md:w-28 md:h-28 object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h3
+                        className="text-base md:text-lg font-semibold mb-1"
+                        style={{
+                          color: primaryTextColor,
+                          fontFamily: theme.primary_font || 'Inter',
+                        }}
+                      >
+                        {product.name}
+                      </h3>
+                      {product.description && (
+                        <p
+                          className="text-sm mb-2 line-clamp-2"
+                          style={{ color: secondaryTextColor }}
+                        >
+                          {product.description}
+                        </p>
+                      )}
+                      <div className="flex items-center justify-between">
+                        <span
+                          className="text-base md:text-lg font-bold"
+                          style={{ color: primaryColor }}
+                        >
+                          {formatCurrency(
+                            minPrice,
+                            restaurant.settings.currency || 'USD'
+                          )}
+                        </span>
+                        <ChevronRight
+                          className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity"
+                          style={{ color: primaryColor }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </main>
 
-      {/* Footer minimalista */}
-      <footer
-        className="border-t mt-12"
-        style={{
-          backgroundColor: menuBackgroundColor,
-          borderColor: primaryTextColor + '20',
-        }}
-      >
-        <div className="max-w-5xl mx-auto px-4 py-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm">
-            <div className="flex items-center gap-2" style={{ color: secondaryTextColor }}>
+      {/* Footer con Glassmorfismo */}
+      <footer className="glass-effect mt-12 border-t" style={{ borderColor: primaryTextColor + '20' }}>
+        <div className="max-w-6xl mx-auto px-4 md:px-6 py-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 text-sm">
+            <div className="flex items-center gap-2" style={{ color: primaryTextColor }}>
               <MapPin className="w-4 h-4" />
               <span>{restaurant.address}</span>
             </div>
@@ -257,6 +447,7 @@ export const PublicMenuMinimal: React.FC<PublicMenuMinimalProps> = ({
                   href={restaurant.settings.social_media.website}
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="glass-card p-2 rounded-full hover:scale-110 transition-transform"
                   style={{ color: primaryTextColor }}
                 >
                   <Globe className="w-5 h-5" />
@@ -267,6 +458,7 @@ export const PublicMenuMinimal: React.FC<PublicMenuMinimalProps> = ({
                   href={restaurant.settings.social_media.facebook}
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="glass-card p-2 rounded-full hover:scale-110 transition-transform"
                   style={{ color: primaryTextColor }}
                 >
                   <Facebook className="w-5 h-5" />
@@ -277,6 +469,7 @@ export const PublicMenuMinimal: React.FC<PublicMenuMinimalProps> = ({
                   href={restaurant.settings.social_media.instagram}
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="glass-card p-2 rounded-full hover:scale-110 transition-transform"
                   style={{ color: primaryTextColor }}
                 >
                   <Instagram className="w-5 h-5" />
@@ -286,6 +479,31 @@ export const PublicMenuMinimal: React.FC<PublicMenuMinimalProps> = ({
           </div>
         </div>
       </footer>
+
+      {/* PROMOTIONAL MODAL */}
+      {showPromoModal && hasPromo && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4"
+          onClick={() => setShowPromoModal(false)}
+        >
+          <div
+            className="relative max-w-2xl max-h-[90vh] glass-card rounded-3xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowPromoModal(false)}
+              className="absolute top-4 right-4 glass-card rounded-full p-2 hover:scale-110 transition-transform z-10"
+            >
+              <X className="w-6 h-6" style={{ color: primaryTextColor }} />
+            </button>
+            <img
+              src={restaurant.settings.promo.vertical_promo_image}
+              alt="Promoción"
+              className="w-full h-auto object-contain"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Modals */}
       {selectedProduct && (
