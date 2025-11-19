@@ -318,7 +318,7 @@ export const LandingPage: React.FC = () => {
       {/* Hero Section */}
       <section className="relative pt-24 md:pt-32 pb-16 md:pb-24 overflow-hidden">
         {/* Background Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-50 via-red-50 to-white -z-10"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-100 via-red-50 to-white -z-10"></div>
 
         {/* Decorative Elements */}
         <div className="absolute top-20 right-10 w-72 h-72 bg-orange-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
