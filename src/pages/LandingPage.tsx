@@ -174,7 +174,7 @@ export const LandingPage: React.FC = () => {
       {/* Navigation */}
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isScrolled ? 'bg-white/80 backdrop-blur-lg shadow-lg' : 'bg-white/10 backdrop-blur-md'
+          isScrolled ? 'bg-white shadow-lg' : 'bg-transparent'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -215,7 +215,7 @@ export const LandingPage: React.FC = () => {
               </button>
 
               {/* Language Selector */}
-              <div className="flex items-center gap-2 bg-white/40 backdrop-blur-sm rounded-lg p-1 border border-white/60">
+              <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
                 <button
                   onClick={() => setLanguage('es')}
                   className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
@@ -259,7 +259,7 @@ export const LandingPage: React.FC = () => {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden bg-white/80 backdrop-blur-lg border-t border-gray-200 shadow-lg">
+          <div className="md:hidden bg-white border-t border-gray-200 shadow-lg">
             <div className="px-4 py-4 space-y-3">
               <button
                 onClick={() => scrollToSection('features')}
@@ -281,7 +281,7 @@ export const LandingPage: React.FC = () => {
               </button>
 
               {/* Language Selector Mobile */}
-              <div className="flex items-center gap-2 bg-white/40 backdrop-blur-sm rounded-lg p-1 border border-white/60">
+              <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
                 <button
                   onClick={() => setLanguage('es')}
                   className={`flex-1 px-3 py-2 rounded text-sm font-medium transition-colors ${
@@ -389,7 +389,7 @@ export const LandingPage: React.FC = () => {
             {features.map((feature, index) => (
               <div
                 key={index}
-                className="group p-8 bg-white/40 backdrop-blur-md rounded-2xl border border-white/60 hover:border-orange-300 hover:shadow-xl hover:bg-white/60 transition-all duration-300 transform hover:-translate-y-2"
+                className="group p-8 bg-white rounded-2xl border border-gray-200 hover:border-orange-300 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
               >
                 <div className={`w-14 h-14 bg-gradient-to-br ${feature.color} rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
                   <feature.icon className="w-7 h-7 text-white" />
@@ -463,11 +463,11 @@ export const LandingPage: React.FC = () => {
                 className={`relative p-8 rounded-2xl ${
                   plan.popular
                     ? 'bg-gradient-to-br from-orange-500 to-red-500 text-white shadow-2xl scale-105 border-4 border-orange-400'
-                    : 'bg-white/40 backdrop-blur-md border-2 border-white/60 hover:border-orange-300 hover:shadow-lg hover:bg-white/60'
+                    : 'bg-white border-2 border-gray-200 hover:border-orange-300 hover:shadow-lg'
                 } transition-all duration-300`}
               >
                 {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur-sm text-orange-600 px-4 py-1 rounded-full text-sm font-bold shadow-lg">
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-white text-orange-600 px-4 py-1 rounded-full text-sm font-bold">
                     {t('mostPopular')}
                   </div>
                 )}
@@ -532,7 +532,7 @@ export const LandingPage: React.FC = () => {
             {testimonials.map((testimonial, index) => (
               <div
                 key={index}
-                className="bg-white/40 backdrop-blur-md p-8 rounded-2xl border border-white/60 shadow-lg hover:shadow-xl hover:bg-white/60 transition-all duration-300"
+                className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300"
               >
                 <div className="flex items-center gap-1 mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (
