@@ -127,24 +127,24 @@ export const PublicMenuMinimal: React.FC<PublicMenuMinimalProps> = ({
         }
 
         .glass-effect {
-          background: rgba(255, 255, 255, 0.1);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.15);
         }
 
         .glass-card {
-          background: rgba(255, 255, 255, 0.7);
-          backdrop-filter: blur(10px);
-          -webkit-backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.3);
-          transition: all 0.3s ease;
+          background: rgba(255, 255, 255, 0.4);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          border: 1px solid rgba(255, 255, 255, 0.25);
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .glass-card:hover {
-          background: rgba(255, 255, 255, 0.9);
-          transform: translateY(-2px);
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+          background: rgba(255, 255, 255, 0.55);
+          transform: translateY(-4px);
+          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
         }
 
         .scrollbar-hide::-webkit-scrollbar {
@@ -158,16 +158,16 @@ export const PublicMenuMinimal: React.FC<PublicMenuMinimalProps> = ({
 
       {/* Header con Glassmorfismo */}
       <header
-        className={`sticky top-0 z-50 transition-all duration-300 ${
-          scrolled ? 'glass-effect shadow-lg' : ''
+        className={`sticky top-0 z-50 transition-all duration-500 ${
+          scrolled ? 'glass-effect shadow-xl' : ''
         }`}
         style={{
           backgroundColor: scrolled
-            ? 'rgba(255, 255, 255, 0.1)'
+            ? 'rgba(255, 255, 255, 0.05)'
             : 'transparent',
         }}
       >
-        <div className="max-w-6xl mx-auto px-4 md:px-6 py-4">
+        <div className="max-w-6xl mx-auto px-4 md:px-6 py-5">
           <div className="flex items-center justify-between gap-4 mb-4">
             {restaurant.logo ? (
               <img
@@ -240,10 +240,10 @@ export const PublicMenuMinimal: React.FC<PublicMenuMinimalProps> = ({
 
       {/* Featured Products Carousel con Glassmorfismo */}
       {!searchTerm && featuredProducts.length > 0 && (
-        <section className="max-w-6xl mx-auto px-4 md:px-6 py-8 relative z-10">
-          <div className="flex items-center gap-2 mb-6">
+        <section className="max-w-6xl mx-auto px-4 md:px-6 py-10 relative z-10">
+          <div className="flex items-center gap-3 mb-8">
             <Star
-              className="w-6 h-6 fill-current"
+              className="w-7 h-7 fill-current"
               style={{ color: primaryColor }}
             />
             <h2
@@ -257,7 +257,7 @@ export const PublicMenuMinimal: React.FC<PublicMenuMinimalProps> = ({
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-5">
             {featuredProducts.map((product) => {
               const minPrice =
                 product.variations.length > 0
@@ -357,8 +357,8 @@ export const PublicMenuMinimal: React.FC<PublicMenuMinimalProps> = ({
       </div>
 
       {/* Lista de productos con Glassmorfismo */}
-      <main className="max-w-6xl mx-auto px-4 md:px-6 pb-12 relative z-10">
-        <div className="space-y-3">
+      <main className="max-w-6xl mx-auto px-4 md:px-6 pb-16 relative z-10">
+        <div className="space-y-4">
           {filteredProducts.length === 0 ? (
             <div className="text-center py-12">
               <p
@@ -378,22 +378,22 @@ export const PublicMenuMinimal: React.FC<PublicMenuMinimalProps> = ({
               return (
                 <div
                   key={product.id}
-                  className="glass-card rounded-2xl p-4 cursor-pointer group"
+                  className="glass-card rounded-2xl p-5 cursor-pointer group"
                   onClick={() => setSelectedProduct(product)}
                 >
-                  <div className="flex items-start gap-4">
+                  <div className="flex items-start gap-5">
                     {product.images[0] && (
-                      <div className="relative overflow-hidden rounded-xl flex-shrink-0">
+                      <div className="relative overflow-hidden rounded-xl flex-shrink-0 shadow-md">
                         <img
                           src={product.images[0]}
                           alt={product.name}
-                          className="w-24 h-24 md:w-28 md:h-28 object-cover group-hover:scale-110 transition-transform duration-500"
+                          className="w-28 h-28 md:w-32 md:h-32 object-cover group-hover:scale-110 transition-transform duration-500"
                         />
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
                       <h3
-                        className="text-base md:text-lg font-semibold mb-1"
+                        className="text-base md:text-lg font-semibold mb-2"
                         style={{
                           color: primaryTextColor,
                           fontFamily: theme.primary_font || 'Inter',
@@ -403,7 +403,7 @@ export const PublicMenuMinimal: React.FC<PublicMenuMinimalProps> = ({
                       </h3>
                       {product.description && (
                         <p
-                          className="text-sm mb-2 line-clamp-2"
+                          className="text-sm mb-3 line-clamp-2"
                           style={{ color: secondaryTextColor }}
                         >
                           {product.description}
@@ -411,7 +411,7 @@ export const PublicMenuMinimal: React.FC<PublicMenuMinimalProps> = ({
                       )}
                       <div className="flex items-center justify-between">
                         <span
-                          className="text-base md:text-lg font-bold"
+                          className="text-lg md:text-xl font-bold"
                           style={{ color: primaryColor }}
                         >
                           {formatCurrency(
@@ -420,7 +420,7 @@ export const PublicMenuMinimal: React.FC<PublicMenuMinimalProps> = ({
                           )}
                         </span>
                         <ChevronRight
-                          className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-all"
                           style={{ color: primaryColor }}
                         />
                       </div>
