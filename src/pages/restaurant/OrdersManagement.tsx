@@ -417,7 +417,7 @@ export const OrdersManagement: React.FC = () => {
             <p>${t('subtotalLabel')}: ${formatCurrency(order.subtotal, currency)}</p>
             ${order.delivery_cost ?
             `<p>${t('deliveryLabel')}: ${formatCurrency(order.delivery_cost, currency)}</p>` : ''}
-            <p>${t('totalLabel')}: ${formatCurrency(order.total, currency)}</p>
+            <p>Total: ${formatCurrency(order.total, currency)}</p>
           </div>
           
           ${order.special_instructions ?
