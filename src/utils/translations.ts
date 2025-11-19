@@ -2224,7 +2224,7 @@ const translations: Record<Language, Translations> = {
     
     // Subscription
     subscriptionPlans: 'Planes de Suscripción',
-    choosePlan: 'Elige el plan que mejor se adapte a las necesidades de tu restaurante',
+    choosePlan: 'Seleccionar Plan',
     currentPlan: 'Plan Actual',
     planActivated: '¡Plan Activado!',
     freePlan: 'Gratis',
@@ -3831,7 +3831,7 @@ const translations: Record<Language, Translations> = {
     
     // Subscription
     subscriptionPlans: 'Subscription Plans',
-    choosePlan: 'Choose the plan that best fits your restaurant needs',
+    choosePlan: 'Choose Plan',
     currentPlan: 'Current Plan',
     planActivated: 'Plan Activated!',
     freePlan: 'Free',
