@@ -321,7 +321,7 @@ export const LandingPage: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-br from-orange-50 via-red-50 to-white -z-10"></div>
 
         {/* Decorative Elements */}
-        <div className="absolute top-20 right-10 w-72 h-72 bg-orange-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
+        <div className="absolute top-20 right-10 w-72 h-72 bg-orange-200 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob"></div>
         <div className="absolute top-40 left-10 w-72 h-72 bg-red-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
