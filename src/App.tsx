@@ -7,6 +7,7 @@ import { ToastProvider } from './hooks/useToast';
 import { AuthPage } from './pages/AuthPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { PublicMenu } from './pages/public/PublicMenu';
+import { MarketplacePage } from './pages/public/MarketplacePage';
 import { LandingPage } from './pages/LandingPage';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -79,6 +80,14 @@ const AppRoutes: React.FC = () => {
               <DashboardPage />
             </PrivateRoute>
           )
+        }
+      />
+      <Route
+        path="/marketplace"
+        element={
+          <CartProvider>
+            <MarketplacePage />
+          </CartProvider>
         }
       />
       <Route

@@ -823,6 +823,23 @@ interface Translations {
 
   // Public Menu
   charging_public_menu: string;
+
+  // Marketplace
+  marketplace: string;
+  searchProducts: string;
+  productsFound: string;
+  marketplaceSortByName: string;
+  marketplaceSortByPriceLow: string;
+  marketplaceSortByPriceHigh: string;
+  marketplaceSortByNewest: string;
+  marketplaceNoProducts: string;
+  marketplaceClearFilters: string;
+  marketplaceApplyFilters: string;
+  marketplacePriceRange: string;
+  marketplaceMinPrice: string;
+  marketplaceMaxPrice: string;
+  marketplaceDietaryRestrictions: string;
+  marketplaceSpiceLevel: string;
 }
 
 const translations: Record<Language, Translations> = {
@@ -2307,6 +2324,23 @@ const translations: Record<Language, Translations> = {
     presenting_featured_products: 'Te presentamos nuestros',
     presenting_featured_products1: 'DESTACADOS',
     title_public_menu: 'Menú público',
+
+    // Marketplace
+    marketplace: 'Marketplace',
+    searchProducts: 'Buscar productos, restaurantes o categorías...',
+    productsFound: 'productos encontrados',
+    marketplaceSortByName: 'Ordenar por nombre',
+    marketplaceSortByPriceLow: 'Precio: menor a mayor',
+    marketplaceSortByPriceHigh: 'Precio: mayor a menor',
+    marketplaceSortByNewest: 'Más recientes',
+    marketplaceNoProducts: 'No se encontraron productos',
+    marketplaceClearFilters: 'Limpiar filtros',
+    marketplaceApplyFilters: 'Aplicar filtros',
+    marketplacePriceRange: 'Rango de precio',
+    marketplaceMinPrice: 'Precio mínimo',
+    marketplaceMaxPrice: 'Precio máximo',
+    marketplaceDietaryRestrictions: 'Restricciones dietéticas',
+    marketplaceSpiceLevel: 'Nivel de picante',
     description_public_menu: 'Comparte este link con tus clientes para que puedan ver tu menú y crear ordenes',
     your_custom_url: 'Tu URL personalizada:',
     copy: 'Copiar',
@@ -3982,6 +4016,23 @@ const translations: Record<Language, Translations> = {
     presenting_featured_products: 'We present our',
     presenting_featured_products1: 'HIGHLIGHTS',
     description_public_menu: 'Share this link with your customers so they can view your menu and place orders',
+
+    // Marketplace
+    marketplace: 'Marketplace',
+    searchProducts: 'Search products, restaurants or categories...',
+    productsFound: 'products found',
+    marketplaceSortByName: 'Sort by name',
+    marketplaceSortByPriceLow: 'Price: low to high',
+    marketplaceSortByPriceHigh: 'Price: high to low',
+    marketplaceSortByNewest: 'Newest first',
+    marketplaceNoProducts: 'No products found',
+    marketplaceClearFilters: 'Clear filters',
+    marketplaceApplyFilters: 'Apply filters',
+    marketplacePriceRange: 'Price range',
+    marketplaceMinPrice: 'Min price',
+    marketplaceMaxPrice: 'Max price',
+    marketplaceDietaryRestrictions: 'Dietary restrictions',
+    marketplaceSpiceLevel: 'Spice level',
     your_custom_url: 'Your custom URL:',
     copy: 'Copy',
     copied_title_public_menu: 'Copied',
