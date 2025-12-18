@@ -54,7 +54,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
 
     setTimeout(() => {
       onClose();
-    }, 100);
+    }, 850);
   };
   const theme = restaurant.settings.theme;
   const primaryColor = theme.primary_color || '#FFC700';
