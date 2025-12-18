@@ -47,10 +47,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (session?.user) {
         await loadUserData(session.user.id);
+      } else {
+        setLoading(false);
       }
     } catch (error) {
       console.error('Error checking user:', error);
-    } finally {
       setLoading(false);
     }
   };
@@ -292,9 +293,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (subscriptionError) throw subscriptionError;
 
+      await supabase.auth.signOut();
+
       return { success: true };
     } catch (error: any) {
       console.error('Register error:', error);
+      await supabase.auth.signOut();
       return { success: false, error: error.message || 'Error al registrar' };
     }
   };
