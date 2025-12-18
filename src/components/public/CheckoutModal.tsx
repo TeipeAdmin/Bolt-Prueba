@@ -1166,14 +1166,16 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                 <div
                   className="flex items-center gap-3 p-4 rounded-lg"
                   style={{
-                    backgroundColor: `${secondaryColor}`,
-                    border: `1px solid ${primaryColor}20`,
-                    borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem'
+                    backgroundColor: `${primaryColor}15`,
+                    border: `1px solid ${primaryColor}30`,
+                    borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
+                    fontFamily: 'var(--secondary-font)',
                   }}
                 >
                   <div
                     className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: primaryColor }}
+                    style={{ 
+                      backgroundColor: primaryColor }}
                   >
                     <Phone className="w-5 h-5" style={{ color: secondaryTextColor }} />
                   </div>
