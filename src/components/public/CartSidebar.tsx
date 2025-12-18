@@ -202,7 +202,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, onChe
                   fontFamily: theme.secondary_font || 'Poppins'
                 }}
               >
-                CONTINUAR
+                CONFIRMAR
               </button>
             </div>
           )}
