@@ -1017,6 +1017,10 @@ export const OrdersManagement: React.FC = () => {
       showToast('error', t('errorTitle'), t('invalidEmailError'), 4000);
       return;
     }
+    if (orderItems.length === 0) {
+      showToast('error', t('errorTitle'), 'Debes agregar al menos un producto al pedido', 4000);
+      return;
+    }
     const subtotal = orderItems.reduce((sum, item) => sum + item.total_price, 0);
     const deliveryCost = orderForm.order_type === 'delivery' ?
     (restaurant?.settings?.delivery?.zones[0]?.cost || 0) : 0;
@@ -1068,6 +1072,10 @@ export const OrdersManagement: React.FC = () => {
     }
     if (orderForm.customer.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(orderForm.customer.email.trim())) {
       showToast('error', t('errorTitle'), t('invalidEmailError'), 4000);
+      return;
+    }
+    if (orderItems.length === 0) {
+      showToast('error', t('errorTitle'), 'Debes agregar al menos un producto al pedido', 4000);
       return;
     }
 
