@@ -558,7 +558,7 @@ export const PublicMenu: React.FC = () => {
                       right: '-4px', // antes 6px → negativo para que sobresalga del borde
                       width: '17px',
                       height: '17px',
-                      backgroundColor: secondaryColor,
+                      backgroundColor: primaryColor,
                       borderRadius: '50%',
                     }}
                   />
