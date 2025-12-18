@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Minus, Plus, X } from 'lucide-react';
 import { Product, ProductVariation, Restaurant } from '../../types';
 import { useCart } from '../../contexts/CartContext';
 import { formatCurrency } from '../../utils/currencyUtils';
+import { AddToCartAnimation } from './AddToCartAnimation';
 
 interface ProductDetailProps {
   product: Product;
@@ -16,6 +17,9 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
     product.ingredients.filter(ing => !ing.optional).map(ing => ing.id)
   );
   const [quantity, setQuantity] = useState(1);
+  const [showAnimation, setShowAnimation] = useState(false);
+  const [animationStart, setAnimationStart] = useState({ x: 0, y: 0 });
+  const imageRef = useRef<HTMLImageElement>(null);
 
   const { addItem } = useCart();
 
@@ -37,8 +41,20 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
   };
 
   const handleAddToCart = () => {
+    if (imageRef.current) {
+      const rect = imageRef.current.getBoundingClientRect();
+      setAnimationStart({
+        x: rect.left + rect.width / 2 - 40,
+        y: rect.top + rect.height / 2 - 40,
+      });
+      setShowAnimation(true);
+    }
+
     addItem(product, selectedVariation, quantity, selectedIngredients, '');
-    onClose();
+
+    setTimeout(() => {
+      onClose();
+    }, 100);
   };
   const theme = restaurant.settings.theme;
   const primaryColor = theme.primary_color || '#FFC700';
@@ -103,6 +119,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
           {product.images.length > 0 && (
             <div className="relative w-full h-[250px] md:h-[400px]">
               <img
+                ref={imageRef}
                 src={product.images}
                 alt={product.name}
                 className="w-full h-full object-cover"
@@ -321,6 +338,14 @@ onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${primaryColor}4D
           </div>
         </div>
       </div>
+
+      {showAnimation && product.images.length > 0 && (
+        <AddToCartAnimation
+          imageUrl={product.images[0]}
+          startPosition={animationStart}
+          onComplete={() => setShowAnimation(false)}
+        />
+      )}
     </div>
   );
 };

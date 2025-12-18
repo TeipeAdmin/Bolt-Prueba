@@ -575,6 +575,7 @@ export const PublicMenu: React.FC = () => {
                 </button>
               )}
               <button
+                data-cart-button
                 onClick={() => setShowCart(true)}
                 className="p-3 rounded-lg border hover:opacity-90 transition-colors relative shadow-lg"
                 style={{
