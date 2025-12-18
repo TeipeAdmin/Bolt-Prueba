@@ -7,7 +7,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 
 interface ChangePasswordModalProps {
   isOpen: boolean;
-  onPasswordChanged: (newPassword: string) => void;
+  onPasswordChanged: (newPassword: string) => Promise<void>;
 }
 
 export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
@@ -17,9 +17,10 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const { t } = useLanguage();
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setError('');
 
     if (newPassword.length < 6) {
@@ -32,9 +33,16 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
       return;
     }
 
-    onPasswordChanged(newPassword);
-    setNewPassword('');
-    setConfirmPassword('');
+    try {
+      setLoading(true);
+      await onPasswordChanged(newPassword);
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err: any) {
+      setError(err.message || 'Error al cambiar la contraseña');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -90,10 +98,10 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
           <Button
             variant="primary"
             onClick={handleSubmit}
-            disabled={!newPassword || !confirmPassword}
+            disabled={!newPassword || !confirmPassword || loading}
             icon={Lock}
           >
-            {t('changePassword')}
+            {loading ? t('processing') : t('changePassword')}
           </Button>
         </div>
       </div>

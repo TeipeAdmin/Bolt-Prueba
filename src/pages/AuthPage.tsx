@@ -192,7 +192,12 @@ export const AuthPage: React.FC = () => {
 
       <ChangePasswordModal
         isOpen={requirePasswordChange || false}
-        onPasswordChanged={(newPassword) => changePassword?.(newPassword)}
+        onPasswordChanged={async (newPassword) => {
+          const result = await changePassword?.(newPassword);
+          if (result && !result.success) {
+            throw new Error(result.error || 'Error al cambiar la contraseña');
+          }
+        }}
       />
     </div>
   );

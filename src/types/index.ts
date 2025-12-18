@@ -1,12 +1,11 @@
 export interface User {
   id: string;
   email: string;
-  password: string;
-  role: 'restaurant_owner' | 'super_admin';
+  full_name?: string;
+  role: 'restaurant_owner' | 'superadmin';
   restaurant_id?: string;
   created_at: string;
   updated_at: string;
-  email_verified?: boolean;
   require_password_change?: boolean;
 }
 
@@ -318,6 +317,6 @@ export interface AuthContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   register: (data: RegisterData) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
-  changePassword?: (newPassword: string) => void;
+  changePassword?: (newPassword: string) => Promise<{ success: boolean; error?: string }>;
   requestPasswordReset: (email: string) => Promise<{ success: boolean; error?: string }>;
 }
