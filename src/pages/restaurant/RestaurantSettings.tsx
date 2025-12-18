@@ -705,7 +705,7 @@ Fecha: ${new Date().toLocaleString()}
  
 
 
-              </div>
+
             </div>
           )}
 
