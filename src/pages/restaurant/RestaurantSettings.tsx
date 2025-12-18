@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Globe, Clock, Truck, QrCode, Palette, Bell, MapPin, HelpCircle, Send, Eye, Calendar, Mail, Phone, Building, Store, Megaphone, Upload, Image as ImageIcon, FileText, DollarSign, Star, ChevronDown } from 'lucide-react';
+import { Save, Globe, Clock, Truck, QrCode, Palette, Bell, MapPin, HelpCircle, Send, Eye, Calendar, Mail, Phone, Building, Store, Megaphone, Upload, Image as ImageIcon, FileText, DollarSign, Star, ChevronDown, ExternalLink } from 'lucide-react';
 import { colombianDepartments, colombianCitiesByDepartment, validateNIT, formatNIT } from '../../utils/colombianCities';
 import { Restaurant } from '../../types';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
@@ -348,14 +348,31 @@ Fecha: ${new Date().toLocaleString()}
     <div className="p-4 md:p-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 md:mb-6">
         <h1 className="text-xl md:text-2xl font-bold text-gray-900">{t('settings')}</h1>
-        <Button
-          onClick={handleSave}
-          loading={loading}
-          icon={Save}
-          className="w-full sm:w-auto"
-        >
-          {t('save')} {t('settings')}
-        </Button>
+        <div className="flex gap-3 w-full sm:w-auto">
+          <a
+            href={restaurant?.slug ? `/${restaurant.slug}` : '#'}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => {
+              if (!restaurant?.slug) {
+                e.preventDefault();
+                showToast('warning', 'No disponible', 'El menú público aún no está disponible', 3000);
+              }
+            }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg text-sm font-medium hover:from-green-700 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg"
+          >
+            <ExternalLink className="w-4 h-4" />
+            {t('viewMenu')}
+          </a>
+          <Button
+            onClick={handleSave}
+            loading={loading}
+            icon={Save}
+            className="w-full sm:w-auto"
+          >
+            {t('save')} {t('settings')}
+          </Button>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow">
