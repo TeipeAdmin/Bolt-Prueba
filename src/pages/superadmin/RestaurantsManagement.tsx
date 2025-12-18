@@ -6,8 +6,11 @@ import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
+import { supabase } from '../../lib/supabase';
+import { useToast } from '../../hooks/useToast';
 
 export const RestaurantsManagement: React.FC = () => {
+  const { showToast } = useToast();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
@@ -25,6 +28,7 @@ export const RestaurantsManagement: React.FC = () => {
   const [newRestaurantForm, setNewRestaurantForm] = useState({
     name: '',
     email: '',
+    password: '',
     phone: '',
     address: '',
     description: '',
@@ -34,6 +38,7 @@ export const RestaurantsManagement: React.FC = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'name'>('newest');
+  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -244,32 +249,47 @@ export const RestaurantsManagement: React.FC = () => {
     return <Badge variant={variant}>{planName}</Badge>;
   };
 
-  const handleCreateRestaurant = () => {
-    if (!newRestaurantForm.name || !newRestaurantForm.email) {
-      alert('Por favor completa al menos el nombre y email del restaurante');
+  const handleCreateRestaurant = async () => {
+    if (!newRestaurantForm.name || !newRestaurantForm.email || !newRestaurantForm.password) {
+      showToast('Por favor completa el nombre, email y contraseña', 'error');
       return;
     }
 
-    const restaurantId = `rest-${Date.now()}`;
-    const slug = newRestaurantForm.name
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '');
+    if (newRestaurantForm.password.length < 6) {
+      showToast('La contraseña debe tener al menos 6 caracteres', 'error');
+      return;
+    }
 
-    const newRestaurant: Restaurant = {
-      id: restaurantId,
-      name: newRestaurantForm.name,
-      slug: slug,
-      email: newRestaurantForm.email,
-      phone: newRestaurantForm.phone,
-      address: newRestaurantForm.address,
-      description: newRestaurantForm.description,
-      owner_id: '',
-      owner_name: '',
-      domain: slug,
-      settings: {
+    setIsCreating(true);
+
+    try {
+      const slug = newRestaurantForm.name
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: newRestaurantForm.email,
+        password: newRestaurantForm.password,
+        options: {
+          emailRedirectTo: window.location.origin,
+          data: {
+            name: newRestaurantForm.name,
+          }
+        }
+      });
+
+      if (authError) {
+        throw authError;
+      }
+
+      if (!authData.user) {
+        throw new Error('No se pudo crear el usuario');
+      }
+
+      const defaultSettings = {
         currency: 'USD',
         language: 'es',
         timezone: 'America/Bogota',
@@ -329,43 +349,70 @@ export const RestaurantsManagement: React.FC = () => {
           whatsapp: newRestaurantForm.phone,
           sound_enabled: true,
         },
-      },
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+      };
 
-    // Create subscription
-    const subscriptionId = `sub-${Date.now()}`;
-    const newSubscription: Subscription = {
-      id: subscriptionId,
-      restaurant_id: restaurantId,
-      plan_type: 'gratis',
-      duration: 'monthly',
-      status: 'active',
-      start_date: new Date().toISOString(),
-      end_date: '2099-12-31T23:59:59Z',
-      auto_renew: false,
-      created_at: new Date().toISOString(),
-    };
+      const { data: restaurantData, error: restaurantError } = await supabase
+        .from('restaurants')
+        .insert({
+          name: newRestaurantForm.name,
+          slug: slug,
+          email: newRestaurantForm.email,
+          phone: newRestaurantForm.phone || null,
+          address: newRestaurantForm.address || null,
+          description: newRestaurantForm.description || null,
+          owner_id: authData.user.id,
+          owner_name: newRestaurantForm.name,
+          domain: slug,
+          settings: defaultSettings,
+        })
+        .select()
+        .single();
 
-    newRestaurant.subscription_id = subscriptionId;
+      if (restaurantError) {
+        throw restaurantError;
+      }
 
-    const updatedRestaurants = [...restaurants, newRestaurant];
-    const allSubscriptions = loadFromStorage('subscriptions') || [];
-    const updatedSubscriptions = [...allSubscriptions, newSubscription];
+      await supabase
+        .from('users')
+        .update({
+          restaurant_id: restaurantData.id,
+          role: 'admin'
+        })
+        .eq('id', authData.user.id);
 
-    saveToStorage('restaurants', updatedRestaurants);
-    saveToStorage('subscriptions', updatedSubscriptions);
+      const endDate = new Date();
+      endDate.setFullYear(endDate.getFullYear() + 100);
 
-    setNewRestaurantForm({
-      name: '',
-      email: '',
-      phone: '',
-      address: '',
-      description: '',
-    });
-    setShowCreateModal(false);
-    loadData();
+      await supabase
+        .from('subscriptions')
+        .insert({
+          restaurant_id: restaurantData.id,
+          plan_type: 'gratis',
+          duration: 'monthly',
+          status: 'active',
+          start_date: new Date().toISOString(),
+          end_date: endDate.toISOString(),
+          auto_renew: false,
+        });
+
+      showToast('Restaurante y usuario creados exitosamente', 'success');
+
+      setNewRestaurantForm({
+        name: '',
+        email: '',
+        password: '',
+        phone: '',
+        address: '',
+        description: '',
+      });
+      setShowCreateModal(false);
+      loadData();
+    } catch (error: any) {
+      console.error('Error creating restaurant:', error);
+      showToast(error.message || 'Error al crear el restaurante', 'error');
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   const handleDeleteRestaurant = (restaurant: Restaurant) => {
@@ -861,6 +908,7 @@ export const RestaurantsManagement: React.FC = () => {
           setNewRestaurantForm({
             name: '',
             email: '',
+            password: '',
             phone: '',
             address: '',
             description: '',
@@ -891,6 +939,19 @@ export const RestaurantsManagement: React.FC = () => {
               value={newRestaurantForm.email}
               onChange={(e) => setNewRestaurantForm({ ...newRestaurantForm, email: e.target.value })}
               placeholder="contacto@email.com"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Contraseña *
+            </label>
+            <Input
+              type="password"
+              value={newRestaurantForm.password}
+              onChange={(e) => setNewRestaurantForm({ ...newRestaurantForm, password: e.target.value })}
+              placeholder="Mínimo 6 caracteres"
               required
             />
           </div>
@@ -933,12 +994,13 @@ export const RestaurantsManagement: React.FC = () => {
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-sm text-blue-800">
-              <strong>Nota:</strong> El restaurante se creará con:
+              <strong>Nota:</strong> El sistema creará automáticamente:
             </p>
             <ul className="text-sm text-blue-700 mt-2 space-y-1">
+              <li>• Usuario admin con el email y contraseña proporcionados</li>
+              <li>• Restaurante vinculado al usuario</li>
               <li>• Plan Gratis activo</li>
               <li>• Configuración predeterminada</li>
-              <li>• Sin usuarios asignados (asignar desde Gestión de Usuarios)</li>
             </ul>
           </div>
 
@@ -950,11 +1012,13 @@ export const RestaurantsManagement: React.FC = () => {
                 setNewRestaurantForm({
                   name: '',
                   email: '',
+                  password: '',
                   phone: '',
                   address: '',
                   description: '',
                 });
               }}
+              disabled={isCreating}
             >
               Cancelar
             </Button>
@@ -962,8 +1026,9 @@ export const RestaurantsManagement: React.FC = () => {
               variant="primary"
               onClick={handleCreateRestaurant}
               icon={Plus}
+              disabled={isCreating}
             >
-              Crear Restaurante
+              {isCreating ? 'Creando...' : 'Crear Restaurante'}
             </Button>
           </div>
         </div>
