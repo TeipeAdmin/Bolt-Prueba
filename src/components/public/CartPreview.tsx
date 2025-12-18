@@ -103,7 +103,7 @@ export const CartPreview: React.FC<CartPreviewProps> = ({
                 style={{ color: secondaryTextColor, stroke: secondaryTextColor }}
               />
             </div>
-            <span
+            <h3
               className="font-bold text-sm"
               style={{
                 color: secondaryTextColor,
@@ -111,7 +111,7 @@ export const CartPreview: React.FC<CartPreviewProps> = ({
               }}
             >
               Agregado al carrito
-            </span>
+            </h3>
           </div>
           <button
             onClick={handleClose}
