@@ -250,9 +250,9 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
             )}
 
             {/* Quantity and Add to Cart */}
-            <div className="space-y-4 mt-6">
+            <div className="flex flex-col md:flex-row items-center md:justify-between gap-4 mt-6">
               {/* Quantity */}
-              <div className="flex items-center justify-center gap-3">
+              <div className="flex items-center gap-3">
                 <span
                   className="font-medium"
                   style={{
@@ -308,7 +308,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
               {/* Add to Cart Button */}
               <button
                 onClick={handleAddToCart}
-                className="w-full px-6 py-3 text-white font-bold rounded-lg transition-all hover:opacity-90"
+                className="w-full md:flex-1 px-6 py-3 text-white font-bold rounded-lg transition-all hover:opacity-90"
                 style={{
                   backgroundColor: primaryColor,
                   fontSize: '16px',
