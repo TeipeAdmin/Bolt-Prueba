@@ -51,20 +51,20 @@ export const AuthPage: React.FC = () => {
         </div>
 
         <div className="relative z-10">
-          {/* Logo */}
-          <div className="flex items-center space-x-3 mb-16">
-            <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-orange-400 rounded-xl flex items-center justify-center shadow-lg">
-                <img
-                  src="/PLATYO FAVICON BLANCO.svg"
-                  alt="Platyo"
-                  className="w-10 h-10 flex-shrink-0"
-                />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-white">Platyo</h1>
-              <p className="text-sm text-gray-400">{t('authPageSubtitle')}</p>
-            </div>
+        {/* Logo */}
+        <a href="/" className="flex items-center space-x-3 mb-16 cursor-pointer">
+          <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-orange-400 rounded-xl flex items-center justify-center shadow-lg">
+            <img
+              src="/PLATYO FAVICON BLANCO.svg"
+              alt="Platyo"
+              className="w-10 h-10 flex-shrink-0"
+            />
           </div>
+          <div>
+            <h1 className="text-2xl font-bold text-white">Platyo</h1>
+            <p className="text-sm text-gray-400">{t('authPageSubtitle')}</p>
+          </div>
+        </a>
 
           {/* Main Value Proposition */}
           <div className="mb-12">
