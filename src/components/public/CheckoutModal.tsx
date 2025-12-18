@@ -100,10 +100,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
   };
 
   const handlePhoneChange = (value: string) => {
-    if (!value.startsWith('+57 ')) {
-      value = '+57 ';
-    }
-    const formatted = formatPhoneNumber(value);
+    const digits = value.replace(/[^\d]/g, '');
+    const phoneDigits = digits.startsWith('57') ? digits.slice(2) : digits;
+    const formatted = phoneDigits ? `+57 ${phoneDigits}` : '+57 ';
     setCustomerInfo({ ...customerInfo, phone: formatted });
     setValidationErrors({ ...validationErrors, phone: validatePhone(formatted) });
   };
