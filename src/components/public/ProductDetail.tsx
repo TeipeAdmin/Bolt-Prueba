@@ -250,8 +250,9 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
             )}
 
             {/* Quantity and Add to Cart */}
-            <div className="flex items-center justify-between gap-4 mt-6">
-              <div className="flex items-center gap-3">
+            <div className="space-y-4 mt-6">
+              {/* Quantity */}
+              <div className="flex items-center justify-center gap-3">
                 <span
                   className="font-medium"
                   style={{
@@ -263,18 +264,18 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
                   Cantidad:
                 </span>
                 <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-                  style={{
-                    border: `2px solid ${primaryColor}`,
-                    color: primaryColor,
-                    transition: 'background-color 0.3s ease',
-                    fontFamily: theme.secondary_font || 'Poppins'
-                  }}
-onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${primaryColor}4D`)}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-                >
+                  <button
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+                    style={{
+                      border: `2px solid ${primaryColor}`,
+                      color: primaryColor,
+                      transition: 'background-color 0.3s ease',
+                      fontFamily: theme.secondary_font || 'Poppins'
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${primaryColor}4D`)}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                  >
                     <Minus className="w-5 h-5" strokeWidth={3} />
                   </button>
                   <span
@@ -296,18 +297,18 @@ onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${primaryColor}4D
                       transition: 'background-color 0.3s ease',
                       fontFamily: theme.secondary_font || 'Poppins'
                     }}
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${primaryColor}4D`)} // 10% de opacidad
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${primaryColor}4D`)}
                     onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                   >
-
                     <Plus className="w-5 h-5" strokeWidth={3} />
                   </button>
                 </div>
               </div>
 
+              {/* Add to Cart Button */}
               <button
                 onClick={handleAddToCart}
-                className="flex-1 px-6 py-3 text-white font-bold rounded-lg transition-all hover:opacity-90"
+                className="w-full px-6 py-3 text-white font-bold rounded-lg transition-all hover:opacity-90"
                 style={{
                   backgroundColor: primaryColor,
                   fontSize: '16px',
