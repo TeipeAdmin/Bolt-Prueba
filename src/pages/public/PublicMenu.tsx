@@ -23,6 +23,7 @@ import { useCart } from '../../contexts/CartContext';
 import { ProductDetail } from '../../components/public/ProductDetail';
 import { CartSidebar } from '../../components/public/CartSidebar';
 import { CheckoutModal } from '../../components/public/CheckoutModal';
+import { CartPreview } from '../../components/public/CartPreview';
 import { formatCurrency } from '../../utils/currencyUtils';
 import { AnimatedCarousel } from '../../components/public/AnimatedCarousel'; /*DF:componenetes carousel*/
 import Pathtop from '../../components/public/Pathformtop.tsx'; /*DF:componenetes pathform*/
@@ -33,7 +34,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 
 export const PublicMenu: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
-  const { items: cartItems } = useCart();
+  const { items: cartItems, lastAddedItem, clearLastAddedItem } = useCart();
   const { t } = useLanguage();
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -1038,6 +1039,13 @@ export const PublicMenu: React.FC = () => {
         isOpen={showCheckout}
         onClose={() => setShowCheckout(false)}
         restaurant={restaurant}
+      />
+      {/* CART PREVIEW */}
+      <CartPreview
+        item={lastAddedItem}
+        restaurant={restaurant}
+        onViewCart={() => setShowCart(true)}
+        onClose={clearLastAddedItem}
       />
       {/* HOURS MODAL */}
       {showHoursModal && (

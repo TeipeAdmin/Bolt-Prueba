@@ -3,12 +3,14 @@ import { CartItem, Product, ProductVariation } from '../types';
 
 interface CartContextType {
   items: CartItem[];
+  lastAddedItem: CartItem | null;
   addItem: (product: Product, variation: ProductVariation, quantity?: number, selectedIngredients?: string[], notes?: string) => void;
   removeItem: (productId: string, variationId: string) => void;
   updateQuantity: (productId: string, variationId: string, quantity: number) => void;
   clearCart: () => void;
   getTotal: () => number;
   getItemCount: () => number;
+  clearLastAddedItem: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -27,11 +29,20 @@ interface CartProviderProps {
 
 export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [lastAddedItem, setLastAddedItem] = useState<CartItem | null>(null);
 
   const addItem = (product: Product, variation: ProductVariation, quantity = 1, selectedIngredients?: string[], notes?: string) => {
-    setItems(prevItems => {
-      const ingredientsToUse = selectedIngredients || product.ingredients?.filter(ing => !ing.optional).map(ing => ing.id) || [];
+    const ingredientsToUse = selectedIngredients || product.ingredients?.filter(ing => !ing.optional).map(ing => ing.id) || [];
 
+    const newItem: CartItem = {
+      product,
+      variation,
+      quantity,
+      special_notes: notes,
+      selected_ingredients: ingredientsToUse,
+    };
+
+    setItems(prevItems => {
       const existingItemIndex = prevItems.findIndex(
         item => item.product.id === product.id &&
                item.variation.id === variation.id &&
@@ -44,14 +55,10 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         return newItems;
       }
 
-      return [...prevItems, {
-        product,
-        variation,
-        quantity,
-        special_notes: notes,
-        selected_ingredients: ingredientsToUse,
-      }];
+      return [...prevItems, newItem];
     });
+
+    setLastAddedItem(newItem);
   };
 
   const removeItem = (productId: string, variationId: string) => {
@@ -99,14 +106,20 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     return items.reduce((count, item) => count + item.quantity, 0);
   };
 
+  const clearLastAddedItem = () => {
+    setLastAddedItem(null);
+  };
+
   const value: CartContextType = {
     items,
+    lastAddedItem,
     addItem,
     removeItem,
     updateQuantity,
     clearCart,
     getTotal,
     getItemCount,
+    clearLastAddedItem,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
