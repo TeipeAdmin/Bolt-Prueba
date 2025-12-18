@@ -32,6 +32,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
   const [orderNumber, setOrderNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const [deliveryCost, setDeliveryCost] = useState(0);
+  const [tip, setTip] = useState(0);
+  const [tipPercentage, setTipPercentage] = useState<number | null>(null);
+  const [customTip, setCustomTip] = useState('');
   const [validationErrors, setValidationErrors] = useState({
     name: '',
     phone: '',
@@ -232,6 +235,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
     if (deliveryMode === 'delivery' && deliveryCost > 0) {
       message += `Envío: ${formatCurrency(deliveryCost, currency)}\n`;
     }
+    if (tip > 0) {
+      message += `Propina: ${formatCurrency(tip, currency)}\n`;
+    }
     message += `*Total: ${formatCurrency(order.total, currency)}*\n`;
 
     if (customerInfo.notes) {
@@ -270,7 +276,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
       notes: customerInfo.notes,
       table_number: deliveryMode === 'dine-in' ? customerInfo.tableNumber : undefined,
       delivery_cost: deliveryMode === 'delivery' ? deliveryCost : 0,
-      total: getTotal() + (deliveryMode === 'delivery' ? deliveryCost : 0),
+      tip: tip,
+      total: getTotal() + (deliveryMode === 'delivery' ? deliveryCost : 0) + tip,
       status: 'pending',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -302,12 +309,30 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
     });
     setOrderNumber('');
     setDeliveryCost(0);
+    setTip(0);
+    setTipPercentage(null);
+    setCustomTip('');
     setValidationErrors({
       name: '',
       phone: '',
       email: ''
     });
     onClose();
+  };
+
+  const handleTipPercentageSelect = (percentage: number) => {
+    const subtotal = getTotal();
+    const calculatedTip = (subtotal * percentage) / 100;
+    setTip(calculatedTip);
+    setTipPercentage(percentage);
+    setCustomTip('');
+  };
+
+  const handleCustomTipChange = (value: string) => {
+    const numValue = parseFloat(value) || 0;
+    setCustomTip(value);
+    setTip(numValue);
+    setTipPercentage(null);
   };
 
   const getDeliveryModeLabel = () => {
@@ -936,9 +961,87 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                       <span style={{fontFamily: theme.secondary_font || 'Poppins'}}>{formatCurrency(deliveryCost, currency)}</span>
                     </div>
                   )}
+
+                  {/* Tip Section */}
+                  <div className="pt-3 pb-2 border-t" style={{ borderColor: `${primaryColor}40` }}>
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="font-medium" style={{fontFamily: theme.secondary_font || 'Poppins'}}>Propina (Opcional):</span>
+                      {tip > 0 && (
+                        <span className="font-semibold" style={{ color: 'var(--accent-color)', fontFamily: theme.secondary_font || 'Poppins' }}>
+                          {formatCurrency(tip, currency)}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-4 gap-2 mb-2">
+                      {[5, 10, 15, 20].map((percentage) => (
+                        <button
+                          key={percentage}
+                          onClick={() => handleTipPercentageSelect(percentage)}
+                          className="py-2 px-3 rounded-lg text-sm font-medium transition-all"
+                          style={{
+                            backgroundColor: tipPercentage === percentage ? primaryColor : 'transparent',
+                            color: tipPercentage === percentage ? secondaryTextColor : primaryTextColor,
+                            border: `2px solid ${primaryColor}`,
+                            borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
+                            fontFamily: theme.secondary_font || 'Poppins'
+                          }}
+                        >
+                          {percentage}%
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        value={customTip}
+                        onChange={(e) => handleCustomTipChange(e.target.value)}
+                        placeholder="Monto personalizado"
+                        className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2"
+                        style={{
+                          borderColor: customTip ? primaryColor : `${primaryColor}60`,
+                          backgroundColor: 'transparent',
+                          color: primaryTextColor,
+                          borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
+                          caretColor: primaryColor,
+                          fontFamily: theme.secondary_font || 'Poppins'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = primaryColor;
+                          e.target.style.boxShadow = `0 0 0 1px ${primaryColor}80`;
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = customTip ? primaryColor : `${primaryColor}60`;
+                          e.target.style.boxShadow = 'none';
+                        }}
+                        min="0"
+                        step="0.01"
+                      />
+                      {tip > 0 && (
+                        <button
+                          onClick={() => {
+                            setTip(0);
+                            setTipPercentage(null);
+                            setCustomTip('');
+                          }}
+                          className="px-3 py-2 text-sm rounded-lg transition-colors"
+                          style={{
+                            color: primaryTextColor,
+                            border: `1px solid ${primaryColor}60`,
+                            borderRadius: theme.button_style === 'rounded' ? '0.5rem' : '0.25rem',
+                            fontFamily: theme.secondary_font || 'Poppins'
+                          }}
+                        >
+                          Limpiar
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
                   <div className="flex justify-between text-xl font-bold border-t pt-2" style={{ borderColor: primaryColor }}>
                     <span style={{fontFamily: theme.secondary_font || 'Poppins'}}>Total:</span>
-                    <span style={{ color: 'var(--accent-color)', fontFamily: theme.secondary_font || 'Poppins' }}>{formatCurrency(getTotal() + (deliveryMode === 'delivery' ? deliveryCost : 0), currency)}</span>
+                    <span style={{ color: 'var(--accent-color)', fontFamily: theme.secondary_font || 'Poppins' }}>{formatCurrency(getTotal() + (deliveryMode === 'delivery' ? deliveryCost : 0) + tip, currency)}</span>
                   </div>
                 </div>
               </div>
@@ -994,7 +1097,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                   fontFamily: theme.secondary_font || 'Poppins'
                 }}
               >
-                {loading ? 'Procesando...' : `Confirmar Pedido - ${formatCurrency(getTotal() + (deliveryMode === 'delivery' ? deliveryCost : 0), currency)}`}
+                {loading ? 'Procesando...' : `Confirmar Pedido - ${formatCurrency(getTotal() + (deliveryMode === 'delivery' ? deliveryCost : 0) + tip, currency)}`}
               </button>
             </div>
           )}
