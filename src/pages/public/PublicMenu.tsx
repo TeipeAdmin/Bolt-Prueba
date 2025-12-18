@@ -442,7 +442,14 @@ export const PublicMenu: React.FC = () => {
             </div>
 
             {/* Logo */}
-            <div className="flex-shrink-0 text-center">
+            <button
+              onClick={() => {
+                setSelectedCategory('all');
+                setSearchTerm('');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="flex-shrink-0 text-center cursor-pointer hover:opacity-80 transition-opacity"
+            >
               {restaurant.logo ? (
                 <img
                   src={restaurant.logo}
@@ -451,7 +458,7 @@ export const PublicMenu: React.FC = () => {
                 />
               ) : (
                 <div
-                  className="text-3xl font-bold" 
+                  className="text-3xl font-bold"
                   style={{
                     color: primaryColor,
                     fontFamily: theme.secondary_font || 'Poppins',
@@ -460,7 +467,7 @@ export const PublicMenu: React.FC = () => {
                   {restaurant.name.substring(0, 2).toUpperCase()}
                 </div>
               )}
-            </div>
+            </button>
 
             {/* Action Buttons */}
 
