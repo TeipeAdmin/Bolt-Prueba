@@ -1188,8 +1188,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                       `}
                     </style>
                   
-                    <p className="font-semibold secondaryTextColorImportant" style={{ color: primaryTextColor, fontFamily: 'var(--secondary-font)', }}>Contacto</p>
-                    <p className="text-sm secondaryTextColorImportant" style={{ color: primaryTextColor, fontFamily: 'var(--secondary-font)', }}>
+                    <p className="font-semibold" style={{ color: primaryTextColor, fontFamily: 'var(--secondary-font)', }}>Contacto</p>
+                    <p className="text-sm" style={{ color: primaryTextColor, fontFamily: 'var(--secondary-font)', }}>
                       Te contactaremos al {customerInfo.phone}
                     </p>
                   </div>
