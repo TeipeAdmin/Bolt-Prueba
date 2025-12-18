@@ -16,7 +16,7 @@ import {
   Globe,
   AlignLeft,
 } from 'lucide-react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { Category, Product, Restaurant, Subscription } from '../../types';
 import { loadFromStorage } from '../../data/mockData';
 import { useCart } from '../../contexts/CartContext';
@@ -34,7 +34,6 @@ import { useLanguage } from '../../contexts/LanguageContext';
 
 export const PublicMenu: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
-  const navigate = useNavigate();
   const { items: cartItems, lastAddedItem, clearLastAddedItem } = useCart();
   const { t } = useLanguage();
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
@@ -443,10 +442,7 @@ export const PublicMenu: React.FC = () => {
             </div>
 
             {/* Logo */}
-            <button
-              onClick={() => navigate('/')}
-              className="flex-shrink-0 text-center cursor-pointer hover:opacity-80 transition-opacity"
-            >
+            <div className="flex-shrink-0 text-center">
               {restaurant.logo ? (
                 <img
                   src={restaurant.logo}
@@ -455,7 +451,7 @@ export const PublicMenu: React.FC = () => {
                 />
               ) : (
                 <div
-                  className="text-3xl font-bold"
+                  className="text-3xl font-bold" 
                   style={{
                     color: primaryColor,
                     fontFamily: theme.secondary_font || 'Poppins',
@@ -464,7 +460,7 @@ export const PublicMenu: React.FC = () => {
                   {restaurant.name.substring(0, 2).toUpperCase()}
                 </div>
               )}
-            </button>
+            </div>
 
             {/* Action Buttons */}
 
