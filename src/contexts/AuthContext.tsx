@@ -63,7 +63,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .eq('id', userId)
         .maybeSingle();
 
-      if (userError) throw userError;
+      if (userError) {
+        console.error('Error loading user data:', userError);
+        setUser(null);
+        setRestaurant(null);
+        setIsAuthenticated(false);
+        setLoading(false);
+        return;
+      }
 
       if (userData) {
         setUser(userData as User);
@@ -81,9 +88,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setRestaurant(restaurantData as Restaurant);
           }
         }
+
+        if (userData.role === 'superadmin') {
+          setRestaurant(null);
+        }
+      } else {
+        setUser(null);
+        setRestaurant(null);
+        setIsAuthenticated(false);
       }
+
+      setLoading(false);
     } catch (error) {
       console.error('Error loading user data:', error);
+      setUser(null);
+      setRestaurant(null);
+      setIsAuthenticated(false);
+      setLoading(false);
     }
   };
 
@@ -323,10 +344,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setRestaurant(null);
-    setIsAuthenticated(false);
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      setRestaurant(null);
+      setIsAuthenticated(false);
+      window.location.href = '/login';
+    } catch (error) {
+      console.error('Logout error:', error);
+      setUser(null);
+      setRestaurant(null);
+      setIsAuthenticated(false);
+      window.location.href = '/login';
+    }
   };
 
   const value: AuthContextType = {
