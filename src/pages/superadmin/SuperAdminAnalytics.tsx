@@ -114,7 +114,7 @@ export const SuperAdminAnalytics: React.FC = () => {
   const totalUsers = users.length;
   const verifiedUsers = users.filter(u => u.email_verified).length;
   const restaurantOwners = users.filter(u => u.role === 'restaurant_owner').length;
-  const superAdmins = users.filter(u => u.role === 'super_admin').length;
+  const superAdmins = users.filter(u => u.role === 'superadmin').length;
 
   const activeSubscriptions = filteredSubscriptions.filter(s => s.status === 'active').length;
   const expiredSubscriptions = filteredSubscriptions.filter(s => s.status === 'expired').length;

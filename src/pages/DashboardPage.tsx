@@ -23,7 +23,7 @@ export const DashboardPage: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const renderContent = () => {
-    if (user?.role === 'super_admin') {
+    if (user?.role === 'superadmin') {
       switch (activeTab) {
         case 'dashboard':
           return <SuperAdminDashboard />;

@@ -252,7 +252,7 @@ export const UsersManagement: React.FC = () => {
 
   const getRoleBadge = (role: UserType['role']) => {
     switch (role) {
-      case 'super_admin':
+      case 'superadmin':
         return <Badge variant="error">Superadmin</Badge>;
       case 'restaurant_owner':
         return <Badge variant="info">Restaurante</Badge>;
@@ -299,7 +299,7 @@ export const UsersManagement: React.FC = () => {
                 className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="all">Todos los roles</option>
-                <option value="super_admin">Superadministradores</option>
+                <option value="superadmin">Superadministradores</option>
                 <option value="restaurant_owner">Restaurantes</option>
               </select>
             </div>
@@ -652,10 +652,10 @@ export const UsersManagement: React.FC = () => {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="restaurant_owner">Restaurante</option>
-              <option value="super_admin">Superadministrador</option>
+              <option value="superadmin">Superadministrador</option>
             </select>
             <p className="text-xs text-gray-500 mt-1">
-              {newUserForm.role === 'super_admin'
+              {newUserForm.role === 'superadmin'
                 ? 'Tendrá acceso completo al panel de administración'
                 : 'Podrá gestionar su restaurante'}
             </p>
@@ -734,7 +734,7 @@ export const UsersManagement: React.FC = () => {
                 <strong>Usuario:</strong> {editingUser.email}
               </p>
               <p className="text-sm text-blue-700 mt-1">
-                <strong>Rol:</strong> {editingUser.role === 'super_admin' ? 'Superadministrador' : 'Restaurante'}
+                <strong>Rol:</strong> {editingUser.role === 'superadmin' ? 'Superadministrador' : 'Restaurante'}
               </p>
             </div>
 

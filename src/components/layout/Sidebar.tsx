@@ -30,7 +30,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isOpen
   
   // Check if user has a paid subscription
   const hasAnalyticsAccess = () => {
-    if (user?.role === 'super_admin') return true;
+    if (user?.role === 'superadmin') return true;
     
     if (!restaurant) return false;
     
@@ -66,7 +66,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isOpen
     restaurantTabs.push({ id: 'analytics', name: t('analytics'), icon: BarChart3 });
   }
 
-  const tabs = user?.role === 'super_admin' ? superAdminTabs : restaurantTabs;
+  const tabs = user?.role === 'superadmin' ? superAdminTabs : restaurantTabs;
 
   return (
     <>

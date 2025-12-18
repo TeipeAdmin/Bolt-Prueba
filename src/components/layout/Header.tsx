@@ -28,7 +28,7 @@ export const Header: React.FC<HeaderProps> = ({ onNavigateToSettings, onToggleSi
               <Menu className="w-6 h-6" />
             </button>
 
-            {user?.role === 'super_admin' && (
+            {user?.role === 'superadmin' && (
               <button
                 onClick={onNavigateToDashboard}
                 className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
@@ -46,7 +46,7 @@ export const Header: React.FC<HeaderProps> = ({ onNavigateToSettings, onToggleSi
                 </div>
               </button>
             )}
-            {user?.role !== 'super_admin' && (
+            {user?.role !== 'superadmin' && (
               <button
                 onClick={onNavigateToDashboard}
                 className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
