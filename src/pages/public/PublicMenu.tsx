@@ -161,12 +161,6 @@ export const PublicMenu: React.FC = () => {
     }
   }, [slug]);
 
-  useEffect(() => {
-    if (restaurant && hasPromo && !loading) {
-      setShowPromoModal(true);
-    }
-  }, [restaurant, hasPromo, loading]);
-
   const filteredProducts = products
     .filter((product) => {
       const matchesCategory =
@@ -253,6 +247,13 @@ export const PublicMenu: React.FC = () => {
   const hasPromo =
     restaurant.settings.promo?.enabled &&
     restaurant.settings.promo?.vertical_promo_image;
+
+  useEffect(() => {
+    if (restaurant && hasPromo && !loading) {
+      setShowPromoModal(true);
+    }
+  }, [restaurant, hasPromo, loading]);
+
   const internalDivStyle = scrolled ? {
     // 1. Fondo semi-transparente
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
