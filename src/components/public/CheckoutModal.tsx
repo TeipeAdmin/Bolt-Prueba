@@ -1159,7 +1159,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                   </div>
                   <div>
                     <p className="font-semibold" style={{ color: primaryTextColor, fontFamily: 'var(--secondary-font)', }}>Estado: Recibido</p>
-                    <p className="text-sm" style={{ color: secondaryTextColor, fontFamily: 'var(--secondary-font)', }}>Tu pedido está siendo preparado</p> 
+                    <p className="text-sm" style={{ color: primaryTextColo, fontFamily: 'var(--secondary-font)', }}>Tu pedido está siendo preparado</p> 
                   </div>
                 </div>
 
@@ -1188,8 +1188,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                       `}
                     </style>
                   
-                    <p className="font-semibold secondaryTextColorImportant" style={{fontFamily: theme.secondary_font || 'Poppins'}}>Contacto</p>
-                    <p className="text-sm secondaryTextColorImportant"style={{fontFamily: theme.secondary_font || 'Poppins'}}>
+                    <p className="font-semibold secondaryTextColorImportant" style={{fontFamily: primaryTextColo || 'Poppins'}}>Contacto</p>
+                    <p className="text-sm secondaryTextColorImportant"style={{fontFamily: primaryTextColo || 'Poppins'}}>
                       Te contactaremos al {customerInfo.phone}
                     </p>
                   </div>
