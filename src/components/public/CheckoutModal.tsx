@@ -22,7 +22,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>('pickup');
   const [customerInfo, setCustomerInfo] = useState({
     name: '',
-    phone: '',
+    phone: '+57 ',
     email: '',
     address: '',
     city: '',
@@ -79,7 +79,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
   };
 
   const validatePhone = (phone: string): string => {
-    if (!phone || phone.trim().length === 0) return '';
+    if (!phone || phone.trim().length <= 4) return '';
     const phoneRegex = /^\+\d{1,3}\s?\d{7,14}$/;
     if (!phoneRegex.test(phone.replace(/\s+/g, ' '))) {
       return 'Formato: +57 3001234567';
@@ -100,6 +100,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
   };
 
   const handlePhoneChange = (value: string) => {
+    if (!value.startsWith('+57 ')) {
+      value = '+57 ';
+    }
     const formatted = formatPhoneNumber(value);
     setCustomerInfo({ ...customerInfo, phone: formatted });
     setValidationErrors({ ...validationErrors, phone: validatePhone(formatted) });
@@ -154,14 +157,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
       return false;
     }
 
-    if (!customerInfo.phone || customerInfo.phone.trim().length === 0) {
+    if (!customerInfo.phone || customerInfo.phone.trim().length <= 4) {
       showToast('warning', 'Teléfono requerido', 'Por favor ingresa tu número de teléfono', 5000, { primary: primaryColor, secondary: secondaryTextColor });
       return false;
     }
 
     const phoneRegex = /^\+\d{1,3}\s?\d{7,14}$/;
     if (!phoneRegex.test(customerInfo.phone.replace(/\s+/g, ' '))) {
-      showToast('warning', 'Teléfono inválido', 'Por favor ingresa un teléfono válido con código de país (Ej: +57 3001234567)', 5000, { primary: primaryColor, secondary: secondaryTextColor });
+      showToast('warning', 'Teléfono inválido', 'Por favor ingresa un teléfono válido (Ej: +57 3001234567)', 5000, { primary: primaryColor, secondary: secondaryTextColor });
       return false;
     }
 
@@ -613,6 +616,31 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                     type="tel"
                     value={customerInfo.phone}
                     onChange={(e) => handlePhoneChange(e.target.value)}
+                    onKeyDown={(e) => {
+                      const cursorPosition = e.currentTarget.selectionStart || 0;
+                      if ((e.key === 'Backspace' || e.key === 'Delete') && cursorPosition <= 4) {
+                        e.preventDefault();
+                      }
+                    }}
+                    onFocus={(e) => {
+                      if (e.target.value === '+57 ') {
+                        setTimeout(() => {
+                          e.target.setSelectionRange(4, 4);
+                        }, 0);
+                      }
+                      e.target.style.borderColor = validationErrors.phone ? '#ef4444' : primaryColor;
+                      e.target.style.boxShadow = `0 0 0 1px ${validationErrors.phone ? '#ef4444' : primaryColor}80`;
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = validationErrors.phone ? '#ef4444' : primaryColor;
+                      e.target.style.boxShadow = `0 0 0 1px ${validationErrors.phone ? '#ef4444' : primaryColor}40`;
+                    }}
+                    onClick={(e) => {
+                      const cursorPosition = e.currentTarget.selectionStart || 0;
+                      if (cursorPosition < 4) {
+                        e.currentTarget.setSelectionRange(4, 4);
+                      }
+                    }}
                     className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2"
                     style={{
                       fontSize: 'var(--font-size-normal)',
@@ -623,15 +651,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
                       caretColor: primaryColor,
                       fontFamily: theme.secondary_font || 'Poppins'
                     }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = validationErrors.phone ? '#ef4444' : primaryColor;
-                      e.target.style.boxShadow = `0 0 0 1px ${validationErrors.phone ? '#ef4444' : primaryColor}80`;
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = validationErrors.phone ? '#ef4444' : primaryColor;
-                      e.target.style.boxShadow = `0 0 0 1px ${validationErrors.phone ? '#ef4444' : primaryColor}40`;
-                    }}
-                    placeholder="+57 3001234567"
+                    placeholder="3001234567"
                     required
                   />
                   {validationErrors.phone && (
