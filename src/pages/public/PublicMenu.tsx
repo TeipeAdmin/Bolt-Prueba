@@ -161,6 +161,12 @@ export const PublicMenu: React.FC = () => {
     }
   }, [slug]);
 
+  useEffect(() => {
+    if (restaurant && hasPromo && !loading) {
+      setShowPromoModal(true);
+    }
+  }, [restaurant, hasPromo, loading]);
+
   const filteredProducts = products
     .filter((product) => {
       const matchesCategory =
