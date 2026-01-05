@@ -100,11 +100,17 @@ export const PublicMenu: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      const { data: restaurantData, error: restaurantError } = await supabase
-        .from('restaurants')
-        .select('*')
-        .or(`slug.eq.${slug},id.eq.${slug},domain.eq.${slug}`)
-        .maybeSingle();
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug || '');
+
+      let query = supabase.from('restaurants').select('*');
+
+      if (isUUID) {
+        query = query.or(`slug.eq.${slug},id.eq.${slug},domain.eq.${slug}`);
+      } else {
+        query = query.or(`slug.eq.${slug},domain.eq.${slug}`);
+      }
+
+      const { data: restaurantData, error: restaurantError } = await query.maybeSingle();
 
       if (restaurantError) throw restaurantError;
 
