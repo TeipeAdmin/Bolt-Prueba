@@ -83,14 +83,30 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    console.log('Deleting user from auth system:', userId);
+    const { error: authError } = await supabaseClient.auth.admin.deleteUser(userId);
+
+    if (authError) {
+      console.error('Auth deletion error:', authError);
+      return new Response(
+        JSON.stringify({ error: `Error eliminando del sistema de autenticación: ${authError.message}` }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    console.log('User deleted from auth, now deleting from users table');
     const { error: dbError } = await supabaseClient
       .from('users')
       .delete()
       .eq('id', userId);
 
     if (dbError) {
+      console.error('Database deletion error:', dbError);
       return new Response(
-        JSON.stringify({ error: dbError.message }),
+        JSON.stringify({ error: `Error eliminando de la base de datos: ${dbError.message}` }),
         {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -98,18 +114,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const { error: authError } = await supabaseClient.auth.admin.deleteUser(userId);
-
-    if (authError) {
-      return new Response(
-        JSON.stringify({ error: authError.message }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
+    console.log('User deleted successfully from both auth and database');
     return new Response(
       JSON.stringify({ success: true, message: 'User deleted successfully' }),
       {
