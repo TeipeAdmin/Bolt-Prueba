@@ -44,16 +44,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const checkUser = async () => {
     try {
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Auth check timeout')), 10000)
-      );
+      const { data: { session }, error } = await supabase.auth.getSession();
 
-      const sessionPromise = supabase.auth.getSession();
-
-      const { data: { session } } = await Promise.race([
-        sessionPromise,
-        timeoutPromise
-      ]) as any;
+      if (error) {
+        console.error('Error getting session:', error);
+        setLoading(false);
+        return;
+      }
 
       if (session?.user) {
         await loadUserData(session.user.id);
@@ -73,20 +70,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
 
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('User data load timeout')), 10000)
-      );
-
-      const userDataPromise = supabase
+      const { data: userData, error: userError } = await supabase
         .from('users')
         .select('*')
         .eq('id', userId)
         .maybeSingle();
-
-      const { data: userData, error: userError } = await Promise.race([
-        userDataPromise,
-        timeoutPromise
-      ]) as any;
 
       if (userError) {
         console.error('Error loading user data:', userError);
