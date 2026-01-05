@@ -24,41 +24,52 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [requirePasswordChange, setRequirePasswordChange] = useState(false);
 
   useEffect(() => {
+    console.log('[AuthContext] Initializing auth context...');
     checkUser();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('[AuthContext] Auth state changed:', event);
+
       if (event === 'SIGNED_IN' && session?.user) {
+        console.log('[AuthContext] User signed in:', session.user.email);
         await loadUserData(session.user.id);
       } else if (event === 'SIGNED_OUT') {
+        console.log('[AuthContext] User signed out');
         setUser(null);
         setRestaurant(null);
         setIsAuthenticated(false);
         setLoading(false);
+      } else if (event === 'TOKEN_REFRESHED') {
+        console.log('[AuthContext] Token refreshed for user:', session?.user?.email);
       }
     });
 
     return () => {
+      console.log('[AuthContext] Cleaning up auth listener');
       authListener?.subscription.unsubscribe();
     };
   }, []);
 
   const checkUser = async () => {
     try {
+      console.log('[AuthContext] Checking user session...');
       const { data: { session }, error } = await supabase.auth.getSession();
 
       if (error) {
-        console.error('Error getting session:', error);
+        console.error('[AuthContext] Error getting session:', error);
         setLoading(false);
         return;
       }
 
       if (session?.user) {
+        console.log('[AuthContext] Session found for user:', session.user.email);
         await loadUserData(session.user.id);
       } else {
+        console.log('[AuthContext] No active session found');
         setLoading(false);
       }
     } catch (error) {
-      console.error('Error checking user:', error);
+      console.error('[AuthContext] Unexpected error checking user:', error);
       setUser(null);
       setRestaurant(null);
       setIsAuthenticated(false);
@@ -66,8 +77,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const loadUserData = async (userId: string) => {
+  const loadUserData = async (userId: string, retryCount = 0) => {
     try {
+      console.log('[AuthContext] Loading user data for:', userId);
       setLoading(true);
 
       const { data: userData, error: userError } = await supabase
@@ -77,7 +89,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .maybeSingle();
 
       if (userError) {
-        console.error('Error loading user data:', userError);
+        console.error('[AuthContext] Error loading user data:', userError);
+
+        if (retryCount < 2) {
+          console.log('[AuthContext] Retrying... attempt', retryCount + 1);
+          await new Promise(resolve => setTimeout(resolve, 500));
+          return loadUserData(userId, retryCount + 1);
+        }
+
+        console.error('[AuthContext] Max retries reached, signing out');
         await supabase.auth.signOut();
         setUser(null);
         setRestaurant(null);
@@ -86,42 +106,57 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return;
       }
 
-      if (userData) {
-        setUser(userData as User);
-        setIsAuthenticated(true);
-        setRequirePasswordChange(userData.require_password_change || false);
-
-        if (userData.role === 'restaurant_owner' && userData.restaurant_id) {
-          try {
-            const { data: restaurantData, error: restaurantError } = await supabase
-              .from('restaurants')
-              .select('*')
-              .eq('id', userData.restaurant_id)
-              .maybeSingle();
-
-            if (!restaurantError && restaurantData) {
-              setRestaurant(restaurantData as Restaurant);
-            }
-          } catch (restaurantError) {
-            console.error('Error loading restaurant data:', restaurantError);
-          }
-        }
-
-        if (userData.role === 'superadmin') {
-          setRestaurant(null);
-        }
-
-        setLoading(false);
-      } else {
-        console.warn('No user data found for userId:', userId);
+      if (!userData) {
+        console.error('[AuthContext] No user data found for userId:', userId);
         await supabase.auth.signOut();
         setUser(null);
         setRestaurant(null);
         setIsAuthenticated(false);
         setLoading(false);
+        return;
       }
+
+      console.log('[AuthContext] User data loaded successfully:', userData.email, 'Role:', userData.role);
+      setUser(userData as User);
+      setIsAuthenticated(true);
+      setRequirePasswordChange(userData.require_password_change || false);
+
+      if (userData.role === 'restaurant_owner' && userData.restaurant_id) {
+        console.log('[AuthContext] Loading restaurant data for:', userData.restaurant_id);
+
+        const { data: restaurantData, error: restaurantError } = await supabase
+          .from('restaurants')
+          .select('*')
+          .eq('id', userData.restaurant_id)
+          .maybeSingle();
+
+        if (restaurantError) {
+          console.error('[AuthContext] Error loading restaurant:', restaurantError);
+        } else if (restaurantData) {
+          console.log('[AuthContext] Restaurant data loaded:', restaurantData.name);
+          setRestaurant(restaurantData as Restaurant);
+        } else {
+          console.warn('[AuthContext] No restaurant data found');
+        }
+      }
+
+      if (userData.role === 'superadmin') {
+        console.log('[AuthContext] User is superadmin, no restaurant needed');
+        setRestaurant(null);
+      }
+
+      console.log('[AuthContext] Auth context fully loaded');
+      setLoading(false);
     } catch (error) {
-      console.error('Error loading user data:', error);
+      console.error('[AuthContext] Unexpected error loading user data:', error);
+
+      if (retryCount < 2) {
+        console.log('[AuthContext] Retrying after unexpected error... attempt', retryCount + 1);
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return loadUserData(userId, retryCount + 1);
+      }
+
+      console.error('[AuthContext] Max retries reached after unexpected error, signing out');
       await supabase.auth.signOut();
       setUser(null);
       setRestaurant(null);
