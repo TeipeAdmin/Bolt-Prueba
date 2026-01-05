@@ -83,21 +83,17 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    console.log('Deleting user from auth system:', userId);
-    const { error: authError } = await supabaseClient.auth.admin.deleteUser(userId);
+    console.log('Step 1: Deleting related records from restaurants table');
+    const { error: restaurantsError } = await supabaseClient
+      .from('restaurants')
+      .delete()
+      .eq('user_id', userId);
 
-    if (authError) {
-      console.error('Auth deletion error:', authError);
-      return new Response(
-        JSON.stringify({ error: `Error eliminando del sistema de autenticación: ${authError.message}` }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
+    if (restaurantsError) {
+      console.error('Error deleting restaurants:', restaurantsError);
     }
 
-    console.log('User deleted from auth, now deleting from users table');
+    console.log('Step 2: Deleting from users table');
     const { error: dbError } = await supabaseClient
       .from('users')
       .delete()
@@ -114,7 +110,21 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    console.log('User deleted successfully from both auth and database');
+    console.log('Step 3: Deleting user from auth system');
+    const { error: authError } = await supabaseClient.auth.admin.deleteUser(userId);
+
+    if (authError) {
+      console.error('Auth deletion error:', authError);
+      return new Response(
+        JSON.stringify({ error: `Error eliminando del sistema de autenticación: ${authError.message}` }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    console.log('User deleted successfully from all locations');
     return new Response(
       JSON.stringify({ success: true, message: 'User deleted successfully' }),
       {
