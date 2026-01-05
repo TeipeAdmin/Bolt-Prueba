@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, Trash2, Filter, ExternalLink, Settings, Plus } from 'lucide-react';
+import { Eye, Trash2, Filter, ExternalLink, Settings, Plus, UserCheck } from 'lucide-react';
 import { Restaurant, Subscription, SubscriptionPlan } from '../../types';
 import { supabase } from '../../lib/supabase';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
+import { useToast } from '../../hooks/useToast';
 
 export const RestaurantsManagement: React.FC = () => {
+  const toast = useToast();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [subscriptionPlans, setSubscriptionPlans] = useState<SubscriptionPlan[]>([]);
@@ -15,8 +17,13 @@ export const RestaurantsManagement: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showTransferModal, setShowTransferModal] = useState(false);
   const [restaurantToDelete, setRestaurantToDelete] = useState<Restaurant | null>(null);
+  const [restaurantToTransfer, setRestaurantToTransfer] = useState<Restaurant | null>(null);
   const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(null);
+  const [availableUsers, setAvailableUsers] = useState<any[]>([]);
+  const [selectedNewOwner, setSelectedNewOwner] = useState<string>('');
+  const [transferLoading, setTransferLoading] = useState(false);
   const [subscriptionForm, setSubscriptionForm] = useState({
     plan_name: 'free',
     duration: 'monthly' as Subscription['duration'],
@@ -178,6 +185,73 @@ export const RestaurantsManagement: React.FC = () => {
     } catch (error) {
       console.error('Error deleting restaurant:', error);
       alert('Error al eliminar el restaurante');
+    }
+  };
+
+  const handleTransferOwnership = async (restaurant: Restaurant) => {
+    setRestaurantToTransfer(restaurant);
+    setSelectedNewOwner('');
+
+    try {
+      const { data: users, error } = await supabase
+        .from('users')
+        .select('id, full_name, email, role')
+        .eq('restaurant_id', restaurant.id)
+        .neq('id', restaurant.owner_id)
+        .in('role', ['restaurant_owner', 'superadmin']);
+
+      if (error) throw error;
+
+      setAvailableUsers(users || []);
+      setShowTransferModal(true);
+    } catch (error) {
+      console.error('Error loading users:', error);
+      toast.error('Error al cargar usuarios disponibles');
+    }
+  };
+
+  const confirmTransferOwnership = async () => {
+    if (!restaurantToTransfer || !selectedNewOwner) return;
+
+    try {
+      setTransferLoading(true);
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error('Sesión expirada');
+        return;
+      }
+
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/transfer-restaurant-ownership`;
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          restaurantId: restaurantToTransfer.id,
+          newOwnerId: selectedNewOwner,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Error al transferir propiedad');
+      }
+
+      toast.success(`Propiedad transferida exitosamente a ${result.restaurant.newOwnerName}`);
+      await loadData();
+      setShowTransferModal(false);
+      setRestaurantToTransfer(null);
+      setSelectedNewOwner('');
+    } catch (error: any) {
+      console.error('Error transferring ownership:', error);
+      toast.error(error.message || 'Error al transferir propiedad');
+    } finally {
+      setTransferLoading(false);
     }
   };
 
@@ -438,6 +512,15 @@ export const RestaurantsManagement: React.FC = () => {
                         <Button
                           variant="ghost"
                           size="sm"
+                          icon={UserCheck}
+                          onClick={() => handleTransferOwnership(restaurant)}
+                          className="text-green-600 hover:text-green-700"
+                          title="Transferir Propiedad"
+                        />
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           icon={Trash2}
                           onClick={() => handleDeleteRestaurant(restaurant)}
                           className="text-red-600 hover:text-red-700"
@@ -672,6 +755,90 @@ export const RestaurantsManagement: React.FC = () => {
                 icon={Trash2}
               >
                 Eliminar Restaurante
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        isOpen={showTransferModal}
+        onClose={() => {
+          setShowTransferModal(false);
+          setRestaurantToTransfer(null);
+          setSelectedNewOwner('');
+        }}
+        title="Transferir Propiedad del Restaurante"
+        size="md"
+      >
+        {restaurantToTransfer && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-center mb-6">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                <UserCheck className="w-8 h-8 text-green-600" />
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2 text-center">
+                Transferir propiedad de "{restaurantToTransfer.name}"
+              </h3>
+              <p className="text-sm text-gray-600 text-center mb-4">
+                El propietario actual es: <strong>{restaurantToTransfer.owner_name || 'No especificado'}</strong>
+              </p>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                <p className="text-sm text-yellow-800">
+                  <strong>Importante:</strong> Esta acción transferirá todos los derechos y responsabilidades del restaurante al nuevo propietario. El propietario actual perderá el control total del restaurante.
+                </p>
+              </div>
+            </div>
+
+            {availableUsers.length === 0 ? (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <p className="text-sm text-gray-600 text-center">
+                  No hay usuarios disponibles para transferir la propiedad. El nuevo propietario debe ser un miembro del restaurante con rol de "restaurant_owner" o "superadmin".
+                </p>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Seleccionar Nuevo Propietario
+                </label>
+                <select
+                  value={selectedNewOwner}
+                  onChange={(e) => setSelectedNewOwner(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  disabled={transferLoading}
+                >
+                  <option value="">-- Seleccionar usuario --</option>
+                  {availableUsers.map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.full_name} ({user.email}) - {user.role}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setShowTransferModal(false);
+                  setRestaurantToTransfer(null);
+                  setSelectedNewOwner('');
+                }}
+                disabled={transferLoading}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={confirmTransferOwnership}
+                icon={UserCheck}
+                disabled={!selectedNewOwner || transferLoading || availableUsers.length === 0}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                {transferLoading ? 'Transfiriendo...' : 'Transferir Propiedad'}
               </Button>
             </div>
           </div>
