@@ -23,28 +23,51 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [requirePasswordChange, setRequirePasswordChange] = useState(false);
   const loadingUserRef = useRef(false);
+  const initializedRef = useRef(false);
 
   useEffect(() => {
     console.log('[AuthContext] Initializing auth context...');
 
+    const initializeAuth = async () => {
+      try {
+        console.log('[AuthContext] Getting initial session...');
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        if (error) {
+          console.error('[AuthContext] Error getting session:', error);
+          setLoading(false);
+          return;
+        }
+
+        if (session?.user) {
+          console.log('[AuthContext] Initial session found for:', session.user.email);
+          await loadUserData(session.user.id);
+        } else {
+          console.log('[AuthContext] No initial session found');
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('[AuthContext] Error initializing auth:', error);
+        setLoading(false);
+      } finally {
+        initializedRef.current = true;
+      }
+    };
+
+    initializeAuth();
+
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('[AuthContext] Auth state changed:', event, session?.user?.email);
 
-      if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session?.user) {
-        console.log('[AuthContext] Loading user after auth event:', event);
-        if (!loadingUserRef.current) {
-          await new Promise(resolve => setTimeout(resolve, 100));
+      if (!initializedRef.current) {
+        console.log('[AuthContext] Skipping event, still initializing...');
+        return;
+      }
 
-          const { data: { session: verifiedSession } } = await supabase.auth.getSession();
-          if (verifiedSession?.user) {
-            console.log('[AuthContext] Session verified, loading user data');
-            await loadUserData(verifiedSession.user.id);
-          } else {
-            console.log('[AuthContext] Session not ready, skipping load');
-            setLoading(false);
-          }
-        } else {
-          console.log('[AuthContext] Skipping loadUserData, already in progress');
+      if (event === 'SIGNED_IN' && session?.user) {
+        console.log('[AuthContext] User signed in, loading data...');
+        if (!loadingUserRef.current) {
+          await loadUserData(session.user.id);
         }
       } else if (event === 'SIGNED_OUT') {
         console.log('[AuthContext] User signed out');
@@ -53,11 +76,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setIsAuthenticated(false);
         setLoading(false);
         loadingUserRef.current = false;
-      } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-        console.log('[AuthContext] Token refreshed for user:', session.user.email);
-      } else if (event === 'INITIAL_SESSION' && !session) {
-        console.log('[AuthContext] No session found, setting loading to false');
-        setLoading(false);
+      } else if (event === 'TOKEN_REFRESHED') {
+        console.log('[AuthContext] Token refreshed');
+      } else if (event === 'USER_UPDATED') {
+        console.log('[AuthContext] User updated');
       }
     });
 
@@ -79,23 +101,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       loadingUserRef.current = true;
       setLoading(true);
 
-      console.log('[AuthContext] About to query users table...');
+      console.log('[AuthContext] Querying users table...');
       const startTime = Date.now();
 
-      const queryPromise = supabase
+      const { data: userData, error: userError } = await supabase
         .from('users')
         .select('*')
         .eq('id', userId)
         .maybeSingle();
-
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Query timeout')), 5000)
-      );
-
-      const { data: userData, error: userError } = await Promise.race([
-        queryPromise,
-        timeoutPromise
-      ]) as any;
 
       const duration = Date.now() - startTime;
       console.log(`[AuthContext] Query completed in ${duration}ms`);
