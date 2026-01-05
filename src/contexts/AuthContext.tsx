@@ -33,6 +33,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
 
     console.log('[AuthContext] Initializing auth context...');
+    initializedRef.current = true;
 
     const initializeAuth = async () => {
       try {
@@ -55,47 +56,41 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } catch (error) {
         console.error('[AuthContext] Error initializing auth:', error);
         setLoading(false);
-      } finally {
-        initializedRef.current = true;
       }
     };
 
     initializeAuth();
 
-    authListenerRef.current = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('[AuthContext] Auth state changed:', event, session?.user?.email);
+    if (!authListenerRef.current) {
+      const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+        console.log('[AuthContext] Auth state changed:', event);
 
-      if (!initializedRef.current) {
-        console.log('[AuthContext] Skipping event, still initializing...');
-        return;
-      }
-
-      (async () => {
-        if (event === 'SIGNED_IN' && session?.user) {
-          console.log('[AuthContext] User signed in, loading data...');
-          if (!loadingUserRef.current) {
-            await loadUserData(session.user.id);
+        (async () => {
+          if (event === 'SIGNED_IN' && session?.user) {
+            console.log('[AuthContext] User signed in, loading data...');
+            if (!loadingUserRef.current) {
+              await loadUserData(session.user.id);
+            }
+          } else if (event === 'SIGNED_OUT') {
+            console.log('[AuthContext] User signed out');
+            setUser(null);
+            setRestaurant(null);
+            setIsAuthenticated(false);
+            setLoading(false);
+            loadingUserRef.current = false;
+          } else if (event === 'TOKEN_REFRESHED') {
+            console.log('[AuthContext] Token refreshed, keeping current state');
+          } else if (event === 'USER_UPDATED') {
+            console.log('[AuthContext] User updated, keeping current state');
           }
-        } else if (event === 'SIGNED_OUT') {
-          console.log('[AuthContext] User signed out');
-          setUser(null);
-          setRestaurant(null);
-          setIsAuthenticated(false);
-          setLoading(false);
-          loadingUserRef.current = false;
-        } else if (event === 'TOKEN_REFRESHED') {
-          console.log('[AuthContext] Token refreshed');
-        } else if (event === 'USER_UPDATED') {
-          console.log('[AuthContext] User updated');
-        }
-      })();
-    });
+        })();
+      });
+
+      authListenerRef.current = authListener;
+    }
 
     return () => {
-      console.log('[AuthContext] Cleaning up auth listener');
-      if (authListenerRef.current?.data?.subscription) {
-        authListenerRef.current.data.subscription.unsubscribe();
-      }
+      console.log('[AuthContext] Cleanup called but keeping listener active');
     };
   }, []);
 
