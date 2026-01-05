@@ -153,18 +153,36 @@ export const UsersManagement: React.FC = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from('users')
-        .delete()
-        .eq('id', userId);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        showToast('error', 'Error', 'No hay sesión activa');
+        return;
+      }
 
-      if (error) throw error;
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-user`;
+      const headers = {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      };
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ userId }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Error al eliminar usuario');
+      }
 
       showToast('success', 'Éxito', 'Usuario eliminado exitosamente');
       await loadData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting user:', error);
-      showToast('error', 'Error', 'No se pudo eliminar el usuario');
+      const errorMessage = error?.message || 'No se pudo eliminar el usuario';
+      showToast('error', 'Error', errorMessage);
     }
   };
 
