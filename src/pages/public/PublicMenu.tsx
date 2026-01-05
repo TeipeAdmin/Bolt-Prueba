@@ -143,21 +143,34 @@ export const PublicMenu: React.FC = () => {
         .select('*')
         .eq('restaurant_id', restaurantData.id)
         .eq('is_active', true)
-        .order('order_position', { ascending: true });
+        .order('display_order', { ascending: true });
 
       if (categoriesError) throw categoriesError;
 
       const { data: productsData, error: productsError } = await supabase
         .from('products')
-        .select('*')
+        .select(`
+          *,
+          product_categories (
+            category_id
+          )
+        `)
         .eq('restaurant_id', restaurantData.id)
-        .eq('status', 'active')
-        .order('order_index', { ascending: true });
+        .eq('is_available', true);
 
       if (productsError) throw productsError;
 
+      const transformedProducts = (productsData || []).map((p: any) => ({
+        ...p,
+        images: p.image_url ? [p.image_url] : [],
+        variations: [{ id: '1', name: 'Default', price: Number(p.price) || 0 }],
+        status: p.is_available ? 'active' : 'inactive',
+        category_id: p.product_categories?.[0]?.category_id || null,
+        order_index: 0
+      }));
+
       setCategories(categoriesData || []);
-      setProducts(productsData || []);
+      setProducts(transformedProducts);
       setLoading(false);
     } catch (err) {
       console.error('Error loading menu:', err);
@@ -199,8 +212,7 @@ export const PublicMenu: React.FC = () => {
         (product.description &&
           product.description.toLowerCase().includes(searchLower))
       );
-    })
-    .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+    });
 
   const getFeaturedProducts = () => {
     if (!restaurant?.settings.promo?.featured_product_ids?.length) {
@@ -456,15 +468,15 @@ export const PublicMenu: React.FC = () => {
 
             {/* Logo */}
             <div className="flex-shrink-0 text-center">
-              {restaurant.logo ? (
+              {(restaurant as any).logo_url ? (
                 <img
-                  src={restaurant.logo}
+                  src={(restaurant as any).logo_url}
                   alt={restaurant.name}
                   className="h-16 mx-auto"
                 />
               ) : (
                 <div
-                  className="text-3xl font-bold" 
+                  className="text-3xl font-bold"
                   style={{
                     color: primaryColor,
                     fontFamily: theme.secondary_font || 'Poppins',
