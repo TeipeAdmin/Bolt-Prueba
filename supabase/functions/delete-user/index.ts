@@ -87,7 +87,7 @@ Deno.serve(async (req: Request) => {
     const { data: restaurants } = await supabaseClient
       .from('restaurants')
       .select('id')
-      .eq('user_id', userId);
+      .eq('owner_id', userId);
 
     const restaurantIds = restaurants?.map(r => r.id) || [];
 
@@ -131,14 +131,14 @@ Deno.serve(async (req: Request) => {
 
       console.log('Step 8: Deleting support tickets for restaurants');
       await supabaseClient.from('support_tickets').delete().in('restaurant_id', restaurantIds);
+
+      console.log('Step 9: Deleting restaurants');
+      await supabaseClient.from('restaurants').delete().in('id', restaurantIds);
     }
 
-    console.log('Step 9: Deleting support tickets for user (assigned or created)');
+    console.log('Step 10: Deleting support tickets for user (assigned or created)');
     await supabaseClient.from('support_tickets').delete().eq('user_id', userId);
     await supabaseClient.from('support_tickets').delete().eq('assigned_to', userId);
-
-    console.log('Step 10: Deleting restaurants');
-    await supabaseClient.from('restaurants').delete().eq('user_id', userId);
 
     console.log('Step 11: Deleting from users table');
     const { error: dbError } = await supabaseClient
