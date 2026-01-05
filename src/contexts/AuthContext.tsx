@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
 import { AuthContextType, User, Restaurant, RegisterData } from '../types';
 import { supabase } from '../lib/supabase';
 
@@ -22,7 +22,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [requirePasswordChange, setRequirePasswordChange] = useState(false);
-  const [isLoadingUser, setIsLoadingUser] = useState(false);
+  const loadingUserRef = useRef(false);
 
   useEffect(() => {
     console.log('[AuthContext] Initializing auth context...');
@@ -33,7 +33,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (event === 'SIGNED_IN' && session?.user) {
         console.log('[AuthContext] User signed in:', session.user.email);
-        if (!isLoadingUser) {
+        if (!loadingUserRef.current) {
           await loadUserData(session.user.id);
         } else {
           console.log('[AuthContext] Skipping loadUserData, already in progress');
@@ -44,7 +44,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setRestaurant(null);
         setIsAuthenticated(false);
         setLoading(false);
-        setIsLoadingUser(false);
+        loadingUserRef.current = false;
       } else if (event === 'TOKEN_REFRESHED') {
         console.log('[AuthContext] Token refreshed for user:', session?.user?.email);
       }
@@ -54,7 +54,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log('[AuthContext] Cleaning up auth listener');
       authListener?.subscription.unsubscribe();
     };
-  }, [isLoadingUser]);
+  }, []);
 
   const checkUser = async () => {
     try {
@@ -84,14 +84,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const loadUserData = async (userId: string, retryCount = 0) => {
-    if (isLoadingUser) {
+    if (loadingUserRef.current) {
       console.log('[AuthContext] loadUserData already in progress, skipping...');
       return;
     }
 
     try {
       console.log('[AuthContext] Loading user data for:', userId);
-      setIsLoadingUser(true);
+      loadingUserRef.current = true;
       setLoading(true);
 
       console.log('[AuthContext] About to query users table...');
@@ -111,7 +111,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         if (retryCount < 2) {
           console.log('[AuthContext] Retrying... attempt', retryCount + 1);
-          setIsLoadingUser(false);
+          loadingUserRef.current = false;
           await new Promise(resolve => setTimeout(resolve, 500));
           return loadUserData(userId, retryCount + 1);
         }
@@ -122,7 +122,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setRestaurant(null);
         setIsAuthenticated(false);
         setLoading(false);
-        setIsLoadingUser(false);
+        loadingUserRef.current = false;
         return;
       }
 
@@ -133,7 +133,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setRestaurant(null);
         setIsAuthenticated(false);
         setLoading(false);
-        setIsLoadingUser(false);
+        loadingUserRef.current = false;
         return;
       }
 
@@ -168,13 +168,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       console.log('[AuthContext] Auth context fully loaded');
       setLoading(false);
-      setIsLoadingUser(false);
+      loadingUserRef.current = false;
     } catch (error) {
       console.error('[AuthContext] Unexpected error loading user data:', error);
 
       if (retryCount < 2) {
         console.log('[AuthContext] Retrying after unexpected error... attempt', retryCount + 1);
-        setIsLoadingUser(false);
+        loadingUserRef.current = false;
         await new Promise(resolve => setTimeout(resolve, 500));
         return loadUserData(userId, retryCount + 1);
       }
@@ -185,7 +185,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setRestaurant(null);
       setIsAuthenticated(false);
       setLoading(false);
-      setIsLoadingUser(false);
+      loadingUserRef.current = false;
     }
   };
 
