@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart3, TrendingUp, Users, Store, Calendar, DollarSign, Filter, Download, FileText, RefreshCw, Clock } from 'lucide-react';
-import { Restaurant, Subscription, User } from '../../types';
-import { loadFromStorage } from '../../data/mockData';
+import { Restaurant, Subscription, User, SubscriptionPlan } from '../../types';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
+import { supabase } from '../../lib/supabase';
 
 export const SuperAdminAnalytics: React.FC = () => {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [selectedPlanFilter, setSelectedPlanFilter] = useState<string>('all');
   const [selectedPeriodFilter, setSelectedPeriodFilter] = useState<string>('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [loading, setLoading] = useState(true);
 
   const calculateNewEndDate = (currentEndDate: string, duration: Subscription['duration']): string => {
     const endDate = new Date(currentEndDate);
@@ -28,38 +30,54 @@ export const SuperAdminAnalytics: React.FC = () => {
   };
 
   useEffect(() => {
-    const restaurantData = loadFromStorage('restaurants') || [];
-    const subscriptionData = loadFromStorage('subscriptions') || [];
-    const userData = loadFromStorage('users') || [];
-
-    // Auto-renew or expire subscriptions based on end date
-    const now = new Date();
-    const updatedSubscriptions = subscriptionData.map((sub: Subscription) => {
-      const endDate = new Date(sub.end_date);
-
-      // If subscription end date has passed and it's currently active
-      if (endDate < now && sub.status === 'active') {
-        // Check if auto-renew is enabled
-        if (sub.auto_renew) {
-          // Auto-renew: extend the subscription based on duration
-          return {
-            ...sub,
-            start_date: sub.end_date,
-            end_date: calculateNewEndDate(sub.end_date, sub.duration),
-            status: 'active' as const
-          };
-        } else {
-          // No auto-renew: mark as expired
-          return { ...sub, status: 'expired' as const };
-        }
-      }
-      return sub;
-    });
-
-    setRestaurants(restaurantData);
-    setSubscriptions(updatedSubscriptions);
-    setUsers(userData);
+    loadData();
   }, []);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+
+      const [restaurantsRes, subscriptionsRes, usersRes, plansRes] = await Promise.all([
+        supabase.from('restaurants').select('*').order('created_at', { ascending: false }),
+        supabase.from('subscriptions').select('*').order('created_at', { ascending: false }),
+        supabase.from('users').select('*').order('created_at', { ascending: false }),
+        supabase.from('subscription_plans').select('*').order('display_order', { ascending: true })
+      ]);
+
+      if (restaurantsRes.error) throw restaurantsRes.error;
+      if (subscriptionsRes.error) throw subscriptionsRes.error;
+      if (usersRes.error) throw usersRes.error;
+      if (plansRes.error) throw plansRes.error;
+
+      const now = new Date();
+      const updatedSubscriptions = (subscriptionsRes.data || []).map((sub: any) => {
+        const endDate = new Date(sub.end_date);
+
+        if (endDate < now && sub.status === 'active') {
+          if (sub.auto_renew) {
+            return {
+              ...sub,
+              start_date: sub.end_date,
+              end_date: calculateNewEndDate(sub.end_date, sub.duration),
+              status: 'active' as const
+            };
+          } else {
+            return { ...sub, status: 'expired' as const };
+          }
+        }
+        return sub;
+      });
+
+      setRestaurants(restaurantsRes.data || []);
+      setSubscriptions(updatedSubscriptions);
+      setUsers(usersRes.data || []);
+      setPlans(plansRes.data || []);
+    } catch (error) {
+      console.error('Error loading analytics data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getFilteredSubscriptions = () => {
     let filtered = [...subscriptions];
@@ -148,11 +166,10 @@ export const SuperAdminAnalytics: React.FC = () => {
     annual: filteredSubscriptions.filter(s => s.duration === 'annual').length,
   };
 
-  const planPrices: Record<string, number> = {
-    free: 0,
-    basic: 15,
-    pro: 35,
-    premium: 80,
+  const getPlanPrice = (planName: string): number => {
+    const plan = plans.find(p => p.slug === planName || p.name.toLowerCase() === planName.toLowerCase());
+    if (!plan) return 0;
+    return plan.billing_period === 'monthly' ? Number(plan.price) : Number(plan.price) / 12;
   };
 
   const durationMultipliers: Record<string, number> = {
@@ -162,9 +179,9 @@ export const SuperAdminAnalytics: React.FC = () => {
 
   const calculateRevenue = (subs: Subscription[]) => {
     return subs.reduce((total, sub) => {
-      const basePrice = planPrices[sub.plan_name] || 0;
+      const monthlyPrice = sub.monthly_price || getPlanPrice(sub.plan_name);
       const multiplier = durationMultipliers[sub.duration] || 1;
-      return total + (basePrice * multiplier);
+      return total + (monthlyPrice * multiplier);
     }, 0);
   };
 
@@ -175,8 +192,8 @@ export const SuperAdminAnalytics: React.FC = () => {
     return subscriptions
       .filter(s => s.status === 'active')
       .reduce((total, sub) => {
-        const basePrice = planPrices[sub.plan_name] || 0;
-        return total + basePrice;
+        const monthlyPrice = sub.monthly_price || getPlanPrice(sub.plan_name);
+        return total + monthlyPrice;
       }, 0);
   };
 
@@ -219,7 +236,8 @@ export const SuperAdminAnalytics: React.FC = () => {
     if (paidSubs.length === 0) return 0;
 
     const totalValue = paidSubs.reduce((sum, sub) => {
-      return sum + (planPrices[sub.plan_name] || 0);
+      const monthlyPrice = sub.monthly_price || getPlanPrice(sub.plan_name);
+      return sum + monthlyPrice;
     }, 0);
 
     return (totalValue / paidSubs.length).toFixed(2);
@@ -296,11 +314,30 @@ export const SuperAdminAnalytics: React.FC = () => {
     document.body.removeChild(link);
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <RefreshCw className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600">Cargando estadísticas...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900">Estadísticas del Sistema</h1>
         <div className="flex items-center gap-3">
+          <Button
+            onClick={loadData}
+            icon={RefreshCw}
+            variant="ghost"
+            size="sm"
+          >
+            Actualizar
+          </Button>
           <div className="text-sm text-gray-500">
             Última actualización: {new Date().toLocaleString()}
           </div>
@@ -677,7 +714,7 @@ export const SuperAdminAnalytics: React.FC = () => {
                   <Badge variant="info">{planDistribution.basic} suscripciones</Badge>
                 </div>
                 <div className="text-xs text-blue-600">
-                  Ingreso: ${(planDistribution.basic * planPrices.basic).toFixed(2)}/mes
+                  Ingreso: ${(planDistribution.basic * getPlanPrice('basic')).toFixed(2)}/mes
                 </div>
               </div>
 
@@ -687,17 +724,17 @@ export const SuperAdminAnalytics: React.FC = () => {
                   <Badge variant="success">{planDistribution.pro} suscripciones</Badge>
                 </div>
                 <div className="text-xs text-green-600">
-                  Ingreso: ${(planDistribution.pro * planPrices.pro).toFixed(2)}/mes
+                  Ingreso: ${(planDistribution.pro * getPlanPrice('pro')).toFixed(2)}/mes
                 </div>
               </div>
 
               <div className="p-3 bg-orange-50 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-orange-700">Plan Premium</span>
+                  <span className="text-sm font-medium text-orange-700">Plan Business</span>
                   <Badge variant="warning">{planDistribution.premium} suscripciones</Badge>
                 </div>
                 <div className="text-xs text-orange-600">
-                  Ingreso: ${(planDistribution.premium * planPrices.premium).toFixed(2)}/mes
+                  Ingreso: ${(planDistribution.premium * getPlanPrice('business')).toFixed(2)}/mes
                 </div>
               </div>
             </div>
