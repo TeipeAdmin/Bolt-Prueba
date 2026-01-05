@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CreditCard, Calendar, AlertCircle, CheckCircle, XCircle, Plus, Pencil as Edit } from 'lucide-react';
-import { Subscription, Restaurant } from '../../types';
+import { Subscription, Restaurant, SubscriptionPlan } from '../../types';
 import { supabase } from '../../lib/supabase';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
@@ -11,6 +11,7 @@ import { useToast } from '../../hooks/useToast';
 export const SubscriptionsManagement: React.FC = () => {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [subscriptionPlans, setSubscriptionPlans] = useState<SubscriptionPlan[]>([]);
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -18,7 +19,7 @@ export const SubscriptionsManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const { showToast } = useToast();
   const [formData, setFormData] = useState({
-    plan_type: 'basic' as Subscription['plan_type'],
+    plan_name: 'free',
     duration: 'monthly' as Subscription['duration'],
     start_date: '',
     end_date: '',
@@ -66,6 +67,14 @@ export const SubscriptionsManagement: React.FC = () => {
 
       if (restaurantsError) throw restaurantsError;
 
+      const { data: plansData, error: plansError } = await supabase
+        .from('subscription_plans')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order');
+
+      if (plansError) throw plansError;
+
       const uniqueSubscriptions = (subscriptionData || []).reduce((acc: Subscription[], current: Subscription) => {
         const duplicate = acc.find(sub => sub.restaurant_id === current.restaurant_id);
         if (!duplicate) {
@@ -101,6 +110,7 @@ export const SubscriptionsManagement: React.FC = () => {
 
       setSubscriptions(updatedSubscriptions);
       setRestaurants(restaurantData || []);
+      setSubscriptionPlans(plansData || []);
 
       if (JSON.stringify(updatedSubscriptions) !== JSON.stringify(uniqueSubscriptions)) {
         for (const sub of updatedSubscriptions) {
@@ -149,7 +159,7 @@ export const SubscriptionsManagement: React.FC = () => {
   const handleEditSubscription = (subscription: Subscription) => {
     setEditingSubscription(subscription);
     setFormData({
-      plan_type: subscription.plan_type,
+      plan_name: subscription.plan_name,
       duration: subscription.duration,
       start_date: subscription.start_date.split('T')[0],
       end_date: subscription.end_date.split('T')[0],
@@ -163,15 +173,25 @@ export const SubscriptionsManagement: React.FC = () => {
     if (!editingSubscription) return;
 
     try {
+      const selectedPlan = subscriptionPlans.find(p => p.slug === formData.plan_name);
+
+      if (!selectedPlan) {
+        showToast('Plan no encontrado', 'error');
+        return;
+      }
+
       const { error } = await supabase
         .from('subscriptions')
         .update({
-          plan_type: formData.plan_type,
+          plan_name: formData.plan_name,
           duration: formData.duration,
           start_date: formData.start_date + 'T00:00:00.000Z',
           end_date: formData.end_date + 'T23:59:59.999Z',
           status: formData.status,
           auto_renew: formData.auto_renew,
+          monthly_price: selectedPlan.price,
+          max_products: selectedPlan.max_products,
+          features: selectedPlan.features,
         })
         .eq('id', editingSubscription.id);
 
@@ -224,25 +244,16 @@ export const SubscriptionsManagement: React.FC = () => {
     }
   };
 
-  const getPlanBadge = (planType: Subscription['plan_type']) => {
-    switch (planType) {
-      case 'gratis':
-        return <Badge variant="gray">Gratis</Badge>;
-      case 'basic':
-        return <Badge variant="info">Basic</Badge>;
-      case 'pro':
-        return <Badge variant="success">Pro</Badge>;
-      case 'business':
-        return <Badge variant="error">Business</Badge>;
-      case 'premium':
-        return <Badge variant="success">Premium</Badge>;
-      case 'enterprise':
-        return <Badge variant="error">Enterprise</Badge>;
-      case 'trial':
-        return <Badge variant="warning">Prueba</Badge>;
-      default:
-        return <Badge variant="gray">Desconocido</Badge>;
-    }
+  const getPlanBadge = (planName: string) => {
+    const plan = subscriptionPlans.find(p => p.slug === planName);
+    const displayName = plan?.name || planName.toUpperCase();
+
+    const variant = planName === 'free' || planName === 'gratis' ? 'gray' :
+                   planName === 'basic' ? 'info' :
+                   planName === 'pro' ? 'success' :
+                   'error';
+
+    return <Badge variant={variant}>{displayName}</Badge>;
   };
 
   const isExpiringSoon = (endDate: string) => {
@@ -306,7 +317,7 @@ export const SubscriptionsManagement: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Plan Gratis</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {subscriptions.filter(s => s.plan_type === 'gratis').length}
+                {subscriptions.filter(s => s.plan_name === 'free' || s.plan_name === 'gratis').length}
               </p>
             </div>
           </div>
@@ -336,10 +347,11 @@ export const SubscriptionsManagement: React.FC = () => {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="all">Todos los planes</option>
-                <option value="gratis">Gratis</option>
-                <option value="basic">Basic</option>
-                <option value="pro">Pro</option>
-                <option value="business">Business</option>
+                {subscriptionPlans.map(plan => (
+                  <option key={plan.id} value={plan.slug}>
+                    {plan.name}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="flex-1">
@@ -457,7 +469,7 @@ export const SubscriptionsManagement: React.FC = () => {
                   }
 
                   // Filter by plan
-                  if (filterPlan !== 'all' && subscription.plan_type !== filterPlan) return false;
+                  if (filterPlan !== 'all' && subscription.plan_name !== filterPlan) return false;
 
                   // Filter by status
                   if (filterStatus !== 'all' && subscription.status !== filterStatus) return false;
@@ -500,7 +512,7 @@ export const SubscriptionsManagement: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {getPlanBadge(subscription.plan_type)}
+                      {getPlanBadge(subscription.plan_name)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
@@ -576,7 +588,7 @@ export const SubscriptionsManagement: React.FC = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Plan</label>
-                {getPlanBadge(selectedSubscription.plan_type)}
+                {getPlanBadge(selectedSubscription.plan_name)}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Estado</label>
@@ -656,14 +668,15 @@ export const SubscriptionsManagement: React.FC = () => {
                 Tipo de Plan
               </label>
               <select
-                value={formData.plan_type}
-                onChange={(e) => setFormData(prev => ({ ...prev, plan_type: e.target.value as Subscription['plan_type'] }))}
+                value={formData.plan_name}
+                onChange={(e) => setFormData(prev => ({ ...prev, plan_name: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="gratis">Gratis</option>
-                <option value="basic">Basic</option>
-                <option value="pro">Pro</option>
-                <option value="business">Business</option>
+                {subscriptionPlans.map(plan => (
+                  <option key={plan.id} value={plan.slug}>
+                    {plan.name} - ${plan.price}/{plan.billing_period === 'monthly' ? 'mes' : 'año'}
+                  </option>
+                ))}
               </select>
             </div>
 

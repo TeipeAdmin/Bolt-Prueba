@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Eye, Trash2, Filter, ExternalLink, Settings, Plus } from 'lucide-react';
-import { Restaurant, Subscription } from '../../types';
+import { Restaurant, Subscription, SubscriptionPlan } from '../../types';
 import { supabase } from '../../lib/supabase';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
@@ -10,6 +10,7 @@ import { Input } from '../../components/ui/Input';
 export const RestaurantsManagement: React.FC = () => {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [subscriptionPlans, setSubscriptionPlans] = useState<SubscriptionPlan[]>([]);
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
@@ -17,7 +18,7 @@ export const RestaurantsManagement: React.FC = () => {
   const [restaurantToDelete, setRestaurantToDelete] = useState<Restaurant | null>(null);
   const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(null);
   const [subscriptionForm, setSubscriptionForm] = useState({
-    plan_type: 'gratis' as Subscription['plan_type'],
+    plan_name: 'free',
     duration: 'monthly' as Subscription['duration'],
     status: 'active' as Subscription['status'],
   });
@@ -49,8 +50,17 @@ export const RestaurantsManagement: React.FC = () => {
 
       if (subscriptionError) throw subscriptionError;
 
+      const { data: plansData, error: plansError } = await supabase
+        .from('subscription_plans')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order');
+
+      if (plansError) throw plansError;
+
       setRestaurants(restaurantData || []);
       setSubscriptions(subscriptionData || []);
+      setSubscriptionPlans(plansData || []);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -73,13 +83,13 @@ export const RestaurantsManagement: React.FC = () => {
 
     if (subscription) {
       setSubscriptionForm({
-        plan_type: subscription.plan_type,
+        plan_name: subscription.plan_name,
         duration: subscription.duration,
         status: subscription.status,
       });
     } else {
       setSubscriptionForm({
-        plan_type: 'gratis',
+        plan_name: 'free',
         duration: 'monthly',
         status: 'active',
       });
@@ -92,6 +102,12 @@ export const RestaurantsManagement: React.FC = () => {
 
     try {
       const existingSubscription = getSubscription(editingRestaurant.id);
+      const selectedPlan = subscriptionPlans.find(p => p.slug === subscriptionForm.plan_name);
+
+      if (!selectedPlan) {
+        alert('Plan no encontrado');
+        return;
+      }
 
       const endDate = new Date();
       if (subscriptionForm.duration === 'monthly') {
@@ -100,14 +116,22 @@ export const RestaurantsManagement: React.FC = () => {
         endDate.setFullYear(endDate.getFullYear() + 1);
       }
 
+      const subscriptionData = {
+        plan_name: subscriptionForm.plan_name,
+        duration: subscriptionForm.duration,
+        status: subscriptionForm.status,
+        start_date: new Date().toISOString(),
+        end_date: endDate.toISOString(),
+        monthly_price: selectedPlan.price,
+        max_products: selectedPlan.max_products,
+        max_orders: 999999,
+        features: selectedPlan.features,
+      };
+
       if (existingSubscription) {
         const { error } = await supabase
           .from('subscriptions')
-          .update({
-            ...subscriptionForm,
-            start_date: new Date().toISOString(),
-            end_date: endDate.toISOString(),
-          })
+          .update(subscriptionData)
           .eq('id', existingSubscription.id);
 
         if (error) throw error;
@@ -116,9 +140,7 @@ export const RestaurantsManagement: React.FC = () => {
           .from('subscriptions')
           .insert([{
             restaurant_id: editingRestaurant.id,
-            ...subscriptionForm,
-            start_date: new Date().toISOString(),
-            end_date: endDate.toISOString(),
+            ...subscriptionData,
             auto_renew: false,
           }]);
 
@@ -206,15 +228,12 @@ export const RestaurantsManagement: React.FC = () => {
   const getSubscriptionBadge = (subscription: Subscription | undefined) => {
     if (!subscription) return <Badge variant="gray">Sin suscripción</Badge>;
 
-    const planName = subscription.plan_type === 'gratis' ? 'Gratis' :
-                     subscription.plan_type === 'basic' ? 'Basic' :
-                     subscription.plan_type === 'pro' ? 'Pro' :
-                     subscription.plan_type === 'business' ? 'Business' :
-                     subscription.plan_type.toUpperCase();
+    const plan = subscriptionPlans.find(p => p.slug === subscription.plan_name);
+    const planName = plan?.name || subscription.plan_name.toUpperCase();
 
-    const variant = subscription.plan_type === 'gratis' ? 'gray' :
-                   subscription.plan_type === 'basic' ? 'info' :
-                   subscription.plan_type === 'pro' ? 'success' :
+    const variant = subscription.plan_name === 'free' || subscription.plan_name === 'gratis' ? 'gray' :
+                   subscription.plan_name === 'basic' ? 'info' :
+                   subscription.plan_name === 'pro' ? 'success' :
                    'error';
 
     return <Badge variant={variant}>{planName}</Badge>;
@@ -539,17 +558,18 @@ export const RestaurantsManagement: React.FC = () => {
                     Tipo de Plan
                   </label>
                   <select
-                    value={subscriptionForm.plan_type}
+                    value={subscriptionForm.plan_name}
                     onChange={(e) => setSubscriptionForm(prev => ({
                       ...prev,
-                      plan_type: e.target.value as Subscription['plan_type']
+                      plan_name: e.target.value
                     }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="gratis">Gratis</option>
-                    <option value="basic">Basic</option>
-                    <option value="pro">Pro</option>
-                    <option value="business">Business</option>
+                    {subscriptionPlans.map(plan => (
+                      <option key={plan.id} value={plan.slug}>
+                        {plan.name} - ${plan.price}/{plan.billing_period === 'monthly' ? 'mes' : 'año'}
+                      </option>
+                    ))}
                   </select>
                 </div>
 

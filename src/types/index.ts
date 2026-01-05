@@ -251,16 +251,43 @@ export interface Restaurant {
   updated_at: string;
 }
 
+export interface SubscriptionPlan {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  billing_period: 'monthly' | 'annual';
+  max_products: number;
+  max_categories: number;
+  features: {
+    analytics: boolean;
+    custom_domain: boolean;
+    priority_support: boolean;
+    advanced_customization: boolean;
+    popular?: boolean;
+  };
+  is_active: boolean;
+  display_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Subscription {
   id: string;
   restaurant_id: string;
-  plan_type: 'gratis' | 'basic' | 'pro' | 'business';
+  plan_name: string;
+  plan_type?: 'gratis' | 'basic' | 'pro' | 'premium' | 'business';
   duration: 'monthly' | 'annual';
-  status: 'active' | 'expired';
+  status: 'active' | 'expired' | 'cancelled' | 'pending';
   start_date: string;
   end_date: string;
   auto_renew: boolean;
+  monthly_price?: number;
+  max_products?: number;
+  max_orders?: number;
+  features?: any;
   created_at: string;
+  updated_at?: string;
 }
 
 export interface SupportTicket {
