@@ -62,7 +62,7 @@ export const UsersManagement: React.FC = () => {
       setRestaurants(restaurantData || []);
     } catch (error) {
       console.error('Error loading data:', error);
-      showToast('Error al cargar los datos', 'error');
+      showToast('error', 'Error', 'No se pudieron cargar los datos');
     } finally {
       setLoading(false);
     }
@@ -98,7 +98,7 @@ export const UsersManagement: React.FC = () => {
 
       if (error) throw error;
 
-      showToast('Restaurante asignado exitosamente', 'success');
+      showToast('success', 'Éxito', 'Restaurante asignado exitosamente');
       await loadData();
 
       setShowAssignModal(false);
@@ -106,7 +106,7 @@ export const UsersManagement: React.FC = () => {
       setSelectedRestaurantId('');
     } catch (error) {
       console.error('Error assigning restaurant:', error);
-      showToast('Error al asignar el restaurante', 'error');
+      showToast('error', 'Error', 'No se pudo asignar el restaurante');
     }
   };
 
@@ -119,11 +119,11 @@ export const UsersManagement: React.FC = () => {
 
       if (error) throw error;
 
-      showToast('Rol actualizado exitosamente', 'success');
+      showToast('success', 'Éxito', 'Rol actualizado exitosamente');
       await loadData();
     } catch (error) {
       console.error('Error updating user role:', error);
-      showToast('Error al actualizar el rol', 'error');
+      showToast('error', 'Error', 'No se pudo actualizar el rol');
     }
   };
 
@@ -139,11 +139,11 @@ export const UsersManagement: React.FC = () => {
 
       if (error) throw error;
 
-      showToast('Estado de verificación actualizado', 'success');
+      showToast('success', 'Éxito', 'Estado de verificación actualizado');
       await loadData();
     } catch (error) {
       console.error('Error toggling email verification:', error);
-      showToast('Error al actualizar la verificación', 'error');
+      showToast('error', 'Error', 'No se pudo actualizar la verificación');
     }
   };
 
@@ -160,23 +160,23 @@ export const UsersManagement: React.FC = () => {
 
       if (error) throw error;
 
-      showToast('Usuario eliminado exitosamente', 'success');
+      showToast('success', 'Éxito', 'Usuario eliminado exitosamente');
       await loadData();
     } catch (error) {
       console.error('Error deleting user:', error);
-      showToast('Error al eliminar el usuario', 'error');
+      showToast('error', 'Error', 'No se pudo eliminar el usuario');
     }
   };
 
   const handleCreateUser = async () => {
     if (!newUserForm.email || !newUserForm.password) {
-      showToast('Por favor completa todos los campos requeridos', 'error');
+      showToast('error', 'Campos requeridos', 'Por favor completa todos los campos requeridos');
       return;
     }
 
     const emailExists = users.some(user => user.email.toLowerCase() === newUserForm.email.toLowerCase());
     if (emailExists) {
-      showToast('Este email ya está registrado', 'error');
+      showToast('error', 'Email duplicado', 'Este email ya está registrado');
       return;
     }
 
@@ -205,7 +205,7 @@ export const UsersManagement: React.FC = () => {
 
       if (dbError) throw dbError;
 
-      showToast('Usuario creado exitosamente', 'success');
+      showToast('success', 'Éxito', 'Usuario creado exitosamente');
       await loadData();
 
       setNewUserForm({
@@ -217,7 +217,7 @@ export const UsersManagement: React.FC = () => {
       setShowCreateUserModal(false);
     } catch (error) {
       console.error('Error creating user:', error);
-      showToast('Error al crear el usuario', 'error');
+      showToast('error', 'Error', 'No se pudo crear el usuario');
     }
   };
 
@@ -241,7 +241,7 @@ export const UsersManagement: React.FC = () => {
 
       if (error) throw error;
 
-      showToast('Usuario actualizado exitosamente', 'success');
+      showToast('success', 'Éxito', 'Usuario actualizado exitosamente');
       await loadData();
 
       setShowEditModal(false);
@@ -249,7 +249,7 @@ export const UsersManagement: React.FC = () => {
       setSelectedRestaurantId('');
     } catch (error) {
       console.error('Error updating user:', error);
-      showToast('Error al actualizar el usuario', 'error');
+      showToast('error', 'Error', 'No se pudo actualizar el usuario');
     }
   };
 
@@ -290,11 +290,11 @@ export const UsersManagement: React.FC = () => {
 
       if (authError) throw authError;
 
-      showToast('Contraseña restablecida exitosamente', 'success');
+      showToast('success', 'Éxito', 'Contraseña restablecida exitosamente');
       await loadData();
     } catch (error) {
       console.error('Error resetting password:', error);
-      showToast('Error al restablecer la contraseña', 'error');
+      showToast('error', 'Error', 'No se pudo restablecer la contraseña');
     }
   };
 
@@ -941,7 +941,7 @@ export const UsersManagement: React.FC = () => {
                   icon={Copy}
                   onClick={() => {
                     navigator.clipboard.writeText(provisionalPassword);
-                    showToast('Contraseña copiada al portapapeles', 'success');
+                    showToast('success', 'Copiado', 'Contraseña copiada al portapapeles');
                   }}
                   title="Copiar contraseña"
                 />

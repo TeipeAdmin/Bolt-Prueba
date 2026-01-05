@@ -124,27 +124,27 @@ export const RestaurantAnalytics: React.FC = () => {
 
   const exportToCSV = () => {
     if (filteredOrders.length === 0) {
-      showToast('warning', t('analyticsToastNoData'));
+      showToast('warning', 'Sin datos', t('analyticsToastNoData'));
       return;
     }
-  
+
     const csvContent = generateCSVContent();
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
-  
+
     const url = URL.createObjectURL(blob);
     link.href = url;
     link.download = generateFileName();
     link.style.display = 'none';
-  
+
     document.body.appendChild(link);
     link.click();
-  
+
     URL.revokeObjectURL(url);
-  
+
     document.body.removeChild(link);
-  
-    showToast('success', t('analyticsToastExportSuccess'));
+
+    showToast('success', 'Exportado', t('analyticsToastExportSuccess'));
   };
 
   const generateCSVContent = () => {
