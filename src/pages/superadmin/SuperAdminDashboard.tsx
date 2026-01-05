@@ -56,7 +56,7 @@ export const SuperAdminDashboard: React.FC = () => {
     freePlan: subscriptions.filter(s => s.plan_name === 'free').length,
     basicPlan: subscriptions.filter(s => s.plan_name === 'basic').length,
     proPlan: subscriptions.filter(s => s.plan_name === 'pro').length,
-    premiumPlan: subscriptions.filter(s => s.plan_name === 'premium').length,
+    businessPlan: subscriptions.filter(s => s.plan_name === 'business').length,
     activeSubscriptions: subscriptions.filter(s => s.status === 'active').length,
     expiredSubscriptions: subscriptions.filter(s => s.status === 'expired').length,
   };
@@ -82,13 +82,14 @@ export const SuperAdminDashboard: React.FC = () => {
     const planName = subscription.plan_name === 'free' ? 'FREE' :
                      subscription.plan_name === 'basic' ? 'Basic' :
                      subscription.plan_name === 'pro' ? 'Pro' :
-                     subscription.plan_name === 'premium' ? 'Premium' :
+                     subscription.plan_name === 'business' ? 'Business' :
                      subscription.plan_name.toUpperCase();
 
     const variant = subscription.plan_name === 'free' ? 'gray' :
                    subscription.plan_name === 'basic' ? 'info' :
                    subscription.plan_name === 'pro' ? 'success' :
-                   'error';
+                   subscription.plan_name === 'business' ? 'warning' :
+                   'default';
 
     return <Badge variant={variant}>{planName}</Badge>;
   };

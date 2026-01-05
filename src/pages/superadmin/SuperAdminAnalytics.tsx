@@ -158,7 +158,7 @@ export const SuperAdminAnalytics: React.FC = () => {
     free: filteredSubscriptions.filter(s => s.plan_name === 'free').length,
     basic: filteredSubscriptions.filter(s => s.plan_name === 'basic').length,
     pro: filteredSubscriptions.filter(s => s.plan_name === 'pro').length,
-    premium: filteredSubscriptions.filter(s => s.plan_name === 'premium').length,
+    business: filteredSubscriptions.filter(s => s.plan_name === 'business').length,
   };
 
   const durationDistribution = {
@@ -209,7 +209,7 @@ export const SuperAdminAnalytics: React.FC = () => {
     free: calculateRevenue(filteredSubscriptions.filter(s => s.plan_name === 'free')),
     basic: calculateRevenue(filteredSubscriptions.filter(s => s.plan_name === 'basic')),
     pro: calculateRevenue(filteredSubscriptions.filter(s => s.plan_name === 'pro')),
-    premium: calculateRevenue(filteredSubscriptions.filter(s => s.plan_name === 'premium')),
+    business: calculateRevenue(filteredSubscriptions.filter(s => s.plan_name === 'business')),
   };
 
   const expiringSoon = subscriptions.filter(sub => {
@@ -280,7 +280,7 @@ export const SuperAdminAnalytics: React.FC = () => {
     csvData.push(['Plan FREE', planDistribution.free, `$${revenueByPlan.free.toFixed(2)}`]);
     csvData.push(['Plan Basic', planDistribution.basic, `$${revenueByPlan.basic.toFixed(2)}`]);
     csvData.push(['Plan Pro', planDistribution.pro, `$${revenueByPlan.pro.toFixed(2)}`]);
-    csvData.push(['Plan Premium', planDistribution.premium, `$${revenueByPlan.premium.toFixed(2)}`]);
+    csvData.push(['Plan Business', planDistribution.business, `$${revenueByPlan.business.toFixed(2)}`]);
     csvData.push([]);
 
     csvData.push(['DISTRIBUCIÓN POR DURACIÓN']);
@@ -370,7 +370,7 @@ export const SuperAdminAnalytics: React.FC = () => {
                 <option value="free">FREE</option>
                 <option value="basic">Basic</option>
                 <option value="pro">Pro</option>
-                <option value="premium">Premium</option>
+                <option value="business">Business</option>
               </select>
             </div>
 
@@ -488,8 +488,8 @@ export const SuperAdminAnalytics: React.FC = () => {
             </div>
             <div className="text-center p-3 bg-orange-50 rounded-lg">
               <p className="text-xs text-orange-600 mb-1">Business</p>
-              <p className="text-lg font-bold text-orange-900">${revenueByPlan.premium.toFixed(2)}</p>
-              <p className="text-xs text-orange-600 mt-1">{planDistribution.premium} suscripciones</p>
+              <p className="text-lg font-bold text-orange-900">${revenueByPlan.business.toFixed(2)}</p>
+              <p className="text-xs text-orange-600 mt-1">{planDistribution.business} suscripciones</p>
             </div>
           </div>
         </div>
@@ -681,10 +681,10 @@ export const SuperAdminAnalytics: React.FC = () => {
                 <div className="w-32 bg-gray-200 rounded-full h-2 mr-3">
                   <div
                     className="bg-orange-500 h-2 rounded-full"
-                    style={{ width: `${totalFilteredSubscriptions > 0 ? (planDistribution.premium / totalFilteredSubscriptions) * 100 : 0}%` }}
+                    style={{ width: `${totalFilteredSubscriptions > 0 ? (planDistribution.business / totalFilteredSubscriptions) * 100 : 0}%` }}
                   />
                 </div>
-                <span className="text-sm font-medium text-gray-900">{planDistribution.premium}</span>
+                <span className="text-sm font-medium text-gray-900">{planDistribution.business}</span>
               </div>
             </div>
           </div>
@@ -731,10 +731,10 @@ export const SuperAdminAnalytics: React.FC = () => {
               <div className="p-3 bg-orange-50 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-orange-700">Plan Business</span>
-                  <Badge variant="warning">{planDistribution.premium} suscripciones</Badge>
+                  <Badge variant="warning">{planDistribution.business} suscripciones</Badge>
                 </div>
                 <div className="text-xs text-orange-600">
-                  Ingreso: ${(planDistribution.premium * getPlanPrice('business')).toFixed(2)}/mes
+                  Ingreso: ${(planDistribution.business * getPlanPrice('business')).toFixed(2)}/mes
                 </div>
               </div>
             </div>

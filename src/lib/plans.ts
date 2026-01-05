@@ -46,9 +46,9 @@ export const availablePlans = [
     },
   },
   {
-    id: 'premium',
-    name: 'Premium',
-    price: 80,
+    id: 'business',
+    name: 'Business',
+    price: 75,
     currency: 'USD',
     billing_period: 'monthly' as const,
     features: {
