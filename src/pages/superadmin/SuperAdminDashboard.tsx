@@ -1,20 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import { Store, Users, CreditCard, TrendingUp, Calendar, RefreshCw, DollarSign, Activity, Clock } from 'lucide-react';
 import { Restaurant, Subscription } from '../../types';
-import { loadFromStorage, resetAllData } from '../../data/mockData';
+import { supabase } from '../../lib/supabase';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 
 export const SuperAdminDashboard: React.FC = () => {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const restaurantData = loadFromStorage('restaurants') || [];
-    const subscriptionData = loadFromStorage('subscriptions') || [];
-    setRestaurants(restaurantData);
-    setSubscriptions(subscriptionData);
+    loadData();
   }, []);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+
+      const { data: restaurantData, error: restaurantError } = await supabase
+        .from('restaurants')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (restaurantError) throw restaurantError;
+
+      const { data: subscriptionData, error: subscriptionError } = await supabase
+        .from('subscriptions')
+        .select('*');
+
+      if (subscriptionError) throw subscriptionError;
+
+      setRestaurants(restaurantData || []);
+      setSubscriptions(subscriptionData || []);
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getRestaurantSubscription = (restaurantId: string) => {
     return subscriptions.find(s => s.restaurant_id === restaurantId);
@@ -69,11 +93,16 @@ export const SuperAdminDashboard: React.FC = () => {
     return <Badge variant={variant}>{planName}</Badge>;
   };
 
-  const handleResetData = () => {
-    if (confirm('¿Estás seguro de que quieres resetear todos los datos a su estado inicial? Esta acción no se puede deshacer.')) {
-      resetAllData();
-    }
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando datos...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
@@ -94,10 +123,10 @@ export const SuperAdminDashboard: React.FC = () => {
             variant="outline"
             size="sm"
             icon={RefreshCw}
-            onClick={handleResetData}
+            onClick={loadData}
             className="shadow-sm"
           >
-            Reiniciar Datos
+            Actualizar Datos
           </Button>
         </div>
       </div>
