@@ -22,6 +22,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [requirePasswordChange, setRequirePasswordChange] = useState(false);
+  const [isLoadingUser, setIsLoadingUser] = useState(false);
 
   useEffect(() => {
     console.log('[AuthContext] Initializing auth context...');
@@ -32,13 +33,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (event === 'SIGNED_IN' && session?.user) {
         console.log('[AuthContext] User signed in:', session.user.email);
-        await loadUserData(session.user.id);
+        if (!isLoadingUser) {
+          await loadUserData(session.user.id);
+        } else {
+          console.log('[AuthContext] Skipping loadUserData, already in progress');
+        }
       } else if (event === 'SIGNED_OUT') {
         console.log('[AuthContext] User signed out');
         setUser(null);
         setRestaurant(null);
         setIsAuthenticated(false);
         setLoading(false);
+        setIsLoadingUser(false);
       } else if (event === 'TOKEN_REFRESHED') {
         console.log('[AuthContext] Token refreshed for user:', session?.user?.email);
       }
@@ -48,7 +54,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log('[AuthContext] Cleaning up auth listener');
       authListener?.subscription.unsubscribe();
     };
-  }, []);
+  }, [isLoadingUser]);
 
   const checkUser = async () => {
     try {
@@ -78,9 +84,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const loadUserData = async (userId: string, retryCount = 0) => {
+    if (isLoadingUser) {
+      console.log('[AuthContext] loadUserData already in progress, skipping...');
+      return;
+    }
+
     try {
       console.log('[AuthContext] Loading user data for:', userId);
+      setIsLoadingUser(true);
       setLoading(true);
+
+      console.log('[AuthContext] About to query users table...');
+      const startTime = Date.now();
 
       const { data: userData, error: userError } = await supabase
         .from('users')
@@ -88,11 +103,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .eq('id', userId)
         .maybeSingle();
 
+      const duration = Date.now() - startTime;
+      console.log(`[AuthContext] Query completed in ${duration}ms`);
+
       if (userError) {
         console.error('[AuthContext] Error loading user data:', userError);
 
         if (retryCount < 2) {
           console.log('[AuthContext] Retrying... attempt', retryCount + 1);
+          setIsLoadingUser(false);
           await new Promise(resolve => setTimeout(resolve, 500));
           return loadUserData(userId, retryCount + 1);
         }
@@ -103,6 +122,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setRestaurant(null);
         setIsAuthenticated(false);
         setLoading(false);
+        setIsLoadingUser(false);
         return;
       }
 
@@ -113,6 +133,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setRestaurant(null);
         setIsAuthenticated(false);
         setLoading(false);
+        setIsLoadingUser(false);
         return;
       }
 
@@ -147,11 +168,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       console.log('[AuthContext] Auth context fully loaded');
       setLoading(false);
+      setIsLoadingUser(false);
     } catch (error) {
       console.error('[AuthContext] Unexpected error loading user data:', error);
 
       if (retryCount < 2) {
         console.log('[AuthContext] Retrying after unexpected error... attempt', retryCount + 1);
+        setIsLoadingUser(false);
         await new Promise(resolve => setTimeout(resolve, 500));
         return loadUserData(userId, retryCount + 1);
       }
@@ -162,6 +185,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setRestaurant(null);
       setIsAuthenticated(false);
       setLoading(false);
+      setIsLoadingUser(false);
     }
   };
 
