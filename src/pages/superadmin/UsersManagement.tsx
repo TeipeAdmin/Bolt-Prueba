@@ -186,42 +186,42 @@ export const UsersManagement: React.FC = () => {
     }
 
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: newUserForm.email,
-        password: newUserForm.password,
-        options: {
-          emailRedirectTo: undefined,
-        }
-      });
-
-      if (authError) {
-        if (authError.message?.includes('already registered') || authError.message?.includes('user_already_exists')) {
-          showToast('error', 'Email duplicado', 'Este email ya está registrado en el sistema de autenticación');
-          return;
-        }
-        throw authError;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        showToast('error', 'Error', 'No hay sesión activa');
+        return;
       }
 
-      if (!authData.user) throw new Error('No se pudo crear el usuario');
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`;
+      const headers = {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      };
 
-      const userUpdate = {
+      const body = {
+        email: newUserForm.email,
+        password: newUserForm.password,
         role: newUserForm.role,
         restaurant_id: newUserForm.role === 'superadmin'
           ? null
           : (newUserForm.restaurant_id && newUserForm.restaurant_id.trim() !== '' ? newUserForm.restaurant_id : null),
-        email_verified: true,
-        require_password_change: true,
-        updated_at: new Date().toISOString()
       };
 
-      console.log('Updating user with data:', userUpdate);
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+      });
 
-      const { error: dbError } = await supabase
-        .from('users')
-        .update(userUpdate)
-        .eq('id', authData.user.id);
+      const result = await response.json();
 
-      if (dbError) throw dbError;
+      if (!response.ok) {
+        if (result.error?.includes('already registered') || result.error?.includes('user_already_exists')) {
+          showToast('error', 'Email duplicado', 'Este email ya está registrado en el sistema de autenticación');
+          return;
+        }
+        throw new Error(result.error || 'Error al crear usuario');
+      }
 
       showToast('success', 'Éxito', 'Usuario creado exitosamente');
       await loadData();
