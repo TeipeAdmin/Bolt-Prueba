@@ -26,13 +26,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     console.log('[AuthContext] Initializing auth context...');
-    checkUser();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('[AuthContext] Auth state changed:', event);
+      console.log('[AuthContext] Auth state changed:', event, session?.user?.email);
 
-      if (event === 'SIGNED_IN' && session?.user) {
-        console.log('[AuthContext] User signed in:', session.user.email);
+      if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session?.user) {
+        console.log('[AuthContext] Loading user after auth event:', event);
         if (!loadingUserRef.current) {
           await loadUserData(session.user.id);
         } else {
@@ -45,8 +44,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setIsAuthenticated(false);
         setLoading(false);
         loadingUserRef.current = false;
-      } else if (event === 'TOKEN_REFRESHED') {
-        console.log('[AuthContext] Token refreshed for user:', session?.user?.email);
+      } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+        console.log('[AuthContext] Token refreshed for user:', session.user.email);
+      } else if (!session) {
+        console.log('[AuthContext] No session found, setting loading to false');
+        setLoading(false);
       }
     });
 
@@ -56,32 +58,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
   }, []);
 
-  const checkUser = async () => {
-    try {
-      console.log('[AuthContext] Checking user session...');
-      const { data: { session }, error } = await supabase.auth.getSession();
-
-      if (error) {
-        console.error('[AuthContext] Error getting session:', error);
-        setLoading(false);
-        return;
-      }
-
-      if (session?.user) {
-        console.log('[AuthContext] Session found for user:', session.user.email);
-        await loadUserData(session.user.id);
-      } else {
-        console.log('[AuthContext] No active session found');
-        setLoading(false);
-      }
-    } catch (error) {
-      console.error('[AuthContext] Unexpected error checking user:', error);
-      setUser(null);
-      setRestaurant(null);
-      setIsAuthenticated(false);
-      setLoading(false);
-    }
-  };
 
   const loadUserData = async (userId: string, retryCount = 0) => {
     if (loadingUserRef.current) {
@@ -201,7 +177,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       if (data.user) {
-        await loadUserData(data.user.id);
         return { success: true };
       }
 
