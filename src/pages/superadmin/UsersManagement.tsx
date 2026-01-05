@@ -204,22 +204,22 @@ export const UsersManagement: React.FC = () => {
 
       if (!authData.user) throw new Error('No se pudo crear el usuario');
 
-      const userInsert = {
-        id: authData.user.id,
-        email: newUserForm.email,
+      const userUpdate = {
         role: newUserForm.role,
         restaurant_id: newUserForm.role === 'superadmin'
           ? null
           : (newUserForm.restaurant_id && newUserForm.restaurant_id.trim() !== '' ? newUserForm.restaurant_id : null),
         email_verified: true,
         require_password_change: true,
+        updated_at: new Date().toISOString()
       };
 
-      console.log('Inserting user with data:', userInsert);
+      console.log('Updating user with data:', userUpdate);
 
       const { error: dbError } = await supabase
         .from('users')
-        .insert(userInsert);
+        .update(userUpdate)
+        .eq('id', authData.user.id);
 
       if (dbError) throw dbError;
 
