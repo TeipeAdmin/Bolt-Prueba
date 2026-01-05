@@ -253,9 +253,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsAuthenticated(true);
 
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Change password error:', error);
-      return { success: false, error: 'Error al cambiar la contraseña' };
+
+      if (error.message?.includes('weak') || error.message?.includes('easy to guess')) {
+        return { success: false, error: 'La contraseña es muy débil o común. Debe tener al menos 8 caracteres, incluir mayúsculas, minúsculas, números y no ser una contraseña común (como "password123", "12345678", etc.)' };
+      }
+
+      return { success: false, error: error.message || 'Error al cambiar la contraseña' };
     }
   };
 
@@ -402,6 +407,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error: any) {
       console.error('Register error:', error);
       await supabase.auth.signOut();
+
+      if (error.message?.includes('weak') || error.message?.includes('easy to guess')) {
+        return { success: false, error: 'La contraseña es muy débil o común. Debe tener al menos 8 caracteres, incluir mayúsculas, minúsculas, números y no ser una contraseña común (como "password123", "12345678", etc.)' };
+      }
+
       return { success: false, error: error.message || 'Error al registrar' };
     }
   };

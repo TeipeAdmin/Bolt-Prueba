@@ -181,15 +181,20 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Input
-              name="password"
-              type="password"
-              label={`${t('password')}*`}
-              value={formData.password}
-              onChange={handleChange}
-              error={errors.password}
-              placeholder={t('minimumCharacters')}
-            />
+            <div>
+              <Input
+                name="password"
+                type="password"
+                label={`${t('password')}*`}
+                value={formData.password}
+                onChange={handleChange}
+                error={errors.password}
+                placeholder="Mínimo 8 caracteres"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Debe tener al menos 8 caracteres, incluir mayúsculas, minúsculas, números y no ser común
+              </p>
+            </div>
 
             <Input
               name="confirmPassword"

@@ -220,6 +220,10 @@ export const UsersManagement: React.FC = () => {
           showToast('error', 'Email duplicado', 'Este email ya está registrado en el sistema de autenticación');
           return;
         }
+        if (result.error?.includes('weak') || result.error?.includes('easy to guess')) {
+          showToast('error', 'Contraseña débil', 'La contraseña es muy débil o común. Debe tener al menos 8 caracteres, incluir mayúsculas, minúsculas, números y no ser una contraseña común (como "password123", "12345678", etc.)');
+          return;
+        }
         throw new Error(result.error || 'Error al crear usuario');
       }
 
@@ -743,13 +747,18 @@ export const UsersManagement: React.FC = () => {
             placeholder="usuario@ejemplo.com"
           />
 
-          <Input
-            label="Contraseña*"
-            type="password"
-            value={newUserForm.password}
-            onChange={(e) => setNewUserForm(prev => ({ ...prev, password: e.target.value }))}
-            placeholder="Mínimo 6 caracteres"
-          />
+          <div>
+            <Input
+              label="Contraseña*"
+              type="password"
+              value={newUserForm.password}
+              onChange={(e) => setNewUserForm(prev => ({ ...prev, password: e.target.value }))}
+              placeholder="Mínimo 8 caracteres"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              La contraseña debe tener al menos 8 caracteres, incluir mayúsculas, minúsculas, números y no ser una contraseña común (como "password123", "12345678", etc.)
+            </p>
+          </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">

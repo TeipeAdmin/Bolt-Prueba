@@ -39,7 +39,12 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
       setNewPassword('');
       setConfirmPassword('');
     } catch (err: any) {
-      setError(err.message || 'Error al cambiar la contraseña');
+      const errorMessage = err.message || 'Error al cambiar la contraseña';
+      if (errorMessage.includes('weak') || errorMessage.includes('easy to guess')) {
+        setError('La contraseña es muy débil o común. Debe tener al menos 8 caracteres, incluir mayúsculas, minúsculas, números y no ser una contraseña común.');
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -80,8 +85,11 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
             type="password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            placeholder={t('minimumCharacters')}
+            placeholder="Mínimo 8 caracteres"
           />
+          <p className="text-xs text-gray-500 mt-1">
+            Debe tener al menos 8 caracteres, incluir mayúsculas, minúsculas, números y no ser común
+          </p>
         </div>
 
         <div>
