@@ -45,38 +45,42 @@ export const Toast: React.FC<ToastProps> = ({
   const getStyles = () => {
     if (customColors?.primary) {
       return {
-        backgroundColor: `${customColors.primary}ff`,
-        borderColor: `${customColors.primary}40`,
-        color: customColors.secondary || '#000000'
+        style: {
+          backgroundColor: `${customColors.primary}ff`,
+          borderColor: `${customColors.primary}40`,
+          color: customColors.secondary || '#000000'
+        },
+        className: ''
       };
     }
 
     switch (type) {
       case 'success':
-        return { className: 'bg-green-50 border-green-200 text-green-800' };
+        return { className: 'bg-green-50 border-green-200 text-green-800', style: undefined };
       case 'warning':
-        return { className: 'bg-yellow-50 border-yellow-200 text-yellow-800' };
+        return { className: 'bg-yellow-50 border-yellow-200 text-yellow-800', style: undefined };
       case 'error':
-        return { className: 'bg-red-50 border-red-200 text-red-800' };
+        return { className: 'bg-red-50 border-red-200 text-red-800', style: undefined };
       case 'info':
-        return { className: 'bg-blue-50 border-blue-200 text-blue-800' };
+        return { className: 'bg-blue-50 border-blue-200 text-blue-800', style: undefined };
+      default:
+        return { className: 'bg-gray-50 border-gray-200 text-gray-800', style: undefined };
     }
   };
 
   const styles = getStyles();
-  const hasCustomColors = customColors?.primary;
 
   return (
     <div
-      className={`fixed top-4 right-4 left-4 sm:left-auto z-50 max-w-sm sm:w-full w-auto border rounded-lg p-3 sm:p-4 shadow-lg transform transition-all duration-300 ease-in-out ${hasCustomColors ? '' : styles.className || ''}`}
-      style={hasCustomColors ? styles : undefined}
+      className={`fixed top-4 right-4 left-4 sm:left-auto z-50 max-w-sm sm:w-full w-auto border rounded-lg p-3 sm:p-4 shadow-lg transform transition-all duration-300 ease-in-out ${styles.className}`}
+      style={styles.style}
     >
       <div className="flex items-start gap-2 sm:gap-0">
         <div className="flex-shrink-0">
           {getIcon()}
         </div>
         <>
-          {hasCustomColors && (
+          {customColors?.primary && (
             <style>
               {`
                 .customSecondaryImportant {
@@ -93,14 +97,14 @@ export const Toast: React.FC<ToastProps> = ({
           <div className="ml-2 sm:ml-3 flex-1 min-w-0">
             <h3
               className={`text-xs sm:text-sm font-medium break-words ${
-                hasCustomColors ? 'customSecondaryImportant' : ''
+                customColors?.primary ? 'customSecondaryImportant' : ''
               }`}
             >
               {title}
             </h3>
             <p
               className={`text-xs sm:text-sm mt-1 opacity-90 break-words ${
-                hasCustomColors ? 'customSecondaryImportant' : ''
+                customColors?.primary ? 'customSecondaryImportant' : ''
               }`}
             >
               {message}
@@ -111,9 +115,9 @@ export const Toast: React.FC<ToastProps> = ({
             <button
               onClick={onClose}
               className={`inline-flex transition ease-in-out duration-150 ${
-                hasCustomColors ? 'customSecondaryImportant' : ''
+                customColors?.primary ? 'customSecondaryImportant' : ''
               }`}
-              style={!hasCustomColors ? { color: '#9ca3af' } : undefined}
+              style={!customColors?.primary ? { color: '#9ca3af' } : undefined}
             >
               <X className="w-3 h-3 sm:w-4 sm:h-4" />
             </button>
