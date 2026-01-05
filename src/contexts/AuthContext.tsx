@@ -25,6 +25,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const loadingUserRef = useRef(false);
   const initializedRef = useRef(false);
   const authListenerRef = useRef<any>(null);
+  const hasDataRef = useRef(false);
 
   useEffect(() => {
     if (initializedRef.current) {
@@ -78,6 +79,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setIsAuthenticated(false);
             setLoading(false);
             loadingUserRef.current = false;
+            hasDataRef.current = false;
           } else if (event === 'TOKEN_REFRESHED') {
             console.log('[AuthContext] Token refreshed, keeping current state');
           } else if (event === 'USER_UPDATED') {
@@ -104,7 +106,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       console.log('[AuthContext] Loading user data for:', userId);
       loadingUserRef.current = true;
-      setLoading(true);
+
+      if (!hasDataRef.current) {
+        setLoading(true);
+      }
 
       console.log('[AuthContext] Querying users table...');
       const startTime = Date.now();
@@ -135,6 +140,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setIsAuthenticated(false);
         setLoading(false);
         loadingUserRef.current = false;
+        hasDataRef.current = false;
         return;
       }
 
@@ -146,6 +152,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setIsAuthenticated(false);
         setLoading(false);
         loadingUserRef.current = false;
+        hasDataRef.current = false;
         return;
       }
 
@@ -179,6 +186,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       console.log('[AuthContext] Auth context fully loaded');
+      hasDataRef.current = true;
       setLoading(false);
       loadingUserRef.current = false;
     } catch (error) {
@@ -198,6 +206,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsAuthenticated(false);
       setLoading(false);
       loadingUserRef.current = false;
+      hasDataRef.current = false;
     }
   };
 
@@ -444,12 +453,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(null);
       setRestaurant(null);
       setIsAuthenticated(false);
+      hasDataRef.current = false;
       window.location.href = '/login';
     } catch (error) {
       console.error('Logout error:', error);
       setUser(null);
       setRestaurant(null);
       setIsAuthenticated(false);
+      hasDataRef.current = false;
       window.location.href = '/login';
     }
   };
