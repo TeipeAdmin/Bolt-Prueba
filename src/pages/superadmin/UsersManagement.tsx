@@ -204,16 +204,22 @@ export const UsersManagement: React.FC = () => {
 
       if (!authData.user) throw new Error('No se pudo crear el usuario');
 
+      const userInsert = {
+        id: authData.user.id,
+        email: newUserForm.email,
+        role: newUserForm.role,
+        restaurant_id: newUserForm.role === 'superadmin'
+          ? null
+          : (newUserForm.restaurant_id && newUserForm.restaurant_id.trim() !== '' ? newUserForm.restaurant_id : null),
+        email_verified: true,
+        require_password_change: true,
+      };
+
+      console.log('Inserting user with data:', userInsert);
+
       const { error: dbError } = await supabase
         .from('users')
-        .insert({
-          id: authData.user.id,
-          email: newUserForm.email,
-          role: newUserForm.role,
-          restaurant_id: newUserForm.role === 'superadmin' ? null : (newUserForm.restaurant_id || null),
-          email_verified: true,
-          require_password_change: true,
-        });
+        .insert(userInsert);
 
       if (dbError) throw dbError;
 
@@ -716,6 +722,7 @@ export const UsersManagement: React.FC = () => {
             email: '',
             password: '',
             role: 'restaurant_owner',
+            restaurant_id: '',
           });
         }}
         title="Crear Nuevo Usuario"
