@@ -174,6 +174,11 @@ export const UsersManagement: React.FC = () => {
       return;
     }
 
+    if (newUserForm.role === 'restaurant_owner' && !newUserForm.restaurant_id) {
+      showToast('error', 'Restaurante requerido', 'Los usuarios de restaurante deben tener un restaurante asignado');
+      return;
+    }
+
     const emailExists = users.some(user => user.email.toLowerCase() === newUserForm.email.toLowerCase());
     if (emailExists) {
       showToast('error', 'Email duplicado', 'Este email ya está registrado');
@@ -198,7 +203,7 @@ export const UsersManagement: React.FC = () => {
           id: authData.user.id,
           email: newUserForm.email,
           role: newUserForm.role,
-          restaurant_id: newUserForm.restaurant_id || null,
+          restaurant_id: newUserForm.role === 'superadmin' ? null : (newUserForm.restaurant_id || null),
           email_verified: true,
           require_password_change: true,
         });
@@ -737,7 +742,14 @@ export const UsersManagement: React.FC = () => {
             </label>
             <select
               value={newUserForm.role}
-              onChange={(e) => setNewUserForm(prev => ({ ...prev, role: e.target.value as UserType['role'] }))}
+              onChange={(e) => {
+                const newRole = e.target.value as UserType['role'];
+                setNewUserForm(prev => ({
+                  ...prev,
+                  role: newRole,
+                  restaurant_id: newRole === 'superadmin' ? '' : prev.restaurant_id
+                }));
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="restaurant_owner">Restaurante</option>
@@ -753,14 +765,14 @@ export const UsersManagement: React.FC = () => {
           {newUserForm.role === 'restaurant_owner' && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Restaurante (Opcional)
+                Restaurante*
               </label>
               <select
                 value={newUserForm.restaurant_id}
                 onChange={(e) => setNewUserForm(prev => ({ ...prev, restaurant_id: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="">Sin restaurante asignado</option>
+                <option value="">Seleccionar restaurante...</option>
                 {restaurants.map(restaurant => (
                   <option key={restaurant.id} value={restaurant.id}>
                     {restaurant.name}
@@ -768,7 +780,15 @@ export const UsersManagement: React.FC = () => {
                 ))}
               </select>
               <p className="text-xs text-gray-500 mt-1">
-                Puedes asignar un restaurante ahora o después
+                Los usuarios de restaurante deben tener un restaurante asignado
+              </p>
+            </div>
+          )}
+
+          {newUserForm.role === 'superadmin' && (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <p className="text-sm text-gray-700">
+                Los superadministradores no necesitan restaurante asignado. Tienen acceso completo a todos los restaurantes y funciones del sistema.
               </p>
             </div>
           )}
@@ -796,7 +816,11 @@ export const UsersManagement: React.FC = () => {
             </Button>
             <Button
               onClick={handleCreateUser}
-              disabled={!newUserForm.email || !newUserForm.password}
+              disabled={
+                !newUserForm.email ||
+                !newUserForm.password ||
+                (newUserForm.role === 'restaurant_owner' && !newUserForm.restaurant_id)
+              }
               icon={UserPlus}
             >
               Crear Usuario
