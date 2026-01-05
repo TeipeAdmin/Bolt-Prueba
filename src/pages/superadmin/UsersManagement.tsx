@@ -168,43 +168,57 @@ export const UsersManagement: React.FC = () => {
     }
   };
 
-  const handleCreateUser = () => {
+  const handleCreateUser = async () => {
     if (!newUserForm.email || !newUserForm.password) {
-      alert('Por favor completa todos los campos requeridos.');
+      showToast('Por favor completa todos los campos requeridos', 'error');
       return;
     }
 
-    // Check if email already exists
     const emailExists = users.some(user => user.email.toLowerCase() === newUserForm.email.toLowerCase());
     if (emailExists) {
-      alert('Este email ya está registrado.');
+      showToast('Este email ya está registrado', 'error');
       return;
     }
 
-    const newUser: UserType = {
-      id: `user-${Date.now()}`,
-      email: newUserForm.email,
-      password: newUserForm.password,
-      role: newUserForm.role,
-      restaurant_id: newUserForm.restaurant_id || undefined,
-      email_verified: true,
-      require_password_change: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+    try {
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: newUserForm.email,
+        password: newUserForm.password,
+        options: {
+          emailRedirectTo: undefined,
+        }
+      });
 
-    const updatedUsers = [...users, newUser];
-    saveToStorage('users', updatedUsers);
-    setUsers(updatedUsers);
+      if (authError) throw authError;
+      if (!authData.user) throw new Error('No se pudo crear el usuario');
 
-    // Reset form and close modal
-    setNewUserForm({
-      email: '',
-      password: '',
-      role: 'restaurant_owner',
-      restaurant_id: '',
-    });
-    setShowCreateUserModal(false);
+      const { error: dbError } = await supabase
+        .from('users')
+        .insert({
+          id: authData.user.id,
+          email: newUserForm.email,
+          role: newUserForm.role,
+          restaurant_id: newUserForm.restaurant_id || null,
+          email_verified: true,
+          require_password_change: true,
+        });
+
+      if (dbError) throw dbError;
+
+      showToast('Usuario creado exitosamente', 'success');
+      await loadData();
+
+      setNewUserForm({
+        email: '',
+        password: '',
+        role: 'restaurant_owner',
+        restaurant_id: '',
+      });
+      setShowCreateUserModal(false);
+    } catch (error) {
+      console.error('Error creating user:', error);
+      showToast('Error al crear el usuario', 'error');
+    }
   };
 
   const handleEditUser = (user: UserType) => {
@@ -927,7 +941,7 @@ export const UsersManagement: React.FC = () => {
                   icon={Copy}
                   onClick={() => {
                     navigator.clipboard.writeText(provisionalPassword);
-                    alert('Contraseña copiada al portapapeles');
+                    showToast('Contraseña copiada al portapapeles', 'success');
                   }}
                   title="Copiar contraseña"
                 />
@@ -954,9 +968,8 @@ export const UsersManagement: React.FC = () => {
               </Button>
               <Button
                 variant="primary"
-                onClick={() => {
-                  confirmResetPassword();
-                  alert(`Contraseña provisional asignada a ${userForPasswordReset.email}\n\nContraseña: ${provisionalPassword}\n\nEl usuario deberá cambiarla al iniciar sesión.`);
+                onClick={async () => {
+                  await confirmResetPassword();
                   closeResetPasswordModal();
                 }}
                 icon={Lock}
