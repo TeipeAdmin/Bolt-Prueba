@@ -194,7 +194,14 @@ export const UsersManagement: React.FC = () => {
         }
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        if (authError.message?.includes('already registered') || authError.message?.includes('user_already_exists')) {
+          showToast('error', 'Email duplicado', 'Este email ya está registrado en el sistema de autenticación');
+          return;
+        }
+        throw authError;
+      }
+
       if (!authData.user) throw new Error('No se pudo crear el usuario');
 
       const { error: dbError } = await supabase
@@ -220,9 +227,10 @@ export const UsersManagement: React.FC = () => {
         restaurant_id: '',
       });
       setShowCreateUserModal(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating user:', error);
-      showToast('error', 'Error', 'No se pudo crear el usuario');
+      const errorMessage = error?.message || 'No se pudo crear el usuario';
+      showToast('error', 'Error', errorMessage);
     }
   };
 
