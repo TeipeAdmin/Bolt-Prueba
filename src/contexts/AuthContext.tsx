@@ -33,7 +33,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session?.user) {
         console.log('[AuthContext] Loading user after auth event:', event);
         if (!loadingUserRef.current) {
-          await loadUserData(session.user.id);
+          await new Promise(resolve => setTimeout(resolve, 100));
+
+          const { data: { session: verifiedSession } } = await supabase.auth.getSession();
+          if (verifiedSession?.user) {
+            console.log('[AuthContext] Session verified, loading user data');
+            await loadUserData(verifiedSession.user.id);
+          } else {
+            console.log('[AuthContext] Session not ready, skipping load');
+            setLoading(false);
+          }
         } else {
           console.log('[AuthContext] Skipping loadUserData, already in progress');
         }
@@ -46,7 +55,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         loadingUserRef.current = false;
       } else if (event === 'TOKEN_REFRESHED' && session?.user) {
         console.log('[AuthContext] Token refreshed for user:', session.user.email);
-      } else if (!session) {
+      } else if (event === 'INITIAL_SESSION' && !session) {
         console.log('[AuthContext] No session found, setting loading to false');
         setLoading(false);
       }
@@ -73,11 +82,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log('[AuthContext] About to query users table...');
       const startTime = Date.now();
 
-      const { data: userData, error: userError } = await supabase
+      const queryPromise = supabase
         .from('users')
         .select('*')
         .eq('id', userId)
         .maybeSingle();
+
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Query timeout')), 5000)
+      );
+
+      const { data: userData, error: userError } = await Promise.race([
+        queryPromise,
+        timeoutPromise
+      ]) as any;
 
       const duration = Date.now() - startTime;
       console.log(`[AuthContext] Query completed in ${duration}ms`);
