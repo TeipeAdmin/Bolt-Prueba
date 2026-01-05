@@ -83,15 +83,79 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    console.log('Getting restaurants for user:', userId);
+    console.log('Checking if user is owner of any restaurants:', userId);
     const { data: restaurants } = await supabaseClient
       .from('restaurants')
-      .select('id')
+      .select('id, name')
       .eq('owner_id', userId);
 
     const restaurantIds = restaurants?.map(r => r.id) || [];
 
     if (restaurantIds.length > 0) {
+      console.log('User is owner of restaurants:', restaurantIds);
+
+      const { data: otherUsers, error: usersError } = await supabaseClient
+        .from('users')
+        .select('id, full_name, email, role')
+        .in('restaurant_id', restaurantIds)
+        .neq('id', userId);
+
+      if (usersError) {
+        console.error('Error checking other users:', usersError);
+        return new Response(
+          JSON.stringify({ error: 'Error al verificar usuarios del restaurante' }),
+          {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      if (otherUsers && otherUsers.length > 0) {
+        console.log('Cannot delete: restaurant has other users:', otherUsers);
+
+        const { data: restaurantStats } = await supabaseClient
+          .from('restaurants')
+          .select(`
+            id,
+            name,
+            products:products(count),
+            orders:orders(count),
+            customers:customers(count)
+          `)
+          .in('id', restaurantIds);
+
+        return new Response(
+          JSON.stringify({
+            error: 'No se puede eliminar este usuario porque es propietario de uno o más restaurantes con otros usuarios activos.',
+            cannotDelete: true,
+            details: {
+              restaurants: restaurants,
+              otherUsersCount: otherUsers.length,
+              otherUsers: otherUsers.map(u => ({
+                id: u.id,
+                name: u.full_name,
+                email: u.email,
+                role: u.role
+              })),
+              restaurantData: restaurantStats?.map(r => ({
+                id: r.id,
+                name: r.name,
+                productsCount: r.products?.[0]?.count || 0,
+                ordersCount: r.orders?.[0]?.count || 0,
+                customersCount: r.customers?.[0]?.count || 0
+              }))
+            },
+            suggestion: 'Primero transfiere la propiedad del restaurante a otro usuario administrador, o elimina primero a los otros usuarios del restaurante.'
+          }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      console.log('User is the only user of their restaurant(s). Proceeding with deletion.');
       console.log('Step 1: Deleting order_items for restaurants:', restaurantIds);
       const { data: orders } = await supabaseClient
         .from('orders')

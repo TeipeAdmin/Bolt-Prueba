@@ -17,6 +17,8 @@ export const UsersManagement: React.FC = () => {
   const [showCreateUserModal, setShowCreateUserModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
+  const [showCannotDeleteModal, setShowCannotDeleteModal] = useState(false);
+  const [deleteBlockedDetails, setDeleteBlockedDetails] = useState<any>(null);
   const [editingUser, setEditingUser] = useState<UserType | null>(null);
   const [assigningUser, setAssigningUser] = useState<UserType | null>(null);
   const [userForPasswordReset, setUserForPasswordReset] = useState<UserType | null>(null);
@@ -148,7 +150,10 @@ export const UsersManagement: React.FC = () => {
   };
 
   const deleteUser = async (userId: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este usuario? Esta acción no se puede deshacer.')) {
+    const userToDelete = users.find(u => u.id === userId);
+    if (!userToDelete) return;
+
+    if (!confirm(`¿Estás seguro de que quieres eliminar el usuario ${userToDelete.email}? Esta acción no se puede deshacer.`)) {
       return;
     }
 
@@ -174,6 +179,14 @@ export const UsersManagement: React.FC = () => {
       const result = await response.json();
 
       if (!response.ok) {
+        if (result.cannotDelete) {
+          setDeleteBlockedDetails({
+            user: userToDelete,
+            ...result
+          });
+          setShowCannotDeleteModal(true);
+          return;
+        }
         throw new Error(result.error || 'Error al eliminar usuario');
       }
 
@@ -1041,6 +1054,97 @@ export const UsersManagement: React.FC = () => {
                 icon={Lock}
               >
                 Confirmar y Aplicar
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Cannot Delete User Modal */}
+      <Modal
+        isOpen={showCannotDeleteModal}
+        onClose={() => {
+          setShowCannotDeleteModal(false);
+          setDeleteBlockedDetails(null);
+        }}
+        title="No se puede eliminar el usuario"
+        size="lg"
+      >
+        {deleteBlockedDetails && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-center mb-4">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 className="w-8 h-8 text-red-600" />
+              </div>
+            </div>
+
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-sm font-medium text-red-900 mb-2">
+                {deleteBlockedDetails.error}
+              </p>
+              <p className="text-sm text-red-700">
+                <strong>Usuario:</strong> {deleteBlockedDetails.user?.email}
+              </p>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm font-medium text-blue-900 mb-3">
+                Restaurantes afectados:
+              </p>
+              {deleteBlockedDetails.details?.restaurants?.map((restaurant: any) => {
+                const restaurantData = deleteBlockedDetails.details?.restaurantData?.find((r: any) => r.id === restaurant.id);
+                return (
+                  <div key={restaurant.id} className="mb-4 p-3 bg-white rounded border border-blue-100">
+                    <p className="font-medium text-blue-900">{restaurant.name}</p>
+                    {restaurantData && (
+                      <div className="mt-2 text-xs text-blue-700 grid grid-cols-3 gap-2">
+                        <div>Productos: {restaurantData.productsCount}</div>
+                        <div>Órdenes: {restaurantData.ordersCount}</div>
+                        <div>Clientes: {restaurantData.customersCount}</div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <p className="text-sm font-medium text-amber-900 mb-2">
+                Otros usuarios en el restaurante ({deleteBlockedDetails.details?.otherUsersCount}):
+              </p>
+              <div className="space-y-2">
+                {deleteBlockedDetails.details?.otherUsers?.map((otherUser: any) => (
+                  <div key={otherUser.id} className="p-2 bg-white rounded border border-amber-100">
+                    <p className="text-sm font-medium text-amber-900">{otherUser.name}</p>
+                    <p className="text-xs text-amber-700">{otherUser.email}</p>
+                    <p className="text-xs text-amber-600">Rol: {otherUser.role}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <p className="text-sm font-medium text-gray-900 mb-2">
+                Sugerencias:
+              </p>
+              <p className="text-sm text-gray-700">
+                {deleteBlockedDetails.suggestion}
+              </p>
+              <ul className="text-sm text-gray-600 mt-2 space-y-1 list-disc list-inside">
+                <li>Elimina primero a los otros usuarios del restaurante</li>
+                <li>O transfiere la propiedad del restaurante a otro usuario administrador</li>
+              </ul>
+            </div>
+
+            <div className="flex justify-end pt-4 border-t border-gray-200">
+              <Button
+                variant="primary"
+                onClick={() => {
+                  setShowCannotDeleteModal(false);
+                  setDeleteBlockedDetails(null);
+                }}
+              >
+                Entendido
               </Button>
             </div>
           </div>
