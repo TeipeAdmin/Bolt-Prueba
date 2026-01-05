@@ -174,7 +174,7 @@ export const RestaurantsManagement: React.FC = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        toast.error('Sesión expirada');
+        toast.showToast('error', 'Error', 'Sesión expirada');
         return;
       }
 
@@ -197,13 +197,13 @@ export const RestaurantsManagement: React.FC = () => {
         throw new Error(result.error || 'Error al eliminar el restaurante');
       }
 
-      toast.success(`Restaurante "${restaurantToDelete.name}" eliminado exitosamente`);
+      toast.showToast('success', 'Eliminado', `Restaurante "${restaurantToDelete.name}" eliminado exitosamente`);
       await loadData();
       setShowDeleteModal(false);
       setRestaurantToDelete(null);
     } catch (error: any) {
       console.error('Error deleting restaurant:', error);
-      toast.error(error.message || 'Error al eliminar el restaurante');
+      toast.showToast('error', 'Error', error.message || 'Error al eliminar el restaurante');
     }
   };
 

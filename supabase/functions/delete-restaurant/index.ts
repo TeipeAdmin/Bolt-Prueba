@@ -57,18 +57,21 @@ Deno.serve(async (req: Request) => {
       throw new Error('Restaurant not found');
     }
 
-    const { error: deleteOrderItemsError } = await supabase
-      .from('order_items')
-      .delete()
-      .in('order_id',
-        supabase
-          .from('orders')
-          .select('id')
-          .eq('restaurant_id', restaurantId)
-      );
+    const { data: orders } = await supabase
+      .from('orders')
+      .select('id')
+      .eq('restaurant_id', restaurantId);
 
-    if (deleteOrderItemsError) {
-      console.error('Error deleting order items:', deleteOrderItemsError);
+    if (orders && orders.length > 0) {
+      const orderIds = orders.map(o => o.id);
+      const { error: deleteOrderItemsError } = await supabase
+        .from('order_items')
+        .delete()
+        .in('order_id', orderIds);
+
+      if (deleteOrderItemsError) {
+        console.error('Error deleting order items:', deleteOrderItemsError);
+      }
     }
 
     const { error: deleteOrdersError } = await supabase
@@ -89,18 +92,21 @@ Deno.serve(async (req: Request) => {
       console.error('Error deleting customers:', deleteCustomersError);
     }
 
-    const { error: deleteProductCategoriesError } = await supabase
-      .from('product_categories')
-      .delete()
-      .in('product_id',
-        supabase
-          .from('products')
-          .select('id')
-          .eq('restaurant_id', restaurantId)
-      );
+    const { data: products } = await supabase
+      .from('products')
+      .select('id')
+      .eq('restaurant_id', restaurantId);
 
-    if (deleteProductCategoriesError) {
-      console.error('Error deleting product categories:', deleteProductCategoriesError);
+    if (products && products.length > 0) {
+      const productIds = products.map(p => p.id);
+      const { error: deleteProductCategoriesError } = await supabase
+        .from('product_categories')
+        .delete()
+        .in('product_id', productIds);
+
+      if (deleteProductCategoriesError) {
+        console.error('Error deleting product categories:', deleteProductCategoriesError);
+      }
     }
 
     const { error: deleteProductsError } = await supabase
