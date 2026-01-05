@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { Category, Product, Restaurant, Subscription } from '../../types';
-import { loadFromStorage } from '../../data/mockData';
+import { supabase } from '../../lib/supabase';
 import { useCart } from '../../contexts/CartContext';
 import { ProductDetail } from '../../components/public/ProductDetail';
 import { CartSidebar } from '../../components/public/CartSidebar';
@@ -95,15 +95,18 @@ export const PublicMenu: React.FC = () => {
 
 
 
-  const loadMenuData = () => {
+  const loadMenuData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const restaurants = loadFromStorage('restaurants', []);
-      const restaurantData = restaurants.find(
-        (r: Restaurant) => r.slug === slug || r.id === slug || r.domain === slug
-      );
+      const { data: restaurantData, error: restaurantError } = await supabase
+        .from('restaurants')
+        .select('*')
+        .or(`slug.eq.${slug},id.eq.${slug},domain.eq.${slug}`)
+        .maybeSingle();
+
+      if (restaurantError) throw restaurantError;
 
       if (!restaurantData) {
         setError(`Restaurante no encontrado: ${slug}`);
@@ -111,12 +114,15 @@ export const PublicMenu: React.FC = () => {
         return;
       }
 
-      const subscriptions = loadFromStorage('subscriptions', []);
-      const subscription = subscriptions.find(
-        (s: Subscription) => s.restaurant_id === restaurantData.id
-      );
+      const { data: subscriptionData, error: subscriptionError } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('restaurant_id', restaurantData.id)
+        .maybeSingle();
 
-      if (!subscription || subscription.status !== 'active') {
+      if (subscriptionError) throw subscriptionError;
+
+      if (!subscriptionData || subscriptionData.status !== 'active') {
         setError(
           'Este restaurante no está disponible en este momento. Suscripción inactiva o vencida.'
         );
@@ -126,28 +132,29 @@ export const PublicMenu: React.FC = () => {
 
       setRestaurant(restaurantData);
 
-      const allCategories = loadFromStorage('categories', []);
-      const allProducts = loadFromStorage('products', []);
+      const { data: categoriesData, error: categoriesError } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('restaurant_id', restaurantData.id)
+        .eq('active', true)
+        .order('order_position', { ascending: true });
 
-      const restaurantCategories = allCategories
-        .filter(
-          (cat: Category) =>
-            cat.restaurant_id === restaurantData.id && cat.active
-        )
-        .sort(
-          (a: Category, b: Category) =>
-            (a.order_position || 0) - (b.order_position || 0)
-        );
+      if (categoriesError) throw categoriesError;
 
-      const restaurantProducts = allProducts.filter(
-        (prod: Product) =>
-          prod.restaurant_id === restaurantData.id && prod.status === 'active'
-      );
+      const { data: productsData, error: productsError } = await supabase
+        .from('products')
+        .select('*')
+        .eq('restaurant_id', restaurantData.id)
+        .eq('status', 'active')
+        .order('order_index', { ascending: true });
 
-      setCategories(restaurantCategories);
-      setProducts(restaurantProducts);
+      if (productsError) throw productsError;
+
+      setCategories(categoriesData || []);
+      setProducts(productsData || []);
       setLoading(false);
     } catch (err) {
+      console.error('Error loading menu:', err);
       setError('Error al cargar el menú');
       setLoading(false);
     }
