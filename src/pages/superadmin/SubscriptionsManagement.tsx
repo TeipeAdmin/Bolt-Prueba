@@ -146,23 +146,47 @@ export const SubscriptionsManagement: React.FC = () => {
         .update({ status: newStatus })
         .eq('id', subscriptionId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      setSubscriptions(prev =>
+        prev.map(sub =>
+          sub.id === subscriptionId
+            ? { ...sub, status: newStatus }
+            : sub
+        )
+      );
 
       showToast('Estado de suscripción actualizado', 'success');
-      await loadData();
-    } catch (error) {
+
+      setTimeout(() => {
+        loadData();
+      }, 100);
+    } catch (error: any) {
       console.error('Error updating subscription status:', error);
-      showToast('Error al actualizar el estado', 'error');
+      showToast(error?.message || 'Error al actualizar el estado', 'error');
     }
   };
 
   const handleEditSubscription = (subscription: Subscription) => {
     setEditingSubscription(subscription);
+
+    const formatDate = (dateString: string) => {
+      try {
+        const date = new Date(dateString);
+        return date.toISOString().split('T')[0];
+      } catch (e) {
+        return new Date().toISOString().split('T')[0];
+      }
+    };
+
     setFormData({
       plan_name: subscription.plan_name,
       duration: subscription.duration,
-      start_date: subscription.start_date.split('T')[0],
-      end_date: subscription.end_date.split('T')[0],
+      start_date: formatDate(subscription.start_date),
+      end_date: formatDate(subscription.end_date),
       status: subscription.status,
       auto_renew: subscription.auto_renew,
     });
@@ -180,38 +204,62 @@ export const SubscriptionsManagement: React.FC = () => {
         return;
       }
 
+      if (!formData.start_date || !formData.end_date) {
+        showToast('Las fechas son requeridas', 'error');
+        return;
+      }
+
+      const updateData = {
+        plan_name: formData.plan_name,
+        duration: formData.duration,
+        start_date: new Date(formData.start_date + 'T00:00:00.000Z').toISOString(),
+        end_date: new Date(formData.end_date + 'T23:59:59.999Z').toISOString(),
+        status: formData.status,
+        auto_renew: formData.auto_renew,
+        monthly_price: selectedPlan.price,
+        max_products: selectedPlan.max_products,
+        features: selectedPlan.features,
+      };
+
       const { error } = await supabase
         .from('subscriptions')
-        .update({
-          plan_name: formData.plan_name,
-          duration: formData.duration,
-          start_date: formData.start_date + 'T00:00:00.000Z',
-          end_date: formData.end_date + 'T23:59:59.999Z',
-          status: formData.status,
-          auto_renew: formData.auto_renew,
-          monthly_price: selectedPlan.price,
-          max_products: selectedPlan.max_products,
-          features: selectedPlan.features,
-        })
+        .update(updateData)
         .eq('id', editingSubscription.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      setSubscriptions(prev =>
+        prev.map(sub =>
+          sub.id === editingSubscription.id
+            ? { ...sub, ...updateData }
+            : sub
+        )
+      );
 
       showToast('Suscripción actualizada exitosamente', 'success');
-      await loadData();
 
       setShowEditModal(false);
       setEditingSubscription(null);
-    } catch (error) {
+
+      setTimeout(() => {
+        loadData();
+      }, 100);
+    } catch (error: any) {
       console.error('Error updating subscription:', error);
-      showToast('Error al actualizar la suscripción', 'error');
+      showToast(error?.message || 'Error al actualizar la suscripción', 'error');
     }
   };
 
   const extendSubscription = async (subscriptionId: string, months: number) => {
     try {
       const sub = subscriptions.find(s => s.id === subscriptionId);
-      if (!sub) return;
+      if (!sub) {
+        showToast('Suscripción no encontrada', 'error');
+        return;
+      }
 
       const currentEndDate = new Date(sub.end_date);
       const newEndDate = new Date(currentEndDate);
@@ -222,13 +270,30 @@ export const SubscriptionsManagement: React.FC = () => {
         .update({ end_date: newEndDate.toISOString() })
         .eq('id', subscriptionId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      setSubscriptions(prev =>
+        prev.map(s =>
+          s.id === subscriptionId
+            ? { ...s, end_date: newEndDate.toISOString() }
+            : s
+        )
+      );
 
       showToast(`Suscripción extendida por ${months} mes(es)`, 'success');
-      await loadData();
-    } catch (error) {
+
+      setShowModal(false);
+      setSelectedSubscription(null);
+
+      setTimeout(() => {
+        loadData();
+      }, 100);
+    } catch (error: any) {
       console.error('Error extending subscription:', error);
-      showToast('Error al extender la suscripción', 'error');
+      showToast(error?.message || 'Error al extender la suscripción', 'error');
     }
   };
 
