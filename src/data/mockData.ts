@@ -3,7 +3,7 @@ import { User, Restaurant, Subscription, Category, Product, Order } from '../typ
 // Available plans - Updated system
 export const availablePlans = [
   {
-    id: 'gratis',
+    id: 'free',
     name: 'FREE',
     price: 0,
     currency: 'USD',

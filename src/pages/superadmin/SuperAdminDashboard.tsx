@@ -53,10 +53,10 @@ export const SuperAdminDashboard: React.FC = () => {
     totalRestaurants: restaurants.length,
     activeRestaurants: restaurants.filter(r => isRestaurantActive(r.id)).length,
     inactiveRestaurants: restaurants.filter(r => !isRestaurantActive(r.id)).length,
-    gratisPlan: subscriptions.filter(s => s.plan_type === 'gratis').length,
-    basicPlan: subscriptions.filter(s => s.plan_type === 'basic').length,
-    proPlan: subscriptions.filter(s => s.plan_type === 'pro').length,
-    businessPlan: subscriptions.filter(s => s.plan_type === 'business').length,
+    freePlan: subscriptions.filter(s => s.plan_name === 'free').length,
+    basicPlan: subscriptions.filter(s => s.plan_name === 'basic').length,
+    proPlan: subscriptions.filter(s => s.plan_name === 'pro').length,
+    premiumPlan: subscriptions.filter(s => s.plan_name === 'premium').length,
     activeSubscriptions: subscriptions.filter(s => s.status === 'active').length,
     expiredSubscriptions: subscriptions.filter(s => s.status === 'expired').length,
   };
@@ -79,15 +79,15 @@ export const SuperAdminDashboard: React.FC = () => {
   const getSubscriptionBadge = (subscription: Subscription | undefined) => {
     if (!subscription) return <Badge variant="gray">Sin suscripción</Badge>;
 
-    const planName = subscription.plan_type === 'gratis' ? 'Gratis' :
-                     subscription.plan_type === 'basic' ? 'Basic' :
-                     subscription.plan_type === 'pro' ? 'Pro' :
-                     subscription.plan_type === 'business' ? 'Business' :
-                     subscription.plan_type.toUpperCase();
+    const planName = subscription.plan_name === 'free' ? 'FREE' :
+                     subscription.plan_name === 'basic' ? 'Basic' :
+                     subscription.plan_name === 'pro' ? 'Pro' :
+                     subscription.plan_name === 'premium' ? 'Premium' :
+                     subscription.plan_name.toUpperCase();
 
-    const variant = subscription.plan_type === 'gratis' ? 'gray' :
-                   subscription.plan_type === 'basic' ? 'info' :
-                   subscription.plan_type === 'pro' ? 'success' :
+    const variant = subscription.plan_name === 'free' ? 'gray' :
+                   subscription.plan_name === 'basic' ? 'info' :
+                   subscription.plan_name === 'pro' ? 'success' :
                    'error';
 
     return <Badge variant={variant}>{planName}</Badge>;
@@ -159,7 +159,7 @@ export const SuperAdminDashboard: React.FC = () => {
             </div>
           </div>
           <p className="text-sm font-medium text-slate-600 mb-1">Plan Gratis</p>
-          <p className="text-3xl font-bold text-slate-900 mb-3">{stats.gratisPlan}</p>
+          <p className="text-3xl font-bold text-slate-900 mb-3">{stats.freePlan}</p>
           <div className="pt-3 border-t border-slate-100">
             <span className="text-xs text-slate-600 font-medium">
               Sin costo mensual

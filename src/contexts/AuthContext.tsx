@@ -383,12 +383,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .from('subscriptions')
         .insert([{
           restaurant_id: restaurantResult.id,
-          plan_type: 'gratis',
+          plan_name: 'free',
           duration: 'monthly',
           status: 'active',
           start_date: new Date().toISOString(),
           end_date: '2099-12-31T23:59:59Z',
           auto_renew: false,
+          monthly_price: 0,
+          max_products: 10,
+          max_orders: 999999,
         }]);
 
       if (subscriptionError) throw subscriptionError;

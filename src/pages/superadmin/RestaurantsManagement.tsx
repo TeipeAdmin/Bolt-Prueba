@@ -231,7 +231,7 @@ export const RestaurantsManagement: React.FC = () => {
     const plan = subscriptionPlans.find(p => p.slug === subscription.plan_name);
     const planName = plan?.name || subscription.plan_name.toUpperCase();
 
-    const variant = subscription.plan_name === 'free' || subscription.plan_name === 'gratis' ? 'gray' :
+    const variant = subscription.plan_name === 'free' ? 'gray' :
                    subscription.plan_name === 'basic' ? 'info' :
                    subscription.plan_name === 'pro' ? 'success' :
                    'error';

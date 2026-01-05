@@ -1,6 +1,6 @@
 export const availablePlans = [
   {
-    id: 'gratis',
+    id: 'free',
     name: 'FREE',
     price: 0,
     currency: 'USD',

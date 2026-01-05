@@ -248,7 +248,7 @@ export const SubscriptionsManagement: React.FC = () => {
     const plan = subscriptionPlans.find(p => p.slug === planName);
     const displayName = plan?.name || planName.toUpperCase();
 
-    const variant = planName === 'free' || planName === 'gratis' ? 'gray' :
+    const variant = planName === 'free' ? 'gray' :
                    planName === 'basic' ? 'info' :
                    planName === 'pro' ? 'success' :
                    'error';
@@ -317,7 +317,7 @@ export const SubscriptionsManagement: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Plan Gratis</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {subscriptions.filter(s => s.plan_name === 'free' || s.plan_name === 'gratis').length}
+                {subscriptions.filter(s => s.plan_name === 'free').length}
               </p>
             </div>
           </div>

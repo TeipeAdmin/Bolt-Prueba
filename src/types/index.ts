@@ -276,7 +276,7 @@ export interface Subscription {
   id: string;
   restaurant_id: string;
   plan_name: string;
-  plan_type?: 'gratis' | 'basic' | 'pro' | 'premium' | 'business';
+  plan_type?: 'free' | 'basic' | 'pro' | 'premium' | 'business';
   duration: 'monthly' | 'annual';
   status: 'active' | 'expired' | 'cancelled' | 'pending';
   start_date: string;
