@@ -30,7 +30,7 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Suscripción Requerida</h2>
           <p className="text-gray-600 mb-6">
-            {t('suscriptionend')}
+            Tu suscripción ha expirado. Por favor contacta con soporte para renovarla.
           </p>
           <Navigate to="/dashboard" />
         </div>

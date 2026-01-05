@@ -33,6 +33,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(null);
         setRestaurant(null);
         setIsAuthenticated(false);
+        setLoading(false);
       }
     });
 
@@ -43,7 +44,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const checkUser = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Auth check timeout')), 10000)
+      );
+
+      const sessionPromise = supabase.auth.getSession();
+
+      const { data: { session } } = await Promise.race([
+        sessionPromise,
+        timeoutPromise
+      ]) as any;
 
       if (session?.user) {
         await loadUserData(session.user.id);
@@ -52,20 +62,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     } catch (error) {
       console.error('Error checking user:', error);
+      setUser(null);
+      setRestaurant(null);
+      setIsAuthenticated(false);
       setLoading(false);
     }
   };
 
   const loadUserData = async (userId: string) => {
     try {
-      const { data: userData, error: userError } = await supabase
+      setLoading(true);
+
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('User data load timeout')), 10000)
+      );
+
+      const userDataPromise = supabase
         .from('users')
         .select('*')
         .eq('id', userId)
         .maybeSingle();
 
+      const { data: userData, error: userError } = await Promise.race([
+        userDataPromise,
+        timeoutPromise
+      ]) as any;
+
       if (userError) {
         console.error('Error loading user data:', userError);
+        await supabase.auth.signOut();
         setUser(null);
         setRestaurant(null);
         setIsAuthenticated(false);
@@ -79,29 +104,37 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setRequirePasswordChange(userData.require_password_change || false);
 
         if (userData.role === 'restaurant_owner' && userData.restaurant_id) {
-          const { data: restaurantData, error: restaurantError } = await supabase
-            .from('restaurants')
-            .select('*')
-            .eq('id', userData.restaurant_id)
-            .maybeSingle();
+          try {
+            const { data: restaurantData, error: restaurantError } = await supabase
+              .from('restaurants')
+              .select('*')
+              .eq('id', userData.restaurant_id)
+              .maybeSingle();
 
-          if (!restaurantError && restaurantData) {
-            setRestaurant(restaurantData as Restaurant);
+            if (!restaurantError && restaurantData) {
+              setRestaurant(restaurantData as Restaurant);
+            }
+          } catch (restaurantError) {
+            console.error('Error loading restaurant data:', restaurantError);
           }
         }
 
         if (userData.role === 'superadmin') {
           setRestaurant(null);
         }
+
+        setLoading(false);
       } else {
+        console.warn('No user data found for userId:', userId);
+        await supabase.auth.signOut();
         setUser(null);
         setRestaurant(null);
         setIsAuthenticated(false);
+        setLoading(false);
       }
-
-      setLoading(false);
     } catch (error) {
       console.error('Error loading user data:', error);
+      await supabase.auth.signOut();
       setUser(null);
       setRestaurant(null);
       setIsAuthenticated(false);
