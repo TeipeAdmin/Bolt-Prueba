@@ -172,19 +172,38 @@ export const RestaurantsManagement: React.FC = () => {
     if (!restaurantToDelete) return;
 
     try {
-      const { error } = await supabase
-        .from('restaurants')
-        .delete()
-        .eq('id', restaurantToDelete.id);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error('Sesión expirada');
+        return;
+      }
 
-      if (error) throw error;
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-restaurant`;
 
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          restaurantId: restaurantToDelete.id,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Error al eliminar el restaurante');
+      }
+
+      toast.success(`Restaurante "${restaurantToDelete.name}" eliminado exitosamente`);
       await loadData();
       setShowDeleteModal(false);
       setRestaurantToDelete(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting restaurant:', error);
-      alert('Error al eliminar el restaurante');
+      toast.error(error.message || 'Error al eliminar el restaurante');
     }
   };
 
