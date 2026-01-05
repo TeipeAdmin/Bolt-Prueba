@@ -142,7 +142,7 @@ export const PublicMenu: React.FC = () => {
         .from('categories')
         .select('*')
         .eq('restaurant_id', restaurantData.id)
-        .eq('active', true)
+        .eq('is_active', true)
         .order('order_position', { ascending: true });
 
       if (categoriesError) throw categoriesError;
