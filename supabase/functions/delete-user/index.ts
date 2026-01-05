@@ -83,17 +83,64 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    console.log('Step 1: Deleting related records from restaurants table');
-    const { error: restaurantsError } = await supabaseClient
+    console.log('Getting restaurants for user:', userId);
+    const { data: restaurants } = await supabaseClient
       .from('restaurants')
-      .delete()
+      .select('id')
       .eq('user_id', userId);
 
-    if (restaurantsError) {
-      console.error('Error deleting restaurants:', restaurantsError);
+    const restaurantIds = restaurants?.map(r => r.id) || [];
+
+    if (restaurantIds.length > 0) {
+      console.log('Step 1: Deleting order_items for restaurants:', restaurantIds);
+      const { data: orders } = await supabaseClient
+        .from('orders')
+        .select('id')
+        .in('restaurant_id', restaurantIds);
+
+      const orderIds = orders?.map(o => o.id) || [];
+      if (orderIds.length > 0) {
+        await supabaseClient.from('order_items').delete().in('order_id', orderIds);
+      }
+
+      console.log('Step 2: Deleting product_categories for restaurants');
+      const { data: products } = await supabaseClient
+        .from('products')
+        .select('id')
+        .in('restaurant_id', restaurantIds);
+
+      const productIds = products?.map(p => p.id) || [];
+      if (productIds.length > 0) {
+        await supabaseClient.from('product_categories').delete().in('product_id', productIds);
+      }
+
+      console.log('Step 3: Deleting orders for restaurants');
+      await supabaseClient.from('orders').delete().in('restaurant_id', restaurantIds);
+
+      console.log('Step 4: Deleting products for restaurants');
+      await supabaseClient.from('products').delete().in('restaurant_id', restaurantIds);
+
+      console.log('Step 5: Deleting categories for restaurants');
+      await supabaseClient.from('categories').delete().in('restaurant_id', restaurantIds);
+
+      console.log('Step 6: Deleting customers for restaurants');
+      await supabaseClient.from('customers').delete().in('restaurant_id', restaurantIds);
+
+      console.log('Step 7: Deleting subscriptions for restaurants');
+      await supabaseClient.from('subscriptions').delete().in('restaurant_id', restaurantIds);
+
+      console.log('Step 8: Deleting support tickets for restaurants');
+      await supabaseClient.from('support_tickets').delete().in('restaurant_id', restaurantIds);
     }
 
-    console.log('Step 2: Deleting from users table');
+    console.log('Step 9: Deleting support tickets for user (assigned or created)');
+    await supabaseClient.from('support_tickets').delete().eq('user_id', userId);
+    await supabaseClient.from('support_tickets').delete().eq('assigned_to', userId);
+
+    console.log('Step 10: Deleting restaurants');
+    await supabaseClient.from('restaurants').delete().eq('user_id', userId);
+
+    console.log('Step 11: Deleting from users table');
     const { error: dbError } = await supabaseClient
       .from('users')
       .delete()
@@ -110,7 +157,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    console.log('Step 3: Deleting user from auth system');
+    console.log('Step 12: Deleting user from auth system');
     const { error: authError } = await supabaseClient.auth.admin.deleteUser(userId);
 
     if (authError) {
