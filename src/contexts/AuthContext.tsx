@@ -290,7 +290,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         password: data.password,
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        if (authError.message?.includes('weak') || authError.message?.includes('easy to guess')) {
+          throw new Error('La contraseña es débil. Debe tener al menos 8 caracteres, incluir mayúsculas, minúsculas y números.');
+        }
+        throw authError;
+      }
       if (!authData.user) throw new Error('No se pudo crear el usuario');
 
       const restaurantData = {
@@ -409,10 +414,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await supabase.auth.signOut();
 
       if (error.message?.includes('weak') || error.message?.includes('easy to guess')) {
-        return { success: false, error: 'La contraseña es muy débil o común. Debe tener al menos 8 caracteres, incluir mayúsculas, minúsculas, números y no ser una contraseña común (como "password123", "12345678", etc.)' };
+        return { success: false, error: 'La contraseña es débil. Debe tener al menos 8 caracteres, incluir mayúsculas, minúsculas y números.' };
       }
 
-      return { success: false, error: error.message || 'Error al registrar' };
+      if (error.message?.includes('duplicate') || error.message?.includes('already exists')) {
+        return { success: false, error: 'Ya existe una cuenta con este correo electrónico.' };
+      }
+
+      return { success: false, error: error.message || 'Error al registrar. Por favor intenta nuevamente.' };
     }
   };
 
