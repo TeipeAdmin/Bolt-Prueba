@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { CreditCard, Calendar, AlertCircle, CheckCircle, XCircle, Plus, Pencil as Edit } from 'lucide-react';
 import { Subscription, Restaurant } from '../../types';
-import { loadFromStorage, saveToStorage } from '../../data/mockData';
+import { supabase } from '../../lib/supabase';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
+import { useToast } from '../../hooks/useToast';
 
 export const SubscriptionsManagement: React.FC = () => {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
@@ -14,6 +15,8 @@ export const SubscriptionsManagement: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { showToast } = useToast();
   const [formData, setFormData] = useState({
     plan_type: 'basic' as Subscription['plan_type'],
     duration: 'monthly' as Subscription['duration'],
@@ -45,39 +48,47 @@ export const SubscriptionsManagement: React.FC = () => {
     return endDate.toISOString();
   };
 
-  const loadData = () => {
-    const subscriptionData = loadFromStorage('subscriptions') || [];
-    const restaurantData = loadFromStorage('restaurants') || [];
+  const loadData = async () => {
+    try {
+      setLoading(true);
 
-    // Remove duplicate subscriptions based on restaurant_id
-    const uniqueSubscriptions = subscriptionData.reduce((acc: Subscription[], current: Subscription) => {
-      const duplicate = acc.find(sub => sub.restaurant_id === current.restaurant_id);
-      if (!duplicate) {
-        acc.push(current);
-      } else {
-        // Keep the most recent one
-        const existingIndex = acc.findIndex(sub => sub.restaurant_id === current.restaurant_id);
-        if (new Date(current.created_at) > new Date(acc[existingIndex].created_at)) {
-          acc[existingIndex] = current;
+      const { data: subscriptionData, error: subscriptionsError } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (subscriptionsError) throw subscriptionsError;
+
+      const { data: restaurantData, error: restaurantsError } = await supabase
+        .from('restaurants')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (restaurantsError) throw restaurantsError;
+
+      const uniqueSubscriptions = (subscriptionData || []).reduce((acc: Subscription[], current: Subscription) => {
+        const duplicate = acc.find(sub => sub.restaurant_id === current.restaurant_id);
+        if (!duplicate) {
+          acc.push(current);
+        } else {
+          const existingIndex = acc.findIndex(sub => sub.restaurant_id === current.restaurant_id);
+          if (new Date(current.created_at) > new Date(acc[existingIndex].created_at)) {
+            acc[existingIndex] = current;
+          }
         }
-      }
-      return acc;
-    }, []);
+        return acc;
+      }, []);
 
-    // Auto-renew or expire subscriptions based on end date
-    const now = new Date();
-    const updatedSubscriptions = uniqueSubscriptions.map(sub => {
-      const endDate = new Date(sub.end_date);
+      const now = new Date();
+      const updatedSubscriptions = uniqueSubscriptions.map(sub => {
+        const endDate = new Date(sub.end_date);
 
-      // If subscription end date has passed and it's currently active
-      if (endDate < now && sub.status === 'active') {
-        // Check if auto-renew is enabled
-        if (sub.auto_renew) {
-          // Auto-renew: extend the subscription based on duration
-          return {
-            ...sub,
-            start_date: sub.end_date,
-            end_date: calculateNewEndDate(sub.end_date, sub.duration),
+        if (endDate < now && sub.status === 'active') {
+          if (sub.auto_renew) {
+            return {
+              ...sub,
+              start_date: sub.end_date,
+              end_date: calculateNewEndDate(sub.end_date, sub.duration),
             status: 'active' as const
           };
         } else {
@@ -88,12 +99,29 @@ export const SubscriptionsManagement: React.FC = () => {
       return sub;
     });
 
-    setSubscriptions(updatedSubscriptions);
-    setRestaurants(restaurantData);
+      setSubscriptions(updatedSubscriptions);
+      setRestaurants(restaurantData || []);
 
-    // Save the updated subscriptions back to storage
-    if (JSON.stringify(updatedSubscriptions) !== JSON.stringify(uniqueSubscriptions)) {
-      saveToStorage('subscriptions', updatedSubscriptions);
+      if (JSON.stringify(updatedSubscriptions) !== JSON.stringify(uniqueSubscriptions)) {
+        for (const sub of updatedSubscriptions) {
+          const original = uniqueSubscriptions.find(s => s.id === sub.id);
+          if (original && JSON.stringify(original) !== JSON.stringify(sub)) {
+            await supabase
+              .from('subscriptions')
+              .update({
+                start_date: sub.start_date,
+                end_date: sub.end_date,
+                status: sub.status,
+              })
+              .eq('id', sub.id);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading subscriptions:', error);
+      showToast('Error al cargar las suscripciones', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -101,15 +129,21 @@ export const SubscriptionsManagement: React.FC = () => {
     return restaurants.find(restaurant => restaurant.id === restaurantId);
   };
 
-  const updateSubscriptionStatus = (subscriptionId: string, newStatus: Subscription['status']) => {
-    const updatedSubscriptions = subscriptions.map(sub => 
-      sub.id === subscriptionId 
-        ? { ...sub, status: newStatus }
-        : sub
-    );
-    
-    setSubscriptions(updatedSubscriptions);
-    saveToStorage('subscriptions', updatedSubscriptions);
+  const updateSubscriptionStatus = async (subscriptionId: string, newStatus: Subscription['status']) => {
+    try {
+      const { error } = await supabase
+        .from('subscriptions')
+        .update({ status: newStatus })
+        .eq('id', subscriptionId);
+
+      if (error) throw error;
+
+      showToast('Estado de suscripción actualizado', 'success');
+      await loadData();
+    } catch (error) {
+      console.error('Error updating subscription status:', error);
+      showToast('Error al actualizar el estado', 'error');
+    }
   };
 
   const handleEditSubscription = (subscription: Subscription) => {
@@ -125,45 +159,59 @@ export const SubscriptionsManagement: React.FC = () => {
     setShowEditModal(true);
   };
 
-  const handleSaveSubscription = () => {
+  const handleSaveSubscription = async () => {
     if (!editingSubscription) return;
 
-    const updatedSubscriptions = subscriptions.map(sub =>
-      sub.id === editingSubscription.id
-        ? {
-            ...sub,
-            ...formData,
-            start_date: formData.start_date + 'T00:00:00.000Z',
-            end_date: formData.end_date + 'T23:59:59.999Z',
-          }
-        : sub
-    );
+    try {
+      const { error } = await supabase
+        .from('subscriptions')
+        .update({
+          plan_type: formData.plan_type,
+          duration: formData.duration,
+          start_date: formData.start_date + 'T00:00:00.000Z',
+          end_date: formData.end_date + 'T23:59:59.999Z',
+          status: formData.status,
+          auto_renew: formData.auto_renew,
+        })
+        .eq('id', editingSubscription.id);
 
-    setSubscriptions(updatedSubscriptions);
-    saveToStorage('subscriptions', updatedSubscriptions);
-    setShowEditModal(false);
-    setEditingSubscription(null);
+      if (error) throw error;
+
+      showToast('Suscripción actualizada exitosamente', 'success');
+      await loadData();
+
+      setShowEditModal(false);
+      setEditingSubscription(null);
+    } catch (error) {
+      console.error('Error updating subscription:', error);
+      showToast('Error al actualizar la suscripción', 'error');
+    }
   };
 
-  const extendSubscription = (subscriptionId: string, months: number) => {
-    const updatedSubscriptions = subscriptions.map(sub => {
-      if (sub.id === subscriptionId) {
-        const currentEndDate = new Date(sub.end_date);
-        const newEndDate = new Date(currentEndDate);
-        newEndDate.setMonth(newEndDate.getMonth() + months);
-        
-        return {
-          ...sub,
-          end_date: newEndDate.toISOString(),
-          status: 'active' as const
-        };
-      }
-      return sub;
-    });
-    
-    setSubscriptions(updatedSubscriptions);
-    saveToStorage('subscriptions', updatedSubscriptions);
+  const extendSubscription = async (subscriptionId: string, months: number) => {
+    try {
+      const sub = subscriptions.find(s => s.id === subscriptionId);
+      if (!sub) return;
+
+      const currentEndDate = new Date(sub.end_date);
+      const newEndDate = new Date(currentEndDate);
+      newEndDate.setMonth(newEndDate.getMonth() + months);
+
+      const { error } = await supabase
+        .from('subscriptions')
+        .update({ end_date: newEndDate.toISOString() })
+        .eq('id', subscriptionId);
+
+      if (error) throw error;
+
+      showToast(`Suscripción extendida por ${months} mes(es)`, 'success');
+      await loadData();
+    } catch (error) {
+      console.error('Error extending subscription:', error);
+      showToast('Error al extender la suscripción', 'error');
+    }
   };
+
 
   const getStatusBadge = (status: Subscription['status']) => {
     switch (status) {
@@ -367,8 +415,14 @@ export const SubscriptionsManagement: React.FC = () => {
 
       {/* Subscriptions Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
+        {loading ? (
+          <div className="p-12 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Cargando suscripciones...</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -498,6 +552,7 @@ export const SubscriptionsManagement: React.FC = () => {
             </tbody>
           </table>
         </div>
+        )}
       </div>
 
       {/* Subscription Details Modal */}

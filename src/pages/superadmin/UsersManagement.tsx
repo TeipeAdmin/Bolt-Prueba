@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { User, Pencil as Edit, Trash2, Shield, UserCheck, UserX, Filter, Building, UserPlus, Lock, Copy } from 'lucide-react';
 import { User as UserType, Restaurant } from '../../types';
-import { loadFromStorage, saveToStorage } from '../../data/mockData';
+import { supabase } from '../../lib/supabase';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
+import { useToast } from '../../hooks/useToast';
 
 export const UsersManagement: React.FC = () => {
   const [users, setUsers] = useState<UserType[]>([]);
@@ -26,6 +27,8 @@ export const UsersManagement: React.FC = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'email'>('newest');
+  const [loading, setLoading] = useState(true);
+  const { showToast } = useToast();
   const [newUserForm, setNewUserForm] = useState({
     email: '',
     password: '',
@@ -37,11 +40,32 @@ export const UsersManagement: React.FC = () => {
     loadData();
   }, []);
 
-  const loadData = () => {
-    const userData = loadFromStorage('users') || [];
-    const restaurantData = loadFromStorage('restaurants') || [];
-    setUsers(userData);
-    setRestaurants(restaurantData);
+  const loadData = async () => {
+    try {
+      setLoading(true);
+
+      const { data: userData, error: usersError } = await supabase
+        .from('users')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (usersError) throw usersError;
+
+      const { data: restaurantData, error: restaurantsError } = await supabase
+        .from('restaurants')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (restaurantsError) throw restaurantsError;
+
+      setUsers(userData || []);
+      setRestaurants(restaurantData || []);
+    } catch (error) {
+      console.error('Error loading data:', error);
+      showToast('Error al cargar los datos', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getRestaurant = (userId: string) => {
@@ -60,60 +84,87 @@ export const UsersManagement: React.FC = () => {
     setShowAssignModal(true);
   };
 
-  const saveRestaurantAssignment = () => {
+  const saveRestaurantAssignment = async () => {
     if (!assigningUser) return;
 
-    // Allow empty selection to unassign restaurant
-    const updatedUsers = users.map(user =>
-      user.id === assigningUser.id
-        ? {
-            ...user,
-            restaurant_id: selectedRestaurantId || undefined,
-            updated_at: new Date().toISOString()
-          }
-        : user
-    );
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({
+          restaurant_id: selectedRestaurantId || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', assigningUser.id);
 
-    saveToStorage('users', updatedUsers);
+      if (error) throw error;
 
-    // Reload data to reflect changes
-    loadData();
+      showToast('Restaurante asignado exitosamente', 'success');
+      await loadData();
 
-    setShowAssignModal(false);
-    setAssigningUser(null);
-    setSelectedRestaurantId('');
-  };
-  const updateUserRole = (userId: string, newRole: UserType['role']) => {
-    const updatedUsers = users.map(user => 
-      user.id === userId 
-        ? { ...user, role: newRole }
-        : user
-    );
-    
-    setUsers(updatedUsers);
-    saveToStorage('users', updatedUsers);
+      setShowAssignModal(false);
+      setAssigningUser(null);
+      setSelectedRestaurantId('');
+    } catch (error) {
+      console.error('Error assigning restaurant:', error);
+      showToast('Error al asignar el restaurante', 'error');
+    }
   };
 
-  const toggleEmailVerification = (userId: string) => {
-    const updatedUsers = users.map(user => 
-      user.id === userId 
-        ? { ...user, email_verified: !user.email_verified }
-        : user
-    );
-    
-    setUsers(updatedUsers);
-    saveToStorage('users', updatedUsers);
+  const updateUserRole = async (userId: string, newRole: UserType['role']) => {
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({ role: newRole })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      showToast('Rol actualizado exitosamente', 'success');
+      await loadData();
+    } catch (error) {
+      console.error('Error updating user role:', error);
+      showToast('Error al actualizar el rol', 'error');
+    }
   };
 
-  const deleteUser = (userId: string) => {
-    if (confirm('¿Estás seguro de que quieres eliminar este usuario? Esta acción no se puede deshacer.')) {
-      const updatedUsers = users.filter(user => user.id !== userId);
-      const updatedRestaurants = restaurants.filter(restaurant => restaurant.user_id !== userId);
+  const toggleEmailVerification = async (userId: string) => {
+    try {
+      const user = users.find(u => u.id === userId);
+      if (!user) return;
 
-      setUsers(updatedUsers);
-      setRestaurants(updatedRestaurants);
-      saveToStorage('users', updatedUsers);
-      saveToStorage('restaurants', updatedRestaurants);
+      const { error } = await supabase
+        .from('users')
+        .update({ email_verified: !user.email_verified })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      showToast('Estado de verificación actualizado', 'success');
+      await loadData();
+    } catch (error) {
+      console.error('Error toggling email verification:', error);
+      showToast('Error al actualizar la verificación', 'error');
+    }
+  };
+
+  const deleteUser = async (userId: string) => {
+    if (!confirm('¿Estás seguro de que quieres eliminar este usuario? Esta acción no se puede deshacer.')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('users')
+        .delete()
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      showToast('Usuario eliminado exitosamente', 'success');
+      await loadData();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      showToast('Error al eliminar el usuario', 'error');
     }
   };
 
@@ -162,24 +213,30 @@ export const UsersManagement: React.FC = () => {
     setShowEditModal(true);
   };
 
-  const saveUserEdit = () => {
+  const saveUserEdit = async () => {
     if (!editingUser) return;
 
-    const updatedUsers = users.map(user =>
-      user.id === editingUser.id
-        ? {
-            ...user,
-            restaurant_id: selectedRestaurantId || undefined,
-            updated_at: new Date().toISOString()
-          }
-        : user
-    );
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({
+          restaurant_id: selectedRestaurantId || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', editingUser.id);
 
-    saveToStorage('users', updatedUsers);
-    setUsers(updatedUsers);
-    setShowEditModal(false);
-    setEditingUser(null);
-    setSelectedRestaurantId('');
+      if (error) throw error;
+
+      showToast('Usuario actualizado exitosamente', 'success');
+      await loadData();
+
+      setShowEditModal(false);
+      setEditingUser(null);
+      setSelectedRestaurantId('');
+    } catch (error) {
+      console.error('Error updating user:', error);
+      showToast('Error al actualizar el usuario', 'error');
+    }
   };
 
   const generateProvisionalPassword = () => {
@@ -198,22 +255,33 @@ export const UsersManagement: React.FC = () => {
     setShowResetPasswordModal(true);
   };
 
-  const confirmResetPassword = () => {
+  const confirmResetPassword = async () => {
     if (!userForPasswordReset || !provisionalPassword) return;
 
-    const updatedUsers = users.map(user =>
-      user.id === userForPasswordReset.id
-        ? {
-            ...user,
-            password: provisionalPassword,
-            require_password_change: true,
-            updated_at: new Date().toISOString()
-          }
-        : user
-    );
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({
+          require_password_change: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userForPasswordReset.id);
 
-    saveToStorage('users', updatedUsers);
-    setUsers(updatedUsers);
+      if (error) throw error;
+
+      const { error: authError } = await supabase.auth.admin.updateUserById(
+        userForPasswordReset.id,
+        { password: provisionalPassword }
+      );
+
+      if (authError) throw authError;
+
+      showToast('Contraseña restablecida exitosamente', 'success');
+      await loadData();
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      showToast('Error al restablecer la contraseña', 'error');
+    }
   };
 
   const closeResetPasswordModal = () => {
@@ -359,8 +427,14 @@ export const UsersManagement: React.FC = () => {
 
       {/* Users Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
+        {loading ? (
+          <div className="p-12 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Cargando usuarios...</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -486,6 +560,7 @@ export const UsersManagement: React.FC = () => {
             </tbody>
           </table>
         </div>
+        )}
       </div>
 
       {/* User Details Modal */}
