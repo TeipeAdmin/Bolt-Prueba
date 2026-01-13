@@ -26,45 +26,82 @@ export const RestaurantDashboard: React.FC = () => {
   }, [restaurant]);
 
   const loadSubscription = async () => {
-    if (!restaurant?.id) return;
-
-    const { data, error } = await supabase
-      .from('subscriptions')
-      .select('*')
-      .eq('restaurant_id', restaurant.id)
-      .eq('status', 'active')
-      .maybeSingle();
-
-    if (error) {
-      console.error('Error loading subscription:', error);
+    if (!restaurant?.id) {
+      console.log('[Dashboard] No restaurant ID available yet');
       return;
     }
 
-    setCurrentSubscription(data);
+    console.log('[Dashboard] Loading subscription for restaurant:', restaurant.id);
+
+    try {
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('restaurant_id', restaurant.id)
+        .eq('status', 'active')
+        .maybeSingle();
+
+      if (error) {
+        console.error('[Dashboard] Error loading subscription:', error);
+        return;
+      }
+
+      console.log('[Dashboard] Subscription loaded:', data);
+      setCurrentSubscription(data);
+    } catch (err) {
+      console.error('[Dashboard] Exception loading subscription:', err);
+    }
   };
 
   const loadDashboardData = async () => {
-    if (!restaurant?.id) return;
+    if (!restaurant?.id) {
+      console.log('[Dashboard] No restaurant ID available for loading data');
+      return;
+    }
 
-    const { data: productsData } = await supabase
-      .from('products')
-      .select('*')
-      .eq('restaurant_id', restaurant.id);
+    console.log('[Dashboard] Loading dashboard data for restaurant:', restaurant.id);
 
-    const { data: ordersData } = await supabase
-      .from('orders')
-      .select('*')
-      .eq('restaurant_id', restaurant.id);
+    try {
+      const { data: productsData, error: productsError } = await supabase
+        .from('products')
+        .select('*')
+        .eq('restaurant_id', restaurant.id);
 
-    const { data: categoriesData } = await supabase
-      .from('categories')
-      .select('*')
-      .eq('restaurant_id', restaurant.id)
-      .eq('active', true);
+      if (productsError) {
+        console.error('[Dashboard] Error loading products:', productsError);
+      } else {
+        console.log('[Dashboard] Products loaded:', productsData?.length || 0);
+      }
 
-    setProducts(productsData || []);
-    setOrders(ordersData || []);
-    setCategories(categoriesData || []);
+      const { data: ordersData, error: ordersError } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('restaurant_id', restaurant.id);
+
+      if (ordersError) {
+        console.error('[Dashboard] Error loading orders:', ordersError);
+      } else {
+        console.log('[Dashboard] Orders loaded:', ordersData?.length || 0);
+      }
+
+      const { data: categoriesData, error: categoriesError } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('restaurant_id', restaurant.id)
+        .eq('is_active', true);
+
+      if (categoriesError) {
+        console.error('[Dashboard] Error loading categories:', categoriesError);
+      } else {
+        console.log('[Dashboard] Categories loaded:', categoriesData?.length || 0);
+      }
+
+      setProducts(productsData || []);
+      setOrders(ordersData || []);
+      setCategories(categoriesData || []);
+    } catch (err) {
+      console.error('[Dashboard] Exception loading dashboard data:', err);
+    }
   };
 
   // Calculate last month's revenue
@@ -83,8 +120,8 @@ export const RestaurantDashboard: React.FC = () => {
 
   const getCurrentPlanName = () => {
     if (!currentSubscription) return t('noSubscription');
-    const plan = availablePlans.find(p => p.id === currentSubscription.plan_type);
-    return plan ? plan.name : currentSubscription.plan_type;
+    const plan = availablePlans.find(p => p.id === currentSubscription.plan_name);
+    return plan ? plan.name : currentSubscription.plan_name.toUpperCase();
   };
 
   const stats = {
@@ -231,8 +268,8 @@ export const RestaurantDashboard: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 lg:gap-6">
           <div className="bg-gray-50 p-3 md:p-4 rounded-lg">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">{t('status')}</p>
-            <Badge variant={restaurant?.status === 'active' ? 'success' : 'warning'}>
-              {restaurant?.status === 'active' ? t('active') : t('pending')}
+            <Badge variant={restaurant?.is_active ? 'success' : 'warning'}>
+              {restaurant?.is_active ? t('active') : t('inactive')}
             </Badge>
           </div>
           <div className="bg-gray-50 p-3 md:p-4 rounded-lg">

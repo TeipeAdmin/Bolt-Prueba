@@ -246,6 +246,7 @@ export interface Restaurant {
   user_id?: string;
   subscription_id?: string;
   domain?: string;
+  is_active?: boolean;
   settings: RestaurantSettings;
   created_at: string;
   updated_at: string;

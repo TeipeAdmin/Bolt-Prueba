@@ -56,7 +56,7 @@ export const RestaurantAnalytics: React.FC = () => {
       o.status &&
       o.items
     );
-    const restaurantCategories = allCategories.filter((c: Category) => c && c.restaurant_id === restaurant.id && c.active);
+    const restaurantCategories = allCategories.filter((c: Category) => c && c.restaurant_id === restaurant.id && c.is_active);
 
     setProducts(restaurantProducts);
     setOrders(restaurantOrders);

@@ -179,7 +179,7 @@ export const CategoriesManagement: React.FC = () => {
     try {
       const { error } = await supabase
         .from('categories')
-        .update({ active: !category.active })
+        .update({ is_active: !category.is_active })
         .eq('id', categoryId);
 
       if (error) throw error;
@@ -188,8 +188,8 @@ export const CategoriesManagement: React.FC = () => {
 
       showToast(
         'info',
-        !category.active ? t('categoryActivated') : t('categoryDeactivated'),
-        !category.active
+        !category.is_active ? t('categoryActivated') : t('categoryDeactivated'),
+        !category.is_active
           ? t('categoryActivatedDes')
           : t('categoryDeactivatedDes'),
         4000
@@ -343,7 +343,7 @@ export const CategoriesManagement: React.FC = () => {
             </div>
             <div>
               <p className="text-sm text-gray-600">{t('activeCategories')}</p>
-              <p className="text-2xl font-bold text-gray-900">{categories.filter(c => c.active).length}</p>
+              <p className="text-2xl font-bold text-gray-900">{categories.filter(c => c.is_active).length}</p>
             </div>
           </div>
         </div>
@@ -355,7 +355,7 @@ export const CategoriesManagement: React.FC = () => {
             </div>
             <div>
               <p className="text-sm text-gray-600">{t('inactiveCategories')}</p>
-              <p className="text-2xl font-bold text-gray-900">{categories.filter(c => !c.active).length}</p>
+              <p className="text-2xl font-bold text-gray-900">{categories.filter(c => !c.is_active).length}</p>
             </div>
           </div>
         </div>
@@ -450,8 +450,8 @@ export const CategoriesManagement: React.FC = () => {
                   <h3 className="text-lg font-semibold text-gray-900 truncate">
                     {category.name}
                   </h3>
-                  <Badge variant={category.active ? 'success' : 'gray'}>
-                    {category.active ? t('active') : t('inactive')}
+                  <Badge variant={category.is_active ? 'success' : 'gray'}>
+                    {category.is_active ? t('active') : t('inactive')}
                   </Badge>
                 </div>
                 <p className="text-sm text-gray-600 line-clamp-1">
@@ -490,7 +490,7 @@ export const CategoriesManagement: React.FC = () => {
                   onClick={() => toggleActive(category.id)}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  {category.active ? (
+                  {category.is_active ? (
                     <EyeOff className="w-4 h-4 text-orange-600" />
                   ) : (
                     <Eye className="w-4 h-4 text-green-600" />
