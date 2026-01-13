@@ -92,7 +92,18 @@ export const OrdersManagement: React.FC = () => {
       return;
     }
 
-    setOrders(data || []);
+    const mappedOrders = (data || []).map((order: any) => ({
+      ...order,
+      customer: {
+        name: order.customer_name || '',
+        phone: order.customer_phone || '',
+        email: order.customer_email || '',
+        address: order.customer_address || '',
+        delivery_instructions: '',
+      }
+    }));
+
+    setOrders(mappedOrders);
   };
 
   const loadProductsAndCategories = async () => {
@@ -1057,16 +1068,19 @@ export const OrdersManagement: React.FC = () => {
     const total = subtotal + deliveryCost;
 
     const updatedOrder = {
-      customer: orderForm.customer,
+      customer_name: orderForm.customer.name,
+      customer_phone: orderForm.customer.phone,
+      customer_email: orderForm.customer.email || null,
+      customer_address: orderForm.customer.address || null,
       items: orderItems,
       order_type: orderForm.order_type,
       status: orderForm.status,
-      delivery_address: orderForm.delivery_address,
-      table_number: orderForm.table_number,
+      delivery_address: orderForm.delivery_address || null,
+      table_number: orderForm.table_number || null,
       delivery_cost: deliveryCost,
       subtotal: subtotal,
       total: total,
-      special_instructions: orderForm.special_instructions,
+      special_instructions: orderForm.special_instructions || '',
       updated_at: new Date().toISOString(),
     };
 
@@ -1126,20 +1140,17 @@ export const OrdersManagement: React.FC = () => {
       order_number: generateOrderNumber(),
       status: 'pending',
       order_type: orderForm.order_type,
-      customer: {
-        name: orderForm.customer.name,
-        phone: orderForm.customer.phone,
-        email: orderForm.customer.email,
-        address: orderForm.customer.address,
-        delivery_instructions: orderForm.customer.delivery_instructions,
-      },
+      customer_name: orderForm.customer.name,
+      customer_phone: orderForm.customer.phone,
+      customer_email: orderForm.customer.email || null,
+      customer_address: orderForm.customer.address || null,
       items: orderItems,
       subtotal: subtotal,
       delivery_cost: deliveryCost,
       total: total,
-      delivery_address: orderForm.delivery_address,
-      table_number: orderForm.table_number,
-      special_instructions: orderForm.special_instructions,
+      delivery_address: orderForm.delivery_address || null,
+      table_number: orderForm.table_number || null,
+      special_instructions: orderForm.special_instructions || '',
       whatsapp_sent: false,
     };
 
