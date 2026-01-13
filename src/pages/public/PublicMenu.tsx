@@ -1026,7 +1026,7 @@ export const PublicMenu: React.FC = () => {
                         <div
                           className="absolute top-2 left-2 px-2 py-1 text-xs font-bold rounded z-10"
                           style={{
-                            backgroundColor: '#ef4444',
+                            backgroundColor: primaryColor,
                             color: '#ffffff',
                           }}
                         >
