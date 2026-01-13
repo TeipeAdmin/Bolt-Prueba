@@ -276,7 +276,7 @@ export const PublicMenu: React.FC = () => {
   const menuBackgroundColor = theme.menu_background_color || '#ffffff';
   const cardBackgroundColor = theme.card_background_color || '#f9fafb';
   const primaryTextColor = theme.primary_text_color || '#111827';
-  const c = theme.secondary_text_color || '#6b7280';
+  const secondaryTextColor = theme.secondary_text_color || '#6b7280';
   const textColor = theme.primary_text_color || '#111827';
   const hasPromo =
     restaurant.settings.promo?.enabled &&
@@ -1027,7 +1027,7 @@ export const PublicMenu: React.FC = () => {
                           className="absolute top-2 left-2 px-2 py-1 text-xs font-bold rounded z-10"
                           style={{
                             backgroundColor: primaryColor,
-                            color: secondaryTextColor,
+                            color: '#ffffff',
                           }}
                         >
                           -{discountPercentage}%
