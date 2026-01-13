@@ -108,9 +108,9 @@ export const OrderProductSelector: React.FC<OrderProductSelectorProps> = ({
                         />
                         <span className="text-sm text-gray-700">
                           {ingredient.name}
-                          (
+                          
                             <span className="text-gray-500"> (+{formatCurrency(ingredient.extra_cost, currency)})</span>
-                          )}
+                        
                         </span>
                       </label>
                     ))}
