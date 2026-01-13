@@ -1080,6 +1080,7 @@ export const OrdersManagement: React.FC = () => {
       delivery_cost: deliveryCost,
       subtotal: subtotal,
       total: total,
+      total_amount: total,
       special_instructions: orderForm.special_instructions || '',
       updated_at: new Date().toISOString(),
     };
@@ -1148,6 +1149,7 @@ export const OrdersManagement: React.FC = () => {
       subtotal: subtotal,
       delivery_cost: deliveryCost,
       total: total,
+      total_amount: total,
       delivery_address: orderForm.delivery_address || null,
       table_number: orderForm.table_number || null,
       special_instructions: orderForm.special_instructions || '',
