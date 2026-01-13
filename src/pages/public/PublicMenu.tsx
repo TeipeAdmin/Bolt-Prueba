@@ -1114,9 +1114,7 @@ export const PublicMenu: React.FC = () => {
                           borderTopRightRadius: '0px',
                           borderBottomRightRadius: '0px',
                         }}>
-                          <span className="px-3 py-1 bg-red-600 text-white font-bold text-xs rounded">
-                            AGOTADO
-                          </span>
+
                         </div>
                       )}
                     </div>
