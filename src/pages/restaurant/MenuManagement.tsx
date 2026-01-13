@@ -109,7 +109,12 @@ export const MenuManagement: React.FC = () => {
 
     const { data: productsData, error: productsError } = await supabase
       .from('products')
-      .select('*')
+      .select(`
+        *,
+        product_categories (
+          category_id
+        )
+      `)
       .eq('restaurant_id', restaurant.id)
       .order('created_at', { ascending: true });
 
@@ -117,8 +122,13 @@ export const MenuManagement: React.FC = () => {
       console.error('Error loading products:', productsError);
     }
 
+    const productsWithCategories = (productsData || []).map((product: any) => ({
+      ...product,
+      category_id: product.product_categories?.[0]?.category_id || ''
+    }));
+
     setCategories(categoriesData || []);
-    setProducts(productsData || []);
+    setProducts(productsWithCategories);
   };
 
   const filteredProducts = products
@@ -156,25 +166,67 @@ export const MenuManagement: React.FC = () => {
     if (!restaurant) return;
 
     try {
+      const minPrice = productData.variations && productData.variations.length > 0
+        ? Math.min(...productData.variations.map((v: any) => v.price))
+        : 0;
+
+      const { category_id, ...productDataWithoutCategory } = productData;
+
+      const dataToSave = {
+        ...productDataWithoutCategory,
+        price: minPrice
+      };
+
       if (editingProduct) {
-        const { error } = await supabase
+        const { error: updateError } = await supabase
           .from('products')
           .update({
-            ...productData,
+            ...dataToSave,
             updated_at: new Date().toISOString(),
           })
           .eq('id', editingProduct.id);
 
-        if (error) throw error;
+        if (updateError) throw updateError;
+
+        if (category_id) {
+          const { error: deleteCategoriesError } = await supabase
+            .from('product_categories')
+            .delete()
+            .eq('product_id', editingProduct.id);
+
+          if (deleteCategoriesError) throw deleteCategoriesError;
+
+          const { error: insertCategoryError } = await supabase
+            .from('product_categories')
+            .insert({
+              product_id: editingProduct.id,
+              category_id: category_id
+            });
+
+          if (insertCategoryError) throw insertCategoryError;
+        }
       } else {
-        const { error } = await supabase
+        const { data: newProduct, error: insertError } = await supabase
           .from('products')
           .insert({
             restaurant_id: restaurant.id,
-            ...productData,
-          });
+            ...dataToSave,
+          })
+          .select()
+          .single();
 
-        if (error) throw error;
+        if (insertError) throw insertError;
+
+        if (category_id && newProduct) {
+          const { error: categoryError } = await supabase
+            .from('product_categories')
+            .insert({
+              product_id: newProduct.id,
+              category_id: category_id
+            });
+
+          if (categoryError) throw categoryError;
+        }
       }
 
       await loadMenuData();
