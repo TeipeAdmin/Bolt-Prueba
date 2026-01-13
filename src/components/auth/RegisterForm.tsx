@@ -17,7 +17,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
     email: '',
     password: '',
     confirmPassword: '',
-    phone: '',
+    phone: '+57 ',
     address: '',
     ownerName: '',
     acceptTerms: false,
