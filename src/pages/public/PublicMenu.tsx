@@ -860,9 +860,7 @@ export const PublicMenu: React.FC = () => {
                           />
                           {product.status === 'out_of_stock' && (
                             <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                              <span className="px-4 py-2 bg-red-600 text-white font-bold text-sm rounded">
-                                AGOTADO
-                              </span>
+
                             </div>
                           )}
                         </div>
