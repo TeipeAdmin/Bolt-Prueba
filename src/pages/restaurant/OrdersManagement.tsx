@@ -113,7 +113,7 @@ export const OrdersManagement: React.FC = () => {
       .from('categories')
       .select('*')
       .eq('restaurant_id', restaurant.id)
-      .eq('active', true);
+      .eq('is_active', true);
 
     const { data: productsData } = await supabase
       .from('products')
