@@ -108,7 +108,7 @@ export const OrderProductSelector: React.FC<OrderProductSelectorProps> = ({
                         />
                         <span className="text-sm text-gray-700">
                           {ingredient.name}
-                          {ingredient.extra_cost && ingredient.extra_cost > 0 && (
+                          {ingredient.extra_cost && ingredient.extra_cost >  && (
                             <span className="text-gray-500"> (+{formatCurrency(ingredient.extra_cost, currency)})</span>
                           )}
                         </span>
