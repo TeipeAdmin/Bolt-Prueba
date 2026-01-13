@@ -10,7 +10,6 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
 import { Modal } from '../../components/ui/Modal';
-import { loadFromStorage, saveToStorage } from '../../data/mockData';
 
 export const RestaurantSettings: React.FC = () => {
   const { restaurant, user } = useAuth();
@@ -32,6 +31,7 @@ export const RestaurantSettings: React.FC = () => {
   const [supportTickets, setSupportTickets] = useState<any[]>([]);
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
   const [showTicketDetailModal, setShowTicketDetailModal] = useState(false);
+  const [products, setProducts] = useState<any[]>([]);
 
   useEffect(() => {
     const loadSupportTickets = async () => {
@@ -46,7 +46,21 @@ export const RestaurantSettings: React.FC = () => {
       setSupportTickets(data || []);
     };
 
+    const loadProducts = async () => {
+      if (!restaurant?.id) return;
+
+      const { data } = await supabase
+        .from('products')
+        .select('*')
+        .eq('restaurant_id', restaurant.id)
+        .eq('status', 'active')
+        .order('name', { ascending: true });
+
+      setProducts(data || []);
+    };
+
     loadSupportTickets();
+    loadProducts();
 
     if (restaurant) {
       setSupportForm(prev => ({
@@ -238,66 +252,36 @@ export const RestaurantSettings: React.FC = () => {
     setSupportLoading(true);
 
     try {
-      // Crear el ticket de soporte
       const newTicket = {
-        id: `ticket-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        restaurantId: restaurant?.id,
-        restaurantName: restaurant?.name,
+        restaurant_id: restaurant?.id,
         subject: supportForm.subject,
         category: supportForm.category,
         priority: supportForm.priority,
         message: supportForm.message,
-        contactEmail: supportForm.contactEmail,
-        contactPhone: supportForm.contactPhone,
+        contact_email: supportForm.contactEmail,
+        contact_phone: supportForm.contactPhone,
         status: 'pending',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
       };
 
-      // Guardar en localStorage
-      const existingTickets = loadFromStorage('supportTickets', []);
-      saveToStorage('supportTickets', [...existingTickets, newTicket]);
+      const { data, error } = await supabase
+        .from('support_tickets')
+        .insert([newTicket])
+        .select()
+        .single();
 
-      // En un entorno real, aquí se enviaría al backend:
-      // const response = await fetch('/api/support-tickets', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(newTicket)
-      // });
+      if (error) throw error;
 
-      console.log('Ticket de soporte creado:', newTicket);
-      console.log('Email que se enviaría a admin@digitalfenixpro.com:', {
-        to: 'admin@digitalfenixpro.com',
-        subject: `[SOPORTE] ${supportForm.subject} - ${restaurant?.name}`,
-        body: `
-NUEVO TICKET DE SOPORTE
+      console.log('Ticket de soporte creado:', data);
 
-INFORMACIÓN DEL RESTAURANTE:
-- Nombre: ${restaurant?.name}
-- Email: ${restaurant?.email}
-- Dominio: ${restaurant?.domain}
-- ID: ${restaurant?.id}
-
-INFORMACIÓN DEL TICKET:
-- ID: ${newTicket.id}
-- Asunto: ${supportForm.subject}
-- Categoría: ${supportForm.category}
-- Prioridad: ${supportForm.priority}
-- Email de contacto: ${supportForm.contactEmail}
-- Teléfono de contacto: ${supportForm.contactPhone}
-
-MENSAJE:
-${supportForm.message}
-
----
-Enviado desde el panel de administración
-Fecha: ${new Date().toLocaleString()}
-        `.trim()
-      });
+      showToast(
+        'success',
+        t('support_ticket_created_title') || 'Ticket creado',
+        t('support_ticket_created_message') || 'Tu solicitud de soporte ha sido enviada exitosamente.',
+        4000
+      );
 
       setSupportSuccess(true);
-      
-      // Limpiar formulario después de 2 segundos
+
       setTimeout(() => {
         setSupportForm({
           subject: '',
@@ -309,9 +293,8 @@ Fecha: ${new Date().toLocaleString()}
         });
         setSupportSuccess(false);
       }, 3000);
-      
-      // Actualizar la lista de tickets
-      setSupportTickets(prev => [...prev, newTicket]);
+
+      setSupportTickets(prev => [data, ...prev]);
 
     } catch (error) {
       console.error('Error sending support request:', error);
@@ -2558,15 +2541,11 @@ Fecha: ${new Date().toLocaleString()}
                 </p>
                 <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 max-h-96 overflow-y-auto">
                   {(() => {
-                    const allProducts = loadFromStorage('products', []);
-                    const restaurantProducts = allProducts.filter((p: any) =>
-                      p.restaurant_id === restaurant?.id && p.status === 'active'
-                    );
                     const selectedIds = formData.settings.promo?.featured_product_ids || [];
 
                     return (
                       <div className="space-y-2">
-                        {restaurantProducts.map((product: any) => {
+                        {products.map((product: any) => {
                           const isSelected = selectedIds.includes(product.id);
                           const canSelect = selectedIds.length < 5 || isSelected;
 
