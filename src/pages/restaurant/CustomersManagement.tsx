@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User, Phone, Mail, MapPin, Calendar, ShoppingBag, Filter, Search, Star, Pencil as Edit, ArrowUpDown, Trash2, Info, Download, CheckSquare, Square, Users, DollarSign, TrendingUp, UserCheck, UserPlus, Upload } from 'lucide-react';
 import { Order, Customer, Subscription } from '../../types';
-import { loadFromStorage, saveToStorage } from '../../data/mockData';
+import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useToast } from '../../hooks/useToast';
@@ -73,81 +73,81 @@ export const CustomersManagement: React.FC = () => {
     filterAndSortCustomers();
   }, [customers, searchTerm, sortBy, sortDirection, filterBy, statusFilter]);
 
-  const loadCustomersData = () => {
-    if (!restaurant) return;
+  const loadCustomersData = async () => {
+    if (!restaurant?.id) return;
 
-    const allOrders = loadFromStorage('orders') || [];
-    const vipCustomers = loadFromStorage('vipCustomers') || [];
-    const importedCustomers = loadFromStorage('importedCustomers') || [];
-    const restaurantOrders = allOrders.filter((order: Order) =>
-      order &&
-      order.restaurant_id === restaurant.id &&
-      order.order_number &&
-      order.status &&
-      order.items
-    );
+    const { data: customersData, error } = await supabase
+      .from('customers')
+      .select('*')
+      .eq('restaurant_id', restaurant.id);
+
+    if (error) {
+      console.error('Error loading customers:', error);
+      showToast('error', 'Error', 'No se pudieron cargar los clientes');
+      return;
+    }
+
+    const { data: ordersData } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('restaurant_id', restaurant.id);
 
     const customerMap = new Map<string, CustomerData>();
 
-    restaurantOrders.forEach((order: Order) => {
-      if (!order.customer || !order.customer.phone) return;
+    customersData?.forEach((customer) => {
+      const customerOrders = ordersData?.filter(o => o.customer_phone === customer.phone) || [];
+      const totalOrders = customerOrders.length;
+      const totalSpent = customerOrders
+        .filter(o => o.status === 'delivered')
+        .reduce((sum, o) => sum + o.total, 0);
+      const lastOrder = customerOrders.sort((a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      )[0];
 
-      const customerKey = order.customer.phone;
+      customerMap.set(customer.phone, {
+        ...customer,
+        totalOrders,
+        totalSpent,
+        lastOrderDate: lastOrder?.created_at || customer.created_at,
+        orderTypes: [...new Set(customerOrders.map(o => o.order_type))],
+        isVip: customer.is_vip || false,
+      });
+    });
 
-      if (customerMap.has(customerKey)) {
-        const existing = customerMap.get(customerKey)!;
+    (ordersData || []).forEach((order: Order) => {
+      if (!order.customer_phone) return;
+
+      if (!customerMap.has(order.customer_phone)) {
+        const customerOrders = ordersData?.filter(o => o.customer_phone === order.customer_phone) || [];
+        const totalOrders = customerOrders.length;
+        const totalSpent = customerOrders
+          .filter(o => o.status === 'delivered')
+          .reduce((sum, o) => sum + o.total, 0);
+
+        customerMap.set(order.customer_phone, {
+          id: `cust-${order.customer_phone}`,
+          restaurant_id: restaurant.id,
+          name: order.customer_name || 'Cliente',
+          phone: order.customer_phone,
+          email: order.customer_email || '',
+          address: order.delivery_address || '',
+          delivery_instructions: '',
+          totalOrders,
+          totalSpent,
+          lastOrderDate: order.created_at,
+          orderTypes: [...new Set(customerOrders.map(o => o.order_type))],
+          isVip: false,
+          is_vip: false,
+          created_at: order.created_at,
+        });
+      } else {
+        const existing = customerMap.get(order.customer_phone)!;
         existing.totalOrders += 1;
         existing.totalSpent += order.status === 'delivered' ? order.total : 0;
         existing.lastOrderDate = order.created_at > existing.lastOrderDate ? order.created_at : existing.lastOrderDate;
         if (!existing.orderTypes.includes(order.order_type)) {
           existing.orderTypes.push(order.order_type);
         }
-        existing.name = order.customer.name || existing.name;
-        existing.email = order.customer.email || existing.email;
-        existing.address = order.customer.address || existing.address;
-        existing.delivery_instructions = order.customer.delivery_instructions || existing.delivery_instructions;
-      } else {
-        const isVip = vipCustomers.some((vip: any) =>
-          vip.restaurant_id === restaurant.id && vip.phone === order.customer.phone
-        );
-        customerMap.set(customerKey, {
-          id: order.customer.phone,
-          name: order.customer.name || 'N/A',
-          phone: order.customer.phone,
-          email: order.customer.email,
-          address: order.customer.address,
-          delivery_instructions: order.customer.delivery_instructions,
-          totalOrders: 1,
-          totalSpent: order.status === 'delivered' ? order.total : 0,
-          lastOrderDate: order.created_at,
-          orderTypes: [order.order_type],
-          isVip: isVip,
-        });
-      }
-    });
-
-    importedCustomers.forEach((customer: any) => {
-      if (!customer.phone || customer.restaurant_id !== restaurant.id) return;
-
-      const customerKey = customer.phone;
-
-      if (!customerMap.has(customerKey)) {
-        const isVip = vipCustomers.some((vip: any) =>
-          vip.restaurant_id === restaurant.id && vip.phone === customer.phone
-        );
-        customerMap.set(customerKey, {
-          id: customer.phone,
-          name: customer.name || 'N/A',
-          phone: customer.phone,
-          email: customer.email,
-          address: customer.address,
-          delivery_instructions: customer.delivery_instructions,
-          totalOrders: 0,
-          totalSpent: 0,
-          lastOrderDate: customer.created_at,
-          orderTypes: [],
-          isVip: isVip,
-        });
       }
     });
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Save, Globe, Clock, Truck, QrCode, Palette, Bell, MapPin, HelpCircle, Send, Eye, Calendar, Mail, Phone, Building, Store, Megaphone, Upload, Image as ImageIcon, FileText, DollarSign, Star, ChevronDown, ExternalLink } from 'lucide-react';
 import { colombianDepartments, colombianCitiesByDepartment, validateNIT, formatNIT } from '../../utils/colombianCities';
 import { Restaurant } from '../../types';
-import { loadFromStorage, saveToStorage } from '../../data/mockData';
+import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useToast } from '../../hooks/useToast';
@@ -33,11 +33,20 @@ export const RestaurantSettings: React.FC = () => {
   const [showTicketDetailModal, setShowTicketDetailModal] = useState(false);
 
   useEffect(() => {
-    // Cargar tickets existentes
-    const existingTickets = loadFromStorage('supportTickets', []);
-    setSupportTickets(existingTickets);
+    const loadSupportTickets = async () => {
+      if (!restaurant?.id) return;
 
-    // Inicializar los campos de contacto con los datos del restaurante
+      const { data } = await supabase
+        .from('support_tickets')
+        .select('*')
+        .eq('restaurant_id', restaurant.id)
+        .order('created_at', { ascending: false });
+
+      setSupportTickets(data || []);
+    };
+
+    loadSupportTickets();
+
     if (restaurant) {
       setSupportForm(prev => ({
         ...prev,

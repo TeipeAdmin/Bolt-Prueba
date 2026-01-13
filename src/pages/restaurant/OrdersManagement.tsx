@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Eye, Pencil as Edit, Trash2, Clock, Phone, MapPin, User, Filter, Search, CheckCircle, XCircle, AlertCircle, Package, Plus, MessageSquare, Printer, DollarSign, TrendingUp, Calendar, ShoppingBag } from 'lucide-react';
 import { Order, Product, Category } from '../../types';
-import { loadFromStorage, saveToStorage } from '../../data/mockData';
+import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useToast } from '../../hooks/useToast';
@@ -77,34 +77,41 @@ export const OrdersManagement: React.FC = () => {
     calculateStats();
   }, [orders]);
 
-  const loadOrders = () => {
-    if (!restaurant) return;
+  const loadOrders = async () => {
+    if (!restaurant?.id) return;
 
-    const allOrders = loadFromStorage('orders') || [];
-    const restaurantOrders = allOrders.filter((order: Order) =>
-      order &&
-      order.restaurant_id === restaurant.id &&
-      order.order_number &&
-      order.status &&
-      order.items
-    );
-    setOrders(restaurantOrders);
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('restaurant_id', restaurant.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error loading orders:', error);
+      showToast('error', 'Error', 'No se pudieron cargar las órdenes');
+      return;
+    }
+
+    setOrders(data || []);
   };
 
-  const loadProductsAndCategories = () => {
-    if (!restaurant) return;
+  const loadProductsAndCategories = async () => {
+    if (!restaurant?.id) return;
 
-    const allProducts = loadFromStorage('products') || [];
-    const allCategories = loadFromStorage('categories') || [];
+    const { data: categoriesData } = await supabase
+      .from('categories')
+      .select('*')
+      .eq('restaurant_id', restaurant.id)
+      .eq('active', true);
 
-    const restaurantCategories = allCategories.filter((cat: Category) =>
-      cat.restaurant_id === restaurant.id && cat.active
-    );
-    const restaurantProducts = allProducts.filter((prod: Product) =>
-      prod.restaurant_id === restaurant.id && prod.is_available
-    );
-    setCategories(restaurantCategories);
-    setProducts(restaurantProducts);
+    const { data: productsData } = await supabase
+      .from('products')
+      .select('*')
+      .eq('restaurant_id', restaurant.id)
+      .eq('is_available', true);
+
+    setCategories(categoriesData || []);
+    setProducts(productsData || []);
   };
 
   const calculateStats = () => {
@@ -139,29 +146,34 @@ export const OrdersManagement: React.FC = () => {
     });
   };
 
-  const updateOrderStatus = (orderId: string, newStatus: Order['status']) => {
-    const allOrders = loadFromStorage('orders') || [];
-    const updatedOrders = allOrders.map((order: Order) =>
-      order.id === orderId 
-        ? { ...order, status: newStatus, updated_at: new Date().toISOString() }
-        : order
-    );
-    saveToStorage('orders', updatedOrders);
-    loadOrders();
-    
-    const statusMessages = {
-      confirmed: t('orderConfirmedMsg'),
-      preparing: t('orderInPreparationMsg'),
-      ready: t('orderReadyForDeliveryMsg'),
-      delivered: t('orderDeliveredMsg'),
-      cancelled: t('orderCancelledMsg')
-    };
-    showToast(
-      'success',
-      t('statusUpdatedTitle'),
-      statusMessages[newStatus] || t('orderStatusUpdated'),
-      3000
-    );
+  const updateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      await loadOrders();
+
+      const statusMessages = {
+        confirmed: t('orderConfirmedMsg'),
+        preparing: t('orderInPreparationMsg'),
+        ready: t('orderReadyForDeliveryMsg'),
+        delivered: t('orderDeliveredMsg'),
+        cancelled: t('orderCancelledMsg')
+      };
+      showToast(
+        'success',
+        t('statusUpdatedTitle'),
+        statusMessages[newStatus] || t('orderStatusUpdated'),
+        3000
+      );
+    } catch (error: any) {
+      console.error('Error updating order status:', error);
+      showToast('error', 'Error', 'No se pudo actualizar el estado de la orden');
+    }
   };
 
   const getNextStatus = (currentStatus: Order['status']): Order['status'] | null => {

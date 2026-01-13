@@ -17,7 +17,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { Category, Product, Restaurant, Subscription } from '../../types';
-import { loadFromStorage, saveToStorage, availablePlans } from '../../data/mockData';
+import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useToast } from '../../hooks/useToast';
@@ -46,22 +46,27 @@ export const MenuManagement: React.FC = () => {
   });
   const [draggedProduct, setDraggedProduct] = useState<Product | null>(null);
 
-  const handleActivateProduct = (productId: string) => {
-    const allProducts = loadFromStorage('products') || [];
-    const updatedProducts = allProducts.map((p: Product) =>
-      p.id === productId
-        ? { ...p, status: 'active' as const, updated_at: new Date().toISOString() }
-        : p
-    );
-    saveToStorage('products', updatedProducts);
-    loadMenuData();
+  const handleActivateProduct = async (productId: string) => {
+    try {
+      const { error } = await supabase
+        .from('products')
+        .update({ status: 'active', updated_at: new Date().toISOString() })
+        .eq('id', productId);
 
-    showToast(
-      'success',
-      t('productActivatedTitle'),
-      t('productActivatedMessage'),
-      4000
-    );
+      if (error) throw error;
+
+      await loadMenuData();
+
+      showToast(
+        'success',
+        t('productActivatedTitle'),
+        t('productActivatedMessage'),
+        4000
+      );
+    } catch (error: any) {
+      console.error('Error activating product:', error);
+      showToast('error', 'Error', 'No se pudo activar el producto');
+    }
   };
 
   useEffect(() => {
@@ -71,30 +76,49 @@ export const MenuManagement: React.FC = () => {
     }
   }, [restaurant]);
 
-  const loadSubscription = () => {
-    const subscriptions = loadFromStorage('subscriptions', []);
-    const subscription = subscriptions.find((sub: Subscription) =>
-      sub.restaurant_id === restaurant?.id && sub.status === 'active'
-    );
-    setCurrentSubscription(subscription || null);
+  const loadSubscription = async () => {
+    if (!restaurant?.id) return;
+
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('restaurant_id', restaurant.id)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error loading subscription:', error);
+      return;
+    }
+
+    setCurrentSubscription(data);
   };
 
-  const loadMenuData = () => {
-    if (!restaurant) return;
+  const loadMenuData = async () => {
+    if (!restaurant?.id) return;
 
-    const allCategories = loadFromStorage('categories') || [];
-    const allProducts = loadFromStorage('products') || [];
+    const { data: categoriesData, error: categoriesError } = await supabase
+      .from('categories')
+      .select('*')
+      .eq('restaurant_id', restaurant.id)
+      .eq('active', true);
 
-    const restaurantCategories = allCategories.filter((cat: Category) =>
-      cat.restaurant_id === restaurant.id && cat.active
-    );
+    if (categoriesError) {
+      console.error('Error loading categories:', categoriesError);
+    }
 
-    const restaurantProducts = allProducts.filter((prod: Product) =>
-      prod.restaurant_id === restaurant.id
-    );
+    const { data: productsData, error: productsError } = await supabase
+      .from('products')
+      .select('*')
+      .eq('restaurant_id', restaurant.id)
+      .order('order_index', { ascending: true });
 
-    setCategories(restaurantCategories);
-    setProducts(restaurantProducts);
+    if (productsError) {
+      console.error('Error loading products:', productsError);
+    }
+
+    setCategories(categoriesData || []);
+    setProducts(productsData || []);
   };
 
   const filteredProducts = products
@@ -130,57 +154,45 @@ export const MenuManagement: React.FC = () => {
     return category ? category.name : t('unknownCategory');
   };
 
-  const handleSaveProduct = (productData: any) => {
+  const handleSaveProduct = async (productData: any) => {
     if (!restaurant) return;
 
-    // Check product limit
-    if (!editingProduct && currentSubscription) {
-      const currentPlan = availablePlans.find(p => p.id === currentSubscription.plan_type);
-      if (currentPlan && currentPlan.features.max_products !== -1) {
-        if (products.length >= currentPlan.features.max_products) {
-          showToast(
-            'warning',
-            t('productLimitReached'),
-            `${t('upTo')} ${currentPlan.features.max_products} ${t('productsAllowed')} ${t('upgradePlanToAddMore')}`,
-            8000
-          );
-          return;
-        }
+    try {
+      if (editingProduct) {
+        const { error } = await supabase
+          .from('products')
+          .update({
+            ...productData,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', editingProduct.id);
+
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('products')
+          .insert({
+            restaurant_id: restaurant.id,
+            ...productData,
+          });
+
+        if (error) throw error;
       }
-    }
 
-    const allProducts = loadFromStorage('products') || [];
+      await loadMenuData();
+      setShowProductModal(false);
+      setEditingProduct(null);
 
-    if (editingProduct) {
-      // Update existing product
-      const updatedProducts = allProducts.map((p: Product) =>
-        p.id === editingProduct.id
-          ? { ...p, ...productData, updated_at: new Date().toISOString() }
-          : p
+      showToast(
+        'success',
+        editingProduct ? t('productUpdatedTitle') : t('productCreatedTitle'),
+        editingProduct ? t('productUpdatedMessage') : t('productCreatedMessage'),
+        4000
       );
-      saveToStorage('products', updatedProducts);
-    } else {
-      // Create new product
-      const newProduct: Product = {
-        id: `prod-${Date.now()}`,
-        restaurant_id: restaurant.id,
-        ...productData,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      saveToStorage('products', [...allProducts, newProduct]);
+    } catch (error: any) {
+      console.error('Error saving product:', error);
+      showToast('error', 'Error', error.message || 'No se pudo guardar el producto');
     }
-
-    loadMenuData();
-    setShowProductModal(false);
-    setEditingProduct(null);
-
-    showToast(
-      'success',
-      editingProduct ? t('productUpdatedTitle') : t('productCreatedTitle'),
-      editingProduct ? t('productUpdatedMessage') : t('productCreatedMessage'),
-      4000
-    );
   };
 
   const handleEditProduct = (product: Product) => {
@@ -188,18 +200,29 @@ export const MenuManagement: React.FC = () => {
     setShowProductModal(true);
   };
 
-  const handleDeleteProduct = (productId: string) => {
-    const allProducts = loadFromStorage('products') || [];
-    const updatedProducts = allProducts.filter((p: Product) => p.id !== productId);
-    saveToStorage('products', updatedProducts);
-    loadMenuData();
+  const handleDeleteProduct = async (productId: string) => {
+    try {
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', productId);
 
-    showToast(
-      'info',
-      t('productDeletedTitle'),
-      t('productDeletedMessage'),
-      4000
-    );
+      if (error) throw error;
+
+      await loadMenuData();
+
+      showToast(
+        'info',
+        t('productDeletedTitle'),
+        t('productDeletedMessage'),
+        4000
+      );
+
+      setDeleteConfirm({ show: false, productId: '', productName: '' });
+    } catch (error: any) {
+      console.error('Error deleting product:', error);
+      showToast('error', 'Error', 'No se pudo eliminar el producto');
+    }
   };
 
   const openDeleteConfirm = (product: Product) => {
@@ -210,137 +233,133 @@ export const MenuManagement: React.FC = () => {
     });
   };
 
-  const moveProductUp = (productId: string) => {
-    const allProducts = loadFromStorage('products') || [];
-    const restaurantProducts = allProducts
-      .filter((p: Product) => p.restaurant_id === restaurant?.id)
-      .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
-
-    const currentIndex = restaurantProducts.findIndex((p: Product) => p.id === productId);
+  const moveProductUp = async (productId: string) => {
+    const currentIndex = products.findIndex((p: Product) => p.id === productId);
     if (currentIndex <= 0) return;
 
-    [restaurantProducts[currentIndex], restaurantProducts[currentIndex - 1]] =
-      [restaurantProducts[currentIndex - 1], restaurantProducts[currentIndex]];
+    const reorderedProducts = [...products];
+    [reorderedProducts[currentIndex], reorderedProducts[currentIndex - 1]] =
+      [reorderedProducts[currentIndex - 1], reorderedProducts[currentIndex]];
 
-    restaurantProducts.forEach((product, index) => {
-      product.order_index = index;
-      product.updated_at = new Date().toISOString();
-    });
+    try {
+      const updates = reorderedProducts.map((product, index) => ({
+        id: product.id,
+        order_index: index,
+      }));
 
-    const productMap = new Map(restaurantProducts.map(p => [p.id, p]));
-    const updatedProducts = allProducts.map((p: Product) => {
-      if (productMap.has(p.id)) {
-        return productMap.get(p.id)!;
+      for (const update of updates) {
+        await supabase
+          .from('products')
+          .update({ order_index: update.order_index, updated_at: new Date().toISOString() })
+          .eq('id', update.id);
       }
-      return p;
-    });
 
-    saveToStorage('products', updatedProducts);
-    loadMenuData();
+      await loadMenuData();
 
-    showToast(
-      'success',
-      t('orderUpdatedTitle'),
-      t('orderUpdatedMessage'),
-      2000
-    );
-  };
-  const moveProductDown = (productId: string) => {
-    const allProducts = loadFromStorage('products') || [];
-    const restaurantProducts = allProducts
-      .filter((p: Product) => p.restaurant_id === restaurant?.id)
-      .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
-
-    const currentIndex = restaurantProducts.findIndex((p: Product) => p.id === productId);
-    if (currentIndex >= restaurantProducts.length - 1) return;
-
-    [restaurantProducts[currentIndex], restaurantProducts[currentIndex + 1]] =
-      [restaurantProducts[currentIndex + 1], restaurantProducts[currentIndex]];
-
-    restaurantProducts.forEach((product, index) => {
-      product.order_index = index;
-      product.updated_at = new Date().toISOString();
-    });
-
-    const productMap = new Map(restaurantProducts.map(p => [p.id, p]));
-    const updatedProducts = allProducts.map((p: Product) => {
-      if (productMap.has(p.id)) {
-        return productMap.get(p.id)!;
-      }
-      return p;
-    });
-
-    saveToStorage('products', updatedProducts);
-    loadMenuData();
-
-    showToast(
-      'success',
-      t('orderUpdatedTitle'),
-      t('orderUpdatedMessage'),
-      2000
-    );
+      showToast(
+        'success',
+        t('orderUpdatedTitle'),
+        t('orderUpdatedMessage'),
+        2000
+      );
+    } catch (error: any) {
+      console.error('Error reordering product:', error);
+      showToast('error', 'Error', 'No se pudo reordenar el producto');
+    }
   };
 
-  const handleDuplicateProduct = (productId: string) => {
+  const moveProductDown = async (productId: string) => {
+    const currentIndex = products.findIndex((p: Product) => p.id === productId);
+    if (currentIndex >= products.length - 1) return;
+
+    const reorderedProducts = [...products];
+    [reorderedProducts[currentIndex], reorderedProducts[currentIndex + 1]] =
+      [reorderedProducts[currentIndex + 1], reorderedProducts[currentIndex]];
+
+    try {
+      const updates = reorderedProducts.map((product, index) => ({
+        id: product.id,
+        order_index: index,
+      }));
+
+      for (const update of updates) {
+        await supabase
+          .from('products')
+          .update({ order_index: update.order_index, updated_at: new Date().toISOString() })
+          .eq('id', update.id);
+      }
+
+      await loadMenuData();
+
+      showToast(
+        'success',
+        t('orderUpdatedTitle'),
+        t('orderUpdatedMessage'),
+        2000
+      );
+    } catch (error: any) {
+      console.error('Error reordering product:', error);
+      showToast('error', 'Error', 'No se pudo reordenar el producto');
+    }
+  };
+
+  const handleDuplicateProduct = async (productId: string) => {
     if (!restaurant) return;
 
-    if (currentSubscription) {
-      const currentPlan = availablePlans.find(p => p.id === currentSubscription.plan_type);
-      if (currentPlan && currentPlan.features.max_products !== -1) {
-        if (products.length >= currentPlan.features.max_products) {
-          showToast(
-            'error',
-            t('productLimitTitle'),
-            t('productLimitMessage', { limit: currentPlan.features.max_products }),
-            5000
-          );
-          return;
-        }
-      }
-    }
-
-    const allProducts = loadFromStorage('products') || [];
-    const productToDuplicate = allProducts.find((p: Product) => p.id === productId);
-
+    const productToDuplicate = products.find((p: Product) => p.id === productId);
     if (!productToDuplicate) return;
 
-    const newProduct: Product = {
-      ...productToDuplicate,
-      id: `product-${Date.now()}`,
-      name: `${productToDuplicate.name} (${t('copyLabel')})`,
-      order_index: products.length,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .insert({
+          ...productToDuplicate,
+          id: undefined,
+          name: `${productToDuplicate.name} (${t('copyLabel')})`,
+          order_index: products.length,
+          created_at: undefined,
+          updated_at: undefined,
+        })
+        .select()
+        .single();
 
-    const updatedProducts = [...allProducts, newProduct];
-    saveToStorage('products', updatedProducts);
-    loadMenuData();
+      if (error) throw error;
 
-    showToast(
-      'success',
-      t('productDuplicatedTitle'),
-      t('productDuplicatedMessage', { name: productToDuplicate.name }),
-      4000
-    );
+      await loadMenuData();
+
+      showToast(
+        'success',
+        t('productDuplicatedTitle'),
+        t('productDuplicatedMessage', { name: productToDuplicate.name }),
+        4000
+      );
+    } catch (error: any) {
+      console.error('Error duplicating product:', error);
+      showToast('error', 'Error', 'No se pudo duplicar el producto');
+    }
   };
 
-  const handleArchiveProduct = (productId: string) => {
-    const allProducts = loadFromStorage('products') || [];
-    const updatedProducts = allProducts.map((p: Product) =>
-      p.id === productId
-        ? { ...p, status: 'archived' as const, updated_at: new Date().toISOString() }
-        : p
-    );
-    saveToStorage('products', updatedProducts);
-    loadMenuData();
+  const handleArchiveProduct = async (productId: string) => {
+    try {
+      const { error } = await supabase
+        .from('products')
+        .update({ status: 'archived', updated_at: new Date().toISOString() })
+        .eq('id', productId);
 
-    showToast(
-      'info',
-      t('productArchivedTitle'),
-      t('productArchivedMessage'),
-      4000
-    );
+      if (error) throw error;
+
+      await loadMenuData();
+
+      showToast(
+        'info',
+        t('productArchivedTitle'),
+        t('productArchivedMessage'),
+        4000
+      );
+    } catch (error: any) {
+      console.error('Error archiving product:', error);
+      showToast('error', 'Error', 'No se pudo archivar el producto');
+    }
   };
 
   const handleDragStart = (e: React.DragEvent, product: Product) => {
@@ -353,7 +372,7 @@ export const MenuManagement: React.FC = () => {
     e.dataTransfer.dropEffect = 'move';
   };
 
-  const handleDrop = (e: React.DragEvent, targetProduct: Product) => {
+  const handleDrop = async (e: React.DragEvent, targetProduct: Product) => {
     e.preventDefault();
 
     if (!draggedProduct || draggedProduct.id === targetProduct.id) {
@@ -361,42 +380,42 @@ export const MenuManagement: React.FC = () => {
       return;
     }
 
-    const allProducts = loadFromStorage('products') || [];
-    const restaurantProducts = allProducts
-      .filter((p: Product) => p.restaurant_id === restaurant?.id)
-      .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
-
-    const draggedIndex = restaurantProducts.findIndex((p: Product) => p.id === draggedProduct.id);
-    const targetIndex = restaurantProducts.findIndex((p: Product) => p.id === targetProduct.id);
+    const draggedIndex = products.findIndex((p: Product) => p.id === draggedProduct.id);
+    const targetIndex = products.findIndex((p: Product) => p.id === targetProduct.id);
 
     if (draggedIndex === -1 || targetIndex === -1) return;
 
-    restaurantProducts.splice(draggedIndex, 1);
-    restaurantProducts.splice(targetIndex, 0, draggedProduct);
+    const reorderedProducts = [...products];
+    reorderedProducts.splice(draggedIndex, 1);
+    reorderedProducts.splice(targetIndex, 0, draggedProduct);
 
-    restaurantProducts.forEach((product, index) => {
-      product.order_index = index;
-      product.updated_at = new Date().toISOString();
-    });
+    try {
+      const updates = reorderedProducts.map((product, index) => ({
+        id: product.id,
+        order_index: index,
+      }));
 
-    const productMap = new Map(restaurantProducts.map(p => [p.id, p]));
-    const updatedProducts = allProducts.map((p: Product) => {
-      if (productMap.has(p.id)) {
-        return productMap.get(p.id)!;
+      for (const update of updates) {
+        await supabase
+          .from('products')
+          .update({ order_index: update.order_index, updated_at: new Date().toISOString() })
+          .eq('id', update.id);
       }
-      return p;
-    });
 
-    saveToStorage('products', updatedProducts);
-    loadMenuData();
-    setDraggedProduct(null);
+      await loadMenuData();
+      setDraggedProduct(null);
 
-    showToast(
-      'success',
-      t('orderUpdatedTitle'),
-      t('productsReorderedMessage'),
-      2000
-    );
+      showToast(
+        'success',
+        t('orderUpdatedTitle'),
+        t('productsReorderedMessage'),
+        2000
+      );
+    } catch (error: any) {
+      console.error('Error reordering products:', error);
+      showToast('error', 'Error', 'No se pudo reordenar los productos');
+      setDraggedProduct(null);
+    }
   };
 
   const handleDragEnd = () => {

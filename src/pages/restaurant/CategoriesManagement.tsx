@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Pencil, Trash2, GripVertical, Eye, EyeOff,ArrowUp, ArrowDown, Search, Image as ImageIcon, FolderOpen, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Category, Subscription } from '../../types';
-import { loadFromStorage, saveToStorage, availablePlans } from '../../data/mockData';
+import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useToast } from '../../hooks/useToast';
@@ -41,25 +41,40 @@ export const CategoriesManagement: React.FC = () => {
     }
   }, [restaurant]);
 
-  const loadSubscription = () => {
-    const subscriptions = loadFromStorage('subscriptions', []);
-    const subscription = subscriptions.find((sub: Subscription) => 
-      sub.restaurant_id === restaurant?.id && sub.status === 'active'
-    );
-    setCurrentSubscription(subscription || null);
+  const loadSubscription = async () => {
+    if (!restaurant?.id) return;
+
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('restaurant_id', restaurant.id)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error loading subscription:', error);
+      return;
+    }
+
+    setCurrentSubscription(data);
   };
 
-  const loadCategories = () => {
-    if (!restaurant) return;
+  const loadCategories = async () => {
+    if (!restaurant?.id) return;
 
-    const allCategories = loadFromStorage('categories') || [];
-    const restaurantCategories = allCategories.filter((cat: Category) => 
-      cat.restaurant_id === restaurant.id
-    );
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .eq('restaurant_id', restaurant.id)
+      .order('order_position', { ascending: true });
 
-    // Sort by order position
-    restaurantCategories.sort((a: Category, b: Category) => a.order_position - b.order_position);
-    setCategories(restaurantCategories);
+    if (error) {
+      console.error('Error loading categories:', error);
+      showToast('error', 'Error', 'No se pudieron cargar las categorías');
+      return;
+    }
+
+    setCategories(data || []);
   };
 
   const filteredCategories = categories.filter(category =>
@@ -67,61 +82,51 @@ export const CategoriesManagement: React.FC = () => {
     (category.description && category.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!restaurant || !formData.name.trim()) return;
 
-    // Check category limit for new categories
-    if (!editingCategory && currentSubscription) {
-      const currentPlan = availablePlans.find(p => p.id === currentSubscription.plan_type);
-      if (currentPlan && currentPlan.features.max_categories !== -1) {
-        if (categories.length >= currentPlan.features.max_categories) {
-          showToast(
-            'warning',
-            t('categoryLimitReached'),
-            `${t('upTo')} ${currentPlan.features.max_categories} ${t('addMoreCategories')} ${currentPlan.name}. ${t('upgradeSubscription')} ${t('addMoreCategories')}`,
-            8000
-          );
-          return;
-        }
+    try {
+      if (editingCategory) {
+        const { error } = await supabase
+          .from('categories')
+          .update({
+            name: formData.name,
+            description: formData.description,
+            icon: formData.icon,
+          })
+          .eq('id', editingCategory.id);
+
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('categories')
+          .insert({
+            restaurant_id: restaurant.id,
+            name: formData.name,
+            description: formData.description,
+            icon: formData.icon,
+            order_position: categories.length + 1,
+            active: true,
+          });
+
+        if (error) throw error;
       }
-    }
 
-    const allCategories = loadFromStorage('categories') || [];
-    
-    if (editingCategory) {
-      // Update existing category
-      const updatedCategories = allCategories.map((cat: Category) =>
-        cat.id === editingCategory.id
-          ? { ...cat, ...formData }
-          : cat
+      await loadCategories();
+      handleCloseModal();
+
+      showToast(
+        'success',
+        editingCategory ? t('categoryUpdated') : t('categoryCreated'),
+        editingCategory
+          ? t('messageCategoryUpdated')
+          : t('messageCategoryCreated'),
+        4000
       );
-      saveToStorage('categories', updatedCategories);
-    } else {
-      // Create new category
-      const newCategory: Category = {
-        id: `cat-${Date.now()}`,
-        restaurant_id: restaurant.id,
-        name: formData.name,
-        description: formData.description,
-        icon: formData.icon,
-        order_position: categories.length + 1,
-        active: true,
-        created_at: new Date().toISOString(),
-      };
-      saveToStorage('categories', [...allCategories, newCategory]);
+    } catch (error: any) {
+      console.error('Error saving category:', error);
+      showToast('error', 'Error', error.message || 'No se pudo guardar la categoría');
     }
-
-    loadCategories();
-    handleCloseModal();
-    
-    showToast(
-      'success',
-      editingCategory ? t('categoryUpdated') : t('categoryCreated'),
-      editingCategory 
-        ? t('messageCategoryUpdated')
-        : t('messageCategoryCreated'),
-      4000
-    );
   };
 
   const handleEdit = (category: Category) => {
@@ -134,18 +139,29 @@ export const CategoriesManagement: React.FC = () => {
     setShowModal(true);
   };
 
-  const handleDelete = (categoryId: string) => {
-    const allCategories = loadFromStorage('categories') || [];
-    const updatedCategories = allCategories.filter((cat: Category) => cat.id !== categoryId);
-    saveToStorage('categories', updatedCategories);
-    loadCategories();
+  const handleDelete = async (categoryId: string) => {
+    try {
+      const { error } = await supabase
+        .from('categories')
+        .delete()
+        .eq('id', categoryId);
 
-    showToast(
-      'info',
-      t('categoryDeleted'),
-       t('messageCategoryDeleted'),
-      4000
-    );
+      if (error) throw error;
+
+      await loadCategories();
+
+      showToast(
+        'info',
+        t('categoryDeleted'),
+        t('messageCategoryDeleted'),
+        4000
+      );
+
+      setDeleteConfirm({ show: false, categoryId: '', categoryName: '' });
+    } catch (error: any) {
+      console.error('Error deleting category:', error);
+      showToast('error', 'Error', error.message || 'No se pudo eliminar la categoría');
+    }
   };
 
   const openDeleteConfirm = (category: Category) => {
@@ -156,27 +172,32 @@ export const CategoriesManagement: React.FC = () => {
     });
   };
 
-  const toggleActive = (categoryId: string) => {
-    const allCategories = loadFromStorage('categories') || [];
-    const category = allCategories.find((cat: Category) => cat.id === categoryId);
+  const toggleActive = async (categoryId: string) => {
+    const category = categories.find(cat => cat.id === categoryId);
     if (!category) return;
-    
-    const updatedCategories = allCategories.map((cat: Category) =>
-      cat.id === categoryId
-        ? { ...cat, active: !cat.active }
-        : cat
-    );
-    saveToStorage('categories', updatedCategories);
-    loadCategories();
-    
-    showToast(
-      'info',
-      !category.active ? t('categoryActivated') : t('categoryDeactivated'),
-      !category.active 
-        ? t('categoryActivatedDes')
-        : t('categoryDeactivatedDes'),
-      4000
-    );
+
+    try {
+      const { error } = await supabase
+        .from('categories')
+        .update({ active: !category.active })
+        .eq('id', categoryId);
+
+      if (error) throw error;
+
+      await loadCategories();
+
+      showToast(
+        'info',
+        !category.active ? t('categoryActivated') : t('categoryDeactivated'),
+        !category.active
+          ? t('categoryActivatedDes')
+          : t('categoryDeactivatedDes'),
+        4000
+      );
+    } catch (error: any) {
+      console.error('Error toggling category:', error);
+      showToast('error', 'Error', error.message || 'No se pudo actualizar la categoría');
+    }
   };
 
   const handleCloseModal = () => {
@@ -189,7 +210,7 @@ export const CategoriesManagement: React.FC = () => {
     });
   };
 
-  const moveCategory = (categoryId: string, direction: 'up' | 'down') => {
+  const moveCategory = async (categoryId: string, direction: 'up' | 'down') => {
     const currentIndex = categories.findIndex(cat => cat.id === categoryId);
     if (currentIndex === -1) return;
 
@@ -199,18 +220,24 @@ export const CategoriesManagement: React.FC = () => {
     const newCategories = [...categories];
     [newCategories[currentIndex], newCategories[newIndex]] = [newCategories[newIndex], newCategories[currentIndex]];
 
-    // Update order positions
-    const allCategories = loadFromStorage('categories') || [];
-    const updatedCategories = allCategories.map((cat: Category) => {
-      const newCat = newCategories.find(nc => nc.id === cat.id);
-      if (newCat) {
-        return { ...cat, order_position: newCategories.indexOf(newCat) + 1 };
-      }
-      return cat;
-    });
+    try {
+      const updates = newCategories.map((cat, index) => ({
+        id: cat.id,
+        order_position: index + 1,
+      }));
 
-    saveToStorage('categories', updatedCategories);
-    loadCategories();
+      for (const update of updates) {
+        await supabase
+          .from('categories')
+          .update({ order_position: update.order_position })
+          .eq('id', update.id);
+      }
+
+      await loadCategories();
+    } catch (error: any) {
+      console.error('Error reordering categories:', error);
+      showToast('error', 'Error', 'No se pudo reordenar las categorías');
+    }
   };
 
   const handleDragStart = (e: React.DragEvent, category: Category) => {
@@ -223,7 +250,7 @@ export const CategoriesManagement: React.FC = () => {
     e.dataTransfer.dropEffect = 'move';
   };
 
-  const handleDrop = (e: React.DragEvent, targetCategory: Category) => {
+  const handleDrop = async (e: React.DragEvent, targetCategory: Category) => {
     e.preventDefault();
 
     if (!draggedCategory || draggedCategory.id === targetCategory.id) {
@@ -240,19 +267,26 @@ export const CategoriesManagement: React.FC = () => {
     newCategories.splice(draggedIndex, 1);
     newCategories.splice(targetIndex, 0, draggedCategory);
 
-    // Update order positions
-    const allCategories = loadFromStorage('categories') || [];
-    const updatedCategories = allCategories.map((cat: Category) => {
-      const newCat = newCategories.find(nc => nc.id === cat.id);
-      if (newCat) {
-        return { ...cat, order_position: newCategories.indexOf(newCat) + 1 };
-      }
-      return cat;
-    });
+    try {
+      const updates = newCategories.map((cat, index) => ({
+        id: cat.id,
+        order_position: index + 1,
+      }));
 
-    saveToStorage('categories', updatedCategories);
-    loadCategories();
-    setDraggedCategory(null);
+      for (const update of updates) {
+        await supabase
+          .from('categories')
+          .update({ order_position: update.order_position })
+          .eq('id', update.id);
+      }
+
+      await loadCategories();
+      setDraggedCategory(null);
+    } catch (error: any) {
+      console.error('Error reordering categories:', error);
+      showToast('error', 'Error', 'No se pudo reordenar las categorías');
+      setDraggedCategory(null);
+    }
   };
 
   const handleDragEnd = () => {
