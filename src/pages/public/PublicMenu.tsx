@@ -156,7 +156,7 @@ export const PublicMenu: React.FC = () => {
           )
         `)
         .eq('restaurant_id', restaurantData.id)
-        .eq('is_available', true);
+        .in('status', ['active', 'out_of_stock']);
 
       if (productsError) throw productsError;
 
@@ -164,7 +164,6 @@ export const PublicMenu: React.FC = () => {
         ...p,
         images: p.images || [],
         variations: p.variations && p.variations.length > 0 ? p.variations : [{ id: '1', name: 'Default', price: Number(p.price) || 0 }],
-        status: p.is_available ? 'active' : 'inactive',
         category_id: p.product_categories?.[0]?.category_id || null
       }));
 
@@ -830,32 +829,43 @@ export const PublicMenu: React.FC = () => {
                 return (
                   <div
                     key={product.id}
-                    className="rounded-xl shadow-sm hover:shadow-lg transition-all cursor-pointer overflow-hidden "
-                    onClick={() => setSelectedProduct(product)}
+                    className="rounded-xl shadow-sm hover:shadow-lg transition-all cursor-pointer overflow-hidden relative"
+                    onClick={() => product.status !== 'out_of_stock' && setSelectedProduct(product)}
                     style={{
                       borderRadius:
                         theme.button_style === 'rounded'
                           ? '0.75rem'
                           : '0.25rem',
                       backgroundColor: cardBackgroundColor,
+                      opacity: product.status === 'out_of_stock' ? 0.7 : 1,
+                      cursor: product.status === 'out_of_stock' ? 'not-allowed' : 'pointer',
                     }}
                   >
                     <div className="flex flex-col md:flex-row gap-2 px-4 md:px-0">
                       {' '}
                       {/*DF:Se quito el pading*/}
                       {product.images[0] && (
-                        <img
-                          src={product.images[0]}
-                          alt={product.name}
-                          className={`
-                            w-full md:w-[164px] md:h-[154px] object-cover flex-shrink-0
-                            ${
-                              theme.button_style === 'rounded'
-                                ? 'md:rounded-lg md:rounded-tr-none md:rounded-br-none'
-                                : 'md:rounded-sm md:rounded-tr-none md:rounded-br-none'
-                            }
-                          `}
-                        />
+                        <div className="relative">
+                          <img
+                            src={product.images[0]}
+                            alt={product.name}
+                            className={`
+                              w-full md:w-[164px] md:h-[154px] object-cover flex-shrink-0
+                              ${
+                                theme.button_style === 'rounded'
+                                  ? 'md:rounded-lg md:rounded-tr-none md:rounded-br-none'
+                                  : 'md:rounded-sm md:rounded-tr-none md:rounded-br-none'
+                              }
+                            `}
+                          />
+                          {product.status === 'out_of_stock' && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                              <span className="px-4 py-2 bg-red-600 text-white font-bold text-sm rounded">
+                                AGOTADO
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       )}
                       <div className="flex-1 flex flex-col justify-center p-2">
                         <div className="flex items-start justify-between gap-2 mb-3">
@@ -868,17 +878,30 @@ export const PublicMenu: React.FC = () => {
                           >
                             {product.name}
                           </h2>
-                          {hasDiscount && (
-                            <span
-                              className="px-2 py-1 text-xs font-bold rounded"
-                              style={{
-                                backgroundColor: '#ef4444',
-                                color: '#ffffff',
-                              }}
-                            >
-                              -{discountPercentage}%
-                            </span>
-                          )}
+                          <div className="flex gap-2">
+                            {product.status === 'out_of_stock' && (
+                              <span
+                                className="px-2 py-1 text-xs font-bold rounded"
+                                style={{
+                                  backgroundColor: '#dc2626',
+                                  color: '#ffffff',
+                                }}
+                              >
+                                AGOTADO
+                              </span>
+                            )}
+                            {hasDiscount && (
+                              <span
+                                className="px-2 py-1 text-xs font-bold rounded"
+                                style={{
+                                  backgroundColor: '#ef4444',
+                                  color: '#ffffff',
+                                }}
+                              >
+                                -{discountPercentage}%
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <p
                           className="mb-4 text-base leading-relaxed line-clamp-2"
@@ -928,32 +951,56 @@ export const PublicMenu: React.FC = () => {
                   <div
                     key={product.id}
                     className="rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden relative"
-                    onClick={() => setSelectedProduct(product)}
+                    onClick={() => product.status !== 'out_of_stock' && setSelectedProduct(product)}
                     style={{
                       borderRadius:
                         theme.button_style === 'rounded'
                           ? '0.75rem'
                           : '0.25rem',
                       backgroundColor: cardBackgroundColor,
+                      opacity: product.status === 'out_of_stock' ? 0.7 : 1,
+                      cursor: product.status === 'out_of_stock' ? 'not-allowed' : 'pointer',
                     }}
                   >
-                    {hasDiscount && (
-                      <div
-                        className="absolute top-2 right-2 px-2 py-1 text-xs font-bold rounded z-10"
-                        style={{
-                          backgroundColor: '#ef4444',
-                          color: '#ffffff',
-                        }}
-                      >
-                        -{discountPercentage}%
-                      </div>
-                    )}
+                    <div className="absolute top-2 right-2 flex flex-col gap-2 z-10">
+                      {product.status === 'out_of_stock' && (
+                        <div
+                          className="px-2 py-1 text-xs font-bold rounded"
+                          style={{
+                            backgroundColor: '#dc2626',
+                            color: '#ffffff',
+                          }}
+                        >
+                          AGOTADO
+                        </div>
+                      )}
+                      {hasDiscount && (
+                        <div
+                          className="px-2 py-1 text-xs font-bold rounded"
+                          style={{
+                            backgroundColor: '#ef4444',
+                            color: '#ffffff',
+                          }}
+                        >
+                          -{discountPercentage}%
+                        </div>
+                      )}
+                    </div>
                     {product.images[0] && (
-                      <img
-                        src={product.images[0]}
-                        alt={product.name}
-                        className="aspect-[4/3] w-full  object-cover" /*DF:SE AGREGA ASPECT PARA QUE SE VEAN DEL MISMO TAMAÑO*/
-                      />
+                      <div className="relative">
+                        <img
+                          src={product.images[0]}
+                          alt={product.name}
+                          className="aspect-[4/3] w-full  object-cover" /*DF:SE AGREGA ASPECT PARA QUE SE VEAN DEL MISMO TAMAÑO*/
+                        />
+                        {product.status === 'out_of_stock' && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                            <span className="px-4 py-2 bg-red-600 text-white font-bold text-sm rounded">
+                              AGOTADO
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     )}
                     <div className="p-2 ">
                       <h2
@@ -1012,27 +1059,42 @@ export const PublicMenu: React.FC = () => {
                 <div
                   key={product.id}
                   className="rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer flex items-left gap-4 p-4 pl-0 py-0 relative"
-                  onClick={() => setSelectedProduct(product)}
+                  onClick={() => product.status !== 'out_of_stock' && setSelectedProduct(product)}
                   style={{
                     borderRadius:
                       theme.button_style === 'rounded' ? '0.75rem' : '0.25rem',
                     display: 'flex',
                     backgroundColor: cardBackgroundColor,
+                    opacity: product.status === 'out_of_stock' ? 0.7 : 1,
+                    cursor: product.status === 'out_of_stock' ? 'not-allowed' : 'pointer',
                   }}
                 >
                   {product.images[0] && (
                     <div className="relative">
-                      {hasDiscount && (
-                        <div
-                          className="absolute top-2 left-2 px-2 py-1 text-xs font-bold rounded z-10"
-                          style={{
-                            backgroundColor: primaryColor,
-                            color: secondaryTextColor,
-                          }}
-                        >
-                          -{discountPercentage}%
-                        </div>
-                      )}
+                      <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
+                        {product.status === 'out_of_stock' && (
+                          <div
+                            className="px-2 py-1 text-xs font-bold rounded"
+                            style={{
+                              backgroundColor: '#dc2626',
+                              color: '#ffffff',
+                            }}
+                          >
+                            AGOTADO
+                          </div>
+                        )}
+                        {hasDiscount && (
+                          <div
+                            className="px-2 py-1 text-xs font-bold rounded"
+                            style={{
+                              backgroundColor: primaryColor,
+                              color: secondaryTextColor,
+                            }}
+                          >
+                            -{discountPercentage}%
+                          </div>
+                        )}
+                      </div>
                       <img
                         src={product.images[0]}
                         alt={product.name}
@@ -1047,6 +1109,16 @@ export const PublicMenu: React.FC = () => {
                             '0px' /*DF:configurar las imagenes para que vayan al borde*/,
                         }}
                       />
+                      {product.status === 'out_of_stock' && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-xl" style={{
+                          borderTopRightRadius: '0px',
+                          borderBottomRightRadius: '0px',
+                        }}>
+                          <span className="px-3 py-1 bg-red-600 text-white font-bold text-xs rounded">
+                            AGOTADO
+                          </span>
+                        </div>
+                      )}
                     </div>
                   )}
                   <div className="flex-1 min-w-0 p-4">
