@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart3, ShoppingBag, Menu, Eye, TrendingUp, HelpCircle } from 'lucide-react';
 import { Product, Order, Category, Subscription } from '../../types';
-import { loadFromStorage, availablePlans } from '../../data/mockData';
+import { supabase } from '../../lib/supabase';
+import { availablePlans } from '../../lib/plans';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Badge } from '../../components/ui/Badge';
@@ -24,34 +25,46 @@ export const RestaurantDashboard: React.FC = () => {
     }
   }, [restaurant]);
 
-  const loadSubscription = () => {
-    const subscriptions = loadFromStorage('subscriptions', []);
-    const subscription = subscriptions.find((sub: Subscription) =>
-      sub.restaurant_id === restaurant?.id && sub.status === 'active'
-    );
-    setCurrentSubscription(subscription || null);
+  const loadSubscription = async () => {
+    if (!restaurant?.id) return;
+
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('restaurant_id', restaurant.id)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error loading subscription:', error);
+      return;
+    }
+
+    setCurrentSubscription(data);
   };
 
-  const loadDashboardData = () => {
-    if (!restaurant) return;
+  const loadDashboardData = async () => {
+    if (!restaurant?.id) return;
 
-    const allProducts = loadFromStorage('products') || [];
-    const allOrders = loadFromStorage('orders') || [];
-    const allCategories = loadFromStorage('categories') || [];
+    const { data: productsData } = await supabase
+      .from('products')
+      .select('*')
+      .eq('restaurant_id', restaurant.id);
 
-    const restaurantProducts = allProducts.filter((p: Product) => p && p.restaurant_id === restaurant.id);
-    const restaurantOrders = allOrders.filter((o: Order) =>
-      o &&
-      o.restaurant_id === restaurant.id &&
-      o.order_number &&
-      o.status &&
-      o.items
-    );
-    const restaurantCategories = allCategories.filter((c: Category) => c && c.restaurant_id === restaurant.id && c.active);
+    const { data: ordersData } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('restaurant_id', restaurant.id);
 
-    setProducts(restaurantProducts);
-    setOrders(restaurantOrders);
-    setCategories(restaurantCategories);
+    const { data: categoriesData } = await supabase
+      .from('categories')
+      .select('*')
+      .eq('restaurant_id', restaurant.id)
+      .eq('active', true);
+
+    setProducts(productsData || []);
+    setOrders(ordersData || []);
+    setCategories(categoriesData || []);
   };
 
   // Calculate last month's revenue
