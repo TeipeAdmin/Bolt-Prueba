@@ -162,8 +162,8 @@ export const PublicMenu: React.FC = () => {
 
       const transformedProducts = (productsData || []).map((p: any) => ({
         ...p,
-        images: p.image_url ? [p.image_url] : [],
-        variations: [{ id: '1', name: 'Default', price: Number(p.price) || 0 }],
+        images: p.images || [],
+        variations: p.variations && p.variations.length > 0 ? p.variations : [{ id: '1', name: 'Default', price: Number(p.price) || 0 }],
         status: p.is_available ? 'active' : 'inactive',
         category_id: p.product_categories?.[0]?.category_id || null
       }));
