@@ -35,6 +35,39 @@ export const LandingPage: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    // Intentar activar el audio después de una breve interacción del usuario
+    const attemptUnmute = () => {
+      const iframe = document.querySelector('iframe[title="Platyo Demo Video"]') as HTMLIFrameElement;
+      if (iframe && iframe.contentWindow) {
+        // Enviar comando para unmute al iframe de YouTube
+        iframe.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
+      }
+    };
+
+    // Intentar unmute al hacer clic en cualquier parte de la página
+    const handleFirstInteraction = () => {
+      attemptUnmute();
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('touchstart', handleFirstInteraction);
+      document.removeEventListener('keydown', handleFirstInteraction);
+    };
+
+    // Intentar inmediatamente
+    setTimeout(attemptUnmute, 1000);
+
+    // También intentar después de la primera interacción del usuario
+    document.addEventListener('click', handleFirstInteraction);
+    document.addEventListener('touchstart', handleFirstInteraction);
+    document.addEventListener('keydown', handleFirstInteraction);
+
+    return () => {
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('touchstart', handleFirstInteraction);
+      document.removeEventListener('keydown', handleFirstInteraction);
+    };
+  }, []);
+
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
@@ -378,7 +411,7 @@ export const LandingPage: React.FC = () => {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-2xl">
             <iframe
-              src="https://www.youtube.com/embed/bSKNTe1m3QY?autoplay=1&mute=1&controls=1&modestbranding=1&rel=0&showinfo=0&loop=1&playlist=bSKNTe1m3QY"
+              src="https://www.youtube.com/embed/bSKNTe1m3QY?autoplay=1&mute=0&controls=1&modestbranding=1&rel=0&showinfo=0&loop=1&playlist=bSKNTe1m3QY&enablejsapi=1"
               title="Platyo Demo Video"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
