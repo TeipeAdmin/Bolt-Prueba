@@ -156,7 +156,8 @@ export const PublicMenu: React.FC = () => {
           )
         `)
         .eq('restaurant_id', restaurantData.id)
-        .in('status', ['active', 'out_of_stock']);
+        .in('status', ['active', 'out_of_stock'])
+        .order('display_order', { ascending: true });
 
       if (productsError) throw productsError;
 

@@ -139,7 +139,7 @@ export const MenuManagement: React.FC = () => {
         )
       `)
       .eq('restaurant_id', restaurant.id)
-      .order('created_at', { ascending: true });
+      .order('display_order', { ascending: true });
 
     if (productsError) {
       console.error('Error loading products:', productsError);
@@ -229,11 +229,14 @@ export const MenuManagement: React.FC = () => {
           if (insertCategoryError) throw insertCategoryError;
         }
       } else {
+        const maxDisplayOrder = Math.max(...products.map(p => (p as any).display_order || 0), -1);
+
         const { data: newProduct, error: insertError } = await supabase
           .from('products')
           .insert({
             restaurant_id: restaurant.id,
             ...dataToSave,
+            display_order: maxDisplayOrder + 1,
           })
           .select()
           .single();
@@ -307,14 +310,27 @@ export const MenuManagement: React.FC = () => {
   };
 
   const moveProductUp = async (productId: string) => {
-    const currentIndex = products.findIndex((p: Product) => p.id === productId);
+    const currentIndex = filteredProducts.findIndex((p: Product) => p.id === productId);
     if (currentIndex <= 0) return;
 
-    const reorderedProducts = [...products];
-    [reorderedProducts[currentIndex], reorderedProducts[currentIndex - 1]] =
-      [reorderedProducts[currentIndex - 1], reorderedProducts[currentIndex]];
+    const currentProduct = filteredProducts[currentIndex];
+    const previousProduct = filteredProducts[currentIndex - 1];
 
     try {
+      const { error: error1 } = await supabase
+        .from('products')
+        .update({ display_order: previousProduct.display_order })
+        .eq('id', currentProduct.id);
+
+      if (error1) throw error1;
+
+      const { error: error2 } = await supabase
+        .from('products')
+        .update({ display_order: currentProduct.display_order })
+        .eq('id', previousProduct.id);
+
+      if (error2) throw error2;
+
       await loadMenuData();
 
       showToast(
@@ -330,14 +346,27 @@ export const MenuManagement: React.FC = () => {
   };
 
   const moveProductDown = async (productId: string) => {
-    const currentIndex = products.findIndex((p: Product) => p.id === productId);
-    if (currentIndex >= products.length - 1) return;
+    const currentIndex = filteredProducts.findIndex((p: Product) => p.id === productId);
+    if (currentIndex >= filteredProducts.length - 1) return;
 
-    const reorderedProducts = [...products];
-    [reorderedProducts[currentIndex], reorderedProducts[currentIndex + 1]] =
-      [reorderedProducts[currentIndex + 1], reorderedProducts[currentIndex]];
+    const currentProduct = filteredProducts[currentIndex];
+    const nextProduct = filteredProducts[currentIndex + 1];
 
     try {
+      const { error: error1 } = await supabase
+        .from('products')
+        .update({ display_order: nextProduct.display_order })
+        .eq('id', currentProduct.id);
+
+      if (error1) throw error1;
+
+      const { error: error2 } = await supabase
+        .from('products')
+        .update({ display_order: currentProduct.display_order })
+        .eq('id', nextProduct.id);
+
+      if (error2) throw error2;
+
       await loadMenuData();
 
       showToast(
@@ -359,6 +388,8 @@ export const MenuManagement: React.FC = () => {
     if (!productToDuplicate) return;
 
     try {
+      const maxDisplayOrder = Math.max(...products.map(p => (p as any).display_order || 0), -1);
+
       const { data: newProduct, error: insertError } = await supabase
         .from('products')
         .insert({
@@ -375,6 +406,7 @@ export const MenuManagement: React.FC = () => {
           sku: productToDuplicate.sku ? `${productToDuplicate.sku}-COPY` : '',
           is_available: productToDuplicate.is_available,
           is_featured: false,
+          display_order: maxDisplayOrder + 1,
           price: productToDuplicate.variations && productToDuplicate.variations.length > 0
             ? Math.min(...productToDuplicate.variations.map(v => v.price))
             : 0
@@ -450,16 +482,30 @@ export const MenuManagement: React.FC = () => {
       return;
     }
 
-    const draggedIndex = products.findIndex((p: Product) => p.id === draggedProduct.id);
-    const targetIndex = products.findIndex((p: Product) => p.id === targetProduct.id);
+    const draggedIndex = filteredProducts.findIndex((p: Product) => p.id === draggedProduct.id);
+    const targetIndex = filteredProducts.findIndex((p: Product) => p.id === targetProduct.id);
 
     if (draggedIndex === -1 || targetIndex === -1) return;
 
-    const reorderedProducts = [...products];
-    reorderedProducts.splice(draggedIndex, 1);
-    reorderedProducts.splice(targetIndex, 0, draggedProduct);
-
     try {
+      const reorderedProducts = [...filteredProducts];
+      reorderedProducts.splice(draggedIndex, 1);
+      reorderedProducts.splice(targetIndex, 0, draggedProduct);
+
+      const updates = reorderedProducts.map((product, index) => ({
+        id: product.id,
+        display_order: index
+      }));
+
+      for (const update of updates) {
+        const { error } = await supabase
+          .from('products')
+          .update({ display_order: update.display_order })
+          .eq('id', update.id);
+
+        if (error) throw error;
+      }
+
       await loadMenuData();
       setDraggedProduct(null);
 
