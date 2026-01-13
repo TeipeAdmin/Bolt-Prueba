@@ -359,7 +359,7 @@ export const RestaurantDashboard: React.FC = () => {
                       <div className="text-sm text-gray-500">{order.customer?.phone || t('na')}</div>
                     </td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap">
-                      {order.order_type === 'table' ? (
+                      {order.order_type === 'dine-in' ? (
                         <Badge variant="warning">
                           {t('orderTable')} {order.table_number}
                         </Badge>

@@ -172,7 +172,7 @@ export const RestaurantAnalytics: React.FC = () => {
     const ordersByType = {
       pickup: filteredOrders.filter(o => o.order_type === 'pickup').length,
       delivery: filteredOrders.filter(o => o.order_type === 'delivery').length,
-      table: filteredOrders.filter(o => o.order_type === 'table').length,
+      table: filteredOrders.filter(o => o.order_type === 'dine-in').length,
     };
     csvData.push([t('orderTypePickup'), ordersByType.pickup, `${totalOrders > 0 ? ((ordersByType.pickup / totalOrders) * 100).toFixed(1) : 0}%`]);
     csvData.push([t('orderTypeDelivery'), ordersByType.delivery, `${totalOrders > 0 ? ((ordersByType.delivery / totalOrders) * 100).toFixed(1) : 0}%`]);
@@ -694,7 +694,7 @@ export const RestaurantAnalytics: React.FC = () => {
               const ordersByType = {
                 pickup: filteredOrders.filter(o => o.order_type === 'pickup').length,
                 delivery: filteredOrders.filter(o => o.order_type === 'delivery').length,
-                table: filteredOrders.filter(o => o.order_type === 'table').length,
+                table: filteredOrders.filter(o => o.order_type === 'dine-in').length,
               };
               const totalTypeOrders = Object.values(ordersByType).reduce((sum, count) => sum + count, 0);
               

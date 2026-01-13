@@ -498,13 +498,13 @@ export const OrdersManagement: React.FC = () => {
     }
     message += `\n`;
     
-    message += `*${t('orderTypeTitle')}:* ${order.order_type === 'delivery' ? t('deliveryOrderType') : order.order_type === 'table' ? t('tableOrderType') : t('pickupAtRestaurant')}\n`;
+    message += `*${t('orderTypeTitle')}:* ${order.order_type === 'delivery' ? t('deliveryOrderType') : order.order_type === 'dine-in' ? t('tableOrderType') : t('pickupAtRestaurant')}\n`;
     if (order.order_type === 'delivery' && order.delivery_address) {
       message += `*${t('addressLabel')}:* ${order.delivery_address}\n`;
       if (order.customer.delivery_instructions) {
         message += `*${t('deliveryReferencesLabel')}:* ${order.customer.delivery_instructions}\n`;
       }
-    } else if (order.order_type === 'table' && order.table_number) {
+    } else if (order.order_type === 'dine-in' && order.table_number) {
       message += `*${t('tableLabel')}:* ${order.table_number}\n`;
     }
     message += `\n`;
@@ -1688,7 +1688,7 @@ export const OrdersManagement: React.FC = () => {
                     )}
                   </>
                 )}
-                {selectedOrder.order_type === 'table' && selectedOrder.table_number && (
+                {selectedOrder.order_type === 'dine-in' && selectedOrder.table_number && (
                   <p><strong>{t('tableNumberLabel')}:</strong> {selectedOrder.table_number}</p>
                 )}
               </div>
@@ -1863,8 +1863,8 @@ export const OrdersManagement: React.FC = () => {
                 <input
                   type="radio"
                   name="orderType"
-                  value="table"
-                  checked={orderForm.order_type === 'table'}
+                  value="dine-in"
+                  checked={orderForm.order_type === 'dine-in'}
                   onChange={(e) => setOrderForm(prev => ({ ...prev, order_type: e.target.value as Order['order_type'] }))}
                   className="mr-2"
                 />
@@ -1891,7 +1891,7 @@ export const OrdersManagement: React.FC = () => {
               />
             </div>
           )}
-          {orderForm.order_type === 'table' && (
+          {orderForm.order_type === 'dine-in' && (
             <Input
               label={t('tableNumberLabel')}
               value={orderForm.table_number}
@@ -2065,8 +2065,8 @@ export const OrdersManagement: React.FC = () => {
                 <input
                   type="radio"
                   name="orderType"
-                  value="table"
-                  checked={orderForm.order_type === 'table'}
+                  value="dine-in"
+                  checked={orderForm.order_type === 'dine-in'}
                   onChange={(e) => setOrderForm(prev => ({ ...prev, order_type: e.target.value as Order['order_type'] }))}
                   className="mr-2"
                 />
@@ -2092,7 +2092,7 @@ export const OrdersManagement: React.FC = () => {
               />
             </div>
           )}
-          {orderForm.order_type === 'table' && (
+          {orderForm.order_type === 'dine-in' && (
             <Input
               label={t('tableNumberLabel')}
               value={orderForm.table_number}

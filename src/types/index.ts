@@ -69,7 +69,7 @@ export interface Order {
   order_number: string;
   customer: Customer;
   items: OrderItem[];
-  order_type: 'pickup' | 'delivery' | 'table';
+  order_type: 'pickup' | 'delivery' | 'dine-in';
   delivery_address?: string;
   table_number?: string;
   delivery_cost?: number;
