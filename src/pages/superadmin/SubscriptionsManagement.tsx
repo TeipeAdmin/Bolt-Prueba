@@ -58,14 +58,24 @@ export const SubscriptionsManagement: React.FC = () => {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (subscriptionsError) throw subscriptionsError;
+      if (subscriptionsError) {
+        console.error('SubscriptionsManagement - Error loading subscriptions:', subscriptionsError);
+        throw subscriptionsError;
+      }
+
+      console.log('SubscriptionsManagement - Subscriptions loaded:', subscriptionData?.length || 0, subscriptionData);
 
       const { data: restaurantData, error: restaurantsError } = await supabase
         .from('restaurants')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (restaurantsError) throw restaurantsError;
+      if (restaurantsError) {
+        console.error('SubscriptionsManagement - Error loading restaurants:', restaurantsError);
+        throw restaurantsError;
+      }
+
+      console.log('SubscriptionsManagement - Restaurants loaded:', restaurantData?.length || 0);
 
       const { data: plansData, error: plansError } = await supabase
         .from('subscription_plans')
@@ -73,7 +83,12 @@ export const SubscriptionsManagement: React.FC = () => {
         .eq('is_active', true)
         .order('display_order');
 
-      if (plansError) throw plansError;
+      if (plansError) {
+        console.error('SubscriptionsManagement - Error loading plans:', plansError);
+        throw plansError;
+      }
+
+      console.log('SubscriptionsManagement - Plans loaded:', plansData?.length || 0);
 
       const uniqueSubscriptions = (subscriptionData || []).reduce((acc: Subscription[], current: Subscription) => {
         const duplicate = acc.find(sub => sub.restaurant_id === current.restaurant_id);

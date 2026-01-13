@@ -49,13 +49,23 @@ export const RestaurantsManagement: React.FC = () => {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (restaurantError) throw restaurantError;
+      if (restaurantError) {
+        console.error('RestaurantsManagement - Error loading restaurants:', restaurantError);
+        throw restaurantError;
+      }
+
+      console.log('RestaurantsManagement - Restaurants loaded:', restaurantData?.length || 0);
 
       const { data: subscriptionData, error: subscriptionError } = await supabase
         .from('subscriptions')
         .select('*');
 
-      if (subscriptionError) throw subscriptionError;
+      if (subscriptionError) {
+        console.error('RestaurantsManagement - Error loading subscriptions:', subscriptionError);
+        throw subscriptionError;
+      }
+
+      console.log('RestaurantsManagement - Subscriptions loaded:', subscriptionData?.length || 0, subscriptionData);
 
       const { data: plansData, error: plansError } = await supabase
         .from('subscription_plans')
@@ -63,13 +73,19 @@ export const RestaurantsManagement: React.FC = () => {
         .eq('is_active', true)
         .order('display_order');
 
-      if (plansError) throw plansError;
+      if (plansError) {
+        console.error('RestaurantsManagement - Error loading plans:', plansError);
+        throw plansError;
+      }
+
+      console.log('RestaurantsManagement - Plans loaded:', plansData?.length || 0);
 
       setRestaurants(restaurantData || []);
       setSubscriptions(subscriptionData || []);
       setSubscriptionPlans(plansData || []);
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('RestaurantsManagement - Error loading data:', error);
+      toast.showToast('error', 'Error', 'No se pudieron cargar los datos');
     } finally {
       setLoading(false);
     }

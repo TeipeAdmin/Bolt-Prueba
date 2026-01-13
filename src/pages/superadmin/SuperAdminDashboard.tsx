@@ -23,13 +23,23 @@ export const SuperAdminDashboard: React.FC = () => {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (restaurantError) throw restaurantError;
+      if (restaurantError) {
+        console.error('Error loading restaurants:', restaurantError);
+        throw restaurantError;
+      }
+
+      console.log('Restaurants loaded:', restaurantData?.length || 0);
 
       const { data: subscriptionData, error: subscriptionError } = await supabase
         .from('subscriptions')
         .select('*');
 
-      if (subscriptionError) throw subscriptionError;
+      if (subscriptionError) {
+        console.error('Error loading subscriptions:', subscriptionError);
+        throw subscriptionError;
+      }
+
+      console.log('Subscriptions loaded:', subscriptionData?.length || 0);
 
       setRestaurants(restaurantData || []);
       setSubscriptions(subscriptionData || []);
