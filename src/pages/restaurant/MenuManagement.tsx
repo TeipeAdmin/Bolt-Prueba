@@ -137,7 +137,7 @@ export const MenuManagement: React.FC = () => {
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.description.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesCategory = selectedCategory === 'all';
+      const matchesCategory = selectedCategory === 'all' || product.category_id === selectedCategory;
 
       return matchesSearch && matchesCategory;
     });
