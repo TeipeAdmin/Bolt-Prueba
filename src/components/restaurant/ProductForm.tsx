@@ -116,15 +116,17 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.name.trim() || !formData.category_id || variations.length === 0) {
       alert(t('fillRequiredFields'));
       return;
     }
 
+    const { image, ...formDataWithoutImage } = formData;
+
     const productData = {
-      ...formData,
-      images: formData.image ? [formData.image] : [],
+      ...formDataWithoutImage,
+      images: image ? [image] : [],
       variations: variations.filter(v => v.name.trim() && v.price >= 0),
       ingredients: ingredients.filter(ing => ing.name.trim())
     };
