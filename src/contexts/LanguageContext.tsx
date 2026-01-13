@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Language, useTranslation } from '../utils/translations';
 import { useAuth } from './AuthContext';
-import { loadFromStorage, saveToStorage } from '../data/mockData';
+import { supabase } from '../lib/supabase';
 
 interface LanguageContextType {
   language: Language;
@@ -24,41 +24,43 @@ interface LanguageProviderProps {
 }
 
 export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
-  const { restaurant } = useAuth();
-  const [language, setLanguageState] = useState<Language>(() => {
-    const savedLanguage = localStorage.getItem('app_language');
-    return (savedLanguage as Language) || 'es';
-  });
+  const { restaurant, refreshRestaurantData } = useAuth();
+  const [language, setLanguageState] = useState<Language>('es');
 
   const { t } = useTranslation(language);
 
   useEffect(() => {
-    // Load language from restaurant settings if logged in, otherwise use saved preference
     if (restaurant?.settings?.language) {
       setLanguageState(restaurant.settings.language as Language);
-      localStorage.setItem('app_language', restaurant.settings.language);
     }
   }, [restaurant]);
 
-  const setLanguage = (lang: Language) => {
+  const setLanguage = async (lang: Language) => {
     setLanguageState(lang);
-    localStorage.setItem('app_language', lang);
 
-    // Update restaurant settings if user is logged in
     if (restaurant) {
-      const restaurants = loadFromStorage('restaurants', []);
-      const updatedRestaurants = restaurants.map((r: any) =>
-        r.id === restaurant.id
-          ? { ...r, settings: { ...r.settings, language: lang }, updated_at: new Date().toISOString() }
-          : r
-      );
-      saveToStorage('restaurants', updatedRestaurants);
+      try {
+        const updatedSettings = {
+          ...restaurant.settings,
+          language: lang
+        };
 
-      // Update auth context
-      const currentAuth = loadFromStorage('currentAuth', null);
-      if (currentAuth) {
-        currentAuth.restaurant.settings.language = lang;
-        saveToStorage('currentAuth', currentAuth);
+        const { error } = await supabase
+          .from('restaurants')
+          .update({
+            settings: updatedSettings,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', restaurant.id);
+
+        if (error) {
+          console.error('Error updating language in database:', error);
+          return;
+        }
+
+        await refreshRestaurantData();
+      } catch (error) {
+        console.error('Error updating language:', error);
       }
     }
   };

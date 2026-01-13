@@ -343,4 +343,5 @@ export interface AuthContextType {
   logout: () => void;
   changePassword?: (newPassword: string) => Promise<{ success: boolean; error?: string }>;
   requestPasswordReset: (email: string) => Promise<{ success: boolean; error?: string }>;
+  refreshRestaurantData: () => Promise<void>;
 }

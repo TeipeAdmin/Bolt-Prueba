@@ -487,6 +487,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const refreshRestaurantData = async () => {
+    if (!user?.restaurant_id) return;
+
+    try {
+      const { data: restaurantData, error } = await supabase
+        .from('restaurants')
+        .select('*')
+        .eq('id', user.restaurant_id)
+        .maybeSingle();
+
+      if (!error && restaurantData) {
+        setRestaurant(restaurantData as Restaurant);
+      }
+    } catch (error) {
+      console.error('[AuthContext] Error refreshing restaurant data:', error);
+    }
+  };
+
   const value: AuthContextType = {
     user,
     restaurant,
@@ -498,6 +516,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     requirePasswordChange,
     changePassword,
     requestPasswordReset,
+    refreshRestaurantData,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

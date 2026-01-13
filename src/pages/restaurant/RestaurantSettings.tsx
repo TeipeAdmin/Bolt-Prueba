@@ -201,6 +201,38 @@ export const RestaurantSettings: React.FC = () => {
     setFormData(newData);
   };
 
+  const handleCurrencyChange = async (currency: string) => {
+    if (!formData || !restaurant) return;
+
+    updateFormData('settings.currency', currency);
+
+    try {
+      const updatedSettings = {
+        ...restaurant.settings,
+        currency
+      };
+
+      const { error } = await supabase
+        .from('restaurants')
+        .update({
+          settings: updatedSettings,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', restaurant.id);
+
+      if (error) {
+        console.error('Error updating currency in database:', error);
+        showToast('error', t('config_toast_error'), t('config_toast_error1'), 3000);
+        return;
+      }
+
+      showToast('success', t('config_saved_title'), t('currency') + ' ' + t('changes_saved_success').toLowerCase(), 2000);
+    } catch (error) {
+      console.error('Error updating currency:', error);
+      showToast('error', t('config_toast_error'), t('config_toast_error1'), 3000);
+    }
+  };
+
   const handleSupportSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSupportLoading(true);
@@ -703,7 +735,7 @@ Fecha: ${new Date().toLocaleString()}
                       </label>
                       <select
                         value={formData.settings.currency || 'COP'}
-                        onChange={(e) => updateFormData('settings.currency', e.target.value)}
+                        onChange={(e) => handleCurrencyChange(e.target.value)}
                         className="w-full px-4 py-3 bg-white border-2 border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all font-medium"
                       >
                         <option value="COP">{t('currency_cop_option')}</option>
