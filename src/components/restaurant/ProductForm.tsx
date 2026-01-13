@@ -17,7 +17,6 @@ interface ProductVariation {
   name: string;
   price: number;
   compare_at_price?: number;
-  sku?: string;
 }
 
 interface ProductIngredient {
@@ -368,7 +367,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pl-11">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-11">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">{t('priceRequired')} *</label>
                   <div className="relative">
@@ -400,16 +399,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     />
                   </div>
                   <p className="text-xs text-gray-500 mt-1">{t('priceBeforeDiscount')}</p>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">SKU</label>
-                  <Input
-                    type="text"
-                    value={variation.sku || ''}
-                    onChange={(e) => handleVariationChange(index, 'sku', e.target.value)}
-                    placeholder="SKU-001"
-                  />
                 </div>
               </div>
 
