@@ -35,6 +35,32 @@ export const LandingPage: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    const unmuteVideo = () => {
+      const iframe = document.querySelector('iframe[title="Platyo Demo Video"]') as HTMLIFrameElement;
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
+        iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+      }
+    };
+
+    setTimeout(unmuteVideo, 1000);
+
+    const handleInteraction = () => {
+      unmuteVideo();
+      document.removeEventListener('click', handleInteraction);
+      document.removeEventListener('touchstart', handleInteraction);
+    };
+
+    document.addEventListener('click', handleInteraction);
+    document.addEventListener('touchstart', handleInteraction);
+
+    return () => {
+      document.removeEventListener('click', handleInteraction);
+      document.removeEventListener('touchstart', handleInteraction);
+    };
+  }, []);
+
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
@@ -378,7 +404,7 @@ export const LandingPage: React.FC = () => {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-2xl">
             <iframe
-              src="https://www.youtube.com/embed/bSKNTe1m3QY?autoplay=1&mute=1&controls=1&modestbranding=1&rel=0&showinfo=0&loop=1&playlist=bSKNTe1m3QY"
+              src="https://www.youtube.com/embed/bSKNTe1m3QY?autoplay=1&mute=0&controls=1&modestbranding=1&rel=0&showinfo=0&loop=1&playlist=bSKNTe1m3QY&enablejsapi=1"
               title="Platyo Demo Video"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
