@@ -463,9 +463,9 @@ Fecha: ${new Date().toLocaleString()}
                     <div className="flex-shrink-0">
                       <div className="relative group">
                         <div className="w-32 h-32 md:w-40 md:h-40 rounded-xl md:rounded-2xl border-2 md:border-4 border-gray-100 shadow-xl bg-gradient-to-br from-gray-50 to-white overflow-hidden flex items-center justify-center transition-transform group-hover:scale-105">
-                          {formData.logo ? (
+                          {formData.logo_url ? (
                             <img
-                              src={formData.logo}
+                              src={formData.logo_url}
                               alt="Logo"
                               className="w-full h-full object-cover"
                             />
@@ -476,7 +476,7 @@ Fecha: ${new Date().toLocaleString()}
                             </div>
                           )}
                         </div>
-                        {formData.logo && (
+                        {formData.logo_url && (
                           <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
                             <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -502,7 +502,7 @@ Fecha: ${new Date().toLocaleString()}
                                   }
                                   const reader = new FileReader();
                                   reader.onloadend = () => {
-                                    updateFormData('logo', reader.result as string);
+                                    updateFormData('logo_url', reader.result as string);
                                   };
                                   reader.readAsDataURL(file);
                                 }
@@ -512,13 +512,13 @@ Fecha: ${new Date().toLocaleString()}
                             />
                             <span className="inline-flex items-center justify-center w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-sm font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg">
                               <Upload className="w-4 h-4 mr-2" />
-                              {formData.logo ? t('change_logo_button') : t('upload_logo_button')}
+                              {formData.logo_url ? t('change_logo_button') : t('upload_logo_button')}
                             </span>
                           </label>
 
-                          {formData.logo && (
+                          {formData.logo_url && (
                             <button
-                              onClick={() => updateFormData('logo', '')}
+                              onClick={() => updateFormData('logo_url', '')}
                               className="inline-flex items-center px-6 py-3 bg-red-50 border-2 border-red-200 rounded-xl text-sm font-semibold text-red-700 hover:bg-red-100 hover:border-red-300 transition-all"
                             >
                               {t('delete_button')}
