@@ -69,6 +69,29 @@ export const MenuManagement: React.FC = () => {
     }
   };
 
+  const handleChangeProductStatus = async (productId: string, newStatus: Product['status']) => {
+    try {
+      const { error } = await supabase
+        .from('products')
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .eq('id', productId);
+
+      if (error) throw error;
+
+      await loadMenuData();
+
+      showToast(
+        'success',
+        t('statusUpdated'),
+        `${t('productStatusChangedTo')} ${t(newStatus)}`,
+        3000
+      );
+    } catch (error: any) {
+      console.error('Error changing product status:', error);
+      showToast('error', 'Error', 'No se pudo cambiar el estado del producto');
+    }
+  };
+
   useEffect(() => {
     if (restaurant) {
       loadMenuData();
@@ -336,19 +359,41 @@ export const MenuManagement: React.FC = () => {
     if (!productToDuplicate) return;
 
     try {
-      const { data, error } = await supabase
+      const { data: newProduct, error: insertError } = await supabase
         .from('products')
         .insert({
-          ...productToDuplicate,
-          id: undefined,
+          restaurant_id: restaurant.id,
           name: `${productToDuplicate.name} (${t('copyLabel')})`,
-          created_at: undefined,
-          updated_at: undefined,
+          description: productToDuplicate.description,
+          images: productToDuplicate.images,
+          variations: productToDuplicate.variations,
+          ingredients: productToDuplicate.ingredients,
+          dietary_restrictions: productToDuplicate.dietary_restrictions,
+          spice_level: productToDuplicate.spice_level,
+          preparation_time: productToDuplicate.preparation_time,
+          status: productToDuplicate.status,
+          sku: productToDuplicate.sku ? `${productToDuplicate.sku}-COPY` : '',
+          is_available: productToDuplicate.is_available,
+          is_featured: false,
+          price: productToDuplicate.variations && productToDuplicate.variations.length > 0
+            ? Math.min(...productToDuplicate.variations.map(v => v.price))
+            : 0
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (insertError) throw insertError;
+
+      if (productToDuplicate.category_id && newProduct) {
+        const { error: categoryError } = await supabase
+          .from('product_categories')
+          .insert({
+            product_id: newProduct.id,
+            category_id: productToDuplicate.category_id
+          });
+
+        if (categoryError) console.error('Error adding category:', categoryError);
+      }
 
       await loadMenuData();
 
@@ -360,7 +405,7 @@ export const MenuManagement: React.FC = () => {
       );
     } catch (error: any) {
       console.error('Error duplicating product:', error);
-      showToast('error', 'Error', 'No se pudo duplicar el producto');
+      showToast('error', 'Error', error.message || 'No se pudo duplicar el producto');
     }
   };
 
@@ -708,7 +753,7 @@ export const MenuManagement: React.FC = () => {
                 </div>
 
                 {/* Actions */}
-                <div className="flex justify-between items-center">
+                <div className="space-y-2">
                   <div className="flex gap-1">
                     <Button
                       variant="ghost"
@@ -743,24 +788,6 @@ export const MenuManagement: React.FC = () => {
                       className="text-purple-600 hover:text-purple-700"
                       title={t('duplicateProduct')}
                     />
-                    {product.status !== 'active' && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        icon={Eye}
-                        onClick={() => handleActivateProduct(product.id)}
-                        className="text-green-600 hover:text-green-700"
-                        title={t('activateProduct')}
-                      />
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      icon={Archive}
-                      onClick={() => handleArchiveProduct(product.id)}
-                      className="text-orange-600 hover:text-orange-700"
-                      title={t('archiveProduct')}
-                    />
                     <Button
                       variant="ghost"
                       size="sm"
@@ -770,8 +797,21 @@ export const MenuManagement: React.FC = () => {
                       title={t('deleteProduct')}
                     />
                   </div>
-                  <div className="text-xs text-gray-500">
-                    {product.sku}
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={product.status}
+                      onChange={(e) => handleChangeProductStatus(product.id, e.target.value as Product['status'])}
+                      className="flex-1 text-xs px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                    >
+                      <option value="active">{t('active')}</option>
+                      <option value="out_of_stock">{t('outOfStock')}</option>
+                      <option value="archived">{t('archived')}</option>
+                    </select>
+                    {product.sku && (
+                      <span className="text-xs text-gray-500">
+                        {product.sku}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
