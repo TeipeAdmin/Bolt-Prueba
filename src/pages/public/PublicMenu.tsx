@@ -707,7 +707,7 @@ export const PublicMenu: React.FC = () => {
                 <button
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
-                  className="px-6 py-2 whitespace-nowrap transition-all font-medium text-sm flex-shrink-0"
+                  className="px-6 py-2 whitespace-nowrap transition-all font-medium text-sm flex-shrink-0 flex items-center gap-2"
                   style={{
                     backgroundColor:
                       selectedCategory === category.id
@@ -723,6 +723,7 @@ export const PublicMenu: React.FC = () => {
                     fontFamily: theme.primary_font || 'Inter',
                   }}
                 >
+                  {category.icon && <span className="text-lg">{category.icon}</span>}
                   {category.name}
                 </button>
               ))}

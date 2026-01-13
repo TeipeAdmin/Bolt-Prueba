@@ -104,6 +104,7 @@ export const CategoriesManagement: React.FC = () => {
             restaurant_id: restaurant.id,
             name: formData.name,
             description: formData.description,
+            icon: formData.icon,
             display_order: categories.length + 1,
             is_active: true,
           });
