@@ -151,7 +151,7 @@ export const OrderProductSelector: React.FC<OrderProductSelectorProps> = ({
                 <p className="text-xs text-gray-600">{item.variation.name}</p>
                 {item.selected_ingredients && item.selected_ingredients.length > 0 && (
                   <p className="text-xs text-blue-600 mt-1">
-                    + {item.selected_ingredients.map(ing => ing.name).join(', ')}
+                    + {item.selected_ingredients.map(ing => typeof ing === 'object' ? ing.name : ing).join(', ')}
                   </p>
                 )}
               </div>

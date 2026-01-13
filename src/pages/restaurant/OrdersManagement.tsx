@@ -876,7 +876,7 @@ export const OrdersManagement: React.FC = () => {
                   <div class="item-name">
                     ${item.product.name}<br>
                     <small style="font-size: 9px; color: #666;">${item.variation.name}</small>
-                    ${item.selected_ingredients && item.selected_ingredients.length > 0 ? `<br><small style="font-size: 9px; color: #0066cc;">+ ${item.selected_ingredients.map(ing => ing.name).join(', ')}</small>` : ''}
+                    ${item.selected_ingredients && item.selected_ingredients.length > 0 ? `<br><small style="font-size: 9px; color: #0066cc;">+ ${item.selected_ingredients.map(ing => typeof ing === 'object' ? ing.name : ing).join(', ')}</small>` : ''}
                     ${item.special_notes ? `<br><small style="font-size: 9px; color: #666;">${t('noteLabel')}: ${item.special_notes}</small>` : ''}
                   </div>
                   <div class="item-qty">${item.quantity}</div>
@@ -1705,7 +1705,7 @@ export const OrdersManagement: React.FC = () => {
                       <p className="text-sm text-gray-600">{item.variation.name}</p>
                       {item.selected_ingredients && item.selected_ingredients.length > 0 && (
                         <p className="text-sm text-blue-600 mt-1">
-                          + {item.selected_ingredients.map(ing => ing.name).join(', ')}
+                          + {item.selected_ingredients.map(ing => typeof ing === 'object' ? ing.name : ing).join(', ')}
                         </p>
                       )}
                       {item.special_notes && (
