@@ -464,10 +464,10 @@ export const RestaurantsManagement: React.FC = () => {
                   <tr key={restaurant.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        {restaurant.logo && (
+                        {restaurant.logo_url && (
                           <img
                             className="h-10 w-10 rounded-full object-cover mr-3"
-                            src={restaurant.logo}
+                            src={restaurant.logo_url}
                             alt={restaurant.name}
                           />
                         )}

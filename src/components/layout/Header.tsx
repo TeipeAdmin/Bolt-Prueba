@@ -51,9 +51,9 @@ export const Header: React.FC<HeaderProps> = ({ onNavigateToSettings, onToggleSi
                 onClick={onNavigateToDashboard}
                 className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
               >
-                {restaurant?.logo ? (
+                {restaurant?.logo_url ? (
                   <img
-                    src={restaurant.logo}
+                    src={restaurant.logo_url}
                     alt={restaurant.name}
                     className="h-10 w-10 rounded-xl object-cover flex-shrink-0 shadow-md"
                   />

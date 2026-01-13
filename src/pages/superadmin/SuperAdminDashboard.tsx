@@ -267,10 +267,10 @@ export const SuperAdminDashboard: React.FC = () => {
                   <tr key={restaurant.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        {restaurant.logo ? (
+                        {restaurant.logo_url ? (
                           <img
                             className="h-10 w-10 rounded-xl object-cover mr-3 shadow-sm"
-                            src={restaurant.logo}
+                            src={restaurant.logo_url}
                             alt={restaurant.name}
                           />
                         ) : (
