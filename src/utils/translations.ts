@@ -1404,7 +1404,7 @@ const translations: Record<Language, Translations> = {
     orderUpdateTitle: 'ACTUALIZACIÓN DE PEDIDO',
     statusPendingMessage: 'está *PENDIENTE* de confirmación. Pronto recibirás una actualización',
     statusConfirmedMessage: 'ha sido *CONFIRMADO*. Estamos preparando tu pedido',
-    statusPreparingMessage: 'se está *PREPARANDO* con mucho cuidado',
+    statusPreparingMessage: 'se está *PREPARANDO*',
     statusReadyMessage: 'está *LISTO* para ser recogido/entregado',
     statusDeliveredMessage: 'ha sido *ENTREGADO* exitosamente. ¡Esperamos que lo disfrutes!',
     statusCancelledMessage: 'ha sido *CANCELADO*. Si tienes dudas, contáctanos',
