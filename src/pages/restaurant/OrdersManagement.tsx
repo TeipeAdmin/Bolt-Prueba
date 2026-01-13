@@ -1062,6 +1062,28 @@ export const OrdersManagement: React.FC = () => {
       showToast('error', t('errorTitle'), 'Debes agregar al menos un producto al pedido', 4000);
       return;
     }
+
+    const { data: existingCustomer } = await supabase
+      .from('customers')
+      .select('id')
+      .eq('restaurant_id', restaurant?.id)
+      .eq('phone', orderForm.customer.phone.trim())
+      .maybeSingle();
+
+    if (!existingCustomer) {
+      await supabase
+        .from('customers')
+        .insert({
+          restaurant_id: restaurant?.id,
+          name: orderForm.customer.name.trim(),
+          phone: orderForm.customer.phone.trim(),
+          email: orderForm.customer.email?.trim() || null,
+          address: orderForm.delivery_address?.trim() || orderForm.customer.address?.trim() || null,
+          delivery_instructions: orderForm.customer.delivery_instructions?.trim() || '',
+          is_vip: false,
+        });
+    }
+
     const subtotal = orderItems.reduce((sum, item) => sum + item.total_price, 0);
     const deliveryCost = orderForm.order_type === 'delivery' ?
     (restaurant?.settings?.delivery?.zones[0]?.cost || 0) : 0;
@@ -1129,6 +1151,27 @@ export const OrdersManagement: React.FC = () => {
     if (orderItems.length === 0) {
       showToast('error', t('errorTitle'), 'Debes agregar al menos un producto al pedido', 4000);
       return;
+    }
+
+    const { data: existingCustomer } = await supabase
+      .from('customers')
+      .select('id')
+      .eq('restaurant_id', restaurant.id)
+      .eq('phone', orderForm.customer.phone.trim())
+      .maybeSingle();
+
+    if (!existingCustomer) {
+      await supabase
+        .from('customers')
+        .insert({
+          restaurant_id: restaurant.id,
+          name: orderForm.customer.name.trim(),
+          phone: orderForm.customer.phone.trim(),
+          email: orderForm.customer.email?.trim() || null,
+          address: orderForm.delivery_address?.trim() || orderForm.customer.address?.trim() || null,
+          delivery_instructions: orderForm.customer.delivery_instructions?.trim() || '',
+          is_vip: false,
+        });
     }
 
     const subtotal = orderItems.reduce((sum, item) => sum + item.total_price, 0);

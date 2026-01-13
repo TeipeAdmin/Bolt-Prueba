@@ -76,6 +76,11 @@ export const CustomersManagement: React.FC = () => {
   const loadCustomersData = async () => {
     if (!restaurant?.id) return;
 
+    const { data: ordersData } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('restaurant_id', restaurant.id);
+
     const { data: customersData, error } = await supabase
       .from('customers')
       .select('*')
@@ -86,11 +91,6 @@ export const CustomersManagement: React.FC = () => {
       showToast('error', 'Error', 'No se pudieron cargar los clientes');
       return;
     }
-
-    const { data: ordersData } = await supabase
-      .from('orders')
-      .select('*')
-      .eq('restaurant_id', restaurant.id);
 
     const customerMap = new Map<string, CustomerData>();
 
@@ -104,7 +104,7 @@ export const CustomersManagement: React.FC = () => {
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       )[0];
 
-      customerMap.set(customer.phone, {
+      customerMap.set(customer.phone || '', {
         ...customer,
         totalOrders,
         totalSpent,
@@ -114,7 +114,7 @@ export const CustomersManagement: React.FC = () => {
       });
     });
 
-    (ordersData || []).forEach((order: Order) => {
+    (ordersData || []).forEach((order: any) => {
       if (!order.customer_phone) return;
 
       if (!customerMap.has(order.customer_phone)) {
@@ -125,7 +125,7 @@ export const CustomersManagement: React.FC = () => {
           .reduce((sum, o) => sum + o.total, 0);
 
         customerMap.set(order.customer_phone, {
-          id: `cust-${order.customer_phone}`,
+          id: `temp-${order.customer_phone}`,
           restaurant_id: restaurant.id,
           name: order.customer_name || 'Cliente',
           phone: order.customer_phone,
@@ -139,15 +139,10 @@ export const CustomersManagement: React.FC = () => {
           isVip: false,
           is_vip: false,
           created_at: order.created_at,
+          city: '',
+          notes: '',
+          updated_at: order.created_at,
         });
-      } else {
-        const existing = customerMap.get(order.customer_phone)!;
-        existing.totalOrders += 1;
-        existing.totalSpent += order.status === 'delivered' ? order.total : 0;
-        existing.lastOrderDate = order.created_at > existing.lastOrderDate ? order.created_at : existing.lastOrderDate;
-        if (!existing.orderTypes.includes(order.order_type)) {
-          existing.orderTypes.push(order.order_type);
-        }
       }
     });
 
@@ -222,43 +217,35 @@ export const CustomersManagement: React.FC = () => {
     setFilteredCustomers(filtered);
   };
 
-  const toggleVipStatus = (customerId: string) => {
+  const toggleVipStatus = async (customerId: string) => {
     const customer = customers.find(c => c.id === customerId);
     if (!customer) return;
 
-    // Update VIP customers in localStorage
-    const vipCustomers = loadFromStorage('vipCustomers') || [];
-    
-    if (customer.isVip) {
-      // Remove from VIP list
-      const updatedVipCustomers = vipCustomers.filter((vip: any) => 
-        !(vip.restaurant_id === restaurant?.id && vip.phone === customer.phone)
-      );
-      saveToStorage('vipCustomers', updatedVipCustomers);
-    } else {
-      // Add to VIP list
-      const newVipCustomer = {
-        restaurant_id: restaurant?.id,
-        phone: customer.phone,
-        name: customer.name,
-        created_at: new Date().toISOString(),
-      };
-      saveToStorage('vipCustomers', [...vipCustomers, newVipCustomer]);
+    if (customer.id.startsWith('temp-')) {
+      showToast('warning', t('cannotModify'), 'Primero debes guardar este cliente en la base de datos', 3000);
+      return;
     }
 
-    // Update local state
-    setCustomers(prevCustomers =>
-      prevCustomers.map(c =>
-        c.id === customerId
-          ? { ...c, isVip: !c.isVip }
-          : c
-      )
-    );
+    const { error } = await supabase
+      .from('customers')
+      .update({
+        is_vip: !customer.isVip,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', customer.id);
+
+    if (error) {
+      console.error('Error updating VIP status:', error);
+      showToast('error', 'Error', 'No se pudo actualizar el estado VIP');
+      return;
+    }
+
+    await loadCustomersData();
 
     showToast(
       'success',
       customer.isVip ? t('vipCustomerRemoved') : t('vipCustomerAdded'),
-      customer.isVip 
+      customer.isVip
         ? `${customer.name} ${t('noLongerVipCustomer')}`
         : `${customer.name} ${t('nowVipCustomer')}`,
       4000
@@ -291,22 +278,19 @@ export const CustomersManagement: React.FC = () => {
     setShowBulkEditModal(true);
   };
 
-  const handleCreateCustomer = () => {
+  const handleCreateCustomer = async () => {
     if (!restaurant) return;
 
-    // Validar nombre
     if (!createForm.name.trim()) {
       showToast('warning', t('validationError'), t('nameRequiredError'), 3000);
       return;
     }
 
-    // Validar teléfono
     if (!createForm.phone.trim()) {
       showToast('warning', t('validationError'), t('phoneRequiredError'), 3000);
       return;
     }
 
-    // Validar email si se proporciona
     if (createForm.email.trim()) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(createForm.email.trim())) {
@@ -315,42 +299,37 @@ export const CustomersManagement: React.FC = () => {
       }
     }
 
-    // Verificar si el cliente ya existe
-    const existingCustomers = loadFromStorage('importedCustomers') || [];
-    const customerExists = existingCustomers.some((c: any) =>
-      c.restaurant_id === restaurant.id && c.phone === createForm.phone.trim()
-    );
+    const { data: existingCustomer } = await supabase
+      .from('customers')
+      .select('id')
+      .eq('restaurant_id', restaurant.id)
+      .eq('phone', createForm.phone.trim())
+      .maybeSingle();
 
-    if (customerExists) {
+    if (existingCustomer) {
       showToast('warning', t('validationError'), t('customerAlreadyExists'), 3000);
       return;
     }
 
-    const newCustomer = {
-      restaurant_id: restaurant.id,
-      name: createForm.name.trim(),
-      phone: createForm.phone.trim(),
-      email: createForm.email.trim(),
-      address: createForm.address.trim(),
-      delivery_instructions: createForm.delivery_instructions.trim(),
-      created_at: new Date().toISOString(),
-    };
-
-    const importedCustomers = loadFromStorage('importedCustomers') || [];
-    saveToStorage('importedCustomers', [...importedCustomers, newCustomer]);
-
-    if (createForm.isVip) {
-      const vipCustomers = loadFromStorage('vipCustomers') || [];
-      const newVipCustomer = {
+    const { error } = await supabase
+      .from('customers')
+      .insert({
         restaurant_id: restaurant.id,
-        phone: createForm.phone.trim(),
         name: createForm.name.trim(),
-        created_at: new Date().toISOString(),
-      };
-      saveToStorage('vipCustomers', [...vipCustomers, newVipCustomer]);
+        phone: createForm.phone.trim(),
+        email: createForm.email.trim() || null,
+        address: createForm.address.trim() || null,
+        delivery_instructions: createForm.delivery_instructions.trim() || '',
+        is_vip: createForm.isVip,
+      });
+
+    if (error) {
+      console.error('Error creating customer:', error);
+      showToast('error', 'Error', 'No se pudo crear el cliente');
+      return;
     }
 
-    loadCustomersData();
+    await loadCustomersData();
     setShowCreateModal(false);
     setCreateForm({
       name: '',
@@ -364,72 +343,68 @@ export const CustomersManagement: React.FC = () => {
     showToast('success', 'Cliente creado', `${createForm.name} ha sido agregado exitosamente`, 4000);
   };
 
-  const executeBulkEdit = () => {
+  const executeBulkEdit = async () => {
     const selectedCustomersList = customers.filter(c => selectedCustomers.has(c.id));
-    
+    const validCustomers = selectedCustomersList.filter(c => !c.id.startsWith('temp-'));
+
+    if (validCustomers.length === 0) {
+      showToast('warning', t('cannotModify'), 'Solo puedes editar clientes guardados en la base de datos', 3000);
+      setShowBulkEditModal(false);
+      return;
+    }
+
     switch (bulkEditAction) {
       case 'vip':
-        // Agregar VIP a todos los seleccionados
-        const vipCustomers = loadFromStorage('vipCustomers') || [];
-        const newVipCustomers = [...vipCustomers];
-        
-        selectedCustomersList.forEach(customer => {
-          if (!customer.isVip) {
-            newVipCustomers.push({
-              restaurant_id: restaurant?.id,
-              phone: customer.phone,
-              name: customer.name,
-              created_at: new Date().toISOString(),
-            });
-          }
-        });
-        
-        saveToStorage('vipCustomers', newVipCustomers);
-        
-        // Update local state
-        setCustomers(prevCustomers =>
-          prevCustomers.map(c =>
-            selectedCustomers.has(c.id)
-              ? { ...c, isVip: true }
-              : c
-          )
-        );
-        
-        showToast('success', t('vipAssigned'), `${selectedCustomers.size} ${t('customerPlural', { count: selectedCustomers.size })} ${t('markedAsVip', { count: selectedCustomers.size })}`, 4000);
+        const { error: vipError } = await supabase
+          .from('customers')
+          .update({ is_vip: true, updated_at: new Date().toISOString() })
+          .in('id', validCustomers.map(c => c.id));
+
+        if (vipError) {
+          console.error('Error updating VIP status:', vipError);
+          showToast('error', 'Error', 'No se pudo actualizar el estado VIP');
+          return;
+        }
+
+        await loadCustomersData();
+        showToast('success', t('vipAssigned'), `${validCustomers.length} ${t('customerPlural', { count: validCustomers.length })} ${t('markedAsVip', { count: validCustomers.length })}`, 4000);
         break;
-        
+
       case 'remove_vip':
-        // Remover VIP de todos los seleccionados
-        const allVipCustomers = loadFromStorage('vipCustomers') || [];
-        const updatedVipCustomers = allVipCustomers.filter((vip: any) => 
-          !(vip.restaurant_id === restaurant?.id && selectedCustomersList.some(c => c.phone === vip.phone))
-        );
-        saveToStorage('vipCustomers', updatedVipCustomers);
-        
-        // Update local state
-        setCustomers(prevCustomers =>
-          prevCustomers.map(c =>
-            selectedCustomers.has(c.id)
-              ? { ...c, isVip: false }
-              : c
-          )
-        );
-        
-        showToast('info', t('vipRemoved'), `${selectedCustomers.size} ${t('customerPlural', { count: selectedCustomers.size })} ${t('noLongerVip', { count: selectedCustomers.size })}`, 4000);
+        const { error: removeVipError } = await supabase
+          .from('customers')
+          .update({ is_vip: false, updated_at: new Date().toISOString() })
+          .in('id', validCustomers.map(c => c.id));
+
+        if (removeVipError) {
+          console.error('Error removing VIP status:', removeVipError);
+          showToast('error', 'Error', 'No se pudo remover el estado VIP');
+          return;
+        }
+
+        await loadCustomersData();
+        showToast('info', t('vipRemoved'), `${validCustomers.length} ${t('customerPlural', { count: validCustomers.length })} ${t('noLongerVip', { count: validCustomers.length })}`, 4000);
         break;
-        
+
       case 'delete':
-       // Eliminar todos los seleccionados
-if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${selectedCustomers.size !== 1 ? 's' : ''}? ${t('warningDeleteAction')}`)) {
-  selectedCustomersList.forEach(customer => {
-    deleteCustomerData(customer);
-  });
-          
-          showToast('info', t('customersDeleted'), `${selectedCustomers.size} ${t('customerPlural', { count: selectedCustomers.size })} ${t('deletedSuccessfully', { count: selectedCustomers.size })}`, 5000);
+        if (confirm(`${t('confirmDeleteMultiple')} ${validCustomers.length} cliente${validCustomers.length !== 1 ? 's' : ''}? ${t('warningDeleteAction')}`)) {
+          const { error: deleteError } = await supabase
+            .from('customers')
+            .delete()
+            .in('id', validCustomers.map(c => c.id));
+
+          if (deleteError) {
+            console.error('Error deleting customers:', deleteError);
+            showToast('error', 'Error', 'No se pudieron eliminar los clientes');
+            return;
+          }
+
+          await loadCustomersData();
+          showToast('info', t('customersDeleted'), `${validCustomers.length} ${t('customerPlural', { count: validCustomers.length })} ${t('deletedSuccessfully', { count: validCustomers.length })}`, 5000);
         }
         break;
     }
-    
+
     setSelectedCustomers(new Set());
     setShowBulkEditModal(false);
   };
@@ -447,27 +422,19 @@ if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${se
     setShowEditModal(true);
   };
 
-  const handleSaveCustomer = () => {
-    if (!editingCustomer) {
-      console.log('No editing customer');
-      return;
-    }
+  const handleSaveCustomer = async () => {
+    if (!editingCustomer) return;
 
-    console.log('Saving customer:', editForm);
-
-    // Validar nombre
     if (!editForm.name.trim()) {
       showToast('warning', t('validationError'), t('nameRequiredError'), 3000);
       return;
     }
 
-    // Validar teléfono
     if (!editForm.phone.trim()) {
       showToast('warning', t('validationError'), t('phoneRequiredError'), 3000);
       return;
     }
 
-    // Validar email si se proporciona
     if (editForm.email.trim()) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(editForm.email.trim())) {
@@ -476,79 +443,49 @@ if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${se
       }
     }
 
-    console.log('Validations passed, updating customer');
-
-    // Update customers in orders
-    const allOrders = loadFromStorage('orders') || [];
-    const updatedOrders = allOrders.map((order: Order) => {
-      if (order && order.customer && order.customer.phone === editingCustomer.phone) {
-        return {
-          ...order,
-          customer: {
-            ...order.customer,
-            name: editForm.name.trim(),
-            phone: editForm.phone.trim(),
-            email: editForm.email.trim(),
-            address: editForm.address.trim(),
-            delivery_instructions: editForm.delivery_instructions.trim(),
-          }
-        };
-      }
-      return order;
-    });
-    saveToStorage('orders', updatedOrders);
-
-    // Update imported customers
-    const importedCustomers = loadFromStorage('importedCustomers') || [];
-    const updatedImportedCustomers = importedCustomers.map((c: any) => {
-      if (c.phone === editingCustomer.phone && c.restaurant_id === restaurant?.id) {
-        return {
-          ...c,
+    if (editingCustomer.id.startsWith('temp-')) {
+      const { error } = await supabase
+        .from('customers')
+        .insert({
+          restaurant_id: restaurant?.id,
           name: editForm.name.trim(),
           phone: editForm.phone.trim(),
-          email: editForm.email.trim(),
-          address: editForm.address.trim(),
-          delivery_instructions: editForm.delivery_instructions.trim(),
-        };
-      }
-      return c;
-    });
-    saveToStorage('importedCustomers', updatedImportedCustomers);
+          email: editForm.email.trim() || null,
+          address: editForm.address.trim() || null,
+          delivery_instructions: editForm.delivery_instructions.trim() || '',
+          is_vip: editForm.isVip,
+        });
 
-    // Update VIP status
-    const vipCustomers = loadFromStorage('vipCustomers') || [];
-    if (editForm.isVip && !editingCustomer.isVip) {
-      // Add to VIP
-      const newVipCustomer = {
-        restaurant_id: restaurant?.id,
-        phone: editForm.phone.trim(),
-        name: editForm.name.trim(),
-        created_at: new Date().toISOString(),
-      };
-      saveToStorage('vipCustomers', [...vipCustomers, newVipCustomer]);
-    } else if (!editForm.isVip && editingCustomer.isVip) {
-      // Remove from VIP
-      const updatedVipCustomers = vipCustomers.filter((vip: any) =>
-        !(vip.restaurant_id === restaurant?.id && vip.phone === editingCustomer.phone)
-      );
-      saveToStorage('vipCustomers', updatedVipCustomers);
-    } else if (editForm.isVip && editingCustomer.isVip && editForm.phone.trim() !== editingCustomer.phone) {
-      // Update VIP phone if changed
-      const updatedVipCustomers = vipCustomers.map((vip: any) => {
-        if (vip.restaurant_id === restaurant?.id && vip.phone === editingCustomer.phone) {
-          return { ...vip, phone: editForm.phone.trim(), name: editForm.name.trim() };
-        }
-        return vip;
-      });
-      saveToStorage('vipCustomers', updatedVipCustomers);
+      if (error) {
+        console.error('Error creating customer:', error);
+        showToast('error', 'Error', 'No se pudo crear el cliente');
+        return;
+      }
+    } else {
+      const { error } = await supabase
+        .from('customers')
+        .update({
+          name: editForm.name.trim(),
+          phone: editForm.phone.trim(),
+          email: editForm.email.trim() || null,
+          address: editForm.address.trim() || null,
+          delivery_instructions: editForm.delivery_instructions.trim() || '',
+          is_vip: editForm.isVip,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', editingCustomer.id);
+
+      if (error) {
+        console.error('Error updating customer:', error);
+        showToast('error', 'Error', 'No se pudo actualizar el cliente');
+        return;
+      }
     }
 
-    console.log('Reloading customers data after save');
-    loadCustomersData();
+    await loadCustomersData();
     setShowEditModal(false);
     setEditingCustomer(null);
 
-    console.log('Showing success toast');
     showToast(
       'success',
       t('customerUpdated'),
@@ -565,50 +502,34 @@ if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${se
     setShowDeleteModal(true);
   };
 
-  const confirmDeleteCustomer = () => {
-    if (!customerToDelete) {
-      console.log('No customer to delete');
-      return;
-    }
+  const confirmDeleteCustomer = async () => {
+    if (!customerToDelete) return;
 
-    console.log('Deleting customer:', customerToDelete);
-    deleteCustomerData(customerToDelete);
+    await deleteCustomerData(customerToDelete);
     setShowDeleteModal(false);
     setCustomerToDelete(null);
   };
 
-  const deleteCustomerData = (customer: CustomerData) => {
-    console.log('deleteCustomerData called for:', customer);
+  const deleteCustomerData = async (customer: CustomerData) => {
+    if (customer.id.startsWith('temp-')) {
+      await loadCustomersData();
+      showToast('info', t('customerDeleted'), 'Cliente temporal eliminado', 3000);
+      return;
+    }
 
-    // Remove all orders from this customer
-    const allOrders = loadFromStorage('orders') || [];
-    console.log('Total orders before delete:', allOrders.length);
-    const updatedOrders = allOrders.filter((order: Order) =>
-      !(order && order.customer && order.customer.phone === customer.phone)
-    );
-    console.log('Total orders after delete:', updatedOrders.length);
-    saveToStorage('orders', updatedOrders);
+    const { error } = await supabase
+      .from('customers')
+      .delete()
+      .eq('id', customer.id);
 
-    // Remove from imported customers if exists
-    const importedCustomers = loadFromStorage('importedCustomers') || [];
-    console.log('Total imported customers before delete:', importedCustomers.length);
-    const updatedImportedCustomers = importedCustomers.filter((c: any) =>
-      !(c.restaurant_id === restaurant?.id && c.phone === customer.phone)
-    );
-    console.log('Total imported customers after delete:', updatedImportedCustomers.length);
-    saveToStorage('importedCustomers', updatedImportedCustomers);
+    if (error) {
+      console.error('Error deleting customer:', error);
+      showToast('error', 'Error', 'No se pudo eliminar el cliente');
+      return;
+    }
 
-    // Remove from VIP customers if exists
-    const vipCustomers = loadFromStorage('vipCustomers') || [];
-    const updatedVipCustomers = vipCustomers.filter((vip: any) =>
-      !(vip.restaurant_id === restaurant?.id && vip.phone === customer.phone)
-    );
-    saveToStorage('vipCustomers', updatedVipCustomers);
+    await loadCustomersData();
 
-    console.log('Reloading customers data');
-    // Update local state by reloading data
-    loadCustomersData();
-    
     showToast(
       'info',
       t('customerDeleted'),
@@ -998,40 +919,30 @@ if (confirm(`${t('confirmDeleteMultiple')} ${selectedCustomers.size} cliente${se
     }
   };
 
-  const executeImport = () => {
+  const executeImport = async () => {
     if (importPreview.length === 0) return;
 
-    const importedCustomers = loadFromStorage('importedCustomers') || [];
-    const vipCustomers = loadFromStorage('vipCustomers') || [];
+    const customersToInsert = importPreview.map((customer) => ({
+      restaurant_id: restaurant?.id,
+      name: customer.name,
+      phone: customer.phone,
+      email: customer.email || null,
+      address: customer.address || null,
+      delivery_instructions: customer.delivery_instructions || '',
+      is_vip: customer.isVip,
+    }));
 
-    importPreview.forEach((customer) => {
-      importedCustomers.push({
-        restaurant_id: restaurant?.id,
-        name: customer.name,
-        phone: customer.phone,
-        email: customer.email,
-        address: customer.address,
-        delivery_instructions: customer.delivery_instructions,
-        created_at: new Date().toISOString(),
-      });
+    const { error } = await supabase
+      .from('customers')
+      .insert(customersToInsert);
 
-      if (customer.isVip) {
-        const existingVip = vipCustomers.find((v: any) => v.phone === customer.phone && v.restaurant_id === restaurant?.id);
-        if (!existingVip) {
-          vipCustomers.push({
-            restaurant_id: restaurant?.id,
-            phone: customer.phone,
-            name: customer.name,
-            created_at: new Date().toISOString(),
-          });
-        }
-      }
-    });
+    if (error) {
+      console.error('Error importing customers:', error);
+      showToast('error', 'Error', 'No se pudieron importar los clientes');
+      return;
+    }
 
-    saveToStorage('importedCustomers', importedCustomers);
-    saveToStorage('vipCustomers', vipCustomers);
-
-    loadCustomersData();
+    await loadCustomersData();
 
     setShowImportModal(false);
     setImportFile(null);
