@@ -1027,7 +1027,7 @@ export const PublicMenu: React.FC = () => {
                           className="absolute top-2 left-2 px-2 py-1 text-xs font-bold rounded z-10"
                           style={{
                             backgroundColor: primaryColor,
-                            color: '#ffffff',
+                            color: secondaryTextColor,
                           }}
                         >
                           -{discountPercentage}%
