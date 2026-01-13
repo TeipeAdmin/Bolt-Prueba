@@ -2594,7 +2594,7 @@ export const RestaurantSettings: React.FC = () => {
                             </label>
                           );
                         })}
-                        {restaurantProducts.length === 0 && (
+                        {products.length === 0 && (
                           <p className="text-center text-gray-500 text-sm py-4">
                             {t('noProductsAdded')}
                           </p>
