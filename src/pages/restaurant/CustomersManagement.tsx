@@ -558,6 +558,7 @@ export const CustomersManagement: React.FC = () => {
       case 'pickup':
         return <Badge variant="gray" size="sm">{t('pickup')}</Badge>;
       case 'table':
+      case 'dine-in':
         return <Badge variant="warning" size="sm">{t('mesa')}</Badge>;
       default:
         return <Badge variant="gray" size="sm">{orderType}</Badge>;
