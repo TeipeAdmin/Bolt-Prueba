@@ -139,21 +139,28 @@ export const RestaurantSettings: React.FC = () => {
 
     setLoading(true);
     try {
-      const restaurants = loadFromStorage('restaurants', []);
-      const updatedRestaurants = restaurants.map((r: Restaurant) =>
-        r.id === restaurant.id
-          ? { ...formData, updated_at: new Date().toISOString() }
-          : r
-      );
+      const { data, error } = await supabase
+        .from('restaurants')
+        .update({
+          name: formData.name,
+          slug: formData.slug,
+          description: formData.description,
+          logo_url: formData.logo_url,
+          banner_url: formData.banner_url,
+          address: formData.address,
+          city: formData.city,
+          phone: formData.phone,
+          email: formData.email,
+          theme_color: formData.theme_color,
+          settings: formData.settings,
+          domain: formData.domain,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', restaurant.id)
+        .select()
+        .single();
 
-      saveToStorage('restaurants', updatedRestaurants);
-
-      // Update auth context
-      const currentAuth = loadFromStorage('currentAuth', null);
-      if (currentAuth) {
-        currentAuth.restaurant = { ...formData, updated_at: new Date().toISOString() };
-        saveToStorage('currentAuth', currentAuth);
-      }
+      if (error) throw error;
 
       showToast(
         'success',
@@ -161,7 +168,10 @@ export const RestaurantSettings: React.FC = () => {
         t('changes_saved_success'),
         4000
       );
+
+      window.location.reload();
     } catch (error) {
+      console.error('Error saving settings:', error);
       showToast(
         'error',
         t('config_toast_error'),
