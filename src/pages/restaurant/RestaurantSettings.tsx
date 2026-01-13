@@ -10,6 +10,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
 import { Modal } from '../../components/ui/Modal';
+import { loadFromStorage, saveToStorage } from '../../data/mockData';
 
 export const RestaurantSettings: React.FC = () => {
   const { restaurant, user } = useAuth();
