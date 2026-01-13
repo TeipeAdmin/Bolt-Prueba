@@ -41,7 +41,7 @@ export const OrdersManagement: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
   const [orderForm, setOrderForm] = useState({
-    customer: { name: '', phone: '', email: '', address: '', delivery_instructions: '' },
+    customer: { name: '', phone: '+57 ', email: '', address: '', delivery_instructions: '' },
     order_type: 'pickup' as Order['order_type'],
     status: 'pending' as Order['status'],
     delivery_address: '',
@@ -954,7 +954,7 @@ export const OrdersManagement: React.FC = () => {
   };
   const resetOrderForm = () => {
     setOrderForm({
-      customer: { name: '', phone: '', email: '', address: '', delivery_instructions: '' },
+      customer: { name: '', phone: '+57 ', email: '', address: '', delivery_instructions: '' },
       order_type: 'pickup',
       status: 'pending',
       delivery_address: '',
