@@ -817,6 +817,15 @@ export const PublicMenu: React.FC = () => {
                   ? Math.min(...product.variations.map((v) => v.price))
                   : 0;
 
+              const minComparePrice = product.variations.length > 0
+                ? Math.min(...product.variations.filter(v => v.compare_at_price).map((v) => v.compare_at_price || 0))
+                : 0;
+
+              const hasDiscount = minComparePrice > 0 && minComparePrice > minPrice;
+              const discountPercentage = hasDiscount
+                ? Math.round(((minComparePrice - minPrice) / minComparePrice) * 100)
+                : 0;
+
               if (viewMode === 'editorial') {
                 return (
                   <div
@@ -849,15 +858,28 @@ export const PublicMenu: React.FC = () => {
                         />
                       )}
                       <div className="flex-1 flex flex-col justify-center p-2">
-                        <h2
-                          className="font-bold mb-3"
-                          style={{
-                            fontFamily: theme.primary_font || 'Poppins',
-                            color: primaryColor,
-                          }}
-                        >
-                          {product.name}
-                        </h2>
+                        <div className="flex items-start justify-between gap-2 mb-3">
+                          <h2
+                            className="font-bold flex-1"
+                            style={{
+                              fontFamily: theme.primary_font || 'Poppins',
+                              color: primaryColor,
+                            }}
+                          >
+                            {product.name}
+                          </h2>
+                          {hasDiscount && (
+                            <span
+                              className="px-2 py-1 text-xs font-bold rounded"
+                              style={{
+                                backgroundColor: '#ef4444',
+                                color: '#ffffff',
+                              }}
+                            >
+                              -{discountPercentage}%
+                            </span>
+                          )}
+                        </div>
                         <p
                           className="mb-4 text-base leading-relaxed line-clamp-2"
                           style={{
@@ -867,18 +889,34 @@ export const PublicMenu: React.FC = () => {
                         >
                           {product.description}
                         </p>
-                        <span
-                          className="font-bold text-2xl"
-                          style={{
-                            fontFamily: theme.secondary_font || 'Poppins',
-                            cssText: `color: ${primaryColor} !important;`,
-                          }}
-                        >
-                          {formatCurrency(
-                          minPrice,
-                          restaurant.settings.currency || 'USD'
-                        )}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          {hasDiscount && (
+                            <span
+                              className="text-lg line-through opacity-60"
+                              style={{
+                                fontFamily: theme.secondary_font || 'Poppins',
+                                color: secondaryTextColor,
+                              }}
+                            >
+                              {formatCurrency(
+                                minComparePrice,
+                                restaurant.settings.currency || 'USD'
+                              )}
+                            </span>
+                          )}
+                          <span
+                            className="font-bold text-2xl"
+                            style={{
+                              fontFamily: theme.secondary_font || 'Poppins',
+                              cssText: `color: ${primaryColor} !important;`,
+                            }}
+                          >
+                            {formatCurrency(
+                              minPrice,
+                              restaurant.settings.currency || 'USD'
+                            )}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -889,7 +927,7 @@ export const PublicMenu: React.FC = () => {
                 return (
                   <div
                     key={product.id}
-                    className="rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden"
+                    className="rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden relative"
                     onClick={() => setSelectedProduct(product)}
                     style={{
                       borderRadius:
@@ -899,6 +937,17 @@ export const PublicMenu: React.FC = () => {
                       backgroundColor: cardBackgroundColor,
                     }}
                   >
+                    {hasDiscount && (
+                      <div
+                        className="absolute top-2 right-2 px-2 py-1 text-xs font-bold rounded z-10"
+                        style={{
+                          backgroundColor: '#ef4444',
+                          color: '#ffffff',
+                        }}
+                      >
+                        -{discountPercentage}%
+                      </div>
+                    )}
                     {product.images[0] && (
                       <img
                         src={product.images[0]}
@@ -926,18 +975,34 @@ export const PublicMenu: React.FC = () => {
                       >
                         {product.description}
                       </p>
-                      <span
-                        className="font-bold text-lg"
-                        style={{
-                          fontFamily: theme.secondary_font || 'Poppins',
-                          cssText: `color: ${primaryColor} !important;`,
-                        }}
-                      >
-                        {formatCurrency(
-                          minPrice,
-                          restaurant.settings.currency || 'USD'
+                      <div className="flex items-center gap-2">
+                        {hasDiscount && (
+                          <span
+                            className="text-sm line-through opacity-60"
+                            style={{
+                              fontFamily: theme.secondary_font || 'Poppins',
+                              color: secondaryTextColor,
+                            }}
+                          >
+                            {formatCurrency(
+                              minComparePrice,
+                              restaurant.settings.currency || 'USD'
+                            )}
+                          </span>
                         )}
-                      </span>
+                        <span
+                          className="font-bold text-lg"
+                          style={{
+                            fontFamily: theme.secondary_font || 'Poppins',
+                            cssText: `color: ${primaryColor} !important;`,
+                          }}
+                        >
+                          {formatCurrency(
+                            minPrice,
+                            restaurant.settings.currency || 'USD'
+                          )}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 );
@@ -946,7 +1011,7 @@ export const PublicMenu: React.FC = () => {
               return (
                 <div
                   key={product.id}
-                  className="rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer flex items-left gap-4 p-4 pl-0 py-0"
+                  className="rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer flex items-left gap-4 p-4 pl-0 py-0 relative"
                   onClick={() => setSelectedProduct(product)}
                   style={{
                     borderRadius:
@@ -956,20 +1021,33 @@ export const PublicMenu: React.FC = () => {
                   }}
                 >
                   {product.images[0] && (
-                    <img
-                      src={product.images[0]}
-                      alt={product.name}
-                      className="object-cover rounded-xl flex-shrink-0 " /*DF: agregue el rounded-xl para que se vea cuadrada la imagen*/
-                      style={{
-                        width: '150px',
-                        height: '150px',
-                        objectFit: 'cover',
-                        flexShrink: 0,
-                        borderTopRightRadius: '0px',
-                        borderBottomRightRadius:
-                          '0px' /*DF:configurar las imagenes para que vayan al borde*/,
-                      }}
-                    />
+                    <div className="relative">
+                      {hasDiscount && (
+                        <div
+                          className="absolute top-2 left-2 px-2 py-1 text-xs font-bold rounded z-10"
+                          style={{
+                            backgroundColor: '#ef4444',
+                            color: '#ffffff',
+                          }}
+                        >
+                          -{discountPercentage}%
+                        </div>
+                      )}
+                      <img
+                        src={product.images[0]}
+                        alt={product.name}
+                        className="object-cover rounded-xl flex-shrink-0 " /*DF: agregue el rounded-xl para que se vea cuadrada la imagen*/
+                        style={{
+                          width: '150px',
+                          height: '150px',
+                          objectFit: 'cover',
+                          flexShrink: 0,
+                          borderTopRightRadius: '0px',
+                          borderBottomRightRadius:
+                            '0px' /*DF:configurar las imagenes para que vayan al borde*/,
+                        }}
+                      />
+                    </div>
                   )}
                   <div className="flex-1 min-w-0 p-4">
                     <h2
@@ -988,7 +1066,21 @@ export const PublicMenu: React.FC = () => {
                     >
                       {product.description}
                     </p>
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {hasDiscount && (
+                        <span
+                          className="text-sm line-through opacity-60"
+                          style={{
+                            fontFamily: theme.secondary_font || 'Poppins',
+                            color: secondaryTextColor,
+                          }}
+                        >
+                          {formatCurrency(
+                            minComparePrice,
+                            restaurant.settings.currency || 'USD'
+                          )}
+                        </span>
+                      )}
                       <span
                         className="font-bold text-lg"
                         style={{
