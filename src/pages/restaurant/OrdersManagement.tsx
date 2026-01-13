@@ -203,14 +203,19 @@ export const OrdersManagement: React.FC = () => {
     return labels[nextStatus];
   };
 
-  const handleQuickStatusUpdate = (orderId: string, newStatus: Order['status']) => {
-    const updatedOrders = orders.map(order =>
-      order.id === orderId
-        ? { ...order, status: newStatus, updated_at: new Date().toISOString() }
-        : order
-    );
-    saveToStorage('orders', updatedOrders);
-    loadOrders();
+  const handleQuickStatusUpdate = async (orderId: string, newStatus: Order['status']) => {
+    const { error } = await supabase
+      .from('orders')
+      .update({ status: newStatus, updated_at: new Date().toISOString() })
+      .eq('id', orderId);
+
+    if (error) {
+      console.error('Error updating order status:', error);
+      showToast('error', t('errorTitle'), 'No se pudo actualizar el estado', 4000);
+      return;
+    }
+
+    await loadOrders();
     
     showToast(
       'success',
@@ -322,16 +327,21 @@ export const OrdersManagement: React.FC = () => {
   );
   const totalPages = Math.ceil(sortedOrders.length / itemsPerPage);
 
-  const handleBulkAction = () => {
+  const handleBulkAction = async () => {
     if (!bulkAction || selectedOrders.length === 0) return;
-    const allOrders = loadFromStorage('orders') || [];
-    const updatedOrders = allOrders.map((order: Order) =>
-      selectedOrders.includes(order.id)
-        ? { ...order, status: bulkAction as Order['status'], updated_at: new Date().toISOString() }
-        : order
-    );
-    saveToStorage('orders', updatedOrders);
-    loadOrders();
+
+    const { error } = await supabase
+      .from('orders')
+      .update({ status: bulkAction as Order['status'], updated_at: new Date().toISOString() })
+      .in('id', selectedOrders);
+
+    if (error) {
+      console.error('Error updating orders:', error);
+      showToast('error', t('errorTitle'), 'No se pudieron actualizar los pedidos', 4000);
+      return;
+    }
+
+    await loadOrders();
     setSelectedOrders([]);
     setBulkAction('');
     setShowBulkActions(false);
@@ -549,7 +559,7 @@ export const OrdersManagement: React.FC = () => {
     return encodeURIComponent(message);
   };
 
-  const sendWhatsAppMessage = (order: Order) => {
+  const sendWhatsAppMessage = async (order: Order) => {
     if (!order.customer?.phone || order.customer.phone.trim() === '') {
       showToast('error', t('errorTitle'), t('noPhoneError'), 4000);
       return;
@@ -565,12 +575,17 @@ export const OrdersManagement: React.FC = () => {
 
     if (!order.whatsapp_sent) {
       whatsappMessage = generateWhatsAppMessage(order);
-      const allOrders = loadFromStorage('orders') || [];
-      const updatedOrders = allOrders.map((o: Order) =>
-        o.id === order.id ? { ...o, whatsapp_sent: true } : o
-      );
-      saveToStorage('orders', updatedOrders);
-      loadOrders();
+
+      const { error } = await supabase
+        .from('orders')
+        .update({ whatsapp_sent: true })
+        .eq('id', order.id);
+
+      if (error) {
+        console.error('Error updating whatsapp_sent:', error);
+      }
+
+      await loadOrders();
     } else {
       whatsappMessage = generateStatusUpdateMessage(order);
     }
@@ -988,13 +1003,21 @@ export const OrdersManagement: React.FC = () => {
     setShowDeleteModal(true);
   };
 
-  const confirmDeleteOrder = () => {
+  const confirmDeleteOrder = async () => {
     if (!orderToDelete) return;
 
-    const allOrders = loadFromStorage('orders') || [];
-    const updatedOrders = allOrders.filter((order: Order) => order.id !== orderToDelete.id);
-    saveToStorage('orders', updatedOrders);
-    loadOrders();
+    const { error } = await supabase
+      .from('orders')
+      .delete()
+      .eq('id', orderToDelete.id);
+
+    if (error) {
+      console.error('Error deleting order:', error);
+      showToast('error', t('errorTitle'), 'No se pudo eliminar el pedido', 4000);
+      return;
+    }
+
+    await loadOrders();
     setShowDeleteModal(false);
     setOrderToDelete(null);
 
@@ -1006,7 +1029,7 @@ export const OrdersManagement: React.FC = () => {
     );
   };
 
-  const handleUpdateOrder = () => {
+  const handleUpdateOrder = async () => {
     if (!editingOrder) return;
     if (!orderForm.customer.name.trim() || !orderForm.customer.phone.trim()) {
       showToast('error', t('errorTitle'), t('namePhoneRequiredError'), 4000);
@@ -1032,9 +1055,8 @@ export const OrdersManagement: React.FC = () => {
     const deliveryCost = orderForm.order_type === 'delivery' ?
     (restaurant?.settings?.delivery?.zones[0]?.cost || 0) : 0;
     const total = subtotal + deliveryCost;
-    const allOrders = loadFromStorage('orders') || [];
+
     const updatedOrder = {
-      ...editingOrder,
       customer: orderForm.customer,
       items: orderItems,
       order_type: orderForm.order_type,
@@ -1047,11 +1069,19 @@ export const OrdersManagement: React.FC = () => {
       special_instructions: orderForm.special_instructions,
       updated_at: new Date().toISOString(),
     };
-    const updatedOrders = allOrders.map((order: Order) =>
-      order.id === editingOrder.id ? updatedOrder : order
-    );
-    saveToStorage('orders', updatedOrders);
-    loadOrders();
+
+    const { error } = await supabase
+      .from('orders')
+      .update(updatedOrder)
+      .eq('id', editingOrder.id);
+
+    if (error) {
+      console.error('Error updating order:', error);
+      showToast('error', t('errorTitle'), 'No se pudo actualizar el pedido', 4000);
+      return;
+    }
+
+    await loadOrders();
     setShowEditOrderModal(false);
     setEditingOrder(null);
     resetOrderForm();
@@ -1063,7 +1093,7 @@ export const OrdersManagement: React.FC = () => {
     );
   };
 
-  const handleCreateOrder = () => {
+  const handleCreateOrder = async () => {
     if (!restaurant) return;
     if (!orderForm.customer.name.trim() || !orderForm.customer.phone.trim()) {
       showToast('error', t('errorTitle'), t('namePhoneRequiredError'), 4000);
@@ -1091,12 +1121,9 @@ export const OrdersManagement: React.FC = () => {
       (restaurant.settings?.delivery?.zones[0]?.cost || 0) : 0;
     const total = subtotal + deliveryCost;
 
-    const newOrder: Order = {
-      id: Date.now().toString(),
+    const newOrder = {
       restaurant_id: restaurant.id,
       order_number: generateOrderNumber(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
       status: 'pending',
       order_type: orderForm.order_type,
       customer: {
@@ -1116,9 +1143,17 @@ export const OrdersManagement: React.FC = () => {
       whatsapp_sent: false,
     };
 
-    const allOrders = loadFromStorage('orders') || [];
-    saveToStorage('orders', [newOrder, ...allOrders]);
-    loadOrders();
+    const { error } = await supabase
+      .from('orders')
+      .insert([newOrder]);
+
+    if (error) {
+      console.error('Error creating order:', error);
+      showToast('error', t('errorTitle'), 'No se pudo crear el pedido', 4000);
+      return;
+    }
+
+    await loadOrders();
     setShowCreateOrderModal(false);
     resetOrderForm();
     showToast(
