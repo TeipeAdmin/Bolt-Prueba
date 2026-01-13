@@ -104,18 +104,17 @@ export const RestaurantDashboard: React.FC = () => {
     }
   };
 
-  // Calculate last month's revenue
-  const getLastMonthRevenue = () => {
+  const getCurrentMonthRevenue = () => {
     const now = new Date();
     const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
 
     return orders.filter(order => {
       const orderDate = new Date(order.created_at);
-      return order.status === 'delivered' &&
+      return (order.status === 'delivered' || order.status === 'ready' || order.status === 'confirmed') &&
              orderDate >= currentMonthStart &&
              orderDate <= currentMonthEnd;
-    }).reduce((sum, order) => sum + order.total, 0);
+    }).reduce((sum, order) => sum + (order.total || 0), 0);
   };
 
   const getCurrentPlanName = () => {
@@ -133,7 +132,7 @@ export const RestaurantDashboard: React.FC = () => {
       const orderDate = new Date(o.created_at).toDateString();
       return today === orderDate;
     }).length,
-    currentMonthRevenue: getLastMonthRevenue(),
+    currentMonthRevenue: getCurrentMonthRevenue(),
     categories: categories.length,
   };
 
