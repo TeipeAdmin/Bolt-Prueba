@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HelpCircle, MessageSquare, Clock, AlertTriangle, CheckCircle, Eye, Trash2, Filter, Search, Mail, Phone, Calendar, User, Building } from 'lucide-react';
+import { HelpCircle, MessageSquare, Clock, AlertTriangle, CheckCircle, Eye, Trash2, Filter, Search, Mail, Phone, Calendar, User, Building, RefreshCw } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
@@ -45,6 +45,25 @@ export const SupportTicketsManagement: React.FC = () => {
 
   useEffect(() => {
     loadTickets();
+
+    const channel = supabase
+      .channel('support_tickets_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'support_tickets'
+        },
+        () => {
+          loadTickets();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   useEffect(() => {
@@ -53,7 +72,11 @@ export const SupportTicketsManagement: React.FC = () => {
 
   const loadTickets = async () => {
     try {
-      setLoading(true);
+      const wasInitialLoad = loading && tickets.length === 0;
+      if (wasInitialLoad) {
+        setLoading(true);
+      }
+
       const { data, error } = await supabase
         .from('support_tickets')
         .select(`
@@ -66,7 +89,7 @@ export const SupportTicketsManagement: React.FC = () => {
 
       if (error) throw error;
 
-      const formattedTickets = data.map((ticket: any) => ({
+      const formattedTickets = (data || []).map((ticket: any) => ({
         id: ticket.id,
         restaurantId: ticket.restaurant_id,
         restaurantName: ticket.restaurants?.name || 'Restaurante Desconocido',
@@ -85,6 +108,10 @@ export const SupportTicketsManagement: React.FC = () => {
       }));
 
       setTickets(formattedTickets);
+
+      if (!wasInitialLoad) {
+        showToast('success', 'Actualizado', 'Tickets actualizados correctamente', 2000);
+      }
     } catch (error) {
       console.error('Error loading tickets:', error);
       showToast('error', 'Error', 'No se pudieron cargar los tickets de soporte', 3000);
@@ -295,8 +322,20 @@ export const SupportTicketsManagement: React.FC = () => {
     <div className="p-6 w-full min-h-screen bg-gray-50">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Gestión de Tickets de Soporte</h1>
-        <div className="text-sm text-gray-500">
-          {filteredTickets.length} de {tickets.length} tickets
+        <div className="flex items-center gap-4">
+          <div className="text-sm text-gray-500">
+            {filteredTickets.length} de {tickets.length} tickets
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            icon={RefreshCw}
+            onClick={loadTickets}
+            disabled={loading}
+            className={loading ? 'animate-spin' : ''}
+          >
+            Actualizar
+          </Button>
         </div>
       </div>
 

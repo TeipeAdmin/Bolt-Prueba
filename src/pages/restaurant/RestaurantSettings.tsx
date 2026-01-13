@@ -52,7 +52,7 @@ export const RestaurantSettings: React.FC = () => {
         message: ticket.message,
         contactEmail: ticket.contact_email,
         contactPhone: ticket.contact_phone,
-        status: ticket.status,
+        status: ticket.status === 'open' ? 'pending' : ticket.status,
         createdAt: ticket.created_at,
         updatedAt: ticket.updated_at,
         response: ticket.response,
@@ -279,7 +279,7 @@ export const RestaurantSettings: React.FC = () => {
         message: supportForm.message,
         contact_email: supportForm.contactEmail,
         contact_phone: supportForm.contactPhone || '',
-        status: 'pending',
+        status: 'open',
       };
 
       const { data, error } = await supabase
@@ -322,7 +322,7 @@ export const RestaurantSettings: React.FC = () => {
         message: data.message,
         contactEmail: data.contact_email,
         contactPhone: data.contact_phone,
-        status: data.status,
+        status: data.status === 'open' ? 'pending' : data.status,
         createdAt: data.created_at,
         updatedAt: data.updated_at,
         response: data.response,
