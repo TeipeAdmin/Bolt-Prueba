@@ -36,12 +36,8 @@ export interface Category {
   name: string;
   description?: string;
   restaurant_id: string;
-  order_index: number;
-  order_position: number;
+  display_order: number;
   is_active: boolean;
-  active: boolean;
-  icon?: string;
-  image?: string;
   created_at: string;
   updated_at: string;
 }
@@ -49,7 +45,7 @@ export interface Category {
 export interface Product {
   id: string;
   restaurant_id: string;
-  category_id: string;
+  category_id?: string;
   name: string;
   description: string;
   images: string[];
@@ -62,7 +58,6 @@ export interface Product {
   sku?: string;
   is_available: boolean;
   is_featured: boolean;
-  order_index: number;
   created_at: string;
   updated_at: string;
 }

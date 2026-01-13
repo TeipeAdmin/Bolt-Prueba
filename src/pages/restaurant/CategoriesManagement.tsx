@@ -66,7 +66,7 @@ export const CategoriesManagement: React.FC = () => {
       .from('categories')
       .select('*')
       .eq('restaurant_id', restaurant.id)
-      .order('order_position', { ascending: true });
+      .order('display_order', { ascending: true });
 
     if (error) {
       console.error('Error loading categories:', error);
@@ -104,9 +104,8 @@ export const CategoriesManagement: React.FC = () => {
             restaurant_id: restaurant.id,
             name: formData.name,
             description: formData.description,
-            icon: formData.icon,
-            order_position: categories.length + 1,
-            active: true,
+            display_order: categories.length + 1,
+            is_active: true,
           });
 
         if (error) throw error;
@@ -223,13 +222,13 @@ export const CategoriesManagement: React.FC = () => {
     try {
       const updates = newCategories.map((cat, index) => ({
         id: cat.id,
-        order_position: index + 1,
+        display_order: index + 1,
       }));
 
       for (const update of updates) {
         await supabase
           .from('categories')
-          .update({ order_position: update.order_position })
+          .update({ display_order: update.display_order })
           .eq('id', update.id);
       }
 
@@ -270,13 +269,13 @@ export const CategoriesManagement: React.FC = () => {
     try {
       const updates = newCategories.map((cat, index) => ({
         id: cat.id,
-        order_position: index + 1,
+        display_order: index + 1,
       }));
 
       for (const update of updates) {
         await supabase
           .from('categories')
-          .update({ order_position: update.order_position })
+          .update({ display_order: update.display_order })
           .eq('id', update.id);
       }
 
@@ -432,7 +431,7 @@ export const CategoriesManagement: React.FC = () => {
       
               {/* Order Number */}
               <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <span className="text-sm font-bold text-blue-600">#{category.order_position}</span>
+                <span className="text-sm font-bold text-blue-600">#{category.display_order}</span>
               </div>
       
               {/* Category Icon */}

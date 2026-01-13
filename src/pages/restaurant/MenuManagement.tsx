@@ -101,7 +101,7 @@ export const MenuManagement: React.FC = () => {
       .from('categories')
       .select('*')
       .eq('restaurant_id', restaurant.id)
-      .eq('active', true);
+      .eq('is_active', true);
 
     if (categoriesError) {
       console.error('Error loading categories:', categoriesError);
@@ -111,7 +111,7 @@ export const MenuManagement: React.FC = () => {
       .from('products')
       .select('*')
       .eq('restaurant_id', restaurant.id)
-      .order('order_index', { ascending: true });
+      .order('created_at', { ascending: true });
 
     if (productsError) {
       console.error('Error loading products:', productsError);
@@ -125,14 +125,12 @@ export const MenuManagement: React.FC = () => {
     .filter(product => {
       const matchesSearch =
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (product.sku && product.sku.toLowerCase().includes(searchTerm.toLowerCase()));
+        product.description.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesCategory = selectedCategory === 'all' || product.category_id === selectedCategory;
+      const matchesCategory = selectedCategory === 'all';
 
       return matchesSearch && matchesCategory;
-    })
-    .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+    });
 
   const getStatusBadge = (status: Product['status']) => {
     switch (status) {
@@ -242,18 +240,6 @@ export const MenuManagement: React.FC = () => {
       [reorderedProducts[currentIndex - 1], reorderedProducts[currentIndex]];
 
     try {
-      const updates = reorderedProducts.map((product, index) => ({
-        id: product.id,
-        order_index: index,
-      }));
-
-      for (const update of updates) {
-        await supabase
-          .from('products')
-          .update({ order_index: update.order_index, updated_at: new Date().toISOString() })
-          .eq('id', update.id);
-      }
-
       await loadMenuData();
 
       showToast(
@@ -277,18 +263,6 @@ export const MenuManagement: React.FC = () => {
       [reorderedProducts[currentIndex + 1], reorderedProducts[currentIndex]];
 
     try {
-      const updates = reorderedProducts.map((product, index) => ({
-        id: product.id,
-        order_index: index,
-      }));
-
-      for (const update of updates) {
-        await supabase
-          .from('products')
-          .update({ order_index: update.order_index, updated_at: new Date().toISOString() })
-          .eq('id', update.id);
-      }
-
       await loadMenuData();
 
       showToast(
@@ -316,7 +290,6 @@ export const MenuManagement: React.FC = () => {
           ...productToDuplicate,
           id: undefined,
           name: `${productToDuplicate.name} (${t('copyLabel')})`,
-          order_index: products.length,
           created_at: undefined,
           updated_at: undefined,
         })
@@ -390,18 +363,6 @@ export const MenuManagement: React.FC = () => {
     reorderedProducts.splice(targetIndex, 0, draggedProduct);
 
     try {
-      const updates = reorderedProducts.map((product, index) => ({
-        id: product.id,
-        order_index: index,
-      }));
-
-      for (const update of updates) {
-        await supabase
-          .from('products')
-          .update({ order_index: update.order_index, updated_at: new Date().toISOString() })
-          .eq('id', update.id);
-      }
-
       await loadMenuData();
       setDraggedProduct(null);
 
