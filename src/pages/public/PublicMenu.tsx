@@ -883,8 +883,8 @@ export const PublicMenu: React.FC = () => {
                               <span
                                 className="px-2 py-1 text-xs font-bold rounded"
                                 style={{
-                                  backgroundColor: '#dc2626',
-                                  color: '#ffffff',
+                                  backgroundColor: primaryColor,
+                                  color: secondaryTextColor,
                                 }}
                               >
                                 AGOTADO
