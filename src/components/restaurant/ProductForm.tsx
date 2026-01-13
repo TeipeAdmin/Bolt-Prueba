@@ -128,7 +128,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       ...formDataWithoutImage,
       images: image ? [image] : [],
       variations: variations.filter(v => v.name.trim() && v.price >= 0),
-      ingredients: ingredients.filter(ing => ing.name.trim())
+      ingredients: ingredients
+        .filter(ing => ing.name.trim())
+        .map(ing => ing.optional ? ing : { ...ing, extra_cost: undefined })
     };
 
     onSave(productData);
