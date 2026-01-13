@@ -43,7 +43,24 @@ export const RestaurantSettings: React.FC = () => {
         .eq('restaurant_id', restaurant.id)
         .order('created_at', { ascending: false });
 
-      setSupportTickets(data || []);
+      const formattedTickets = (data || []).map(ticket => ({
+        id: ticket.id,
+        restaurantId: ticket.restaurant_id,
+        subject: ticket.subject,
+        category: ticket.category,
+        priority: ticket.priority,
+        message: ticket.message,
+        contactEmail: ticket.contact_email,
+        contactPhone: ticket.contact_phone,
+        status: ticket.status,
+        createdAt: ticket.created_at,
+        updatedAt: ticket.updated_at,
+        response: ticket.response,
+        responseDate: ticket.response_date,
+        adminNotes: ticket.admin_notes
+      }));
+
+      setSupportTickets(formattedTickets);
     };
 
     const loadProducts = async () => {
@@ -253,13 +270,15 @@ export const RestaurantSettings: React.FC = () => {
 
     try {
       const newTicket = {
+        user_id: user?.id,
         restaurant_id: restaurant?.id,
         subject: supportForm.subject,
         category: supportForm.category,
         priority: supportForm.priority,
+        description: supportForm.message,
         message: supportForm.message,
         contact_email: supportForm.contactEmail,
-        contact_phone: supportForm.contactPhone,
+        contact_phone: supportForm.contactPhone || '',
         status: 'pending',
       };
 
@@ -294,7 +313,24 @@ export const RestaurantSettings: React.FC = () => {
         setSupportSuccess(false);
       }, 3000);
 
-      setSupportTickets(prev => [data, ...prev]);
+      const formattedTicket = {
+        id: data.id,
+        restaurantId: data.restaurant_id,
+        subject: data.subject,
+        category: data.category,
+        priority: data.priority,
+        message: data.message,
+        contactEmail: data.contact_email,
+        contactPhone: data.contact_phone,
+        status: data.status,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+        response: data.response,
+        responseDate: data.response_date,
+        adminNotes: data.admin_notes
+      };
+
+      setSupportTickets(prev => [formattedTicket, ...prev]);
 
     } catch (error) {
       console.error('Error sending support request:', error);

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { HelpCircle, MessageSquare, Clock, AlertTriangle, CheckCircle, Eye, Trash2, Filter, Search, Mail, Phone, Calendar, User, Building } from 'lucide-react';
-import { loadFromStorage, saveToStorage } from '../../data/mockData';
+import { supabase } from '../../lib/supabase';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
+import { useToast } from '../../hooks/useToast';
 
 interface SupportTicket {
   id: string;
@@ -25,6 +26,7 @@ interface SupportTicket {
 }
 
 export const SupportTicketsManagement: React.FC = () => {
+  const { showToast } = useToast();
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [filteredTickets, setFilteredTickets] = useState<SupportTicket[]>([]);
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
@@ -39,6 +41,7 @@ export const SupportTicketsManagement: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [responseText, setResponseText] = useState('');
   const [adminNotes, setAdminNotes] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadTickets();
@@ -48,9 +51,46 @@ export const SupportTicketsManagement: React.FC = () => {
     filterTickets();
   }, [tickets, searchTerm, statusFilter, priorityFilter, categoryFilter, dateFromFilter, dateToFilter, sortOrder]);
 
-  const loadTickets = () => {
-    const supportTickets = loadFromStorage('supportTickets', []);
-    setTickets(supportTickets);
+  const loadTickets = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('support_tickets')
+        .select(`
+          *,
+          restaurants (
+            name
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const formattedTickets = data.map((ticket: any) => ({
+        id: ticket.id,
+        restaurantId: ticket.restaurant_id,
+        restaurantName: ticket.restaurants?.name || 'Restaurante Desconocido',
+        subject: ticket.subject,
+        category: ticket.category,
+        priority: ticket.priority,
+        message: ticket.message,
+        contactEmail: ticket.contact_email,
+        contactPhone: ticket.contact_phone || '',
+        status: ticket.status === 'open' ? 'pending' : ticket.status,
+        createdAt: ticket.created_at,
+        updatedAt: ticket.updated_at,
+        response: ticket.response,
+        responseDate: ticket.response_date,
+        adminNotes: ticket.admin_notes,
+      }));
+
+      setTickets(formattedTickets);
+    } catch (error) {
+      console.error('Error loading tickets:', error);
+      showToast('error', 'Error', 'No se pudieron cargar los tickets de soporte', 3000);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const filterTickets = () => {
@@ -89,14 +129,29 @@ export const SupportTicketsManagement: React.FC = () => {
     setFilteredTickets(filtered);
   };
 
-  const updateTicketStatus = (ticketId: string, newStatus: SupportTicket['status']) => {
-    const updatedTickets = tickets.map(ticket =>
-      ticket.id === ticketId
-        ? { ...ticket, status: newStatus, updatedAt: new Date().toISOString() }
-        : ticket
-    );
-    setTickets(updatedTickets);
-    saveToStorage('supportTickets', updatedTickets);
+  const updateTicketStatus = async (ticketId: string, newStatus: SupportTicket['status']) => {
+    try {
+      const { error } = await supabase
+        .from('support_tickets')
+        .update({
+          status: newStatus === 'pending' ? 'open' : newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', ticketId);
+
+      if (error) throw error;
+
+      const updatedTickets = tickets.map(ticket =>
+        ticket.id === ticketId
+          ? { ...ticket, status: newStatus, updatedAt: new Date().toISOString() }
+          : ticket
+      );
+      setTickets(updatedTickets);
+      showToast('success', 'Estado Actualizado', 'El estado del ticket ha sido actualizado', 3000);
+    } catch (error) {
+      console.error('Error updating ticket status:', error);
+      showToast('error', 'Error', 'No se pudo actualizar el estado del ticket', 3000);
+    }
   };
 
   const handleViewTicket = (ticket: SupportTicket) => {
@@ -111,35 +166,67 @@ export const SupportTicketsManagement: React.FC = () => {
     setShowResponseModal(true);
   };
 
-  const saveResponse = () => {
+  const saveResponse = async () => {
     if (!selectedTicket) return;
 
-    const updatedTickets = tickets.map(ticket =>
-      ticket.id === selectedTicket.id
-        ? {
-            ...ticket,
-            response: responseText,
-            responseDate: new Date().toISOString(),
-            adminNotes: adminNotes,
-            status: 'resolved' as const,
-            updatedAt: new Date().toISOString()
-          }
-        : ticket
-    );
+    try {
+      const { error } = await supabase
+        .from('support_tickets')
+        .update({
+          response: responseText,
+          response_date: new Date().toISOString(),
+          admin_notes: adminNotes,
+          status: 'resolved',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', selectedTicket.id);
 
-    setTickets(updatedTickets);
-    saveToStorage('supportTickets', updatedTickets);
-    setShowResponseModal(false);
-    setSelectedTicket(null);
-    setResponseText('');
-    setAdminNotes('');
+      if (error) throw error;
+
+      const updatedTickets = tickets.map(ticket =>
+        ticket.id === selectedTicket.id
+          ? {
+              ...ticket,
+              response: responseText,
+              responseDate: new Date().toISOString(),
+              adminNotes: adminNotes,
+              status: 'resolved' as const,
+              updatedAt: new Date().toISOString()
+            }
+          : ticket
+      );
+
+      setTickets(updatedTickets);
+      showToast('success', 'Respuesta Enviada', 'La respuesta ha sido enviada al cliente', 3000);
+      setShowResponseModal(false);
+      setSelectedTicket(null);
+      setResponseText('');
+      setAdminNotes('');
+    } catch (error) {
+      console.error('Error saving response:', error);
+      showToast('error', 'Error', 'No se pudo enviar la respuesta', 3000);
+    }
   };
 
-  const deleteTicket = (ticketId: string) => {
-    if (confirm('¿Estás seguro de que quieres eliminar este ticket? Esta acción no se puede deshacer.')) {
+  const deleteTicket = async (ticketId: string) => {
+    if (!confirm('¿Estás seguro de que quieres eliminar este ticket? Esta acción no se puede deshacer.')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('support_tickets')
+        .delete()
+        .eq('id', ticketId);
+
+      if (error) throw error;
+
       const updatedTickets = tickets.filter(ticket => ticket.id !== ticketId);
       setTickets(updatedTickets);
-      saveToStorage('supportTickets', updatedTickets);
+      showToast('success', 'Ticket Eliminado', 'El ticket ha sido eliminado correctamente', 3000);
+    } catch (error) {
+      console.error('Error deleting ticket:', error);
+      showToast('error', 'Error', 'No se pudo eliminar el ticket', 3000);
     }
   };
 
@@ -192,6 +279,17 @@ export const SupportTicketsManagement: React.FC = () => {
     resolved: tickets.filter(t => t.status === 'resolved').length,
     urgent: tickets.filter(t => t.priority === 'urgent').length,
   };
+
+  if (loading) {
+    return (
+      <div className="p-6 w-full min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando tickets de soporte...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 w-full min-h-screen bg-gray-50">
