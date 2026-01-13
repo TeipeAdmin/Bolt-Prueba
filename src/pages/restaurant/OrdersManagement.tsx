@@ -260,7 +260,7 @@ export const OrdersManagement: React.FC = () => {
         return <Badge variant="info">{t('deliveryOrderType')}</Badge>;
       case 'pickup':
         return <Badge variant="gray">{t('pickup')}</Badge>;
-      case 'table':
+      case 'dine-in':
         return <Badge variant="warning">{t('tableOrderType')} {tableNumber}</Badge>;
       default:
         return <Badge variant="gray">{orderType}</Badge>;
@@ -1370,7 +1370,7 @@ export const OrdersManagement: React.FC = () => {
                 <option value="all">{t('allTypes')}</option>
                 <option value="pickup">{t('pickup')}</option>
                 <option value="delivery">{t('deliveryOrderType')}</option>
-                <option value="table">{t('tableOrderType')}</option>
+                <option value="dine-in">{t('tableOrderType')}</option>
               </select>
             </div>
             <div>
