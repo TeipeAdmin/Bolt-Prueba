@@ -376,15 +376,6 @@ export const LandingPage: React.FC = () => {
       {/* Video Section */}
       <section className="py-16 md:py-24 bg-gradient-to-br from-gray-50 to-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
-              {t('videoSectionTitle') || 'Descubre Platyo en acción'}
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              {t('videoSectionSubtitle') || 'Mira cómo Platyo transforma la gestión de tu restaurante'}
-            </p>
-          </div>
-
           <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-2xl">
             <iframe
               src="https://www.youtube.com/embed/bSKNTe1m3QY?autoplay=1&mute=1&controls=1&modestbranding=1&rel=0&showinfo=0&loop=1&playlist=bSKNTe1m3QY"
