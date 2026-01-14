@@ -966,7 +966,6 @@ export const PublicMenu: React.FC = () => {
                   >
                     <div className="absolute top-2 right-2 flex flex-col gap-2 z-10">
 
-                      )}
                       {hasDiscount && (
                         <div
                           className="px-2 py-1 text-xs font-bold rounded"
