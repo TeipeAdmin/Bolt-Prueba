@@ -8,12 +8,14 @@ interface VoiceAssistantWidgetProps {
   restaurantLogoUrl?: string;
   restaurantName: string;
   primaryColor: string;
+  secondaryTextColor: string;
   isMobile?: boolean;
 }
 
 export const VoiceAssistantWidget: React.FC<VoiceAssistantWidgetProps> = ({
   agentId,
   primaryColor,
+  secondaryTextColor,
   isMobile = false,
 }) => {
   const { showToast } = useToast();
@@ -120,9 +122,10 @@ export const VoiceAssistantWidget: React.FC<VoiceAssistantWidgetProps> = ({
       {/* Indicador de estado (opcional) */}
       {isActive && (
         <div
-          className="absolute -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap px-3 py-1 rounded-full text-xs font-medium text-white"
+          className="absolute -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap px-3 py-1 rounded-full text-xs font-medium"
           style={{
             backgroundColor: primaryColor,
+            color: secondaryTextColor,
           }}
         >
           {isLoading && 'Conectando...'}

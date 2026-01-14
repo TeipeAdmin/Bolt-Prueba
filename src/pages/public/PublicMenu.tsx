@@ -1567,6 +1567,7 @@ export const PublicMenu: React.FC = () => {
               restaurantLogoUrl={restaurant.logo_url}
               restaurantName={restaurant.name}
               primaryColor={primaryColor}
+              secondaryTextColor={secondaryTextColor}
               isMobile={true}
             />
           </div>
@@ -1577,6 +1578,7 @@ export const PublicMenu: React.FC = () => {
               restaurantLogoUrl={restaurant.logo_url}
               restaurantName={restaurant.name}
               primaryColor={primaryColor}
+              secondaryTextColor={secondaryTextColor}
               isMobile={false}
             />
           </div>
