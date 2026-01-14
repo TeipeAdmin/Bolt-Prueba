@@ -51,6 +51,28 @@ export const VoiceAssistantWidget: React.FC<VoiceAssistantWidgetProps> = ({
           }}
           aria-label={isActive ? 'Finalizar llamada' : 'Iniciar llamada'}
         >
+          {/* Animación de ring expansivo cuando está inactivo */}
+          {!isActive && !isLoading && (
+            <>
+              <span
+                className="absolute inset-0 rounded-full animate-ping"
+                style={{
+                  backgroundColor: primaryColor,
+                  opacity: 0.6,
+                  animationDuration: '2s',
+                }}
+              />
+              <span
+                className="absolute inset-0 rounded-full animate-pulse"
+                style={{
+                  backgroundColor: primaryColor,
+                  opacity: 0.4,
+                  animationDuration: '2s',
+                }}
+              />
+            </>
+          )}
+
           {isLoading ? (
             <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
           ) : isActive ? (
