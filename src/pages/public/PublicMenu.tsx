@@ -1558,9 +1558,16 @@ export const PublicMenu: React.FC = () => {
       </div>
       {/* ELEVENLABS AGENT - SOLO PARA PLATYO */}
       {(restaurant.name.toLowerCase() === 'platyo' || restaurant.slug?.toLowerCase() === 'platyo') && (
-        <div className="fixed bottom-2 right-4 z-[60] md:bottom-40 md:right-8">
-          <elevenlabs-convai agent-id="agent_3801keyhnx5efxps27zym0k39v0b"></elevenlabs-convai>
-        </div>
+        <>
+          {/* Móvil: más abajo */}
+          <div className="block md:hidden fixed right-4 z-[60]" style={{ bottom: '8px' }}>
+            <elevenlabs-convai agent-id="agent_3801keyhnx5efxps27zym0k39v0b"></elevenlabs-convai>
+          </div>
+          {/* Desktop: más arriba */}
+          <div className="hidden md:block fixed right-8 z-[60]" style={{ bottom: '160px' }}>
+            <elevenlabs-convai agent-id="agent_3801keyhnx5efxps27zym0k39v0b"></elevenlabs-convai>
+          </div>
+        </>
       )}
     </div>
   );
