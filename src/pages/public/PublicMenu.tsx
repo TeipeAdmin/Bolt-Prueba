@@ -997,7 +997,13 @@ export const PublicMenu: React.FC = () => {
                         />
                         {product.status === 'out_of_stock' && (
                           <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                            <span className="px-4 py-2 bg-red-600 text-white font-bold text-sm rounded">
+                            <span
+                              className="px-4 py-2 font-bold text-sm rounded"
+                              style={{
+                                backgroundColor: primaryColor,
+                                color: secondaryTextColor,
+                              }}
+                            >
                               AGOTADO
                             </span>
                           </div>
