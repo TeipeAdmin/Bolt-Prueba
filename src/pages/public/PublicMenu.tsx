@@ -1558,7 +1558,7 @@ export const PublicMenu: React.FC = () => {
       </div>
       {/* ELEVENLABS AGENT - SOLO PARA PLATYO */}
       {(restaurant.name.toLowerCase() === 'platyo' || restaurant.slug?.toLowerCase() === 'platyo') && (
-        <div className="fixed bottom-20 right-4 z-[60] md:bottom-24 md:right-8">
+        <div className="fixed bottom-4 right-4 z-[60] md:bottom-32 md:right-8">
           <elevenlabs-convai agent-id="agent_3801keyhnx5efxps27zym0k39v0b"></elevenlabs-convai>
         </div>
       )}
