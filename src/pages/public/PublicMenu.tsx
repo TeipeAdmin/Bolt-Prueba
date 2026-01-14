@@ -896,8 +896,8 @@ export const PublicMenu: React.FC = () => {
                               <span
                                 className="px-2 py-1 text-xs font-bold rounded"
                                 style={{
-                                  backgroundColor: '#ef4444',
-                                  color: '#ffffff',
+                                  backgroundColor: primaryColor,
+                                  color: secondaryTextColor,
                                 }}
                               >
                                 -{discountPercentage}%
