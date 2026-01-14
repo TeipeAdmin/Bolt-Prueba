@@ -31,7 +31,7 @@ export const VoiceAssistantWidget: React.FC<VoiceAssistantWidgetProps> = ({
   return (
     <div
       className={`fixed z-[60] ${
-        isMobile ? 'right-4 bottom-4' : 'right-8 bottom-24'
+        isMobile ? 'right-4 bottom-4' : 'right-8 bottom-20'
       }`}
     >
       <div
