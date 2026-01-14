@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { Phone, PhoneOff, Utensils } from 'lucide-react';
+import React from 'react';
+import { Phone, PhoneOff } from 'lucide-react';
 import { useElevenLabsConversation } from '../../hooks/useElevenLabsConversation';
 import { useToast } from '../../hooks/useToast';
 
@@ -13,8 +13,6 @@ interface VoiceAssistantWidgetProps {
 
 export const VoiceAssistantWidget: React.FC<VoiceAssistantWidgetProps> = ({
   agentId,
-  restaurantLogoUrl,
-  restaurantName,
   primaryColor,
   isMobile = false,
 }) => {
@@ -33,38 +31,15 @@ export const VoiceAssistantWidget: React.FC<VoiceAssistantWidgetProps> = ({
   return (
     <div
       className={`fixed z-[60] ${
-        isMobile ? 'right-4 bottom-4' : 'right-8 bottom-8'
+        isMobile ? 'right-4 bottom-4' : 'right-8 bottom-24'
       }`}
     >
       <div
-        className="flex items-center gap-3 transition-all duration-300"
+        className="transition-all duration-300"
         style={{
           filter: isActive ? 'drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3))' : 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))',
         }}
       >
-        {/* Logo del Restaurante */}
-        <div
-          className="relative w-14 h-14 rounded-full flex items-center justify-center bg-white overflow-hidden"
-          style={{
-            border: `3px solid ${primaryColor}`,
-            boxShadow: isActive ? `0 0 0 4px ${primaryColor}33` : 'none',
-            transition: 'all 0.3s ease',
-          }}
-        >
-          {restaurantLogoUrl ? (
-            <img
-              src={restaurantLogoUrl}
-              alt={restaurantName}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <Utensils
-              className="w-6 h-6"
-              style={{ color: primaryColor }}
-            />
-          )}
-        </div>
-
         {/* Botón de Llamada */}
         <button
           onClick={toggleConversation}
