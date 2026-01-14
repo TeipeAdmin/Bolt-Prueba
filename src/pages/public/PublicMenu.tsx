@@ -862,7 +862,7 @@ export const PublicMenu: React.FC = () => {
                           />
                           {product.status === 'out_of_stock' && (
                             <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                              <span className="px-4 py-2 bg-red-600 text-white font-bold text-sm rounded">
+                              <span className="px-4 py-2 font-bold text-sm rounded">
                                 AGOTADO
                               </span>
                             </div>
@@ -968,10 +968,10 @@ export const PublicMenu: React.FC = () => {
                       {product.status === 'out_of_stock' && (
                         <div
                           className="px-2 py-1 text-xs font-bold rounded"
-                          style={{
-                            backgroundColor: '#dc2626',
-                            color: '#ffffff',
-                          }}
+                              style={{
+                                backgroundColor: primaryColor,
+                                color: secondaryTextColor,
+                               }}
                         >
                           AGOTADO
                         </div>
