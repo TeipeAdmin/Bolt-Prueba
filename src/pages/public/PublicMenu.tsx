@@ -30,6 +30,7 @@ import Pathtop from '../../components/public/Pathformtop.tsx'; /*DF:componenetes
 import Pathbottom from '../../components/public/Pathformbottom.tsx'; /*DF:componenetes pathform*/
 import Pathleft from '../../components/public/Pathformleft.tsx'; /*DF:componenetes pathform*/
 import { FloatingFooter } from '../../components/public/FloatingFooter.tsx'; /*DF:componenetes pathform*/
+import { VoiceAssistantWidget } from '../../components/public/VoiceAssistantWidget';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 export const PublicMenu: React.FC = () => {
@@ -467,9 +468,9 @@ export const PublicMenu: React.FC = () => {
 
             {/* Logo */}
             <div className="flex-shrink-0 text-center">
-              {(restaurant as any).logo_url ? (
+              {restaurant.logo_url ? (
                 <img
-                  src={(restaurant as any).logo_url}
+                  src={restaurant.logo_url}
                   alt={restaurant.name}
                   className="h-16 mx-auto"
                 />
@@ -1556,16 +1557,28 @@ export const PublicMenu: React.FC = () => {
           theme={theme}
         />
       </div>
-      {/* ELEVENLABS AGENT - SOLO PARA PLATYO */}
-      {(restaurant.name.toLowerCase() === 'platyo' || restaurant.slug?.toLowerCase() === 'platyo') && (
+      {/* VOICE ASSISTANT WIDGET */}
+      {restaurant.elevenlabs_agent_id && (
         <>
-          {/* Móvil: más abajo */}
-          <div className="block md:hidden fixed right-4 z-[60]" style={{ bottom: '8px' }}>
-            <elevenlabs-convai agent-id="agent_3801keyhnx5efxps27zym0k39v0b"></elevenlabs-convai>
+          {/* Móvil */}
+          <div className="block md:hidden">
+            <VoiceAssistantWidget
+              agentId={restaurant.elevenlabs_agent_id}
+              restaurantLogoUrl={restaurant.logo_url}
+              restaurantName={restaurant.name}
+              primaryColor={primaryColor}
+              isMobile={true}
+            />
           </div>
-          {/* Desktop: más arriba */}
-          <div className="hidden md:block fixed right-8 z-[60]" style={{ bottom: '160px' }}>
-            <elevenlabs-convai agent-id="agent_3801keyhnx5efxps27zym0k39v0b"></elevenlabs-convai>
+          {/* Desktop */}
+          <div className="hidden md:block">
+            <VoiceAssistantWidget
+              agentId={restaurant.elevenlabs_agent_id}
+              restaurantLogoUrl={restaurant.logo_url}
+              restaurantName={restaurant.name}
+              primaryColor={primaryColor}
+              isMobile={false}
+            />
           </div>
         </>
       )}

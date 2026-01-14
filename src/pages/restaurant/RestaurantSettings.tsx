@@ -185,6 +185,7 @@ export const RestaurantSettings: React.FC = () => {
           theme_color: formData.theme_color,
           settings: formData.settings,
           domain: formData.domain,
+          elevenlabs_agent_id: formData.elevenlabs_agent_id,
           updated_at: new Date().toISOString()
         })
         .eq('id', restaurant.id)
@@ -773,7 +774,89 @@ export const RestaurantSettings: React.FC = () => {
                 </div>
               </div>
 
-  
+              {/* Voice Assistant Section */}
+              <div className="bg-white rounded-xl md:rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-4 md:px-6 py-3 md:py-4 border-b border-gray-200">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md">
+                      <Phone className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-base md:text-lg font-bold text-gray-900">Asistente de Voz</h3>
+                      <p className="text-sm text-gray-600">Configura tu agente de voz con ElevenLabs</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 md:p-6">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                        <Phone className="w-4 h-4 text-gray-500" />
+                        ElevenLabs Agent ID
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.elevenlabs_agent_id || ''}
+                        onChange={(e) => updateFormData('elevenlabs_agent_id', e.target.value)}
+                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white transition-all font-medium"
+                        placeholder="agent_xxxxxxxxxxxxxxxxxxxxx"
+                      />
+                      <p className="text-xs text-gray-500 mt-2">
+                        Ingresa el Agent ID de tu agente de ElevenLabs para habilitar el widget de voz en tu menú público.
+                      </p>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-100">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold text-gray-900 mb-2">¿Cómo obtener tu Agent ID?</p>
+                          <ol className="space-y-1.5 text-xs text-gray-700 list-decimal list-inside">
+                            <li>Ve a tu dashboard de ElevenLabs</li>
+                            <li>Navega a la sección "Conversational AI"</li>
+                            <li>Selecciona o crea un agente</li>
+                            <li>Copia el Agent ID que empieza con "agent_"</li>
+                          </ol>
+                          <a
+                            href="https://elevenlabs.io/app/conversational-ai"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 mt-3 text-xs font-semibold text-indigo-600 hover:text-indigo-700 transition-colors"
+                          >
+                            Ir a ElevenLabs
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+
+                    {formData.elevenlabs_agent_id && (
+                      <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                          <p className="text-sm font-semibold text-green-800">
+                            Widget de voz habilitado
+                          </p>
+                        </div>
+                        <p className="text-xs text-green-700 mt-2 ml-8">
+                          El widget de voz aparecerá en tu menú público una vez guardes los cambios.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+
 
 
 

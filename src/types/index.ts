@@ -237,12 +237,14 @@ export interface Restaurant {
   address?: string;
   description?: string;
   logo?: string;
+  logo_url?: string;
   owner_name?: string;
   owner_id: string;
   user_id?: string;
   subscription_id?: string;
   domain?: string;
   is_active?: boolean;
+  elevenlabs_agent_id?: string;
   settings: RestaurantSettings;
   created_at: string;
   updated_at: string;
