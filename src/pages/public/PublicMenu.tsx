@@ -965,16 +965,7 @@ export const PublicMenu: React.FC = () => {
                     }}
                   >
                     <div className="absolute top-2 right-2 flex flex-col gap-2 z-10">
-                      {product.status === 'out_of_stock' && (
-                        <div
-                          className="px-2 py-1 text-xs font-bold rounded"
-                              style={{
-                                backgroundColor: primaryColor,
-                                color: secondaryTextColor,
-                               }}
-                        >
-                          AGOTADO
-                        </div>
+
                       )}
                       {hasDiscount && (
                         <div
