@@ -76,23 +76,19 @@ export const LandingPage: React.FC = () => {
           loop: 1,
           playlist: videoId, // necesario para loop
           mute: 1, // arrancar mute para que el autoplay no lo bloquee
-          // Ayuda a evitar problemas de embebido en móviles/Safari
           origin: window.location.origin
         },
         events: {
           onReady: (event: any) => {
             try {
-              // Garantiza autoplay (muted) y luego sincroniza con el estado real
               event.target.mute();
               event.target.playVideo();
 
-              // Aplica tu estado real de mute (por si cambió antes de ready)
               if (isVideoMuted) event.target.mute();
               else event.target.unMute();
             } catch {}
           },
           onStateChange: (event: any) => {
-            // Algunos móviles quedan "unstarted" (-1) o "cued" (5); reintenta play.
             try {
               if (event.data === -1 || event.data === 5) {
                 event.target.playVideo();
@@ -103,13 +99,11 @@ export const LandingPage: React.FC = () => {
       });
     };
 
-    // Si ya está cargado YT, crear player
     if (window.YT && window.YT.Player) {
       createPlayer();
       return;
     }
 
-    // Cargar script si no existe
     const existingScript = document.querySelector(
       'script[src="https://www.youtube.com/iframe_api"]'
     );
@@ -119,7 +113,6 @@ export const LandingPage: React.FC = () => {
       document.body.appendChild(tag);
     }
 
-    // Hook global que llama YouTube cuando está listo
     const prev = window.onYouTubeIframeAPIReady;
     window.onYouTubeIframeAPIReady = () => {
       if (typeof prev === 'function') prev();
@@ -127,14 +120,11 @@ export const LandingPage: React.FC = () => {
     };
 
     return () => {
-      // Recomendado: destruir en un SPA para evitar leaks al navegar.
-      // (No reinicia en cada render, solo al desmontar la página)
       try {
         playerRef.current?.destroy?.();
       } catch {}
       playerRef.current = null;
     };
-    // Importante: no meter isVideoMuted en deps para no recrear el player.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -273,7 +263,6 @@ export const LandingPage: React.FC = () => {
     }
   ];
 
-  // Colores del nav según scroll
   const navButtonClass = isScrolled
     ? 'text-gray-700 hover:text-orange-600'
     : 'text-white hover:text-white/90';
@@ -437,8 +426,8 @@ export const LandingPage: React.FC = () => {
         )}
       </nav>
 
-      {/* Video Banner (UN SOLO DOM para el player) */}
-      <section className="relative w-full overflow-hidden bg-black pt-20 md:pt-0">
+      {/* Video Banner (detrás del header también en móvil) */}
+      <section className="relative w-full overflow-hidden bg-black pt-0">
         {/* Botón mute/unmute */}
         <div className="absolute top-24 md:top-28 right-4 md:right-8 z-10">
           <button
@@ -452,7 +441,6 @@ export const LandingPage: React.FC = () => {
           </button>
         </div>
 
-        {/* Un solo wrapper: en móvil será aspect-video; en desktop será h-screen */}
         <div className="yt-wrapper">
           <div className="yt-surface">
             <div id={ytContainerId} className="yt-player-root" />
@@ -497,19 +485,25 @@ export const LandingPage: React.FC = () => {
                 <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
                   100+
                 </div>
-                <div className="text-sm md:text-base text-gray-600 mt-1">{t('statActiveRestaurants')}</div>
+                <div className="text-sm md:text-base text-gray-600 mt-1">
+                  {t('statActiveRestaurants')}
+                </div>
               </div>
               <div>
                 <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
                   10K+
                 </div>
-                <div className="text-sm md:text-base text-gray-600 mt-1">{t('statOrdersProcessed')}</div>
+                <div className="text-sm md:text-base text-gray-600 mt-1">
+                  {t('statOrdersProcessed')}
+                </div>
               </div>
               <div>
                 <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
                   98%
                 </div>
-                <div className="text-sm md:text-base text-gray-600 mt-1">{t('statSatisfaction')}</div>
+                <div className="text-sm md:text-base text-gray-600 mt-1">
+                  {t('statSatisfaction')}
+                </div>
               </div>
             </div>
           </div>
@@ -623,11 +617,7 @@ export const LandingPage: React.FC = () => {
                     >
                       ${plan.price}
                     </span>
-                    <span
-                      className={`text-lg ${
-                        plan.popular ? 'text-orange-100' : 'text-gray-600'
-                      }`}
-                    >
+                    <span className={`text-lg ${plan.popular ? 'text-orange-100' : 'text-gray-600'}`}>
                       {plan.price > 0 ? `/${plan.period}` : ''}
                     </span>
                   </div>
@@ -786,7 +776,7 @@ export const LandingPage: React.FC = () => {
         <MessageCircle className="w-7 h-7 text-white" />
       </a>
 
-      {/* Animation Styles + YouTube responsive styles */}
+      {/* Animation Styles + YouTube full-bleed cover (mobile + desktop) */}
       <style>{`
         @keyframes blob {
           0%, 100% { transform: translate(0, 0) scale(1); }
@@ -796,25 +786,22 @@ export const LandingPage: React.FC = () => {
         .animate-blob { animation: blob 7s infinite; }
         .animation-delay-2000 { animation-delay: 2s; }
 
-        /* ====== VIDEO WRAPPER ÚNICO (mobile + desktop) ====== */
-
-        /* Mobile por defecto: 16:9 */
+        /* ====== VIDEO WRAPPER: FULL-BLEED TAMBIÉN EN MÓVIL ====== */
         .yt-wrapper{
           position: relative;
           width: 100%;
+          height: 100vh;      /* <-- móvil también full screen */
           background: #000;
+          overflow: hidden;
         }
 
-        /* “surface” mantiene proporción en móvil */
         .yt-surface{
-          position: relative;
-          width: 100%;
-          aspect-ratio: 16 / 9;
+          position: absolute;
+          inset: 0;
           overflow: hidden;
           background: #000;
         }
 
-        /* Overlay ligero */
         .yt-overlay{
           position: absolute;
           inset: 0;
@@ -822,37 +809,21 @@ export const LandingPage: React.FC = () => {
           pointer-events: none;
         }
 
-        /* Iframe en móvil: normal (encaja exacto) */
+        /* Cover (móvil + desktop) */
         .yt-surface iframe{
           position: absolute !important;
-          inset: 0 !important;
-          width: 100% !important;
-          height: 100% !important;
+          top: 50% !important;
+          left: 50% !important;
+          transform: translate(-50%, -50%) !important;
+
+          min-width: 100% !important;
+          min-height: 100% !important;
+
+          width: 177.7777778vh !important; /* 100vh * (16/9) */
+          height: 56.25vw !important;      /* 100vw * (9/16) */
+
           border: 0 !important;
-        }
-
-        /* Desktop: pantalla completa + cover */
-        @media (min-width: 768px){
-          .yt-surface{
-            height: 100vh;
-            aspect-ratio: auto;
-          }
-
-          .yt-surface iframe{
-            position: absolute !important;
-            top: 50% !important;
-            left: 50% !important;
-            transform: translate(-50%, -50%) !important;
-
-            min-width: 100% !important;
-            min-height: 100% !important;
-
-            width: 177.7777778vh !important; /* 100vh * (16/9) */
-            height: 56.25vw !important;      /* 100vw * (9/16) */
-
-            border: 0 !important;
-            pointer-events: none;
-          }
+          pointer-events: none;
         }
       `}</style>
     </div>
