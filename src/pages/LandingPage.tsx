@@ -437,7 +437,7 @@ export const LandingPage: React.FC = () => {
             aria-label={isVideoMuted ? 'Activar audio del video' : 'Silenciar audio del video'}
           >
             {isVideoMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-            <span className="text-sm font-medium">{isVideoMuted ? 'Audio OFF' : 'Audio ON'}</span>
+            <span className="text-sm font-medium">{isVideoMuted ? 'OFF' : 'ON'}</span>
           </button>
         </div>
 
