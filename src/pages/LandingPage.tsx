@@ -331,14 +331,8 @@ export const LandingPage: React.FC = () => {
           </button>
         </div>
 
-        {/* Importante:
-            Con YouTube, el audio no se puede "prender" de forma fiable solo cambiando la URL,
-            porque el autoplay con sonido normalmente está bloqueado.
-            Aun así, este enfoque hace:
-            - MUTE por defecto (autoplay permitido)
-            - Al "Audio ON", recarga el iframe sin mute para que el usuario lo active.
-        */}
-        <div className="absolute inset-0">
+        {/* Contenedor "cover" para evitar bordes negros en desktop y mejorar mobile */}
+        <div className="yt-cover absolute inset-0">
           <iframe
             key={isVideoMuted ? 'muted' : 'unmuted'}
             src={`https://www.youtube.com/embed/bSKNTe1m3QY?autoplay=1&mute=${
@@ -347,7 +341,7 @@ export const LandingPage: React.FC = () => {
             title="Platyo Video Banner"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
-            className="absolute top-0 left-0 w-full h-full"
+            className="yt-cover__iframe"
           />
         </div>
 
@@ -668,7 +662,7 @@ export const LandingPage: React.FC = () => {
         <MessageCircle className="w-7 h-7 text-white" />
       </a>
 
-      {/* Animation Styles */}
+      {/* Animation Styles + CSS para "cover" del iframe */}
       <style>{`
         @keyframes blob {
           0%, 100% { transform: translate(0, 0) scale(1); }
@@ -681,6 +675,40 @@ export const LandingPage: React.FC = () => {
         .animation-delay-2000 {
           animation-delay: 2s;
         }
+
+        /* --- YouTube Fullscreen Cover --- */
+        .yt-cover {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: #000;
+        }
+
+        /* El iframe se centra y se escala para cubrir el viewport sin bordes negros */
+        .yt-cover__iframe {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+
+          /* Tamaño mínimo para cubrir */
+          min-width: 100%;
+          min-height: 100%;
+
+          /* Truco basado en el ratio 16:9 para cubrir diferentes pantallas */
+          width: 177.7777778vh; /* 100vh * (16/9) */
+          height: 56.25vw;      /* 100vw * (9/16) */
+
+          border: 0;
+          pointer-events: none; /* evita que el usuario "toque" el iframe (se siente más banner) */
+        }
+
+        /* En móvil a veces conviene permitir interacción (por políticas/autoplay), si quieres:
+           comenta pointer-events: none arriba y descomenta esto:
+           @media (max-width: 768px) {
+             .yt-cover__iframe { pointer-events: auto; }
+           }
+        */
       `}</style>
     </div>
   );
