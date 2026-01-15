@@ -790,9 +790,15 @@ export const LandingPage: React.FC = () => {
         .yt-wrapper{
           position: relative;
           width: 100%;
-          height: 100vh;      /* <-- móvil también full screen */
+          height: 35vh;       /* móvil */
           background: #000;
           overflow: hidden;
+        }
+        
+        @media (min-width: 768px){
+          .yt-wrapper{
+            height: 100vh;    /* desktop */
+          }
         }
 
         .yt-surface{
