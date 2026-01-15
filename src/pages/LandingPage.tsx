@@ -429,7 +429,7 @@ export const LandingPage: React.FC = () => {
       {/* Video Banner (detrás del header también en móvil) */}
       <section className="relative w-full overflow-hidden bg-black pt-0">
         {/* Botón mute/unmute */}
-        <div className="absolute top-20 md:top-28 right-4 md:right-8 z-10">
+        <div className="absolute top-12 md:top-28 right-4 md:right-8 z-10">
           <button
             type="button"
             onClick={() => setIsVideoMuted((v) => !v)}
