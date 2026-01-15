@@ -182,11 +182,7 @@ export const LandingPage: React.FC = () => {
             {/* Logo */}
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
-                <img
-                  src="/PLATYO FAVICON BLANCO.svg"
-                  alt="Platyo"
-                  className="w-8 h-8"
-                />
+                <img src="/PLATYO FAVICON BLANCO.svg" alt="Platyo" className="w-8 h-8" />
               </div>
               <span className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
                 Platyo
@@ -315,75 +311,88 @@ export const LandingPage: React.FC = () => {
         )}
       </nav>
 
-      {/* Hero Section */}
-      <section className="relative pt-24 md:pt-32 pb-16 md:pb-24 overflow-hidden">
-        {/* Background Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-50 via-red-50 to-white -z-10"></div>
-
-        {/* Decorative Elements */}
-        <div className="absolute top-20 right-10 w-72 h-72 bg-orange-200 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob"></div>
-        <div className="absolute top-40 left-10 w-72 h-72 bg-red-200 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob animation-delay-2000"></div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-4xl mx-auto">
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
-              {t('heroTitle')}
-            </h1>
-            <p className="text-xl md:text-2xl text-gray-600 mb-10 leading-relaxed">
-              {t('heroSubtitle')}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <button
-                onClick={() => navigate('/login')}
-                className="px-8 py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg font-semibold text-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex items-center gap-2"
-              >
-                {t('startFreeTrial')}
-                <ArrowRight className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => scrollToSection('features')}
-                className="px-8 py-4 bg-white border-2 border-gray-300 text-gray-700 rounded-lg font-semibold text-lg hover:border-orange-500 hover:text-orange-600 transition-all duration-300"
-              >
-                {t('learnMore')}
-              </button>
-            </div>
-
-            {/* Stats */}
-            <div className="mt-16 grid grid-cols-3 gap-8 max-w-3xl mx-auto">
-              <div>
-                <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                  100+
-                </div>
-                <div className="text-sm md:text-base text-gray-600 mt-1">{t('statActiveRestaurants')}</div>
-              </div>
-              <div>
-                <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                  10K+
-                </div>
-                <div className="text-sm md:text-base text-gray-600 mt-1">{t('statOrdersProcessed')}</div>
-              </div>
-              <div>
-                <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                  98%
-                </div>
-                <div className="text-sm md:text-base text-gray-600 mt-1">{t('statSatisfaction')}</div>
-              </div>
-            </div>
-          </div>
+      {/* Video Banner (Full Screen) */}
+      <section className="relative h-screen w-full overflow-hidden">
+        {/* Video */}
+        <div className="absolute inset-0">
+          <iframe
+            src="https://www.youtube.com/embed/bSKNTe1m3QY?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&showinfo=0&loop=1&playlist=bSKNTe1m3QY&playsinline=1"
+            title="Platyo Demo Video"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            className="absolute top-0 left-0 w-full h-full"
+          />
         </div>
-      </section>
 
-      {/* Video Section */}
-      <section className=" bg-gradient-to-br from-gray-50 to-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-2xl">
-            <iframe
-              src="https://www.youtube.com/embed/bSKNTe1m3QY?autoplay=1&mute=1&controls=1&modestbranding=1&rel=0&showinfo=0&loop=1&playlist=bSKNTe1m3QY"
-              title="Platyo Demo Video"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className="absolute top-0 left-0 w-full h-full"
-            />
+        {/* Overlay (para legibilidad del contenido) */}
+        <div className="absolute inset-0 bg-black/45" />
+
+        {/* Contenido encima del video */}
+        <div className="relative z-10 h-full flex items-center">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+            <div className="text-center max-w-4xl mx-auto">
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
+                {t('heroTitle')}
+              </h1>
+              <p className="text-xl md:text-2xl text-white/90 mb-10 leading-relaxed">
+                {t('heroSubtitle')}
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <button
+                  onClick={() => navigate('/login')}
+                  className="px-8 py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg font-semibold text-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex items-center gap-2"
+                >
+                  {t('startFreeTrial')}
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+
+                <button
+                  onClick={() => scrollToSection('features')}
+                  className="px-8 py-4 bg-white/10 backdrop-blur border-2 border-white/40 text-white rounded-lg font-semibold text-lg hover:border-orange-300 transition-all duration-300"
+                >
+                  {t('learnMore')}
+                </button>
+              </div>
+
+              {/* Stats */}
+              <div className="mt-16 grid grid-cols-3 gap-8 max-w-3xl mx-auto">
+                <div>
+                  <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-300 to-red-300 bg-clip-text text-transparent">
+                    100+
+                  </div>
+                  <div className="text-sm md:text-base text-white/80 mt-1">
+                    {t('statActiveRestaurants')}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-300 to-red-300 bg-clip-text text-transparent">
+                    10K+
+                  </div>
+                  <div className="text-sm md:text-base text-white/80 mt-1">
+                    {t('statOrdersProcessed')}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-300 to-red-300 bg-clip-text text-transparent">
+                    98%
+                  </div>
+                  <div className="text-sm md:text-base text-white/80 mt-1">
+                    {t('statSatisfaction')}
+                  </div>
+                </div>
+              </div>
+
+              {/* Hint scroll */}
+              <div className="mt-10">
+                <button
+                  onClick={() => scrollToSection('features')}
+                  className="text-white/80 hover:text-white underline underline-offset-4 transition-colors"
+                >
+                  {t('learnMore')}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -406,15 +415,13 @@ export const LandingPage: React.FC = () => {
                 key={index}
                 className="group p-8 bg-white rounded-2xl border border-gray-200 hover:border-orange-300 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
               >
-                <div className={`w-14 h-14 bg-gradient-to-br ${feature.color} rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                <div
+                  className={`w-14 h-14 bg-gradient-to-br ${feature.color} rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}
+                >
                   <feature.icon className="w-7 h-7 text-white" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">
-                  {feature.title}
-                </h3>
-                <p className="text-gray-600 leading-relaxed">
-                  {feature.description}
-                </p>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
+                <p className="text-gray-600 leading-relaxed">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -571,12 +578,8 @@ export const LandingPage: React.FC = () => {
       {/* Final CTA Section */}
       <section className="py-16 md:py-24 bg-gradient-to-br from-orange-500 to-red-500 text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            {t('ctaTitle')}
-          </h2>
-          <p className="text-xl mb-10 text-orange-100">
-            {t('ctaSubtitle')}
-          </p>
+          <h2 className="text-3xl md:text-5xl font-bold mb-6">{t('ctaTitle')}</h2>
+          <p className="text-xl mb-10 text-orange-100">{t('ctaSubtitle')}</p>
           <button
             onClick={() => navigate('/login')}
             className="px-10 py-4 bg-white text-orange-600 rounded-lg font-bold text-lg hover:bg-orange-50 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-2xl"
@@ -594,17 +597,11 @@ export const LandingPage: React.FC = () => {
             <div className="md:col-span-2">
               <div className="flex items-center space-x-3 mb-4">
                 <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
-                  <img
-                    src="/PLATYO FAVICON BLANCO.svg"
-                    alt="Platyo"
-                    className="w-8 h-8"
-                  />
+                  <img src="/PLATYO FAVICON BLANCO.svg" alt="Platyo" className="w-8 h-8" />
                 </div>
                 <span className="text-2xl font-bold text-white">Platyo</span>
               </div>
-              <p className="text-gray-400 mb-4">
-                {t('footerDescription')}
-              </p>
+              <p className="text-gray-400 mb-4">{t('footerDescription')}</p>
             </div>
 
             {/* Quick Links */}
@@ -642,12 +639,8 @@ export const LandingPage: React.FC = () => {
             <div>
               <h3 className="text-white font-bold mb-4">{t('footerContact')}</h3>
               <ul className="space-y-2">
-                <li className="text-gray-400">
-                  {t('footerEmail')}: admin@digitalfenixpro.com
-                </li>
-                <li className="text-gray-400">
-                  {t('footerPhone')}: +57 302 709 9669
-                </li>
+                <li className="text-gray-400">{t('footerEmail')}: admin@digitalfenixpro.com</li>
+                <li className="text-gray-400">{t('footerPhone')}: +57 302 709 9669</li>
               </ul>
             </div>
           </div>
