@@ -35,12 +35,9 @@ export const LandingPage: React.FC = () => {
   // Audio state (sin reiniciar video)
   const [isVideoMuted, setIsVideoMuted] = useState(true);
 
-  // YouTube Player refs (DESKTOP + MOBILE separados)
-  const desktopPlayerRef = useRef<any>(null);
-  const mobilePlayerRef = useRef<any>(null);
-
-  const ytDesktopContainerId = 'platyo-yt-banner-player-desktop';
-  const ytMobileContainerId = 'platyo-yt-banner-player-mobile';
+  // YouTube Player refs
+  const playerRef = useRef<any>(null);
+  const ytContainerId = 'platyo-yt-banner-player';
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -56,107 +53,48 @@ export const LandingPage: React.FC = () => {
     }
   };
 
-  // Util: mute/unmute ambos sin reiniciar
-  const syncMuteState = (muted: boolean) => {
-    const players = [desktopPlayerRef.current, mobilePlayerRef.current].filter(Boolean);
-    players.forEach((p) => {
-      try {
-        if (muted) p.mute();
-        else p.unMute();
-      } catch {}
-    });
-  };
-
-  // Cargar YouTube IFrame API (una sola vez) y crear players
+  // Cargar YouTube IFrame API (una sola vez) y crear el player
   useEffect(() => {
     const videoId = 'bSKNTe1m3QY';
 
-    const buildPlayerVars = () => ({
-      autoplay: 1,
-      controls: 0,
-      modestbranding: 1,
-      rel: 0,
-      playsinline: 1,
-      loop: 1,
-      playlist: videoId, // necesario para loop
-      mute: 1, // arrancar mute para que el autoplay no lo bloquee
-      // Ayuda en móviles/Safari a evitar “pantalla negra” por políticas y CORS/origin
-      origin: window.location.origin
-    });
-
-    const createDesktopPlayer = () => {
+    const createPlayer = () => {
       if (!window.YT || !window.YT.Player) return;
-      if (desktopPlayerRef.current) return;
 
-      desktopPlayerRef.current = new window.YT.Player(ytDesktopContainerId, {
+      // Evita recrearlo si ya existe
+      if (playerRef.current) return;
+
+      playerRef.current = new window.YT.Player(ytContainerId, {
         videoId,
-        playerVars: buildPlayerVars(),
+        playerVars: {
+          autoplay: 1,
+          controls: 0,
+          modestbranding: 1,
+          rel: 0,
+          playsinline: 1,
+          loop: 1,
+          playlist: videoId, // necesario para loop
+          mute: 1 // arrancar mute para que el autoplay no lo bloquee
+        },
         events: {
           onReady: (event: any) => {
+            // Asegura autoplay
             try {
-              // Asegura autoplay + estado mute
-              event.target.mute();
               event.target.playVideo();
-              // Reaplica tu estado real
-              syncMuteState(isVideoMuted);
-            } catch {}
-          },
-          onStateChange: (event: any) => {
-            // En algunos móviles el primer play falla; reintenta si quedó “unstarted”
-            try {
-              // -1 = unstarted, 5 = video cued
-              if (event.data === -1 || event.data === 5) {
-                event.target.playVideo();
-              }
+              event.target.mute();
             } catch {}
           }
         }
       });
     };
 
-    const createMobilePlayer = () => {
-      if (!window.YT || !window.YT.Player) return;
-      if (mobilePlayerRef.current) return;
-
-      mobilePlayerRef.current = new window.YT.Player(ytMobileContainerId, {
-        videoId,
-        playerVars: buildPlayerVars(),
-        events: {
-          onReady: (event: any) => {
-            try {
-              event.target.mute();
-              event.target.playVideo();
-              syncMuteState(isVideoMuted);
-            } catch {}
-          },
-          onStateChange: (event: any) => {
-            try {
-              if (event.data === -1 || event.data === 5) {
-                event.target.playVideo();
-              }
-            } catch {}
-          }
-        }
-      });
-    };
-
-    const createPlayers = () => {
-      // Importante: ambos contenedores existen en el DOM aunque estén hidden por CSS,
-      // así que los podemos crear sin problemas (y evitamos el bug del id duplicado).
-      createDesktopPlayer();
-      createMobilePlayer();
-    };
-
-    // Si ya está cargado YT, crear players
+    // Si ya está cargado YT, crear player
     if (window.YT && window.YT.Player) {
-      createPlayers();
+      createPlayer();
       return;
     }
 
     // Cargar script si no existe
-    const existingScript = document.querySelector(
-      'script[src="https://www.youtube.com/iframe_api"]'
-    );
+    const existingScript = document.querySelector('script[src="https://www.youtube.com/iframe_api"]');
     if (!existingScript) {
       const tag = document.createElement('script');
       tag.src = 'https://www.youtube.com/iframe_api';
@@ -167,23 +105,23 @@ export const LandingPage: React.FC = () => {
     const prev = window.onYouTubeIframeAPIReady;
     window.onYouTubeIframeAPIReady = () => {
       if (typeof prev === 'function') prev();
-      createPlayers();
+      createPlayer();
     };
 
     return () => {
-      // Si quieres limpiar (opcional). Si lo haces, asegúrate de no recrearlo en cada render.
-      // try { desktopPlayerRef.current?.destroy?.(); } catch {}
-      // try { mobilePlayerRef.current?.destroy?.(); } catch {}
-      // desktopPlayerRef.current = null;
-      // mobilePlayerRef.current = null;
+      // opcional: destruir player al desmontar
+      // if (playerRef.current?.destroy) playerRef.current.destroy();
+      // playerRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Mutear / desmutear SIN reiniciar (aplica a ambos)
+  // Mutear / desmutear SIN reiniciar
   useEffect(() => {
-    syncMuteState(isVideoMuted);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (!playerRef.current) return;
+    try {
+      if (isVideoMuted) playerRef.current.mute();
+      else playerRef.current.unMute();
+    } catch {}
   }, [isVideoMuted]);
 
   const features = [
@@ -497,15 +435,16 @@ export const LandingPage: React.FC = () => {
         {/* Desktop cover */}
         <div className="hidden md:block relative h-screen w-full">
           <div className="yt-cover absolute inset-0">
-            <div id={ytDesktopContainerId} className="yt-cover__player" />
+            <div id={ytContainerId} className="yt-cover__player" />
           </div>
           <div className="absolute inset-0 bg-black/10 pointer-events-none" />
         </div>
 
         {/* Mobile normal (altura 16:9) */}
         <div className="block md:hidden w-full">
-          <div className="relative w-full aspect-video bg-black">
-            <div id={ytMobileContainerId} className="yt-mobile__player" />
+          <div className="relative w-full aspect-video">
+            {/* Reusamos el MISMO player, pero en móvil lo dejamos en "normal" (sin cover) */}
+            <div id={ytContainerId} className="yt-mobile__player" />
             <div className="absolute inset-0 bg-black/10 pointer-events-none" />
           </div>
         </div>
@@ -658,26 +597,14 @@ export const LandingPage: React.FC = () => {
                 )}
 
                 <div className="text-center mb-6">
-                  <h3
-                    className={`text-2xl font-bold mb-2 ${
-                      plan.popular ? 'text-white' : 'text-gray-900'
-                    }`}
-                  >
+                  <h3 className={`text-2xl font-bold mb-2 ${plan.popular ? 'text-white' : 'text-gray-900'}`}>
                     {plan.name}
                   </h3>
                   <div className="mb-2">
-                    <span
-                      className={`text-4xl font-bold ${
-                        plan.popular ? 'text-white' : 'text-gray-900'
-                      }`}
-                    >
+                    <span className={`text-4xl font-bold ${plan.popular ? 'text-white' : 'text-gray-900'}`}>
                       ${plan.price}
                     </span>
-                    <span
-                      className={`text-lg ${
-                        plan.popular ? 'text-orange-100' : 'text-gray-600'
-                      }`}
-                    >
+                    <span className={`text-lg ${plan.popular ? 'text-orange-100' : 'text-gray-600'}`}>
                       {plan.price > 0 ? `/${plan.period}` : ''}
                     </span>
                   </div>
@@ -718,10 +645,7 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* Testimonials Section */}
-      <section
-        id="testimonials"
-        className="py-16 md:py-24 bg-gradient-to-br from-gray-50 to-white"
-      >
+      <section id="testimonials" className="py-16 md:py-24 bg-gradient-to-br from-gray-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
@@ -787,18 +711,12 @@ export const LandingPage: React.FC = () => {
               <h3 className="text-white font-bold mb-4">{t('footerQuickLinks')}</h3>
               <ul className="space-y-2">
                 <li>
-                  <button
-                    onClick={() => scrollToSection('features')}
-                    className="hover:text-orange-400 transition-colors"
-                  >
+                  <button onClick={() => scrollToSection('features')} className="hover:text-orange-400 transition-colors">
                     {t('navFeatures')}
                   </button>
                 </li>
                 <li>
-                  <button
-                    onClick={() => scrollToSection('pricing')}
-                    className="hover:text-orange-400 transition-colors"
-                  >
+                  <button onClick={() => scrollToSection('pricing')} className="hover:text-orange-400 transition-colors">
                     {t('navPricing')}
                   </button>
                 </li>
@@ -856,7 +774,6 @@ export const LandingPage: React.FC = () => {
           overflow: hidden;
           background: #000;
         }
-
         /* El player crea un iframe interno; lo forzamos a "cover" via CSS */
         .yt-cover iframe {
           position: absolute !important;
