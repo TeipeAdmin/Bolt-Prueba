@@ -790,7 +790,7 @@ export const LandingPage: React.FC = () => {
         .yt-wrapper{
           position: relative;
           width: 100%;
-          height: 35vh;       /* móvil */
+          height: 30vh;       /* móvil */
           background: #000;
           overflow: hidden;
         }
