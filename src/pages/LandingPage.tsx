@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import {
@@ -32,12 +32,15 @@ export const LandingPage: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Audio state (sin reiniciar video)
+  // Audio del video banner (controlado por YouTube API, sin reiniciar)
   const [isVideoMuted, setIsVideoMuted] = useState(true);
 
-  // YouTube Player refs
-  const playerRef = useRef<any>(null);
-  const ytContainerId = 'platyo-yt-banner-player';
+  // Players separados (soluciona “móvil en negro”)
+  const playerDesktopRef = useRef<any>(null);
+  const playerMobileRef = useRef<any>(null);
+
+  const ytDesktopId = 'platyo-yt-banner-desktop';
+  const ytMobileId = 'platyo-yt-banner-mobile';
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -53,75 +56,108 @@ export const LandingPage: React.FC = () => {
     }
   };
 
-  // Cargar YouTube IFrame API (una sola vez) y crear el player
+  // Cargar YouTube Iframe API y crear ambos players
   useEffect(() => {
     const videoId = 'bSKNTe1m3QY';
 
-    const createPlayer = () => {
+    const createPlayers = () => {
       if (!window.YT || !window.YT.Player) return;
 
-      // Evita recrearlo si ya existe
-      if (playerRef.current) return;
-
-      playerRef.current = new window.YT.Player(ytContainerId, {
-        videoId,
-        playerVars: {
-          autoplay: 1,
-          controls: 0,
-          modestbranding: 1,
-          rel: 0,
-          playsinline: 1,
-          loop: 1,
-          playlist: videoId, // necesario para loop
-          mute: 1 // arrancar mute para que el autoplay no lo bloquee
-        },
-        events: {
-          onReady: (event: any) => {
-            // Asegura autoplay
-            try {
-              event.target.playVideo();
-              event.target.mute();
-            } catch {}
+      // Desktop
+      if (!playerDesktopRef.current) {
+        playerDesktopRef.current = new window.YT.Player(ytDesktopId, {
+          videoId,
+          playerVars: {
+            autoplay: 1,
+            controls: 0,
+            modestbranding: 1,
+            rel: 0,
+            playsinline: 1,
+            loop: 1,
+            playlist: videoId,
+            mute: 1
+          },
+          events: {
+            onReady: (event: any) => {
+              try {
+                event.target.playVideo();
+                event.target.mute();
+              } catch {}
+            }
           }
-        }
-      });
+        });
+      }
+
+      // Mobile
+      if (!playerMobileRef.current) {
+        playerMobileRef.current = new window.YT.Player(ytMobileId, {
+          videoId,
+          playerVars: {
+            autoplay: 1,
+            controls: 0,
+            modestbranding: 1,
+            rel: 0,
+            playsinline: 1,
+            loop: 1,
+            playlist: videoId,
+            mute: 1
+          },
+          events: {
+            onReady: (event: any) => {
+              try {
+                event.target.playVideo();
+                event.target.mute();
+              } catch {}
+            }
+          }
+        });
+      }
     };
 
-    // Si ya está cargado YT, crear player
+    // Si la API ya está cargada
     if (window.YT && window.YT.Player) {
-      createPlayer();
+      createPlayers();
       return;
     }
 
     // Cargar script si no existe
-    const existingScript = document.querySelector('script[src="https://www.youtube.com/iframe_api"]');
+    const existingScript = document.querySelector(
+      'script[src="https://www.youtube.com/iframe_api"]'
+    );
     if (!existingScript) {
       const tag = document.createElement('script');
       tag.src = 'https://www.youtube.com/iframe_api';
       document.body.appendChild(tag);
     }
 
-    // Hook global que llama YouTube cuando está listo
+    // Hook global cuando la API está lista
     const prev = window.onYouTubeIframeAPIReady;
     window.onYouTubeIframeAPIReady = () => {
       if (typeof prev === 'function') prev();
-      createPlayer();
+      createPlayers();
     };
 
-    return () => {
-      // opcional: destruir player al desmontar
-      // if (playerRef.current?.destroy) playerRef.current.destroy();
-      // playerRef.current = null;
-    };
+    // Nota: si quieres destruir players al desmontar:
+    // return () => {
+    //   try { playerDesktopRef.current?.destroy?.(); } catch {}
+    //   try { playerMobileRef.current?.destroy?.(); } catch {}
+    //   playerDesktopRef.current = null;
+    //   playerMobileRef.current = null;
+    // };
   }, []);
 
-  // Mutear / desmutear SIN reiniciar
+  // Mutear / desmutear sin reiniciar (API)
   useEffect(() => {
-    if (!playerRef.current) return;
-    try {
-      if (isVideoMuted) playerRef.current.mute();
-      else playerRef.current.unMute();
-    } catch {}
+    const applyMute = (player: any) => {
+      if (!player) return;
+      try {
+        if (isVideoMuted) player.mute();
+        else player.unMute();
+      } catch {}
+    };
+
+    applyMute(playerDesktopRef.current);
+    applyMute(playerMobileRef.current);
   }, [isVideoMuted]);
 
   const features = [
@@ -250,7 +286,7 @@ export const LandingPage: React.FC = () => {
     }
   ];
 
-  // Colores del nav según scroll
+  // Estilos de nav según scroll (blanco arriba, normal al bajar)
   const navButtonClass = isScrolled
     ? 'text-gray-700 hover:text-orange-600'
     : 'text-white hover:text-white/90';
@@ -276,7 +312,6 @@ export const LandingPage: React.FC = () => {
               <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
                 <img src="/PLATYO FAVICON BLANCO.svg" alt="Platyo" className="w-8 h-8" />
               </div>
-
               <span className={`text-2xl font-bold transition-colors ${brandTextClass}`}>
                 Platyo
               </span>
@@ -379,7 +414,6 @@ export const LandingPage: React.FC = () => {
                 {t('navTestimonials')}
               </button>
 
-              {/* Language Selector Mobile */}
               <div className="flex items-center gap-2 bg-white/40 backdrop-blur-sm rounded-lg p-1 border border-white/60">
                 <button
                   onClick={() => setLanguage('es')}
@@ -415,8 +449,8 @@ export const LandingPage: React.FC = () => {
       </nav>
 
       {/* Video Banner
-          - Desktop: full screen (cover, sin bordes)
-          - Móvil: altura normal (aspect-video)
+          - Desktop: full screen (cover)
+          - Móvil: normal (16:9)
       */}
       <section className="relative w-full overflow-hidden bg-black pt-20 md:pt-0">
         {/* Botón mute/unmute */}
@@ -435,16 +469,15 @@ export const LandingPage: React.FC = () => {
         {/* Desktop cover */}
         <div className="hidden md:block relative h-screen w-full">
           <div className="yt-cover absolute inset-0">
-            <div id={ytContainerId} className="yt-cover__player" />
+            <div id={ytDesktopId} className="yt-cover__player" />
           </div>
           <div className="absolute inset-0 bg-black/10 pointer-events-none" />
         </div>
 
-        {/* Mobile normal (altura 16:9) */}
+        {/* Mobile normal 16:9 */}
         <div className="block md:hidden w-full">
-          <div className="relative w-full aspect-video">
-            {/* Reusamos el MISMO player, pero en móvil lo dejamos en "normal" (sin cover) */}
-            <div id={ytContainerId} className="yt-mobile__player" />
+          <div className="relative w-full aspect-video bg-black">
+            <div id={ytMobileId} className="yt-mobile__player" />
             <div className="absolute inset-0 bg-black/10 pointer-events-none" />
           </div>
         </div>
@@ -616,11 +649,7 @@ export const LandingPage: React.FC = () => {
                 <ul className="space-y-3 mb-8">
                   {plan.features.map((feature, featureIndex) => (
                     <li key={featureIndex} className="flex items-start gap-3">
-                      <Check
-                        className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
-                          plan.popular ? 'text-white' : 'text-green-500'
-                        }`}
-                      />
+                      <Check className={`w-5 h-5 flex-shrink-0 mt-0.5 ${plan.popular ? 'text-white' : 'text-green-500'}`} />
                       <span className={`text-sm ${plan.popular ? 'text-white' : 'text-gray-700'}`}>
                         {feature}
                       </span>
@@ -721,10 +750,7 @@ export const LandingPage: React.FC = () => {
                   </button>
                 </li>
                 <li>
-                  <button
-                    onClick={() => scrollToSection('testimonials')}
-                    className="hover:text-orange-400 transition-colors"
-                  >
+                  <button onClick={() => scrollToSection('testimonials')} className="hover:text-orange-400 transition-colors">
                     {t('navTestimonials')}
                   </button>
                 </li>
@@ -774,7 +800,6 @@ export const LandingPage: React.FC = () => {
           overflow: hidden;
           background: #000;
         }
-        /* El player crea un iframe interno; lo forzamos a "cover" via CSS */
         .yt-cover iframe {
           position: absolute !important;
           top: 50% !important;
@@ -784,14 +809,18 @@ export const LandingPage: React.FC = () => {
           min-width: 100% !important;
           min-height: 100% !important;
 
-          width: 177.7777778vh !important; /* 100vh * (16/9) */
-          height: 56.25vw !important;      /* 100vw * (9/16) */
+          width: 177.7777778vh !important;
+          height: 56.25vw !important;
 
           border: 0 !important;
-          pointer-events: none; /* se siente más "banner" */
+          pointer-events: none;
         }
 
-        /* Mobile: normal (sin cover), respetando el aspect ratio */
+        /* Mobile: normal (16:9) */
+        .yt-mobile__player {
+          position: absolute;
+          inset: 0;
+        }
         .yt-mobile__player iframe {
           width: 100% !important;
           height: 100% !important;
