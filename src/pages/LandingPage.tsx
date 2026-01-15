@@ -450,7 +450,7 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* Hero Section */}
-      <section className="relative pt-20 md:pt-32 pb-16 md:pb-24 overflow-hidden">
+      <section className="relative pt-12 md:pt-32 pb-16 md:pb-24 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-orange-50 via-red-50 to-white -z-10"></div>
 
         <div className="absolute top-20 right-10 w-72 h-72 bg-orange-200 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob"></div>
