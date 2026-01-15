@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import {
-  ChefHat,
   Menu as MenuIcon,
   X,
   Check,
@@ -12,25 +11,36 @@ import {
   Clock,
   Users,
   Receipt,
-  Eye,
-  Zap,
-  Shield,
-  Globe,
   ArrowRight,
   Star,
-  MessageCircle
+  MessageCircle,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
+
+declare global {
+  interface Window {
+    YT: any;
+    onYouTubeIframeAPIReady: any;
+  }
+}
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const { language, setLanguage, t } = useLanguage();
+
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  // Audio state (sin reiniciar video)
+  const [isVideoMuted, setIsVideoMuted] = useState(true);
+
+  // YouTube Player refs
+  const playerRef = useRef<any>(null);
+  const ytContainerId = 'platyo-yt-banner-player';
+
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -42,6 +52,77 @@ export const LandingPage: React.FC = () => {
       setIsMobileMenuOpen(false);
     }
   };
+
+  // Cargar YouTube IFrame API (una sola vez) y crear el player
+  useEffect(() => {
+    const videoId = 'bSKNTe1m3QY';
+
+    const createPlayer = () => {
+      if (!window.YT || !window.YT.Player) return;
+
+      // Evita recrearlo si ya existe
+      if (playerRef.current) return;
+
+      playerRef.current = new window.YT.Player(ytContainerId, {
+        videoId,
+        playerVars: {
+          autoplay: 1,
+          controls: 0,
+          modestbranding: 1,
+          rel: 0,
+          playsinline: 1,
+          loop: 1,
+          playlist: videoId, // necesario para loop
+          mute: 1 // arrancar mute para que el autoplay no lo bloquee
+        },
+        events: {
+          onReady: (event: any) => {
+            // Asegura autoplay
+            try {
+              event.target.playVideo();
+              event.target.mute();
+            } catch {}
+          }
+        }
+      });
+    };
+
+    // Si ya está cargado YT, crear player
+    if (window.YT && window.YT.Player) {
+      createPlayer();
+      return;
+    }
+
+    // Cargar script si no existe
+    const existingScript = document.querySelector('script[src="https://www.youtube.com/iframe_api"]');
+    if (!existingScript) {
+      const tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      document.body.appendChild(tag);
+    }
+
+    // Hook global que llama YouTube cuando está listo
+    const prev = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => {
+      if (typeof prev === 'function') prev();
+      createPlayer();
+    };
+
+    return () => {
+      // opcional: destruir player al desmontar
+      // if (playerRef.current?.destroy) playerRef.current.destroy();
+      // playerRef.current = null;
+    };
+  }, []);
+
+  // Mutear / desmutear SIN reiniciar
+  useEffect(() => {
+    if (!playerRef.current) return;
+    try {
+      if (isVideoMuted) playerRef.current.mute();
+      else playerRef.current.unMute();
+    } catch {}
+  }, [isVideoMuted]);
 
   const features = [
     {
@@ -169,12 +250,23 @@ export const LandingPage: React.FC = () => {
     }
   ];
 
+  // Colores del nav según scroll
+  const navButtonClass = isScrolled
+    ? 'text-gray-700 hover:text-orange-600'
+    : 'text-white hover:text-white/90';
+
+  const mobileMenuIconClass = isScrolled ? 'text-gray-700' : 'text-white';
+
+  const brandTextClass = isScrolled
+    ? 'bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent'
+    : 'text-white';
+
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation */}
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isScrolled ? 'bg-white/80 backdrop-blur-lg shadow-lg' : 'bg-white/10 backdrop-blur-md'
+          isScrolled ? 'bg-white/80 backdrop-blur-lg shadow-lg' : 'bg-transparent'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -182,13 +274,10 @@ export const LandingPage: React.FC = () => {
             {/* Logo */}
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
-                <img
-                  src="/PLATYO FAVICON BLANCO.svg"
-                  alt="Platyo"
-                  className="w-8 h-8"
-                />
+                <img src="/PLATYO FAVICON BLANCO.svg" alt="Platyo" className="w-8 h-8" />
               </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+
+              <span className={`text-2xl font-bold transition-colors ${brandTextClass}`}>
                 Platyo
               </span>
             </div>
@@ -197,31 +286,39 @@ export const LandingPage: React.FC = () => {
             <div className="hidden md:flex items-center space-x-8">
               <button
                 onClick={() => scrollToSection('features')}
-                className="text-gray-700 hover:text-orange-600 font-medium transition-colors"
+                className={`${navButtonClass} font-medium transition-colors`}
               >
                 {t('navFeatures')}
               </button>
               <button
                 onClick={() => scrollToSection('pricing')}
-                className="text-gray-700 hover:text-orange-600 font-medium transition-colors"
+                className={`${navButtonClass} font-medium transition-colors`}
               >
                 {t('navPricing')}
               </button>
               <button
                 onClick={() => scrollToSection('testimonials')}
-                className="text-gray-700 hover:text-orange-600 font-medium transition-colors"
+                className={`${navButtonClass} font-medium transition-colors`}
               >
                 {t('navTestimonials')}
               </button>
 
               {/* Language Selector */}
-              <div className="flex items-center gap-2 bg-white/40 backdrop-blur-sm rounded-lg p-1 border border-white/60">
+              <div
+                className={`flex items-center gap-2 rounded-lg p-1 border transition-colors ${
+                  isScrolled
+                    ? 'bg-white/40 backdrop-blur-sm border-white/60'
+                    : 'bg-white/10 backdrop-blur border-white/20'
+                }`}
+              >
                 <button
                   onClick={() => setLanguage('es')}
                   className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
                     language === 'es'
                       ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white'
-                      : 'text-gray-600 hover:bg-gray-200'
+                      : isScrolled
+                        ? 'text-gray-600 hover:bg-gray-200'
+                        : 'text-white hover:bg-white/15'
                   }`}
                 >
                   ES
@@ -231,7 +328,9 @@ export const LandingPage: React.FC = () => {
                   className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
                     language === 'en'
                       ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white'
-                      : 'text-gray-600 hover:bg-gray-200'
+                      : isScrolled
+                        ? 'text-gray-600 hover:bg-gray-200'
+                        : 'text-white hover:bg-white/15'
                   }`}
                 >
                   EN
@@ -250,7 +349,7 @@ export const LandingPage: React.FC = () => {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 text-gray-700"
+              className={`md:hidden p-2 transition-colors ${mobileMenuIconClass}`}
             >
               {isMobileMenuOpen ? <X className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
             </button>
@@ -315,12 +414,46 @@ export const LandingPage: React.FC = () => {
         )}
       </nav>
 
+      {/* Video Banner
+          - Desktop: full screen (cover, sin bordes)
+          - Móvil: altura normal (aspect-video)
+      */}
+      <section className="relative w-full overflow-hidden bg-black pt-20 md:pt-0">
+        {/* Botón mute/unmute */}
+        <div className="absolute top-24 md:top-28 right-4 md:right-8 z-10">
+          <button
+            type="button"
+            onClick={() => setIsVideoMuted((v) => !v)}
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 hover:bg-white/25 text-white backdrop-blur border border-white/20 transition-colors"
+            aria-label={isVideoMuted ? 'Activar audio del video' : 'Silenciar audio del video'}
+          >
+            {isVideoMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+            <span className="text-sm font-medium">{isVideoMuted ? 'Audio OFF' : 'Audio ON'}</span>
+          </button>
+        </div>
+
+        {/* Desktop cover */}
+        <div className="hidden md:block relative h-screen w-full">
+          <div className="yt-cover absolute inset-0">
+            <div id={ytContainerId} className="yt-cover__player" />
+          </div>
+          <div className="absolute inset-0 bg-black/10 pointer-events-none" />
+        </div>
+
+        {/* Mobile normal (altura 16:9) */}
+        <div className="block md:hidden w-full">
+          <div className="relative w-full aspect-video">
+            {/* Reusamos el MISMO player, pero en móvil lo dejamos en "normal" (sin cover) */}
+            <div id={ytContainerId} className="yt-mobile__player" />
+            <div className="absolute inset-0 bg-black/10 pointer-events-none" />
+          </div>
+        </div>
+      </section>
+
       {/* Hero Section */}
       <section className="relative pt-24 md:pt-32 pb-16 md:pb-24 overflow-hidden">
-        {/* Background Gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-orange-50 via-red-50 to-white -z-10"></div>
 
-        {/* Decorative Elements */}
         <div className="absolute top-20 right-10 w-72 h-72 bg-orange-200 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob"></div>
         <div className="absolute top-40 left-10 w-72 h-72 bg-red-200 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob animation-delay-2000"></div>
 
@@ -348,7 +481,6 @@ export const LandingPage: React.FC = () => {
               </button>
             </div>
 
-            {/* Stats */}
             <div className="mt-16 grid grid-cols-3 gap-8 max-w-3xl mx-auto">
               <div>
                 <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
@@ -373,21 +505,6 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Video Section */}
-      <section className=" bg-gradient-to-br from-gray-50 to-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-2xl">
-            <iframe
-              src="https://www.youtube.com/embed/bSKNTe1m3QY?autoplay=1&mute=1&controls=1&modestbranding=1&rel=0&showinfo=0&loop=1&playlist=bSKNTe1m3QY"
-              title="Platyo Demo Video"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className="absolute top-0 left-0 w-full h-full"
-            />
-          </div>
-        </div>
-      </section>
-
       {/* Features Section */}
       <section id="features" className="py-16 md:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -395,9 +512,7 @@ export const LandingPage: React.FC = () => {
             <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
               {t('featuresTitle')}
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              {t('featuresSubtitle')}
-            </p>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">{t('featuresSubtitle')}</p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -406,15 +521,13 @@ export const LandingPage: React.FC = () => {
                 key={index}
                 className="group p-8 bg-white rounded-2xl border border-gray-200 hover:border-orange-300 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
               >
-                <div className={`w-14 h-14 bg-gradient-to-br ${feature.color} rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                <div
+                  className={`w-14 h-14 bg-gradient-to-br ${feature.color} rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}
+                >
                   <feature.icon className="w-7 h-7 text-white" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">
-                  {feature.title}
-                </h3>
-                <p className="text-gray-600 leading-relaxed">
-                  {feature.description}
-                </p>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
+                <p className="text-gray-600 leading-relaxed">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -428,9 +541,7 @@ export const LandingPage: React.FC = () => {
             <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
               {t('howItWorksTitle')}
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              {t('howItWorksSubtitle')}
-            </p>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">{t('howItWorksSubtitle')}</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -466,9 +577,7 @@ export const LandingPage: React.FC = () => {
             <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
               {t('pricingTitle')}
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              {t('pricingSubtitle')}
-            </p>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">{t('pricingSubtitle')}</p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -507,7 +616,11 @@ export const LandingPage: React.FC = () => {
                 <ul className="space-y-3 mb-8">
                   {plan.features.map((feature, featureIndex) => (
                     <li key={featureIndex} className="flex items-start gap-3">
-                      <Check className={`w-5 h-5 flex-shrink-0 mt-0.5 ${plan.popular ? 'text-white' : 'text-green-500'}`} />
+                      <Check
+                        className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
+                          plan.popular ? 'text-white' : 'text-green-500'
+                        }`}
+                      />
                       <span className={`text-sm ${plan.popular ? 'text-white' : 'text-gray-700'}`}>
                         {feature}
                       </span>
@@ -538,9 +651,7 @@ export const LandingPage: React.FC = () => {
             <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
               {t('testimonialsTitle')}
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              {t('testimonialsSubtitle')}
-            </p>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">{t('testimonialsSubtitle')}</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -571,12 +682,8 @@ export const LandingPage: React.FC = () => {
       {/* Final CTA Section */}
       <section className="py-16 md:py-24 bg-gradient-to-br from-orange-500 to-red-500 text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            {t('ctaTitle')}
-          </h2>
-          <p className="text-xl mb-10 text-orange-100">
-            {t('ctaSubtitle')}
-          </p>
+          <h2 className="text-3xl md:text-5xl font-bold mb-6">{t('ctaTitle')}</h2>
+          <p className="text-xl mb-10 text-orange-100">{t('ctaSubtitle')}</p>
           <button
             onClick={() => navigate('/login')}
             className="px-10 py-4 bg-white text-orange-600 rounded-lg font-bold text-lg hover:bg-orange-50 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-2xl"
@@ -590,40 +697,26 @@ export const LandingPage: React.FC = () => {
       <footer className="bg-gray-900 text-gray-300 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
-            {/* Logo and Description */}
             <div className="md:col-span-2">
               <div className="flex items-center space-x-3 mb-4">
                 <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
-                  <img
-                    src="/PLATYO FAVICON BLANCO.svg"
-                    alt="Platyo"
-                    className="w-8 h-8"
-                  />
+                  <img src="/PLATYO FAVICON BLANCO.svg" alt="Platyo" className="w-8 h-8" />
                 </div>
                 <span className="text-2xl font-bold text-white">Platyo</span>
               </div>
-              <p className="text-gray-400 mb-4">
-                {t('footerDescription')}
-              </p>
+              <p className="text-gray-400 mb-4">{t('footerDescription')}</p>
             </div>
 
-            {/* Quick Links */}
             <div>
               <h3 className="text-white font-bold mb-4">{t('footerQuickLinks')}</h3>
               <ul className="space-y-2">
                 <li>
-                  <button
-                    onClick={() => scrollToSection('features')}
-                    className="hover:text-orange-400 transition-colors"
-                  >
+                  <button onClick={() => scrollToSection('features')} className="hover:text-orange-400 transition-colors">
                     {t('navFeatures')}
                   </button>
                 </li>
                 <li>
-                  <button
-                    onClick={() => scrollToSection('pricing')}
-                    className="hover:text-orange-400 transition-colors"
-                  >
+                  <button onClick={() => scrollToSection('pricing')} className="hover:text-orange-400 transition-colors">
                     {t('navPricing')}
                   </button>
                 </li>
@@ -638,16 +731,11 @@ export const LandingPage: React.FC = () => {
               </ul>
             </div>
 
-            {/* Contact */}
             <div>
               <h3 className="text-white font-bold mb-4">{t('footerContact')}</h3>
               <ul className="space-y-2">
-                <li className="text-gray-400">
-                  {t('footerEmail')}: admin@digitalfenixpro.com
-                </li>
-                <li className="text-gray-400">
-                  {t('footerPhone')}: +57 302 709 9669
-                </li>
+                <li className="text-gray-400">{t('footerEmail')}: admin@digitalfenixpro.com</li>
+                <li className="text-gray-400">{t('footerPhone')}: +57 302 709 9669</li>
               </ul>
             </div>
           </div>
@@ -669,18 +757,47 @@ export const LandingPage: React.FC = () => {
         <MessageCircle className="w-7 h-7 text-white" />
       </a>
 
-      {/* Animation Styles */}
+      {/* Animation Styles + YouTube cover styles */}
       <style>{`
         @keyframes blob {
           0%, 100% { transform: translate(0, 0) scale(1); }
           33% { transform: translate(30px, -50px) scale(1.1); }
           66% { transform: translate(-20px, 20px) scale(0.9); }
         }
-        .animate-blob {
-          animation: blob 7s infinite;
+        .animate-blob { animation: blob 7s infinite; }
+        .animation-delay-2000 { animation-delay: 2s; }
+
+        /* Desktop: cover full viewport */
+        .yt-cover {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: #000;
         }
-        .animation-delay-2000 {
-          animation-delay: 2s;
+        /* El player crea un iframe interno; lo forzamos a "cover" via CSS */
+        .yt-cover iframe {
+          position: absolute !important;
+          top: 50% !important;
+          left: 50% !important;
+          transform: translate(-50%, -50%) !important;
+
+          min-width: 100% !important;
+          min-height: 100% !important;
+
+          width: 177.7777778vh !important; /* 100vh * (16/9) */
+          height: 56.25vw !important;      /* 100vw * (9/16) */
+
+          border: 0 !important;
+          pointer-events: none; /* se siente más "banner" */
+        }
+
+        /* Mobile: normal (sin cover), respetando el aspect ratio */
+        .yt-mobile__player iframe {
+          width: 100% !important;
+          height: 100% !important;
+          position: absolute !important;
+          inset: 0 !important;
+          border: 0 !important;
         }
       `}</style>
     </div>
