@@ -18,9 +18,7 @@ import {
   Globe,
   ArrowRight,
   Star,
-  MessageCircle,
-  Volume2,
-  VolumeX
+  MessageCircle
 } from 'lucide-react';
 
 export const LandingPage: React.FC = () => {
@@ -28,9 +26,6 @@ export const LandingPage: React.FC = () => {
   const { language, setLanguage, t } = useLanguage();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  // Toggle audio del video banner (YouTube)
-  const [isVideoMuted, setIsVideoMuted] = useState(true);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -187,7 +182,11 @@ export const LandingPage: React.FC = () => {
             {/* Logo */}
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
-                <img src="/PLATYO FAVICON BLANCO.svg" alt="Platyo" className="w-8 h-8" />
+                <img
+                  src="/PLATYO FAVICON BLANCO.svg"
+                  alt="Platyo"
+                  className="w-8 h-8"
+                />
               </div>
               <span className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
                 Platyo
@@ -316,46 +315,7 @@ export const LandingPage: React.FC = () => {
         )}
       </nav>
 
-      {/* Video Banner (Full Screen, sin texto encima) */}
-      <section className="relative h-screen w-full overflow-hidden bg-black">
-        {/* Botón mute/unmute (encima del video) */}
-        <div className="absolute top-24 md:top-28 right-4 md:right-8 z-10">
-          <button
-            type="button"
-            onClick={() => setIsVideoMuted((v) => !v)}
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 hover:bg-white/25 text-white backdrop-blur border border-white/20 transition-colors"
-            aria-label={isVideoMuted ? 'Activar audio del video' : 'Silenciar audio del video'}
-          >
-            {isVideoMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-            <span className="text-sm font-medium">{isVideoMuted ? 'Audio OFF' : 'Audio ON'}</span>
-          </button>
-        </div>
-
-        {/* Importante:
-            Con YouTube, el audio no se puede "prender" de forma fiable solo cambiando la URL,
-            porque el autoplay con sonido normalmente está bloqueado.
-            Aun así, este enfoque hace:
-            - MUTE por defecto (autoplay permitido)
-            - Al "Audio ON", recarga el iframe sin mute para que el usuario lo active.
-        */}
-        <div className="absolute inset-0">
-          <iframe
-            key={isVideoMuted ? 'muted' : 'unmuted'}
-            src={`https://www.youtube.com/embed/bSKNTe1m3QY?autoplay=1&mute=${
-              isVideoMuted ? 1 : 0
-            }&controls=0&modestbranding=1&rel=0&showinfo=0&loop=1&playlist=bSKNTe1m3QY&playsinline=1`}
-            title="Platyo Video Banner"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            className="absolute top-0 left-0 w-full h-full"
-          />
-        </div>
-
-        {/* Overlay sutil opcional para que el botón se vea bien (sin texto de hero) */}
-        <div className="absolute inset-0 bg-black/10 pointer-events-none" />
-      </section>
-
-      {/* Hero Section (AHORA va después del video banner) */}
+      {/* Hero Section */}
       <section className="relative pt-24 md:pt-32 pb-16 md:pb-24 overflow-hidden">
         {/* Background Gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-orange-50 via-red-50 to-white -z-10"></div>
@@ -413,6 +373,21 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
+      {/* Video Section */}
+      <section className=" bg-gradient-to-br from-gray-50 to-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-2xl">
+            <iframe
+              src="https://www.youtube.com/embed/bSKNTe1m3QY?autoplay=1&mute=1&controls=1&modestbranding=1&rel=0&showinfo=0&loop=1&playlist=bSKNTe1m3QY"
+              title="Platyo Demo Video"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="absolute top-0 left-0 w-full h-full"
+            />
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section id="features" className="py-16 md:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -420,7 +395,9 @@ export const LandingPage: React.FC = () => {
             <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
               {t('featuresTitle')}
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">{t('featuresSubtitle')}</p>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              {t('featuresSubtitle')}
+            </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -429,13 +406,15 @@ export const LandingPage: React.FC = () => {
                 key={index}
                 className="group p-8 bg-white rounded-2xl border border-gray-200 hover:border-orange-300 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
               >
-                <div
-                  className={`w-14 h-14 bg-gradient-to-br ${feature.color} rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}
-                >
+                <div className={`w-14 h-14 bg-gradient-to-br ${feature.color} rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
                   <feature.icon className="w-7 h-7 text-white" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
-                <p className="text-gray-600 leading-relaxed">{feature.description}</p>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                  {feature.title}
+                </h3>
+                <p className="text-gray-600 leading-relaxed">
+                  {feature.description}
+                </p>
               </div>
             ))}
           </div>
@@ -449,7 +428,9 @@ export const LandingPage: React.FC = () => {
             <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
               {t('howItWorksTitle')}
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">{t('howItWorksSubtitle')}</p>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              {t('howItWorksSubtitle')}
+            </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -485,7 +466,9 @@ export const LandingPage: React.FC = () => {
             <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
               {t('pricingTitle')}
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">{t('pricingSubtitle')}</p>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              {t('pricingSubtitle')}
+            </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -524,11 +507,7 @@ export const LandingPage: React.FC = () => {
                 <ul className="space-y-3 mb-8">
                   {plan.features.map((feature, featureIndex) => (
                     <li key={featureIndex} className="flex items-start gap-3">
-                      <Check
-                        className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
-                          plan.popular ? 'text-white' : 'text-green-500'
-                        }`}
-                      />
+                      <Check className={`w-5 h-5 flex-shrink-0 mt-0.5 ${plan.popular ? 'text-white' : 'text-green-500'}`} />
                       <span className={`text-sm ${plan.popular ? 'text-white' : 'text-gray-700'}`}>
                         {feature}
                       </span>
@@ -559,7 +538,9 @@ export const LandingPage: React.FC = () => {
             <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
               {t('testimonialsTitle')}
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">{t('testimonialsSubtitle')}</p>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              {t('testimonialsSubtitle')}
+            </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -590,8 +571,12 @@ export const LandingPage: React.FC = () => {
       {/* Final CTA Section */}
       <section className="py-16 md:py-24 bg-gradient-to-br from-orange-500 to-red-500 text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-5xl font-bold mb-6">{t('ctaTitle')}</h2>
-          <p className="text-xl mb-10 text-orange-100">{t('ctaSubtitle')}</p>
+          <h2 className="text-3xl md:text-5xl font-bold mb-6">
+            {t('ctaTitle')}
+          </h2>
+          <p className="text-xl mb-10 text-orange-100">
+            {t('ctaSubtitle')}
+          </p>
           <button
             onClick={() => navigate('/login')}
             className="px-10 py-4 bg-white text-orange-600 rounded-lg font-bold text-lg hover:bg-orange-50 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-2xl"
@@ -609,11 +594,17 @@ export const LandingPage: React.FC = () => {
             <div className="md:col-span-2">
               <div className="flex items-center space-x-3 mb-4">
                 <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
-                  <img src="/PLATYO FAVICON BLANCO.svg" alt="Platyo" className="w-8 h-8" />
+                  <img
+                    src="/PLATYO FAVICON BLANCO.svg"
+                    alt="Platyo"
+                    className="w-8 h-8"
+                  />
                 </div>
                 <span className="text-2xl font-bold text-white">Platyo</span>
               </div>
-              <p className="text-gray-400 mb-4">{t('footerDescription')}</p>
+              <p className="text-gray-400 mb-4">
+                {t('footerDescription')}
+              </p>
             </div>
 
             {/* Quick Links */}
@@ -621,12 +612,18 @@ export const LandingPage: React.FC = () => {
               <h3 className="text-white font-bold mb-4">{t('footerQuickLinks')}</h3>
               <ul className="space-y-2">
                 <li>
-                  <button onClick={() => scrollToSection('features')} className="hover:text-orange-400 transition-colors">
+                  <button
+                    onClick={() => scrollToSection('features')}
+                    className="hover:text-orange-400 transition-colors"
+                  >
                     {t('navFeatures')}
                   </button>
                 </li>
                 <li>
-                  <button onClick={() => scrollToSection('pricing')} className="hover:text-orange-400 transition-colors">
+                  <button
+                    onClick={() => scrollToSection('pricing')}
+                    className="hover:text-orange-400 transition-colors"
+                  >
                     {t('navPricing')}
                   </button>
                 </li>
@@ -645,8 +642,12 @@ export const LandingPage: React.FC = () => {
             <div>
               <h3 className="text-white font-bold mb-4">{t('footerContact')}</h3>
               <ul className="space-y-2">
-                <li className="text-gray-400">{t('footerEmail')}: admin@digitalfenixpro.com</li>
-                <li className="text-gray-400">{t('footerPhone')}: +57 302 709 9669</li>
+                <li className="text-gray-400">
+                  {t('footerEmail')}: admin@digitalfenixpro.com
+                </li>
+                <li className="text-gray-400">
+                  {t('footerPhone')}: +57 302 709 9669
+                </li>
               </ul>
             </div>
           </div>
