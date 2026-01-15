@@ -35,10 +35,8 @@ export const LandingPage: React.FC = () => {
   // Audio state (sin reiniciar video)
   const [isVideoMuted, setIsVideoMuted] = useState(true);
 
-  // YouTube Player ref
+  // YouTube Player refs
   const playerRef = useRef<any>(null);
-
-  // Un único contenedor (IMPORTANTE: no duplicar este id en el DOM)
   const ytContainerId = 'platyo-yt-banner-player';
 
   useEffect(() => {
@@ -75,28 +73,14 @@ export const LandingPage: React.FC = () => {
           playsinline: 1,
           loop: 1,
           playlist: videoId, // necesario para loop
-          mute: 1, // arrancar mute para que el autoplay no lo bloquee
-          // Ayuda a evitar problemas de embebido en móviles/Safari
-          origin: window.location.origin
+          mute: 1 // arrancar mute para que el autoplay no lo bloquee
         },
         events: {
           onReady: (event: any) => {
+            // Asegura autoplay
             try {
-              // Garantiza autoplay (muted) y luego sincroniza con el estado real
-              event.target.mute();
               event.target.playVideo();
-
-              // Aplica tu estado real de mute (por si cambió antes de ready)
-              if (isVideoMuted) event.target.mute();
-              else event.target.unMute();
-            } catch {}
-          },
-          onStateChange: (event: any) => {
-            // Algunos móviles quedan "unstarted" (-1) o "cued" (5); reintenta play.
-            try {
-              if (event.data === -1 || event.data === 5) {
-                event.target.playVideo();
-              }
+              event.target.mute();
             } catch {}
           }
         }
@@ -110,9 +94,7 @@ export const LandingPage: React.FC = () => {
     }
 
     // Cargar script si no existe
-    const existingScript = document.querySelector(
-      'script[src="https://www.youtube.com/iframe_api"]'
-    );
+    const existingScript = document.querySelector('script[src="https://www.youtube.com/iframe_api"]');
     if (!existingScript) {
       const tag = document.createElement('script');
       tag.src = 'https://www.youtube.com/iframe_api';
@@ -127,15 +109,10 @@ export const LandingPage: React.FC = () => {
     };
 
     return () => {
-      // Recomendado: destruir en un SPA para evitar leaks al navegar.
-      // (No reinicia en cada render, solo al desmontar la página)
-      try {
-        playerRef.current?.destroy?.();
-      } catch {}
-      playerRef.current = null;
+      // opcional: destruir player al desmontar
+      // if (playerRef.current?.destroy) playerRef.current.destroy();
+      // playerRef.current = null;
     };
-    // Importante: no meter isVideoMuted en deps para no recrear el player.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Mutear / desmutear SIN reiniciar
@@ -437,7 +414,10 @@ export const LandingPage: React.FC = () => {
         )}
       </nav>
 
-      {/* Video Banner (UN SOLO DOM para el player) */}
+      {/* Video Banner
+          - Desktop: full screen (cover, sin bordes)
+          - Móvil: altura normal (aspect-video)
+      */}
       <section className="relative w-full overflow-hidden bg-black pt-20 md:pt-0">
         {/* Botón mute/unmute */}
         <div className="absolute top-24 md:top-28 right-4 md:right-8 z-10">
@@ -452,12 +432,21 @@ export const LandingPage: React.FC = () => {
           </button>
         </div>
 
-        {/* Un solo wrapper: en móvil será aspect-video; en desktop será h-screen */}
-        <div className="yt-wrapper">
-          <div className="yt-surface">
-            <div id={ytContainerId} className="yt-player-root" />
+        {/* Desktop cover */}
+        <div className="hidden md:block relative h-screen w-full">
+          <div className="yt-cover absolute inset-0">
+            <div id={ytContainerId} className="yt-cover__player" />
           </div>
-          <div className="yt-overlay" />
+          <div className="absolute inset-0 bg-black/10 pointer-events-none" />
+        </div>
+
+        {/* Mobile normal (altura 16:9) */}
+        <div className="block md:hidden w-full">
+          <div className="relative w-full aspect-video">
+            {/* Reusamos el MISMO player, pero en móvil lo dejamos en "normal" (sin cover) */}
+            <div id={ytContainerId} className="yt-mobile__player" />
+            <div className="absolute inset-0 bg-black/10 pointer-events-none" />
+          </div>
         </div>
       </section>
 
@@ -608,26 +597,14 @@ export const LandingPage: React.FC = () => {
                 )}
 
                 <div className="text-center mb-6">
-                  <h3
-                    className={`text-2xl font-bold mb-2 ${
-                      plan.popular ? 'text-white' : 'text-gray-900'
-                    }`}
-                  >
+                  <h3 className={`text-2xl font-bold mb-2 ${plan.popular ? 'text-white' : 'text-gray-900'}`}>
                     {plan.name}
                   </h3>
                   <div className="mb-2">
-                    <span
-                      className={`text-4xl font-bold ${
-                        plan.popular ? 'text-white' : 'text-gray-900'
-                      }`}
-                    >
+                    <span className={`text-4xl font-bold ${plan.popular ? 'text-white' : 'text-gray-900'}`}>
                       ${plan.price}
                     </span>
-                    <span
-                      className={`text-lg ${
-                        plan.popular ? 'text-orange-100' : 'text-gray-600'
-                      }`}
-                    >
+                    <span className={`text-lg ${plan.popular ? 'text-orange-100' : 'text-gray-600'}`}>
                       {plan.price > 0 ? `/${plan.period}` : ''}
                     </span>
                   </div>
@@ -734,18 +711,12 @@ export const LandingPage: React.FC = () => {
               <h3 className="text-white font-bold mb-4">{t('footerQuickLinks')}</h3>
               <ul className="space-y-2">
                 <li>
-                  <button
-                    onClick={() => scrollToSection('features')}
-                    className="hover:text-orange-400 transition-colors"
-                  >
+                  <button onClick={() => scrollToSection('features')} className="hover:text-orange-400 transition-colors">
                     {t('navFeatures')}
                   </button>
                 </li>
                 <li>
-                  <button
-                    onClick={() => scrollToSection('pricing')}
-                    className="hover:text-orange-400 transition-colors"
-                  >
+                  <button onClick={() => scrollToSection('pricing')} className="hover:text-orange-400 transition-colors">
                     {t('navPricing')}
                   </button>
                 </li>
@@ -786,7 +757,7 @@ export const LandingPage: React.FC = () => {
         <MessageCircle className="w-7 h-7 text-white" />
       </a>
 
-      {/* Animation Styles + YouTube responsive styles */}
+      {/* Animation Styles + YouTube cover styles */}
       <style>{`
         @keyframes blob {
           0%, 100% { transform: translate(0, 0) scale(1); }
@@ -796,63 +767,37 @@ export const LandingPage: React.FC = () => {
         .animate-blob { animation: blob 7s infinite; }
         .animation-delay-2000 { animation-delay: 2s; }
 
-        /* ====== VIDEO WRAPPER ÚNICO (mobile + desktop) ====== */
-
-        /* Mobile por defecto: 16:9 */
-        .yt-wrapper{
-          position: relative;
-          width: 100%;
-          background: #000;
-        }
-
-        /* “surface” mantiene proporción en móvil */
-        .yt-surface{
-          position: relative;
-          width: 100%;
-          aspect-ratio: 16 / 9;
+        /* Desktop: cover full viewport */
+        .yt-cover {
+          position: absolute;
+          inset: 0;
           overflow: hidden;
           background: #000;
         }
+        /* El player crea un iframe interno; lo forzamos a "cover" via CSS */
+        .yt-cover iframe {
+          position: absolute !important;
+          top: 50% !important;
+          left: 50% !important;
+          transform: translate(-50%, -50%) !important;
 
-        /* Overlay ligero */
-        .yt-overlay{
-          position: absolute;
-          inset: 0;
-          background: rgba(0,0,0,.10);
-          pointer-events: none;
+          min-width: 100% !important;
+          min-height: 100% !important;
+
+          width: 177.7777778vh !important; /* 100vh * (16/9) */
+          height: 56.25vw !important;      /* 100vw * (9/16) */
+
+          border: 0 !important;
+          pointer-events: none; /* se siente más "banner" */
         }
 
-        /* Iframe en móvil: normal (encaja exacto) */
-        .yt-surface iframe{
-          position: absolute !important;
-          inset: 0 !important;
+        /* Mobile: normal (sin cover), respetando el aspect ratio */
+        .yt-mobile__player iframe {
           width: 100% !important;
           height: 100% !important;
+          position: absolute !important;
+          inset: 0 !important;
           border: 0 !important;
-        }
-
-        /* Desktop: pantalla completa + cover */
-        @media (min-width: 768px){
-          .yt-surface{
-            height: 100vh;
-            aspect-ratio: auto;
-          }
-
-          .yt-surface iframe{
-            position: absolute !important;
-            top: 50% !important;
-            left: 50% !important;
-            transform: translate(-50%, -50%) !important;
-
-            min-width: 100% !important;
-            min-height: 100% !important;
-
-            width: 177.7777778vh !important; /* 100vh * (16/9) */
-            height: 56.25vw !important;      /* 100vw * (9/16) */
-
-            border: 0 !important;
-            pointer-events: none;
-          }
         }
       `}</style>
     </div>
