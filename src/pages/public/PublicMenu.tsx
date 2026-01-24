@@ -818,9 +818,10 @@ export const PublicMenu: React.FC = () => {
                   ? Math.min(...product.variations.map((v) => v.price))
                   : 0;
 
-              const minComparePrice = product.variations.length > 0
-                ? Math.min(...product.variations.filter(v => v.compare_at_price).map((v) => v.compare_at_price || 0))
-                : 0;
+              const comparePrices = product.variations
+                .map(v => v.compare_at_price)
+                .filter((price): price is number => typeof price === 'number' && price > 0);
+              const minComparePrice = comparePrices.length > 0 ? Math.min(...comparePrices) : 0;
 
               const hasDiscount = minComparePrice > 0 && minComparePrice > minPrice;
               const discountPercentage = hasDiscount
