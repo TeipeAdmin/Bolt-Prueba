@@ -33,6 +33,7 @@ import { FloatingFooter } from '../../components/public/FloatingFooter.tsx'; /*D
 import { VoiceAssistantWidget } from '../../components/public/VoiceAssistantWidget';
 import { useLanguage } from '../../contexts/LanguageContext';
 import ProductCard from '../../components/public/ProductCard';
+import ProductCardSkeleton from '../../components/public/ProductCardSkeleton';
 
 export const PublicMenu: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -47,6 +48,7 @@ export const PublicMenu: React.FC = () => {
   const [showCart, setShowCart] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadingPhase, setLoadingPhase] = useState<'initial' | 'restaurant' | 'categories' | 'products' | 'complete'>('initial');
   const [error, setError] = useState<string | null>(null);
   const [showPromoModal, setShowPromoModal] = useState(false);
   const [featuredSlideIndex, setFeaturedSlideIndex] = useState(0);
@@ -100,6 +102,7 @@ export const PublicMenu: React.FC = () => {
   const loadMenuData = async () => {
     try {
       setLoading(true);
+      setLoadingPhase('initial');
       setError(null);
 
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug || '');
@@ -122,36 +125,15 @@ export const PublicMenu: React.FC = () => {
         return;
       }
 
-      const [subscriptionResult, categoriesResult, productsResult] = await Promise.all([
-        supabase
-          .from('subscriptions')
-          .select('status')
-          .eq('restaurant_id', restaurantData.id)
-          .maybeSingle(),
-        supabase
-          .from('categories')
-          .select('*')
-          .eq('restaurant_id', restaurantData.id)
-          .eq('is_active', true)
-          .order('display_order', { ascending: true }),
-        supabase
-          .from('products')
-          .select(`
-            *,
-            product_categories (
-              category_id
-            )
-          `)
-          .eq('restaurant_id', restaurantData.id)
-          .in('status', ['active', 'out_of_stock'])
-          .order('display_order', { ascending: true })
-      ]);
+      const { data: subscriptionData, error: subscriptionError } = await supabase
+        .from('subscriptions')
+        .select('status')
+        .eq('restaurant_id', restaurantData.id)
+        .maybeSingle();
 
-      if (subscriptionResult.error) throw subscriptionResult.error;
-      if (categoriesResult.error) throw categoriesResult.error;
-      if (productsResult.error) throw productsResult.error;
+      if (subscriptionError) throw subscriptionError;
 
-      if (!subscriptionResult.data || subscriptionResult.data.status !== 'active') {
+      if (!subscriptionData || subscriptionData.status !== 'active') {
         setError(
           'Este restaurante no está disponible en este momento. Suscripción inactiva o vencida.'
         );
@@ -160,21 +142,105 @@ export const PublicMenu: React.FC = () => {
       }
 
       setRestaurant(restaurantData);
+      setLoadingPhase('restaurant');
+      setLoading(false);
 
-      const transformedProducts = (productsResult.data || []).map((p: any) => ({
+      const { data: categoriesData, error: categoriesError } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('restaurant_id', restaurantData.id)
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+
+      if (categoriesError) throw categoriesError;
+      setCategories(categoriesData || []);
+      setLoadingPhase('categories');
+
+      const { data: initialProductsData, error: initialProductsError } = await supabase
+        .from('products')
+        .select(`
+          *,
+          product_categories (
+            category_id
+          )
+        `)
+        .eq('restaurant_id', restaurantData.id)
+        .in('status', ['active', 'out_of_stock'])
+        .order('display_order', { ascending: true })
+        .range(0, 11);
+
+      if (initialProductsError) throw initialProductsError;
+
+      const transformedInitialProducts = (initialProductsData || []).map((p: any) => ({
         ...p,
         images: p.images || [],
         variations: p.variations && p.variations.length > 0 ? p.variations : [{ id: '1', name: 'Default', price: Number(p.price) || 0 }],
         category_id: p.product_categories?.[0]?.category_id || null
       }));
 
-      setCategories(categoriesResult.data || []);
-      setProducts(transformedProducts);
-      setLoading(false);
+      setProducts(transformedInitialProducts);
+      setLoadingPhase('products');
+
+      loadRemainingProducts(restaurantData.id);
     } catch (err) {
       console.error('Error loading menu:', err);
       setError('Error al cargar el menú');
       setLoading(false);
+    }
+  };
+
+  const loadRemainingProducts = async (restaurantId: string) => {
+    try {
+      let offset = 12;
+      const batchSize = 20;
+      let hasMore = true;
+
+      while (hasMore) {
+        const { data: batchData, error: batchError } = await supabase
+          .from('products')
+          .select(`
+            *,
+            product_categories (
+              category_id
+            )
+          `)
+          .eq('restaurant_id', restaurantId)
+          .in('status', ['active', 'out_of_stock'])
+          .order('display_order', { ascending: true })
+          .range(offset, offset + batchSize - 1);
+
+        if (batchError) {
+          console.error('Error loading batch:', batchError);
+          break;
+        }
+
+        if (!batchData || batchData.length === 0) {
+          hasMore = false;
+          break;
+        }
+
+        const transformedBatch = batchData.map((p: any) => ({
+          ...p,
+          images: p.images || [],
+          variations: p.variations && p.variations.length > 0 ? p.variations : [{ id: '1', name: 'Default', price: Number(p.price) || 0 }],
+          category_id: p.product_categories?.[0]?.category_id || null
+        }));
+
+        setProducts(prev => [...prev, ...transformedBatch]);
+
+        offset += batchSize;
+
+        if (batchData.length < batchSize) {
+          hasMore = false;
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
+      setLoadingPhase('complete');
+    } catch (err) {
+      console.error('Error loading remaining products:', err);
+      setLoadingPhase('complete');
     }
   };
 
@@ -242,7 +308,7 @@ export const PublicMenu: React.FC = () => {
   }, [featuredProducts.length]);
   
 
-  if (loading) {
+  if (loading && loadingPhase === 'initial') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -253,7 +319,7 @@ export const PublicMenu: React.FC = () => {
     );
   }
 
-  if (error || !restaurant) {
+  if (error || (!restaurant && !loading)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
         <div className="text-center max-w-md">
@@ -267,6 +333,10 @@ export const PublicMenu: React.FC = () => {
         </div>
       </div>
     );
+  }
+
+  if (!restaurant) {
+    return null;
   }
 
   const theme = restaurant.settings.theme;
@@ -791,8 +861,7 @@ export const PublicMenu: React.FC = () => {
             </button>
           </div>
         </div>
-        {/* View Mode Selector */}
-        {filteredProducts.length === 0 ? (
+        {filteredProducts.length === 0 && loadingPhase === 'complete' ? (
           <div className="text-center py-12">
             <p
               className="text-gray-600"
@@ -805,7 +874,7 @@ export const PublicMenu: React.FC = () => {
           <div
             className={
               viewMode === 'list'
-                ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-4' /*DF: agregar scale para reducir un poco el tamaño*/
+                ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-4'
                 : viewMode === 'grid'
                 ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 px-4'
                 : 'space-y-2'
@@ -820,6 +889,13 @@ export const PublicMenu: React.FC = () => {
                 onClick={() => setSelectedProduct(product)}
               />
             ))}
+            {loadingPhase !== 'complete' && (
+              <>
+                {Array.from({ length: 8 }).map((_, index) => (
+                  <ProductCardSkeleton key={`skeleton-${index}`} viewMode={viewMode} />
+                ))}
+              </>
+            )}
           </div>
         )}
       </main>
