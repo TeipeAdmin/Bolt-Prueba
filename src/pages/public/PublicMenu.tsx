@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   ShoppingCart,
   Search,
@@ -32,6 +32,7 @@ import Pathleft from '../../components/public/Pathformleft.tsx'; /*DF:componenet
 import { FloatingFooter } from '../../components/public/FloatingFooter.tsx'; /*DF:componenetes pathform*/
 import { VoiceAssistantWidget } from '../../components/public/VoiceAssistantWidget';
 import { useLanguage } from '../../contexts/LanguageContext';
+import ProductCard from '../../components/public/ProductCard';
 
 export const PublicMenu: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -121,15 +122,36 @@ export const PublicMenu: React.FC = () => {
         return;
       }
 
-      const { data: subscriptionData, error: subscriptionError } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('restaurant_id', restaurantData.id)
-        .maybeSingle();
+      const [subscriptionResult, categoriesResult, productsResult] = await Promise.all([
+        supabase
+          .from('subscriptions')
+          .select('status')
+          .eq('restaurant_id', restaurantData.id)
+          .maybeSingle(),
+        supabase
+          .from('categories')
+          .select('*')
+          .eq('restaurant_id', restaurantData.id)
+          .eq('is_active', true)
+          .order('display_order', { ascending: true }),
+        supabase
+          .from('products')
+          .select(`
+            *,
+            product_categories (
+              category_id
+            )
+          `)
+          .eq('restaurant_id', restaurantData.id)
+          .in('status', ['active', 'out_of_stock'])
+          .order('display_order', { ascending: true })
+      ]);
 
-      if (subscriptionError) throw subscriptionError;
+      if (subscriptionResult.error) throw subscriptionResult.error;
+      if (categoriesResult.error) throw categoriesResult.error;
+      if (productsResult.error) throw productsResult.error;
 
-      if (!subscriptionData || subscriptionData.status !== 'active') {
+      if (!subscriptionResult.data || subscriptionResult.data.status !== 'active') {
         setError(
           'Este restaurante no está disponible en este momento. Suscripción inactiva o vencida.'
         );
@@ -139,37 +161,14 @@ export const PublicMenu: React.FC = () => {
 
       setRestaurant(restaurantData);
 
-      const { data: categoriesData, error: categoriesError } = await supabase
-        .from('categories')
-        .select('*')
-        .eq('restaurant_id', restaurantData.id)
-        .eq('is_active', true)
-        .order('display_order', { ascending: true });
-
-      if (categoriesError) throw categoriesError;
-
-      const { data: productsData, error: productsError } = await supabase
-        .from('products')
-        .select(`
-          *,
-          product_categories (
-            category_id
-          )
-        `)
-        .eq('restaurant_id', restaurantData.id)
-        .in('status', ['active', 'out_of_stock'])
-        .order('display_order', { ascending: true });
-
-      if (productsError) throw productsError;
-
-      const transformedProducts = (productsData || []).map((p: any) => ({
+      const transformedProducts = (productsResult.data || []).map((p: any) => ({
         ...p,
         images: p.images || [],
         variations: p.variations && p.variations.length > 0 ? p.variations : [{ id: '1', name: 'Default', price: Number(p.price) || 0 }],
         category_id: p.product_categories?.[0]?.category_id || null
       }));
 
-      setCategories(categoriesData || []);
+      setCategories(categoriesResult.data || []);
       setProducts(transformedProducts);
       setLoading(false);
     } catch (err) {
@@ -197,8 +196,8 @@ export const PublicMenu: React.FC = () => {
     }
   }, [restaurant, loading]);
 
-  const filteredProducts = products
-    .filter((product) => {
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) => {
       const matchesCategory =
         selectedCategory === 'all' || product.category_id === selectedCategory;
 
@@ -213,35 +212,34 @@ export const PublicMenu: React.FC = () => {
           product.description.toLowerCase().includes(searchLower))
       );
     });
+  }, [products, selectedCategory, searchTerm]);
 
-  const getFeaturedProducts = () => {
+  const featuredProducts = useMemo(() => {
     if (!restaurant?.settings.promo?.featured_product_ids?.length) {
       return products.filter((p) => p.is_featured).slice(0, 5);
     }
 
     const featuredIds = restaurant.settings.promo.featured_product_ids;
     return products.filter((p) => featuredIds.includes(p.id)).slice(0, 5);
-  };
-
-  const featuredProducts = getFeaturedProducts();
+  }, [products, restaurant?.settings.promo?.featured_product_ids]);
   const cartItemsCount = cartItems.reduce(
     (sum, item) => sum + item.quantity,
     0
   );
 
-  const nextSlide = () => {
+  const nextSlide = useCallback(() => {
     setFeaturedSlideIndex(
       (prev) => (prev + 1) % Math.max(1, featuredProducts.length)
     );
-  };
+  }, [featuredProducts.length]);
 
-  const prevSlide = () => {
+  const prevSlide = useCallback(() => {
     setFeaturedSlideIndex(
       (prev) =>
         (prev - 1 + featuredProducts.length) %
         Math.max(1, featuredProducts.length)
     );
-  };
+  }, [featuredProducts.length]);
   
 
   if (loading) {
@@ -472,6 +470,7 @@ export const PublicMenu: React.FC = () => {
                 <img
                   src={restaurant.logo_url}
                   alt={restaurant.name}
+                  loading="lazy"
                   className="h-16 mx-auto"
                 />
               ) : (
@@ -812,361 +811,15 @@ export const PublicMenu: React.FC = () => {
                 : 'space-y-2'
             }
           >
-            {filteredProducts.map((product) => {
-              const minPrice =
-                product.variations.length > 0
-                  ? Math.min(...product.variations.map((v) => v.price))
-                  : 0;
-
-              const comparePrices = product.variations
-                .map(v => v.compare_at_price)
-                .filter((price): price is number => typeof price === 'number' && price > 0);
-              const minComparePrice = comparePrices.length > 0 ? Math.min(...comparePrices) : 0;
-
-              const hasDiscount = minComparePrice > 0 && minComparePrice > minPrice;
-              const discountPercentage = hasDiscount
-                ? Math.round(((minComparePrice - minPrice) / minComparePrice) * 100)
-                : 0;
-
-              if (viewMode === 'editorial') {
-                return (
-                  <div
-                    key={product.id}
-                    className="rounded-xl shadow-sm hover:shadow-lg transition-all cursor-pointer overflow-hidden relative"
-                    onClick={() => product.status !== 'out_of_stock' && setSelectedProduct(product)}
-                    style={{
-                      borderRadius:
-                        theme.button_style === 'rounded'
-                          ? '0.75rem'
-                          : '0.25rem',
-                      backgroundColor: cardBackgroundColor,
-                      opacity: product.status === 'out_of_stock' ? 0.7 : 1,
-                      cursor: product.status === 'out_of_stock' ? 'not-allowed' : 'pointer',
-                    }}
-                  >
-                    <div className="flex flex-col md:flex-row gap-2 px-4 md:px-0">
-                      {' '}
-                      {/*DF:Se quito el pading*/}
-                      {product.images[0] && (
-                        <div className="relative">
-                          <img
-                            src={product.images[0]}
-                            alt={product.name}
-                            className={`
-                              w-full md:w-[164px] md:h-[154px] object-cover flex-shrink-0
-                              ${
-                                theme.button_style === 'rounded'
-                                  ? 'md:rounded-lg md:rounded-tr-none md:rounded-br-none'
-                                  : 'md:rounded-sm md:rounded-tr-none md:rounded-br-none'
-                              }
-                            `}
-                          />
-                          {product.status === 'out_of_stock' && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                              <span className="px-4 py-2 font-bold text-sm rounded">
-                                AGOTADO
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      <div className="flex-1 flex flex-col justify-center p-2">
-                        <div className="flex items-start justify-between gap-2 mb-3">
-                          <h2
-                            className="font-bold flex-1"
-                            style={{
-                              fontFamily: theme.primary_font || 'Poppins',
-                              color: primaryColor,
-                            }}
-                          >
-                            {product.name}
-                          </h2>
-                          <div className="flex gap-2">
-                            {product.status === 'out_of_stock' && (
-                              <span
-                                className="px-2 py-1 text-xs font-bold rounded"
-                                style={{
-                                  backgroundColor: primaryColor,
-                                  color: secondaryTextColor,
-                                }}
-                              >
-                                AGOTADO
-                              </span>
-                            )}
-                            {hasDiscount && (
-                              <span
-                                className="px-2 py-1 text-xs font-bold rounded"
-                                style={{
-                                  backgroundColor: primaryColor,
-                                  color: secondaryTextColor,
-                                }}
-                              >
-                                -{discountPercentage}%
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <p
-                          className="mb-4 text-base leading-relaxed line-clamp-2"
-                          style={{
-                            fontFamily: theme.secondary_font  || 'Inter',
-                            color: secondaryTextColor,
-                          }}
-                        >
-                          {product.description}
-                        </p>
-                        <div className="flex items-center gap-2">
-                          {hasDiscount && (
-                            <span
-                              className="text-lg line-through opacity-60"
-                              style={{
-                                fontFamily: theme.secondary_font || 'Poppins',
-                                color: secondaryTextColor,
-                              }}
-                            >
-                              {formatCurrency(
-                                minComparePrice,
-                                restaurant.settings.currency || 'USD'
-                              )}
-                            </span>
-                          )}
-                          <span
-                            className="font-bold text-2xl"
-                            style={{
-                              fontFamily: theme.secondary_font || 'Poppins',
-                              cssText: `color: ${primaryColor} !important;`,
-                            }}
-                          >
-                            {formatCurrency(
-                              minPrice,
-                              restaurant.settings.currency || 'USD'
-                            )}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-
-              if (viewMode === 'grid') {
-                return (
-                  <div
-                    key={product.id}
-                    className="rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden relative"
-                    onClick={() => product.status !== 'out_of_stock' && setSelectedProduct(product)}
-                    style={{
-                      borderRadius:
-                        theme.button_style === 'rounded'
-                          ? '0.75rem'
-                          : '0.25rem',
-                      backgroundColor: cardBackgroundColor,
-                      opacity: product.status === 'out_of_stock' ? 0.7 : 1,
-                      cursor: product.status === 'out_of_stock' ? 'not-allowed' : 'pointer',
-                    }}
-                  >
-                    <div className="absolute top-2 right-2 flex flex-col gap-2 z-10">
-
-                      {hasDiscount && (
-                        <div
-                          className="px-2 py-1 text-xs font-bold rounded"
-                                style={{
-                                  backgroundColor: primaryColor,
-                                  color: secondaryTextColor,
-                                }}
-                        >
-                          -{discountPercentage}%
-                        </div>
-                      )}
-                    </div>
-                    {product.images[0] && (
-                      <div className="relative">
-                        <img
-                          src={product.images[0]}
-                          alt={product.name}
-                          className="aspect-[4/3] w-full  object-cover" /*DF:SE AGREGA ASPECT PARA QUE SE VEAN DEL MISMO TAMAÑO*/
-                        />
-                        {product.status === 'out_of_stock' && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                            <span
-                              className="px-4 py-2 font-bold text-sm rounded"
-                              style={{
-                                backgroundColor: primaryColor,
-                                color: secondaryTextColor,
-                              }}
-                            >
-                              AGOTADO
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    <div className="p-2 ">
-                      <h2
-                        className="font-bold line-clamp-1"
-                        style={{
-                          fontSize: '16px',
-                          fontFamily: theme.primary_font || 'Poppins',
-                          color: primaryColor,
-                        }}
-                      >
-                        {product.name}
-                      </h2>
-                      <p
-                        className=" text-base leading-relaxed line-clamp-2" /*DF: SE LE AGREGO LINE-CLAMP 2 PARA QUE SE VIERA LA DESCRIPCION*/
-                        style={{
-                          fontFamily: theme.secondary_font || 'Inter',
-                          color: secondaryTextColor,
-                        }}
-                      >
-                        {product.description}
-                      </p>
-                      <div className="flex items-center gap-2">
-                        {hasDiscount && (
-                          <span
-                            className="text-sm line-through opacity-60"
-                            style={{
-                              fontFamily: theme.secondary_font || 'Poppins',
-                              color: secondaryTextColor,
-                            }}
-                          >
-                            {formatCurrency(
-                              minComparePrice,
-                              restaurant.settings.currency || 'USD'
-                            )}
-                          </span>
-                        )}
-                        <span
-                          className="font-bold text-lg"
-                          style={{
-                            fontFamily: theme.secondary_font || 'Poppins',
-                            cssText: `color: ${primaryColor} !important;`,
-                          }}
-                        >
-                          {formatCurrency(
-                            minPrice,
-                            restaurant.settings.currency || 'USD'
-                          )}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-
-              return (
-                <div
-                  key={product.id}
-                  className="rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer flex items-left gap-4 p-4 pl-0 py-0 relative"
-                  onClick={() => product.status !== 'out_of_stock' && setSelectedProduct(product)}
-                  style={{
-                    borderRadius:
-                      theme.button_style === 'rounded' ? '0.75rem' : '0.25rem',
-                    display: 'flex',
-                    backgroundColor: cardBackgroundColor,
-                    opacity: product.status === 'out_of_stock' ? 0.7 : 1,
-                    cursor: product.status === 'out_of_stock' ? 'not-allowed' : 'pointer',
-                  }}
-                >
-                  {product.images[0] && (
-                    <div className="relative">
-                      <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
-                        {product.status === 'out_of_stock' && (
-                          <div
-                            className="px-2 py-1 text-xs font-bold rounded"
-                            style={{
-                              backgroundColor: primaryColor,
-                              color: secondaryTextColor,
-                            }}
-                          >
-                            AGOTADO
-                          </div>
-                        )}
-                        {hasDiscount && (
-                          <div
-                            className="px-2 py-1 text-xs font-bold rounded"
-                            style={{
-                              backgroundColor: primaryColor,
-                              color: secondaryTextColor,
-                            }}
-                          >
-                            -{discountPercentage}%
-                          </div>
-                        )}
-                      </div>
-                      <img
-                        src={product.images[0]}
-                        alt={product.name}
-                        className="object-cover rounded-xl flex-shrink-0 " /*DF: agregue el rounded-xl para que se vea cuadrada la imagen*/
-                        style={{
-                          width: '150px',
-                          height: '150px',
-                          objectFit: 'cover',
-                          flexShrink: 0,
-                          borderTopRightRadius: '0px',
-                          borderBottomRightRadius:
-                            '0px' /*DF:configurar las imagenes para que vayan al borde*/,
-                        }}
-                      />
-                      {product.status === 'out_of_stock' && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-xl" style={{
-                          borderTopRightRadius: '0px',
-                          borderBottomRightRadius: '0px',
-                        }}>
-
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0 p-4">
-                    <h2
-                      className="font-bold mb-1 truncate"
-                      style={{
-                        fontSize: '16px',
-                        fontFamily: theme.primary_font || 'Poppins',
-                        color: primaryColor,
-                      }}
-                    >
-                      {product.name}
-                    </h2>
-                    <p
-                      className="text-gray-600 text-sm mb-2 line-clamp-2"
-                      style={{ fontFamily: theme.secondary_font || 'Inter',}}
-                    >
-                      {product.description}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      {hasDiscount && (
-                        <span
-                          className="text-sm line-through opacity-60"
-                          style={{
-                            fontFamily: theme.secondary_font || 'Poppins',
-                            color: secondaryTextColor,
-                          }}
-                        >
-                          {formatCurrency(
-                            minComparePrice,
-                            restaurant.settings.currency || 'USD'
-                          )}
-                        </span>
-                      )}
-                      <span
-                        className="font-bold text-lg"
-                        style={{
-                          fontFamily: theme.secondary_font || 'Poppins',
-                          cssText: `color: ${primaryColor} !important;`,
-                        }}
-                      >
-                        {formatCurrency(
-                          minPrice,
-                          restaurant.settings.currency || 'USD'
-                        )}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            {filteredProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                restaurant={restaurant}
+                viewMode={viewMode}
+                onClick={() => setSelectedProduct(product)}
+              />
+            ))}
           </div>
         )}
       </main>
@@ -1197,6 +850,7 @@ export const PublicMenu: React.FC = () => {
             <img
               src={restaurant.settings.promo.vertical_promo_image}
               alt="Promoción"
+              loading="lazy"
               className="w-full h-auto object-contain"
             />
           </div>
