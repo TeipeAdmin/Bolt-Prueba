@@ -59,7 +59,8 @@ export const PublicMenu: React.FC = () => {
   const [loadingMoreProducts, setLoadingMoreProducts] = useState(false);
   const [hasMoreProducts, setHasMoreProducts] = useState(true);
   const [productOffset, setProductOffset] = useState(0);
-  const PRODUCTS_PER_PAGE = 20;
+  const PRODUCTS_PER_PAGE = 15;
+  const [showInitialSkeletons, setShowInitialSkeletons] = useState(true);
   // --- Scroll hide header ---
 // Estado para controlar si el header debe mostrarse (scroll up o hover)
   const [showHeader, setShowHeader] = useState(true);
@@ -109,6 +110,7 @@ export const PublicMenu: React.FC = () => {
       setLoading(true);
       setLoadingPhase('initial');
       setError(null);
+      setShowInitialSkeletons(true);
 
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug || '');
       console.log('[PublicMenu] Slug is UUID?', isUUID);
@@ -137,11 +139,13 @@ export const PublicMenu: React.FC = () => {
         console.error('[PublicMenu] Restaurant not found for slug:', slug);
         setError(`Restaurante no encontrado: ${slug}`);
         setLoading(false);
+        setShowInitialSkeletons(false);
         return;
       }
 
       console.log('[PublicMenu] Restaurant found:', restaurantData.name, 'ID:', restaurantData.id);
 
+      // FASE 1: Mostrar restaurante y header inmediatamente
       setRestaurant(restaurantData);
       setLoadingPhase('restaurant');
       setLoading(false);
@@ -149,6 +153,7 @@ export const PublicMenu: React.FC = () => {
       console.log('[PublicMenu] Fetching categories and initial products...');
       const parallelStart = Date.now();
 
+      // FASE 2: Cargar categorías y productos en paralelo
       const [categoriesResult, productsResult] = await Promise.all([
         supabase
           .from('categories')
@@ -180,6 +185,7 @@ export const PublicMenu: React.FC = () => {
       console.log('[PublicMenu] Found', categoriesResult.data?.length || 0, 'categories');
       console.log('[PublicMenu] Found', productsResult.data?.length || 0, 'initial products');
 
+      // Mostrar categorías inmediatamente
       setCategories(categoriesResult.data || []);
       setLoadingPhase('categories');
 
@@ -219,7 +225,9 @@ export const PublicMenu: React.FC = () => {
       }));
 
       console.log('[PublicMenu] Setting', transformedInitialProducts.length, 'products to state');
+      // FASE 3: Mostrar productos y ocultar skeletons
       setProducts(transformedInitialProducts);
+      setShowInitialSkeletons(false);
       setProductOffset(PRODUCTS_PER_PAGE);
       setHasMoreProducts(transformedInitialProducts.length === PRODUCTS_PER_PAGE);
       setLoadingPhase('complete');
@@ -228,6 +236,7 @@ export const PublicMenu: React.FC = () => {
       console.error('[PublicMenu] Error loading menu:', err);
       setError('Error al cargar el menú');
       setLoading(false);
+      setShowInitialSkeletons(false);
     }
   };
 
@@ -372,7 +381,7 @@ export const PublicMenu: React.FC = () => {
   }, [hasMoreProducts, loadingMoreProducts, productOffset]);
   
 
-  if (loading && loadingPhase === 'initial') {
+  if (loading && !restaurant) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -760,7 +769,7 @@ export const PublicMenu: React.FC = () => {
           </div>
         </div>
       </header>
-      {!searchTerm && featuredProducts.length > 0 && (
+      {!searchTerm && !showInitialSkeletons && featuredProducts.length > 0 && (
         <div className="text-left px-[15px]  md:px-[210px] md:-mt-[9px] md:-mb-[30px] scale-[0.85]">
           {' '}
           {/*DF:pasar toda esta seccion completa*/}
@@ -794,7 +803,7 @@ export const PublicMenu: React.FC = () => {
         </div>
       )}
       {/* ANIMATED CAROUSEL */}
-      {!searchTerm && featuredProducts.length > 0 && (
+      {!searchTerm && !showInitialSkeletons && featuredProducts.length > 0 && (
         <AnimatedCarousel
           products={featuredProducts}
           primaryColor={primaryColor}
@@ -925,7 +934,7 @@ export const PublicMenu: React.FC = () => {
             </button>
           </div>
         </div>
-        {filteredProducts.length === 0 && loadingPhase === 'complete' ? (
+        {filteredProducts.length === 0 && loadingPhase === 'complete' && !showInitialSkeletons ? (
           <div className="text-center py-12">
             <p
               className="text-gray-600"
@@ -944,15 +953,25 @@ export const PublicMenu: React.FC = () => {
                 : 'space-y-2'
             }
           >
-            {filteredProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                restaurant={restaurant}
-                viewMode={viewMode}
-                onClick={() => setSelectedProduct(product)}
-              />
-            ))}
+            {showInitialSkeletons ? (
+              <>
+                {Array.from({ length: PRODUCTS_PER_PAGE }).map((_, index) => (
+                  <ProductCardSkeleton key={`initial-skeleton-${index}`} viewMode={viewMode} />
+                ))}
+              </>
+            ) : (
+              <>
+                {filteredProducts.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    restaurant={restaurant}
+                    viewMode={viewMode}
+                    onClick={() => setSelectedProduct(product)}
+                  />
+                ))}
+              </>
+            )}
             {loadingMoreProducts && (
               <>
                 {Array.from({ length: 6 }).map((_, index) => (
