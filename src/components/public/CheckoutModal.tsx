@@ -306,8 +306,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
         total: totalAmount,
         status: 'pending',
         special_instructions: customerInfo.notes || null,
-        notes: customerInfo.notes || '',
-        estimated_time: restaurant.settings?.preparation_time || '30-45 minutos'
+        notes: customerInfo.notes || ''
       };
 
       const { data: newOrder, error } = await supabase
