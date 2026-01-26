@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
+import { availablePlans } from '../lib/plans';
 import {
   Menu as MenuIcon,
   X,
@@ -31,6 +32,7 @@ export const LandingPage: React.FC = () => {
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
 
   // Audio state (sin reiniciar video)
   const [isVideoMuted, setIsVideoMuted] = useState(true);
@@ -53,6 +55,56 @@ export const LandingPage: React.FC = () => {
       element.scrollIntoView({ behavior: 'smooth' });
       setIsMobileMenuOpen(false);
     }
+  };
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price);
+  };
+
+  const getDisplayPrice = (plan: typeof availablePlans[0]) => {
+    return billingPeriod === 'monthly' ? plan.monthlyPrice : plan.annualPrice;
+  };
+
+  const getSavings = (plan: typeof availablePlans[0]) => {
+    const yearlyMonthly = plan.monthlyPrice * 12;
+    return yearlyMonthly - plan.annualPrice;
+  };
+
+  const getPlanFeaturesList = (plan: typeof availablePlans[0]) => {
+    const features = [];
+    if (plan.id === 'free') {
+      features.push(`Hasta ${plan.features.max_products} productos`);
+      features.push(`Hasta ${plan.features.max_categories} categorías`);
+      features.push('Menú digital básico');
+      features.push('Gestión de órdenes');
+      features.push('Soporte por email');
+    } else if (plan.id === 'basic') {
+      features.push(`Hasta ${plan.features.max_products} productos`);
+      features.push(`Hasta ${plan.features.max_categories} categorías`);
+      features.push('Análisis y estadísticas');
+      features.push('Personalización avanzada');
+      features.push('Soporte prioritario');
+    } else if (plan.id === 'pro') {
+      features.push(`Hasta ${plan.features.max_products} productos`);
+      features.push(`Hasta ${plan.features.max_categories} categorías`);
+      features.push('Análisis avanzados');
+      features.push('Dominio personalizado');
+      features.push('Soporte prioritario 24/7');
+      features.push('Personalización completa');
+    } else if (plan.id === 'business') {
+      features.push(`Hasta ${plan.features.max_products} productos`);
+      features.push(`Hasta ${plan.features.max_categories} categorías`);
+      features.push('Todo lo de Pro +');
+      features.push('Asistente virtual con IA');
+      features.push('API personalizada');
+      features.push('Soporte dedicado');
+    }
+    return features;
   };
 
   // Cargar YouTube IFrame API (una sola vez) y crear el player
@@ -176,68 +228,6 @@ export const LandingPage: React.FC = () => {
     }
   ];
 
-  const plans = [
-    {
-      name: 'Free',
-      price: 0,
-      period: t('planFree'),
-      description: t('planFreeDesc'),
-      features: [
-        t('planFreeFeature1'),
-        t('planFreeFeature2'),
-        t('planFreeFeature3'),
-        t('planFreeFeature4'),
-        t('planFreeFeature5')
-      ],
-      cta: t('getStarted'),
-      popular: false
-    },
-    {
-      name: 'Basic',
-      price: 9,
-      period: t('perMonth'),
-      description: t('planBasicDesc'),
-      features: [
-        t('planBasicFeature1'),
-        t('planBasicFeature2'),
-        t('planBasicFeature3'),
-        t('planBasicFeature4'),
-        t('planBasicFeature5')
-      ],
-      cta: t('choosePlan'),
-      popular: false
-    },
-    {
-      name: 'Pro',
-      price: 19,
-      period: t('perMonth'),
-      description: t('planProDesc'),
-      features: [
-        t('planProFeature1'),
-        t('planProFeature2'),
-        t('planProFeature3'),
-        t('planProFeature4'),
-        t('planProFeature5')
-      ],
-      cta: t('choosePlan'),
-      popular: true
-    },
-    {
-      name: 'Business',
-      price: 39,
-      period: t('perMonth'),
-      description: t('planBusinessDesc'),
-      features: [
-        t('planBusinessFeature1'),
-        t('planBusinessFeature2'),
-        t('planBusinessFeature3'),
-        t('planBusinessFeature4'),
-        t('planBusinessFeature5')
-      ],
-      cta: t('choosePlan'),
-      popular: false
-    }
-  ];
 
   const testimonials = [
     {
@@ -578,15 +568,40 @@ export const LandingPage: React.FC = () => {
       {/* Pricing Section */}
       <section id="pricing" className="py-16 md:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
+          <div className="text-center mb-8">
             <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
               {t('pricingTitle')}
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">{t('pricingSubtitle')}</p>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-6">{t('pricingSubtitle')}</p>
+
+            {/* Billing Period Toggle */}
+            <div className="inline-flex items-center bg-gray-100 rounded-lg p-1 shadow-sm">
+              <button
+                onClick={() => setBillingPeriod('monthly')}
+                className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
+                  billingPeriod === 'monthly'
+                    ? 'bg-white text-gray-900 shadow'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Mensual
+              </button>
+              <button
+                onClick={() => setBillingPeriod('annual')}
+                className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
+                  billingPeriod === 'annual'
+                    ? 'bg-white text-gray-900 shadow'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Anual
+                <span className="ml-2 text-xs text-green-600 font-semibold">Ahorra 15%</span>
+              </button>
+            </div>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {plans.map((plan, index) => (
+            {availablePlans.map((plan, index) => (
               <div
                 key={index}
                 className={`relative p-8 rounded-2xl ${
@@ -610,24 +625,39 @@ export const LandingPage: React.FC = () => {
                     {plan.name}
                   </h3>
                   <div className="mb-2">
-                    <span
-                      className={`text-4xl font-bold ${
-                        plan.popular ? 'text-white' : 'text-gray-900'
-                      }`}
-                    >
-                      ${plan.price}
-                    </span>
-                    <span className={`text-lg ${plan.popular ? 'text-orange-100' : 'text-gray-600'}`}>
-                      {plan.price > 0 ? `/${plan.period}` : ''}
-                    </span>
+                    {plan.monthlyPrice === 0 ? (
+                      <div>
+                        <span className={`text-4xl font-bold ${plan.popular ? 'text-white' : 'text-gray-900'}`}>
+                          Gratis
+                        </span>
+                        <p className={`text-sm mt-1 ${plan.popular ? 'text-orange-100' : 'text-gray-600'}`}>
+                          Para siempre
+                        </p>
+                      </div>
+                    ) : (
+                      <div>
+                        <div>
+                          <span className={`text-4xl font-bold ${plan.popular ? 'text-white' : 'text-gray-900'}`}>
+                            {formatPrice(getDisplayPrice(plan))}
+                          </span>
+                          <span className={`text-lg ${plan.popular ? 'text-orange-100' : 'text-gray-600'}`}>
+                            {billingPeriod === 'monthly' ? '/mes' : '/año'}
+                          </span>
+                        </div>
+                        {billingPeriod === 'annual' && (
+                          <div className="mt-2">
+                            <span className={`text-xs ${plan.popular ? 'text-white' : 'text-green-600'} font-semibold`}>
+                              Ahorras {formatPrice(getSavings(plan))}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <p className={`text-sm ${plan.popular ? 'text-orange-100' : 'text-gray-600'}`}>
-                    {plan.description}
-                  </p>
                 </div>
 
                 <ul className="space-y-3 mb-8">
-                  {plan.features.map((feature, featureIndex) => (
+                  {getPlanFeaturesList(plan).map((feature, featureIndex) => (
                     <li key={featureIndex} className="flex items-start gap-3">
                       <Check
                         className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
@@ -649,7 +679,7 @@ export const LandingPage: React.FC = () => {
                       : 'bg-gradient-to-r from-orange-500 to-red-500 text-white hover:shadow-lg'
                   }`}
                 >
-                  {plan.cta}
+                  {plan.id === 'free' ? t('getStarted') : t('choosePlan')}
                 </button>
               </div>
             ))}
