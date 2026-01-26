@@ -2661,12 +2661,22 @@ export const RestaurantSettings: React.FC = () => {
                 <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 max-h-96 overflow-y-auto">
                   {(() => {
                     const selectedIds = formData.settings.promo?.featured_product_ids || [];
+                    // Filter to only valid product IDs (products that actually exist)
+                    const validProductIds = products.map((p: any) => p.id);
+                    const validSelectedIds = selectedIds.filter((id: string) => validProductIds.includes(id));
+
+                    // Auto-cleanup: if there are invalid IDs, update the form data
+                    if (validSelectedIds.length !== selectedIds.length) {
+                      setTimeout(() => {
+                        updateFormData('settings.promo.featured_product_ids', validSelectedIds);
+                      }, 0);
+                    }
 
                     return (
                       <div className="space-y-2">
                         {products.map((product: any) => {
-                          const isSelected = selectedIds.includes(product.id);
-                          const canSelect = selectedIds.length < 5 || isSelected;
+                          const isSelected = validSelectedIds.includes(product.id);
+                          const canSelect = validSelectedIds.length < 5 || isSelected;
 
                           return (
                             <label
@@ -2684,7 +2694,7 @@ export const RestaurantSettings: React.FC = () => {
                                 checked={isSelected}
                                 disabled={!canSelect}
                                 onChange={(e) => {
-                                  let newIds = [...selectedIds];
+                                  let newIds = [...validSelectedIds];
                                   if (e.target.checked) {
                                     if (newIds.length < 5) {
                                       newIds.push(product.id);
@@ -2723,7 +2733,12 @@ export const RestaurantSettings: React.FC = () => {
                   })()}
                 </div>
                 <p className="text-xs text-gray-600">
-                  {formData.settings.promo?.featured_product_ids?.length || 0} {t('featured_products_selected')}
+                  {(() => {
+                    const selectedIds = formData.settings.promo?.featured_product_ids || [];
+                    const validProductIds = products.map((p: any) => p.id);
+                    const validCount = selectedIds.filter((id: string) => validProductIds.includes(id)).length;
+                    return `${validCount} ${t('featured_products_selected')}`;
+                  })()}
                 </p>
               </div>
 
