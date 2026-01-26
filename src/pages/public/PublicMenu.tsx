@@ -236,6 +236,33 @@ export const PublicMenu: React.FC = () => {
       setHasMoreProducts(transformedInitialProducts.length === PRODUCTS_PER_PAGE);
       setLoadingPhase('complete');
       console.log('[PublicMenu] Initial menu loading complete!');
+
+      // Clean up invalid featured product IDs
+      if (restaurantData.settings?.promo?.featured_product_ids?.length) {
+        const validProductIds = transformedInitialProducts.map((p: any) => p.id);
+        const configuredIds = restaurantData.settings.promo.featured_product_ids;
+        const invalidIds = configuredIds.filter((id: string) => !validProductIds.includes(id));
+
+        if (invalidIds.length > 0) {
+          console.log('[PublicMenu] Found', invalidIds.length, 'invalid featured product IDs, cleaning up...');
+          const validFeaturedIds = configuredIds.filter((id: string) => validProductIds.includes(id));
+
+          await supabase
+            .from('restaurants')
+            .update({
+              settings: {
+                ...restaurantData.settings,
+                promo: {
+                  ...restaurantData.settings.promo,
+                  featured_product_ids: validFeaturedIds
+                }
+              }
+            })
+            .eq('id', restaurantData.id);
+
+          console.log('[PublicMenu] Cleaned up invalid product IDs');
+        }
+      }
     } catch (err) {
       console.error('[PublicMenu] Error loading menu:', err);
       setError('Error al cargar el menú');
@@ -347,7 +374,15 @@ export const PublicMenu: React.FC = () => {
     }
 
     const featuredIds = restaurant.settings.promo.featured_product_ids;
-    return products.filter((p) => featuredIds.includes(p.id)).slice(0, 5);
+    // Filter to only include products that actually exist in the products array
+    const validFeatured = products.filter((p) => featuredIds.includes(p.id));
+
+    // If no valid featured products found, fallback to is_featured flag
+    if (validFeatured.length === 0) {
+      return products.filter((p) => p.is_featured).slice(0, 5);
+    }
+
+    return validFeatured.slice(0, 5);
   }, [products, restaurant?.settings.promo?.featured_product_ids]);
   const cartItemsCount = cartItems.reduce(
     (sum, item) => sum + item.quantity,

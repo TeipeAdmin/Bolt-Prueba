@@ -286,6 +286,26 @@ export const MenuManagement: React.FC = () => {
 
       if (error) throw error;
 
+      // Clean up featured product IDs if this product was featured
+      if (restaurant?.settings?.promo?.featured_product_ids?.includes(productId)) {
+        const updatedFeaturedIds = restaurant.settings.promo.featured_product_ids.filter(
+          (id: string) => id !== productId
+        );
+
+        await supabase
+          .from('restaurants')
+          .update({
+            settings: {
+              ...restaurant.settings,
+              promo: {
+                ...restaurant.settings.promo,
+                featured_product_ids: updatedFeaturedIds
+              }
+            }
+          })
+          .eq('id', restaurant.id);
+      }
+
       await loadMenuData();
 
       showToast(
