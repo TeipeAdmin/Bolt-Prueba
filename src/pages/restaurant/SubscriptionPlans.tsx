@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Check, Star, Zap, Crown, Gift } from 'lucide-react';
+import { Check, Star, Zap, Crown, Gift, Bot } from 'lucide-react';
 import { Plan, Subscription, Restaurant } from '../../types';
 import { availablePlans } from '../../data/mockData';
 import { loadFromStorage, saveToStorage } from '../../data/mockData';
@@ -15,6 +15,7 @@ export const SubscriptionPlans: React.FC = () => {
   const { t } = useLanguage();
   const [currentSubscription, setCurrentSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(false);
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
 
   useEffect(() => {
     if (restaurant) {
@@ -186,25 +187,44 @@ export const SubscriptionPlans: React.FC = () => {
 
   const getFeaturesList = (plan: any) => {
     const features = [];
-    
+
     if (plan.features.max_products === -1) {
-      features.push(`${t('unlimited')} products`);
+      features.push(`${t('unlimited')} productos`);
     } else {
-      features.push(`${t('upTo')} ${plan.features.max_products} products`);
+      features.push(`Hasta ${plan.features.max_products} productos`);
     }
-    
+
     if (plan.features.max_categories === -1) {
-      features.push(`${t('unlimited')} categories`);
+      features.push(`${t('unlimited')} categorías`);
     } else {
-      features.push(`${t('upTo')} ${plan.features.max_categories} categories`);
+      features.push(`Hasta ${plan.features.max_categories} categorías`);
     }
-    
-    if (plan.features.analytics) features.push(t('advancedStats'));
-    if (plan.features.custom_domain) features.push(t('customDomain'));
-    if (plan.features.priority_support) features.push(t('prioritySupport'));
-    if (plan.features.advanced_customization) features.push(t('advancedCustomization'));
-    
+
+    if (plan.features.analytics) features.push('Estadísticas avanzadas');
+    if (plan.features.priority_support) features.push('Soporte prioritario');
+    if (plan.features.advanced_customization) features.push('Personalización avanzada');
+    if (plan.features.ai_assistant) features.push('Asistente IA');
+
     return features;
+  };
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price);
+  };
+
+  const getDisplayPrice = (plan: any) => {
+    return billingPeriod === 'monthly' ? plan.monthlyPrice : plan.annualPrice;
+  };
+
+  const getSavings = (plan: any) => {
+    if (plan.monthlyPrice === 0) return 0;
+    const yearlyMonthly = plan.monthlyPrice * 12;
+    return yearlyMonthly - plan.annualPrice;
   };
 
   const isCurrentPlan = (planId: string) => {
@@ -215,9 +235,34 @@ export const SubscriptionPlans: React.FC = () => {
     <div className="p-6">
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-4">{t('subscriptionPlans')}</h1>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-6">
           {t('choosePlan')}
         </p>
+
+        {/* Billing Period Toggle */}
+        <div className="inline-flex items-center bg-gray-100 rounded-lg p-1 shadow-sm">
+          <button
+            onClick={() => setBillingPeriod('monthly')}
+            className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
+              billingPeriod === 'monthly'
+                ? 'bg-white text-gray-900 shadow'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Mensual
+          </button>
+          <button
+            onClick={() => setBillingPeriod('annual')}
+            className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
+              billingPeriod === 'annual'
+                ? 'bg-white text-gray-900 shadow'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Anual
+            <span className="ml-2 text-xs text-green-600 font-semibold">Ahorra 15%</span>
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
@@ -260,15 +305,28 @@ export const SubscriptionPlans: React.FC = () => {
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.name}</h3>
                 <div className="mb-4">
-                  {plan.price === 0 ? (
+                  {plan.monthlyPrice === 0 ? (
                     <div>
-                      <span className="text-3xl font-bold text-gray-900">{t('freePlan')}</span>
-                      <p className="text-sm text-gray-600 mt-1">Forever</p>
+                      <span className="text-3xl font-bold text-gray-900">Gratis</span>
+                      <p className="text-sm text-gray-600 mt-1">Para siempre</p>
                     </div>
                   ) : (
                     <div>
-                      <span className="text-3xl font-bold text-gray-900">${plan.price}</span>
-                      <span className="text-gray-600 ml-1">USD/mes</span>
+                      <div>
+                        <span className="text-3xl font-bold text-gray-900">
+                          {formatPrice(getDisplayPrice(plan))}
+                        </span>
+                        <span className="text-gray-600 ml-1">
+                          {billingPeriod === 'monthly' ? '/mes' : '/año'}
+                        </span>
+                      </div>
+                      {billingPeriod === 'annual' && (
+                        <div className="mt-2">
+                          <Badge variant="success" className="text-xs">
+                            Ahorras {formatPrice(getSavings(plan))}
+                          </Badge>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -301,13 +359,13 @@ export const SubscriptionPlans: React.FC = () => {
                     onClick={() => handleSelectPlan(plan.id)}
                     loading={loading}
                     className={`w-full ${
-                      plan.popular 
-                        ? 'bg-purple-600 hover:bg-purple-700' 
+                      plan.popular
+                        ? 'bg-blue-600 hover:bg-blue-700'
                         : ''
                     }`}
                     variant={plan.popular ? 'primary' : 'primary'}
                   >
-                    Start
+                    Comenzar
                   </Button>
                 )}
               </div>
@@ -317,26 +375,42 @@ export const SubscriptionPlans: React.FC = () => {
       </div>
 
       {/* Additional Info */}
-      <div className="mt-12 text-center">
+      <div className="mt-12 space-y-6">
         <div className="bg-blue-50 rounded-lg p-6 max-w-4xl mx-auto">
           <h3 className="text-lg font-semibold text-blue-900 mb-2">
-            {t('needHelp')}
+            ¿Necesitas ayuda para elegir?
           </h3>
           <p className="text-blue-700 mb-4">
-            {t('allPlansInclude')} {t('canChangeAnytime')}
+            Todos los planes incluyen actualizaciones gratuitas. Puedes cambiar o cancelar en cualquier momento.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-blue-600">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-blue-600">
             <div>
-              <strong>{t('freePlan')}:</strong> {t('perfectToStart')}
+              <strong>Free:</strong> Perfecto para comenzar y probar la plataforma
             </div>
             <div>
-              <strong>Basic/Pro:</strong> {t('forGrowingRestaurants')}
+              <strong>Basic:</strong> Ideal para restaurantes pequeños
             </div>
             <div>
-              <strong>Business:</strong> {t('forChainsAndFranchises')}
+              <strong>Pro:</strong> Para restaurantes en crecimiento con múltiples productos
+            </div>
+            <div>
+              <strong>Business:</strong> Para cadenas y franquicias con alto volumen
             </div>
           </div>
         </div>
+
+        {billingPeriod === 'annual' && (
+          <div className="bg-green-50 rounded-lg p-6 max-w-4xl mx-auto border-2 border-green-200">
+            <h3 className="text-lg font-semibold text-green-900 mb-2 flex items-center gap-2">
+              <Gift className="w-5 h-5" />
+              Beneficio del Plan Anual
+            </h3>
+            <p className="text-green-700">
+              Al elegir la facturación anual, obtienes un <strong>15% de descuento</strong> comparado con el pago mensual.
+              Esto significa que pagas 10 meses y recibes 2 meses adicionales gratis, ¡el equivalente a un mes extra de servicio!
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
