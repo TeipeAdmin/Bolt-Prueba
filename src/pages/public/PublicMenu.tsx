@@ -56,6 +56,10 @@ export const PublicMenu: React.FC = () => {
     'list'
   );
   const [showHoursModal, setShowHoursModal] = useState(false);
+  const [loadingMoreProducts, setLoadingMoreProducts] = useState(false);
+  const [hasMoreProducts, setHasMoreProducts] = useState(true);
+  const [productOffset, setProductOffset] = useState(0);
+  const PRODUCTS_PER_PAGE = 20;
   // --- Scroll hide header ---
 // Estado para controlar si el header debe mostrarse (scroll up o hover)
   const [showHeader, setShowHeader] = useState(true);
@@ -142,7 +146,7 @@ export const PublicMenu: React.FC = () => {
       setLoadingPhase('restaurant');
       setLoading(false);
 
-      console.log('[PublicMenu] Fetching categories and products in parallel...');
+      console.log('[PublicMenu] Fetching categories and initial products...');
       const parallelStart = Date.now();
 
       const [categoriesResult, productsResult] = await Promise.all([
@@ -159,7 +163,7 @@ export const PublicMenu: React.FC = () => {
           .eq('restaurant_id', restaurantData.id)
           .in('status', ['active', 'out_of_stock'])
           .order('display_order', { ascending: true })
-          .limit(50)
+          .range(0, PRODUCTS_PER_PAGE - 1)
       ]);
 
       console.log('[PublicMenu] Parallel queries took:', Date.now() - parallelStart, 'ms');
@@ -174,7 +178,7 @@ export const PublicMenu: React.FC = () => {
       }
 
       console.log('[PublicMenu] Found', categoriesResult.data?.length || 0, 'categories');
-      console.log('[PublicMenu] Found', productsResult.data?.length || 0, 'products');
+      console.log('[PublicMenu] Found', productsResult.data?.length || 0, 'initial products');
 
       setCategories(categoriesResult.data || []);
       setLoadingPhase('categories');
@@ -216,12 +220,67 @@ export const PublicMenu: React.FC = () => {
 
       console.log('[PublicMenu] Setting', transformedInitialProducts.length, 'products to state');
       setProducts(transformedInitialProducts);
+      setProductOffset(PRODUCTS_PER_PAGE);
+      setHasMoreProducts(transformedInitialProducts.length === PRODUCTS_PER_PAGE);
       setLoadingPhase('complete');
-      console.log('[PublicMenu] Menu loading complete!');
+      console.log('[PublicMenu] Initial menu loading complete!');
     } catch (err) {
       console.error('[PublicMenu] Error loading menu:', err);
       setError('Error al cargar el menú');
       setLoading(false);
+    }
+  };
+
+  const loadMoreProducts = async () => {
+    if (!restaurant || loadingMoreProducts || !hasMoreProducts) return;
+
+    try {
+      setLoadingMoreProducts(true);
+      console.log('[PublicMenu] Loading more products from offset:', productOffset);
+
+      const { data: moreProductsData, error: moreProductsError } = await supabase
+        .from('products')
+        .select('id, restaurant_id, name, description, price, images, status, is_available, is_featured, variations, display_order, compare_at_price')
+        .eq('restaurant_id', restaurant.id)
+        .in('status', ['active', 'out_of_stock'])
+        .order('display_order', { ascending: true })
+        .range(productOffset, productOffset + PRODUCTS_PER_PAGE - 1);
+
+      if (moreProductsError) throw moreProductsError;
+
+      const productIds = (moreProductsData || []).map((p: any) => p.id);
+
+      let productCategoryMap: Record<string, string | null> = {};
+      if (productIds.length > 0) {
+        const { data: productCategoriesData } = await supabase
+          .from('product_categories')
+          .select('product_id, category_id')
+          .in('product_id', productIds);
+
+        if (productCategoriesData) {
+          productCategoriesData.forEach(pc => {
+            if (!productCategoryMap[pc.product_id]) {
+              productCategoryMap[pc.product_id] = pc.category_id;
+            }
+          });
+        }
+      }
+
+      const transformedProducts = (moreProductsData || []).map((p: any) => ({
+        ...p,
+        images: p.images || [],
+        variations: p.variations && p.variations.length > 0 ? p.variations : [{ id: '1', name: 'Default', price: Number(p.price) || 0 }],
+        category_id: productCategoryMap[p.id] || null
+      }));
+
+      setProducts(prev => [...prev, ...transformedProducts]);
+      setProductOffset(prev => prev + PRODUCTS_PER_PAGE);
+      setHasMoreProducts(transformedProducts.length === PRODUCTS_PER_PAGE);
+      console.log('[PublicMenu] Loaded', transformedProducts.length, 'more products');
+    } catch (err) {
+      console.error('[PublicMenu] Error loading more products:', err);
+    } finally {
+      setLoadingMoreProducts(false);
     }
   };
 
@@ -288,6 +347,29 @@ export const PublicMenu: React.FC = () => {
         Math.max(1, featuredProducts.length)
     );
   }, [featuredProducts.length]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (first.isIntersecting && hasMoreProducts && !loadingMoreProducts) {
+          loadMoreProducts();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const sentinel = document.getElementById('load-more-sentinel');
+    if (sentinel) {
+      observer.observe(sentinel);
+    }
+
+    return () => {
+      if (sentinel) {
+        observer.unobserve(sentinel);
+      }
+    };
+  }, [hasMoreProducts, loadingMoreProducts, productOffset]);
   
 
   if (loading && loadingPhase === 'initial') {
@@ -871,13 +953,18 @@ export const PublicMenu: React.FC = () => {
                 onClick={() => setSelectedProduct(product)}
               />
             ))}
-            {loadingPhase !== 'complete' && (
+            {loadingMoreProducts && (
               <>
-                {Array.from({ length: 8 }).map((_, index) => (
+                {Array.from({ length: 6 }).map((_, index) => (
                   <ProductCardSkeleton key={`skeleton-${index}`} viewMode={viewMode} />
                 ))}
               </>
             )}
+          </div>
+        )}
+        {hasMoreProducts && !loadingMoreProducts && (
+          <div id="load-more-sentinel" className="h-20 flex items-center justify-center">
+            <div className="text-gray-400 text-sm">Cargando más productos...</div>
           </div>
         )}
       </main>
@@ -1120,7 +1207,7 @@ export const PublicMenu: React.FC = () => {
                 className="font-medium"
                 style={{
                   fontFamily: theme.secondary_font || 'Inter',
-                  cssText: `color: ${secondaryTextColor} !important;`
+                  color: secondaryTextColor
                 }}
               >
                 {restaurant.address}
