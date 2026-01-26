@@ -101,11 +101,13 @@ export const PublicMenu: React.FC = () => {
 
   const loadMenuData = async () => {
     try {
+      console.log('[PublicMenu] Starting to load menu data for slug:', slug);
       setLoading(true);
       setLoadingPhase('initial');
       setError(null);
 
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug || '');
+      console.log('[PublicMenu] Slug is UUID?', isUUID);
 
       let query = supabase
         .from('restaurants')
@@ -117,19 +119,31 @@ export const PublicMenu: React.FC = () => {
         query = query.or(`slug.eq.${slug},domain.eq.${slug}`);
       }
 
+      console.log('[PublicMenu] Fetching restaurant data...');
+      const queryStart = Date.now();
       const { data: restaurantData, error: restaurantError } = await query.maybeSingle();
+      console.log('[PublicMenu] Restaurant query took:', Date.now() - queryStart, 'ms');
 
-      if (restaurantError) throw restaurantError;
+      if (restaurantError) {
+        console.error('[PublicMenu] Restaurant error:', restaurantError);
+        throw restaurantError;
+      }
 
       if (!restaurantData) {
+        console.error('[PublicMenu] Restaurant not found for slug:', slug);
         setError(`Restaurante no encontrado: ${slug}`);
         setLoading(false);
         return;
       }
 
+      console.log('[PublicMenu] Restaurant found:', restaurantData.name, 'ID:', restaurantData.id);
+
       setRestaurant(restaurantData);
       setLoadingPhase('restaurant');
       setLoading(false);
+
+      console.log('[PublicMenu] Fetching categories and products in parallel...');
+      const parallelStart = Date.now();
 
       const [categoriesResult, productsResult] = await Promise.all([
         supabase
@@ -148,8 +162,19 @@ export const PublicMenu: React.FC = () => {
           .limit(50)
       ]);
 
-      if (categoriesResult.error) throw categoriesResult.error;
-      if (productsResult.error) throw productsResult.error;
+      console.log('[PublicMenu] Parallel queries took:', Date.now() - parallelStart, 'ms');
+
+      if (categoriesResult.error) {
+        console.error('[PublicMenu] Categories error:', categoriesResult.error);
+        throw categoriesResult.error;
+      }
+      if (productsResult.error) {
+        console.error('[PublicMenu] Products error:', productsResult.error);
+        throw productsResult.error;
+      }
+
+      console.log('[PublicMenu] Found', categoriesResult.data?.length || 0, 'categories');
+      console.log('[PublicMenu] Found', productsResult.data?.length || 0, 'products');
 
       setCategories(categoriesResult.data || []);
       setLoadingPhase('categories');
@@ -162,10 +187,16 @@ export const PublicMenu: React.FC = () => {
 
       let productCategoryMap: Record<string, string | null> = {};
       if (productIds.length > 0) {
+        console.log('[PublicMenu] Fetching product categories for', productIds.length, 'products...');
+        const pcStart = Date.now();
+
         const { data: productCategoriesData } = await supabase
           .from('product_categories')
           .select('product_id, category_id')
           .in('product_id', productIds);
+
+        console.log('[PublicMenu] Product categories query took:', Date.now() - pcStart, 'ms');
+        console.log('[PublicMenu] Found', productCategoriesData?.length || 0, 'product-category relationships');
 
         if (productCategoriesData) {
           productCategoriesData.forEach(pc => {
@@ -183,10 +214,12 @@ export const PublicMenu: React.FC = () => {
         category_id: productCategoryMap[p.id] || null
       }));
 
+      console.log('[PublicMenu] Setting', transformedInitialProducts.length, 'products to state');
       setProducts(transformedInitialProducts);
       setLoadingPhase('complete');
+      console.log('[PublicMenu] Menu loading complete!');
     } catch (err) {
-      console.error('Error loading menu:', err);
+      console.error('[PublicMenu] Error loading menu:', err);
       setError('Error al cargar el menú');
       setLoading(false);
     }
