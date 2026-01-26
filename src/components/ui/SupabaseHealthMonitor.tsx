@@ -57,7 +57,7 @@ export function SupabaseHealthMonitor() {
             <>
               <AlertCircle className="w-5 h-5 flex-shrink-0" />
               <p className="text-sm font-medium">
-                Problemas de conexión con la base de datos. Reintentando automáticamente...
+                Problemas de conexión con la base de datos. Reintentando...
               </p>
               <button
                 onClick={checkHealth}
