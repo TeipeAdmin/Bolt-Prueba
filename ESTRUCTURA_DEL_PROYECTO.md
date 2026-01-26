@@ -2494,10 +2494,6 @@ module.exports = {
    - Supabase Hosting
    - Cualquier hosting de SPA
 
-4. **Dominio Personalizado**:
-   - Configurar DNS
-   - SSL automático
-   - Redirects 404 a index.html
 
 ---
 
