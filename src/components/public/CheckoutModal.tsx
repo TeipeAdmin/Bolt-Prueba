@@ -261,15 +261,18 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
         .select('order_number')
         .eq('restaurant_id', restaurant.id);
 
-      let nextOrderNumber = '1';
+      let nextOrderNumber = 'RES-1001';
       if (allOrders && allOrders.length > 0) {
         const numericOrderNumbers = allOrders
-          .map(o => parseInt(o.order_number))
-          .filter(n => !isNaN(n));
+          .map(o => {
+            const match = o.order_number?.match(/RES-(\d+)/);
+            return match ? parseInt(match[1]) : null;
+          })
+          .filter(n => n !== null) as number[];
 
         if (numericOrderNumbers.length > 0) {
-          const maxOrderNumber = Math.max(...numericOrderNumbers);
-          nextOrderNumber = (maxOrderNumber + 1).toString();
+          const maxOrderNumber = Math.max(...numericOrderNumbers, 1000);
+          nextOrderNumber = `RES-${maxOrderNumber + 1}`;
         }
       }
 
@@ -303,7 +306,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
         total: totalAmount,
         status: 'pending',
         special_instructions: customerInfo.notes || null,
-        notes: customerInfo.notes || ''
+        notes: customerInfo.notes || '',
+        estimated_time: restaurant.settings?.preparation_time || '30-45 minutos'
       };
 
       const { data: newOrder, error } = await supabase

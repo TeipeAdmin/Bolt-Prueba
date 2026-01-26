@@ -92,16 +92,43 @@ export const OrdersManagement: React.FC = () => {
       return;
     }
 
-    const mappedOrders = (data || []).map((order: any) => ({
-      ...order,
-      customer: {
-        name: order.customer_name || '',
-        phone: order.customer_phone || '',
-        email: order.customer_email || '',
-        address: order.customer_address || '',
-        delivery_instructions: '',
-      }
-    }));
+    const mappedOrders = (data || []).map((order: any) => {
+      const items = order.items || [];
+      const mappedItems = items.map((item: any, index: number) => ({
+        id: item.id || `${order.id}-${index}`,
+        product_id: item.product_id,
+        product: {
+          id: item.product_id,
+          name: item.product_name || 'Producto'
+        },
+        variation: {
+          id: item.variation_id,
+          name: item.variation_name || 'Variación',
+          price: item.unit_price || 0
+        },
+        quantity: item.quantity || 1,
+        unit_price: item.unit_price || 0,
+        price: item.unit_price || 0,
+        total_price: item.total_price || (item.unit_price * item.quantity) || 0,
+        special_notes: item.special_notes || '',
+        selected_ingredients: item.selected_ingredients || []
+      }));
+
+      return {
+        ...order,
+        items: mappedItems,
+        total: order.total || order.total_amount || 0,
+        subtotal: order.subtotal || 0,
+        delivery_cost: order.delivery_cost || 0,
+        customer: {
+          name: order.customer_name || '',
+          phone: order.customer_phone || '',
+          email: order.customer_email || '',
+          address: order.customer_address || '',
+          delivery_instructions: '',
+        }
+      };
+    });
 
     setOrders(mappedOrders);
   };
@@ -127,20 +154,20 @@ export const OrdersManagement: React.FC = () => {
 
   const calculateStats = () => {
     const today = new Date().toDateString();
-    const todayOrders = orders.filter(order => 
+    const todayOrders = orders.filter(order =>
       new Date(order.created_at).toDateString() === today
     );
     const completedOrders = orders.filter(order => order.status === 'delivered');
     const todayRevenue = todayOrders
       .filter(order => order.status === 'delivered')
-      .reduce((sum, order) => sum + order.total, 0);
-    const averageOrderValue = completedOrders.length > 0 
+      .reduce((sum, order) => sum + (order.total || order.total_amount || 0), 0);
+    const averageOrderValue = completedOrders.length > 0
       ?
-      completedOrders.reduce((sum, order) => sum + order.total, 0) / completedOrders.length 
+      completedOrders.reduce((sum, order) => sum + (order.total || order.total_amount || 0), 0) / completedOrders.length
       : 0;
-    const completionRate = orders.length > 0 
+    const completionRate = orders.length > 0
       ?
-      (completedOrders.length / orders.length) * 100 
+      (completedOrders.length / orders.length) * 100
       : 0;
     setOrderStats({
       total: orders.length,
@@ -511,15 +538,15 @@ export const OrdersManagement: React.FC = () => {
     
     message += `*${t('productsSectionTitle')}:*\n`;
     order.items.forEach((item, index) => {
-      const itemTotal = formatCurrency(item.variation.price * item.quantity, currency);
+      const itemTotal = formatCurrency(item.total_price || (item.unit_price * item.quantity), currency);
       message += `${index + 1}. *${item.product.name}*\n`;
       message += `   - *${t('variationLabel')}:* ${item.variation.name}\n`;
       message += `   - *${t('quantityLabel')}:* ${item.quantity}\n`;
-      message += `   - *${t('priceLabel')}:* $${itemTotal}\n`;
+      message += `   - *${t('priceLabel')}:* ${itemTotal}\n`;
       if (item.special_notes) {
         message += `   - *${t('noteLabel')}:* ${item.special_notes}\n`;
       }
-      
+
       message += `\n`;
     });
     
