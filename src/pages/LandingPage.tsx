@@ -93,7 +93,6 @@ export const LandingPage: React.FC = () => {
       features.push(`Hasta ${plan.features.max_products} productos`);
       features.push(`Hasta ${plan.features.max_categories} categorías`);
       features.push('Análisis avanzados');
-      features.push('Dominio personalizado');
       features.push('Soporte prioritario 24/7');
       features.push('Personalización completa');
     } else if (plan.id === 'business') {
