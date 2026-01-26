@@ -374,6 +374,19 @@ export const SubscriptionPlans: React.FC = () => {
         ))}
       </div>
 
+        {billingPeriod === 'annual' && (
+          <div className="bg-green-50 rounded-lg p-6 max-w-4xl mx-auto border-2 border-green-200">
+            <h3 className="text-lg font-semibold text-green-900 mb-2 flex items-center gap-2">
+              <Gift className="w-5 h-5" />
+              Beneficio del Plan Anual
+            </h3>
+            <p className="text-green-700">
+              Al elegir la facturación anual, obtienes un <strong>15% de descuento</strong> comparado con el pago mensual.
+              Esto significa que pagas 10 meses y recibes hasta 2 meses adicionales gratis
+            </p>
+          </div>
+        )}
+
       {/* Additional Info */}
       <div className="mt-12 space-y-6">
         <div className="bg-blue-50 rounded-lg p-6 max-w-4xl mx-auto">
@@ -399,18 +412,6 @@ export const SubscriptionPlans: React.FC = () => {
           </div>
         </div>
 
-        {billingPeriod === 'annual' && (
-          <div className="bg-green-50 rounded-lg p-6 max-w-4xl mx-auto border-2 border-green-200">
-            <h3 className="text-lg font-semibold text-green-900 mb-2 flex items-center gap-2">
-              <Gift className="w-5 h-5" />
-              Beneficio del Plan Anual
-            </h3>
-            <p className="text-green-700">
-              Al elegir la facturación anual, obtienes un <strong>15% de descuento</strong> comparado con el pago mensual.
-              Esto significa que pagas 10 meses y recibes hasta 2 meses adicionales gratis
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );
