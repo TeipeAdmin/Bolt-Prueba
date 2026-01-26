@@ -127,7 +127,7 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, restauran
                 className="font-bold text-2xl"
                 style={{
                   fontFamily: theme.secondary_font || 'Poppins',
-                  cssText: `color: ${primaryColor} !important;`,
+                  color: primaryColor,
                 }}
               >
                 {formatCurrency(minPrice, restaurant.settings.currency || 'USD')}
@@ -223,7 +223,7 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, restauran
               className="font-bold text-lg"
               style={{
                 fontFamily: theme.secondary_font || 'Poppins',
-                cssText: `color: ${primaryColor} !important;`,
+                color: primaryColor,
               }}
             >
               {formatCurrency(minPrice, restaurant.settings.currency || 'USD')}
@@ -328,7 +328,7 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, restauran
             className="font-bold text-lg"
             style={{
               fontFamily: theme.secondary_font || 'Poppins',
-              cssText: `color: ${primaryColor} !important;`,
+              color: primaryColor,
             }}
           >
             {formatCurrency(minPrice, restaurant.settings.currency || 'USD')}
