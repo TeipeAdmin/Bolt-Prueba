@@ -319,7 +319,7 @@ export const SubscriptionPlans: React.FC = () => {
                   {plan.monthlyPrice === 0 ? (
                     <div>
                       <span className="text-3xl font-bold text-gray-900">Gratis</span>
-                      <p className="text-sm text-gray-600 mt-1">Para siempre</p>
+                      <p className="text-sm text-gray-600 mt-1">1 mes</p>
                     </div>
                   ) : (
                     <div>
