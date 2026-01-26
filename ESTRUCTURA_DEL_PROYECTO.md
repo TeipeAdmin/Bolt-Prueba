@@ -233,7 +233,7 @@
 
 ### Planes de Suscripción
 
-**Free Plan** (Gratis para siempre)
+**Free Plan** (1 mes)
 - Hasta 10 productos
 - Hasta 3 categorías
 - Menú público básico
