@@ -49,16 +49,19 @@ export interface Product {
   category_id?: string;
   name: string;
   description: string;
+  price?: number;
   images: string[];
   variations: ProductVariation[];
   ingredients?: ProductIngredient[];
   dietary_restrictions?: string[];
   spice_level?: number;
   preparation_time?: string;
-  status: 'active' | 'inactive';
+  status: 'active' | 'inactive' | 'out_of_stock';
   sku?: string;
   is_available: boolean;
   is_featured: boolean;
+  display_order?: number;
+  compare_at_price?: number;
   created_at: string;
   updated_at: string;
 }

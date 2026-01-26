@@ -11,9 +11,13 @@ interface ProductDetailProps {
 }
 
 export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restaurant, onClose }) => {
-  const [selectedVariation, setSelectedVariation] = useState<ProductVariation>(product.variations[0]);
+  const [selectedVariation, setSelectedVariation] = useState<ProductVariation>(
+    product.variations && product.variations.length > 0
+      ? product.variations[0]
+      : { id: '1', name: 'Default', price: product.price || 0 }
+  );
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>(
-    product.ingredients.filter(ing => !ing.optional).map(ing => ing.id)
+    product.ingredients?.filter(ing => !ing.optional).map(ing => ing.id) || []
   );
   const [quantity, setQuantity] = useState(1);
 
@@ -30,8 +34,8 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
   const calculatePrice = () => {
     const basePrice = selectedVariation.price;
     const extraCost = product.ingredients
-      .filter(ing => ing.optional && selectedIngredients.includes(ing.id))
-      .reduce((sum, ing) => sum + (ing.extra_cost || 0), 0);
+      ?.filter(ing => ing.optional && selectedIngredients.includes(ing.id))
+      .reduce((sum, ing) => sum + (ing.extra_cost || 0), 0) || 0;
 
     return (basePrice + extraCost) * quantity;
   };
@@ -100,10 +104,10 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
         {/* Content */}
         <div className="overflow-y-auto custom-scroll" style={{ flex: 1 }}>
           {/* Product Image */}
-          {product.images.length > 0 && (
+          {product.images && product.images.length > 0 && (
             <div className="relative w-full h-[250px] md:h-[400px]">
               <img
-                src={product.images}
+                src={product.images[0]}
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
@@ -149,7 +153,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
             </p>
 
             {/* Variations */}
-            {product.variations.length > 0 && (
+            {product.variations && product.variations.length > 1 && (
               <div className="mb-6">
                 <h3
                   className="font-semibold mb-3"
@@ -187,7 +191,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, restauran
             )}
 
             {/* Ingredients */}
-            {product.ingredients.length > 0 && (
+            {product.ingredients && product.ingredients.length > 0 && (
               <div className="mb-6">
                 <h3
                   className="font-semibold mb-3"
