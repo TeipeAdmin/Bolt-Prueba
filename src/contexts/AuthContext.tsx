@@ -116,7 +116,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       const { data: userData, error: userError } = await supabase
         .from('users')
-        .select('*')
+        .select('id, email, full_name, role, restaurant_id, require_password_change, created_at, updated_at')
         .eq('id', userId)
         .maybeSingle();
 
@@ -166,7 +166,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         const { data: restaurantData, error: restaurantError } = await supabase
           .from('restaurants')
-          .select('*')
+          .select('id, name, slug, domain, email, phone, address, logo_url, owner_name, owner_id, status, settings, created_at, updated_at, elevenlabs_agent_id')
           .eq('id', userData.restaurant_id)
           .maybeSingle();
 
@@ -493,7 +493,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const { data: restaurantData, error } = await supabase
         .from('restaurants')
-        .select('*')
+        .select('id, name, slug, domain, email, phone, address, logo_url, owner_name, owner_id, status, settings, created_at, updated_at, elevenlabs_agent_id')
         .eq('id', user.restaurant_id)
         .maybeSingle();
 

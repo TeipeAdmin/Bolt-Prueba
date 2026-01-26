@@ -107,7 +107,9 @@ export const PublicMenu: React.FC = () => {
 
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug || '');
 
-      let query = supabase.from('restaurants').select('*');
+      let query = supabase
+        .from('restaurants')
+        .select('id, name, slug, domain, email, phone, address, logo_url, status, settings, elevenlabs_agent_id');
 
       if (isUUID) {
         query = query.or(`slug.eq.${slug},id.eq.${slug},domain.eq.${slug}`);
@@ -125,63 +127,64 @@ export const PublicMenu: React.FC = () => {
         return;
       }
 
-      const { data: subscriptionData, error: subscriptionError } = await supabase
-        .from('subscriptions')
-        .select('status')
-        .eq('restaurant_id', restaurantData.id)
-        .maybeSingle();
-
-      if (subscriptionError) throw subscriptionError;
-
-      if (!subscriptionData || subscriptionData.status !== 'active') {
-        setError(
-          'Este restaurante no está disponible en este momento. Suscripción inactiva o vencida.'
-        );
-        setLoading(false);
-        return;
-      }
-
       setRestaurant(restaurantData);
       setLoadingPhase('restaurant');
       setLoading(false);
 
-      const { data: categoriesData, error: categoriesError } = await supabase
-        .from('categories')
-        .select('*')
-        .eq('restaurant_id', restaurantData.id)
-        .eq('is_active', true)
-        .order('display_order', { ascending: true });
+      const [categoriesResult, productsResult] = await Promise.all([
+        supabase
+          .from('categories')
+          .select('id, name, icon, restaurant_id, is_active, display_order')
+          .eq('restaurant_id', restaurantData.id)
+          .eq('is_active', true)
+          .order('display_order', { ascending: true }),
 
-      if (categoriesError) throw categoriesError;
-      setCategories(categoriesData || []);
+        supabase
+          .from('products')
+          .select('id, restaurant_id, name, description, price, images, status, is_available, is_featured, variations, display_order, compare_at_price')
+          .eq('restaurant_id', restaurantData.id)
+          .in('status', ['active', 'out_of_stock'])
+          .order('display_order', { ascending: true })
+          .limit(50)
+      ]);
+
+      if (categoriesResult.error) throw categoriesResult.error;
+      if (productsResult.error) throw productsResult.error;
+
+      setCategories(categoriesResult.data || []);
       setLoadingPhase('categories');
 
-      const { data: initialProductsData, error: initialProductsError } = await supabase
-        .from('products')
-        .select(`
-          *,
-          product_categories (
-            category_id
-          )
-        `)
-        .eq('restaurant_id', restaurantData.id)
-        .in('status', ['active', 'out_of_stock'])
-        .order('display_order', { ascending: true })
-        .range(0, 11);
+      const { data: initialProductsData, error: initialProductsError } = productsResult;
 
       if (initialProductsError) throw initialProductsError;
+
+      const productIds = (initialProductsData || []).map((p: any) => p.id);
+
+      let productCategoryMap: Record<string, string | null> = {};
+      if (productIds.length > 0) {
+        const { data: productCategoriesData } = await supabase
+          .from('product_categories')
+          .select('product_id, category_id')
+          .in('product_id', productIds);
+
+        if (productCategoriesData) {
+          productCategoriesData.forEach(pc => {
+            if (!productCategoryMap[pc.product_id]) {
+              productCategoryMap[pc.product_id] = pc.category_id;
+            }
+          });
+        }
+      }
 
       const transformedInitialProducts = (initialProductsData || []).map((p: any) => ({
         ...p,
         images: p.images || [],
         variations: p.variations && p.variations.length > 0 ? p.variations : [{ id: '1', name: 'Default', price: Number(p.price) || 0 }],
-        category_id: p.product_categories?.[0]?.category_id || null
+        category_id: productCategoryMap[p.id] || null
       }));
 
       setProducts(transformedInitialProducts);
-      setLoadingPhase('products');
-
-      loadRemainingProducts(restaurantData.id);
+      setLoadingPhase('complete');
     } catch (err) {
       console.error('Error loading menu:', err);
       setError('Error al cargar el menú');
@@ -189,60 +192,6 @@ export const PublicMenu: React.FC = () => {
     }
   };
 
-  const loadRemainingProducts = async (restaurantId: string) => {
-    try {
-      let offset = 12;
-      const batchSize = 20;
-      let hasMore = true;
-
-      while (hasMore) {
-        const { data: batchData, error: batchError } = await supabase
-          .from('products')
-          .select(`
-            *,
-            product_categories (
-              category_id
-            )
-          `)
-          .eq('restaurant_id', restaurantId)
-          .in('status', ['active', 'out_of_stock'])
-          .order('display_order', { ascending: true })
-          .range(offset, offset + batchSize - 1);
-
-        if (batchError) {
-          console.error('Error loading batch:', batchError);
-          break;
-        }
-
-        if (!batchData || batchData.length === 0) {
-          hasMore = false;
-          break;
-        }
-
-        const transformedBatch = batchData.map((p: any) => ({
-          ...p,
-          images: p.images || [],
-          variations: p.variations && p.variations.length > 0 ? p.variations : [{ id: '1', name: 'Default', price: Number(p.price) || 0 }],
-          category_id: p.product_categories?.[0]?.category_id || null
-        }));
-
-        setProducts(prev => [...prev, ...transformedBatch]);
-
-        offset += batchSize;
-
-        if (batchData.length < batchSize) {
-          hasMore = false;
-        }
-
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
-
-      setLoadingPhase('complete');
-    } catch (err) {
-      console.error('Error loading remaining products:', err);
-      setLoadingPhase('complete');
-    }
-  };
 
   useEffect(() => {
     if (slug) {
