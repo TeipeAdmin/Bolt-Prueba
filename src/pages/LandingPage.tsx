@@ -80,7 +80,7 @@ export const LandingPage: React.FC = () => {
     if (plan.id === 'free') {
       features.push(`Hasta ${plan.features.max_products} productos`);
       features.push(`Hasta ${plan.features.max_categories} categorías`);
-      features.push('Menú digital básico');
+      features.push('Menú digital');
       features.push('Gestión de órdenes');
       features.push('Soporte por email');
     } else if (plan.id === 'basic') {
