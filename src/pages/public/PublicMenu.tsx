@@ -111,7 +111,7 @@ export const PublicMenu: React.FC = () => {
 
       let query = supabase
         .from('restaurants')
-        .select('id, name, slug, domain, email, phone, address, logo_url, status, settings, elevenlabs_agent_id');
+        .select('id, name, slug, domain, email, phone, address, logo_url, is_active, settings, elevenlabs_agent_id');
 
       if (isUUID) {
         query = query.or(`slug.eq.${slug},id.eq.${slug},domain.eq.${slug}`);

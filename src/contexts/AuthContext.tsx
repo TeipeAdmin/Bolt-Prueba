@@ -166,7 +166,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         const { data: restaurantData, error: restaurantError } = await supabase
           .from('restaurants')
-          .select('id, name, slug, domain, email, phone, address, logo_url, owner_name, owner_id, status, settings, created_at, updated_at, elevenlabs_agent_id')
+          .select('id, name, slug, domain, email, phone, address, logo_url, owner_name, owner_id, is_active, settings, created_at, updated_at, elevenlabs_agent_id')
           .eq('id', userData.restaurant_id)
           .maybeSingle();
 
