@@ -49,7 +49,7 @@ export const AnimatedCarousel: React.FC<AnimatedCarouselProps> = ({
   const CARD_WIDTH = isMobile ? containerWidth * 0.6 : 340;
 
   // Define la altura para mantener una proporción consistente.
-  const CARD_HEIGHT = isMobile ? CARD_WIDTH * 1.2 : 380; // Proporción ligeramente más alta en móvil
+  const CARD_HEIGHT = isMobile ? CARD_WIDTH * 1.2 : 400; // Proporción ligeramente más alta en móvil
 
   // **2. Cálculo de SPACING para centrar la tarjeta:**
   // El espaciado asegura que la tarjeta activa (centrada) aparezca completamente visible.
