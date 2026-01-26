@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { X, MapPin, Store, Home, CheckCircle, Clock, Phone, AlertCircle } from 'lucide-react';
 import { Restaurant } from '../../types';
 import { useCart } from '../../contexts/CartContext';
-import { loadFromStorage, saveToStorage } from '../../data/mockData';
 import { useToast } from '../../hooks/useToast';
 import { formatCurrency } from '../../utils/currencyUtils';
+import { supabase } from '../../lib/supabase';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -255,46 +255,81 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
   const handleConfirmOrder = async () => {
     setLoading(true);
 
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      const { data: allOrders } = await supabase
+        .from('orders')
+        .select('order_number')
+        .eq('restaurant_id', restaurant.id);
 
-    const newOrder = {
-      id: `ord-${Date.now()}`,
-      restaurant_id: restaurant.id,
-      customer_name: customerInfo.name,
-      customer_phone: customerInfo.phone,
-      customer_email: customerInfo.email,
-      delivery_mode: deliveryMode,
-      delivery_address: deliveryMode === 'delivery' ? `${customerInfo.address}, ${customerInfo.city}` : null,
-      items: items.map(item => ({
-        product_id: item.product.id,
-        product_name: item.product.name,
-        variation_id: item.variation.id,
-        variation_name: item.variation.name,
-        quantity: item.quantity,
-        price: item.variation.price,
-        special_notes: item.special_notes,
-        selected_ingredients: item.selected_ingredients
-      })),
-      notes: customerInfo.notes,
-      table_number: deliveryMode === 'dine-in' ? customerInfo.tableNumber : undefined,
-      delivery_cost: deliveryMode === 'delivery' ? deliveryCost : 0,
-      tip: tip,
-      total: getTotal() + (deliveryMode === 'delivery' ? deliveryCost : 0) + tip,
-      status: 'pending',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
+      let nextOrderNumber = '1';
+      if (allOrders && allOrders.length > 0) {
+        const numericOrderNumbers = allOrders
+          .map(o => parseInt(o.order_number))
+          .filter(n => !isNaN(n));
 
-    const orders = loadFromStorage('orders', []);
-    orders.push(newOrder);
-    saveToStorage('orders', orders);
+        if (numericOrderNumbers.length > 0) {
+          const maxOrderNumber = Math.max(...numericOrderNumbers);
+          nextOrderNumber = (maxOrderNumber + 1).toString();
+        }
+      }
 
-    sendWhatsAppMessage(newOrder);
+      const totalAmount = getTotal() + (deliveryMode === 'delivery' ? deliveryCost : 0) + tip;
 
-    setOrderNumber(newOrder.id);
-    clearCart();
-    setLoading(false);
-    setStep('success');
+      const orderData = {
+        restaurant_id: restaurant.id,
+        order_number: nextOrderNumber,
+        customer_name: customerInfo.name,
+        customer_phone: customerInfo.phone,
+        customer_email: customerInfo.email || null,
+        customer_address: deliveryMode === 'delivery' ? customerInfo.address : null,
+        delivery_city: deliveryMode === 'delivery' ? customerInfo.city : null,
+        order_type: deliveryMode,
+        table_number: deliveryMode === 'dine-in' ? customerInfo.tableNumber : null,
+        delivery_address: deliveryMode === 'delivery' ? `${customerInfo.address}, ${customerInfo.city}` : null,
+        items: items.map(item => ({
+          product_id: item.product.id,
+          product_name: item.product.name,
+          variation_id: item.variation.id,
+          variation_name: item.variation.name,
+          quantity: item.quantity,
+          unit_price: item.variation.price,
+          total_price: item.variation.price * item.quantity,
+          special_notes: item.special_notes,
+          selected_ingredients: item.selected_ingredients
+        })),
+        subtotal: getTotal(),
+        delivery_cost: deliveryMode === 'delivery' ? deliveryCost : 0,
+        total_amount: totalAmount,
+        total: totalAmount,
+        status: 'pending',
+        special_instructions: customerInfo.notes || null,
+        notes: customerInfo.notes || ''
+      };
+
+      const { data: newOrder, error } = await supabase
+        .from('orders')
+        .insert(orderData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating order:', error);
+        showToast('error', 'Error', 'No se pudo crear el pedido. Por favor intenta nuevamente.', 5000, { primary: primaryColor, secondary: secondaryTextColor });
+        setLoading(false);
+        return;
+      }
+
+      sendWhatsAppMessage({ ...newOrder, id: newOrder.order_number });
+
+      setOrderNumber(newOrder.order_number);
+      clearCart();
+      setLoading(false);
+      setStep('success');
+    } catch (error) {
+      console.error('Error in handleConfirmOrder:', error);
+      showToast('error', 'Error', 'Ocurrió un error al procesar el pedido', 5000, { primary: primaryColor, secondary: secondaryTextColor });
+      setLoading(false);
+    }
   };
 
   const handleClose = () => {
