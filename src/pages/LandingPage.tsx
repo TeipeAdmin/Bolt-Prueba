@@ -631,7 +631,7 @@ export const LandingPage: React.FC = () => {
                           Gratis
                         </span>
                         <p className={`text-sm mt-1 ${plan.popular ? 'text-orange-100' : 'text-gray-600'}`}>
-                          Para siempre
+                          1 mes
                         </p>
                       </div>
                     ) : (
