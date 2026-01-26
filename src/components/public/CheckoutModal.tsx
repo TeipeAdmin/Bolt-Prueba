@@ -1119,7 +1119,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
               >
                 <p className="text-sm mb-2" style={{ color: secondaryTextColor, fontFamily: 'var(--secondary-font)' }}>Número de pedido</p>
                 <p className="text-2xl font-bold" style={{ color: 'var(--primary-color)', fontFamily: 'var(--secondary-font)', }}>
-                  #{orderNumber}
+                  {orderNumber}
                 </p>
               </div>
 
