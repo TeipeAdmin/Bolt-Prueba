@@ -407,7 +407,7 @@ export const SubscriptionPlans: React.FC = () => {
             </h3>
             <p className="text-green-700">
               Al elegir la facturación anual, obtienes un <strong>15% de descuento</strong> comparado con el pago mensual.
-              Esto significa que pagas 10 meses y recibes 2 meses adicionales gratis, ¡el equivalente a un mes extra de servicio!
+              Esto significa que pagas 10 meses y recibes hasta 2 meses adicionales gratis
             </p>
           </div>
         )}
