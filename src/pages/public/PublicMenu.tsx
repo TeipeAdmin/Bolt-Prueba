@@ -150,11 +150,27 @@ export const PublicMenu: React.FC = () => {
       setLoadingPhase('restaurant');
       setLoading(false);
 
-      console.log('[PublicMenu] Fetching categories and initial products...');
+      console.log('[PublicMenu] Fetching all data in parallel...');
       const parallelStart = Date.now();
 
-      // FASE 2: Cargar categorías y productos en paralelo
-      const [categoriesResult, productsResult] = await Promise.all([
+      // FASE 2: Primero cargar productos para obtener sus IDs
+      const productsResult = await supabase
+        .from('products')
+        .select('id, restaurant_id, name, description, price, images, status, is_available, is_featured, variations, display_order, compare_at_price')
+        .eq('restaurant_id', restaurantData.id)
+        .in('status', ['active', 'out_of_stock'])
+        .order('display_order', { ascending: true })
+        .range(0, PRODUCTS_PER_PAGE - 1);
+
+      if (productsResult.error) {
+        console.error('[PublicMenu] Products error:', productsResult.error);
+        throw productsResult.error;
+      }
+
+      const productIds = (productsResult.data || []).map((p: any) => p.id);
+
+      // Luego cargar categorías y product_categories en paralelo
+      const [categoriesResult, allProductCategoriesResult] = await Promise.all([
         supabase
           .from('categories')
           .select('id, name, icon, restaurant_id, is_active, display_order')
@@ -162,16 +178,16 @@ export const PublicMenu: React.FC = () => {
           .eq('is_active', true)
           .order('display_order', { ascending: true }),
 
-        supabase
-          .from('products')
-          .select('id, restaurant_id, name, description, price, images, status, is_available, is_featured, variations, display_order, compare_at_price')
-          .eq('restaurant_id', restaurantData.id)
-          .in('status', ['active', 'out_of_stock'])
-          .order('display_order', { ascending: true })
-          .range(0, PRODUCTS_PER_PAGE - 1)
+        // Solo cargar las relaciones de los productos de este restaurante
+        productIds.length > 0
+          ? supabase
+              .from('product_categories')
+              .select('product_id, category_id')
+              .in('product_id', productIds)
+          : Promise.resolve({ data: [], error: null })
       ]);
 
-      console.log('[PublicMenu] Parallel queries took:', Date.now() - parallelStart, 'ms');
+      console.log('[PublicMenu] All parallel queries took:', Date.now() - parallelStart, 'ms');
 
       if (categoriesResult.error) {
         console.error('[PublicMenu] Categories error:', categoriesResult.error);
@@ -184,38 +200,26 @@ export const PublicMenu: React.FC = () => {
 
       console.log('[PublicMenu] Found', categoriesResult.data?.length || 0, 'categories');
       console.log('[PublicMenu] Found', productsResult.data?.length || 0, 'initial products');
+      console.log('[PublicMenu] Found', allProductCategoriesResult.data?.length || 0, 'total product-category relationships');
 
       // Mostrar categorías inmediatamente
       setCategories(categoriesResult.data || []);
       setLoadingPhase('categories');
 
-      const { data: initialProductsData, error: initialProductsError } = productsResult;
+      const { data: initialProductsData } = productsResult;
 
-      if (initialProductsError) throw initialProductsError;
-
-      const productIds = (initialProductsData || []).map((p: any) => p.id);
-
-      let productCategoryMap: Record<string, string | null> = {};
-      if (productIds.length > 0) {
-        console.log('[PublicMenu] Fetching product categories for', productIds.length, 'products...');
-        const pcStart = Date.now();
-
-        const { data: productCategoriesData } = await supabase
-          .from('product_categories')
-          .select('product_id, category_id')
-          .in('product_id', productIds);
-
-        console.log('[PublicMenu] Product categories query took:', Date.now() - pcStart, 'ms');
-        console.log('[PublicMenu] Found', productCategoriesData?.length || 0, 'product-category relationships');
-
-        if (productCategoriesData) {
-          productCategoriesData.forEach(pc => {
-            if (!productCategoryMap[pc.product_id]) {
-              productCategoryMap[pc.product_id] = pc.category_id;
-            }
-          });
-        }
+      // Crear mapa de categorías de productos y guardarlo en caché
+      const productCategoryMap: Record<string, string | null> = {};
+      if (allProductCategoriesResult.data) {
+        allProductCategoriesResult.data.forEach(pc => {
+          if (!productCategoryMap[pc.product_id]) {
+            productCategoryMap[pc.product_id] = pc.category_id;
+          }
+        });
       }
+
+      // Guardar el mapa en el caché
+      setProductCategoryCache(productCategoryMap);
 
       const transformedInitialProducts = (initialProductsData || []).map((p: any) => ({
         ...p,
@@ -240,6 +244,9 @@ export const PublicMenu: React.FC = () => {
     }
   };
 
+  // Cache para product_categories para evitar consultas repetidas
+  const [productCategoryCache, setProductCategoryCache] = useState<Record<string, string | null>>({});
+
   const loadMoreProducts = async () => {
     if (!restaurant || loadingMoreProducts || !hasMoreProducts) return;
 
@@ -259,12 +266,15 @@ export const PublicMenu: React.FC = () => {
 
       const productIds = (moreProductsData || []).map((p: any) => p.id);
 
-      let productCategoryMap: Record<string, string | null> = {};
-      if (productIds.length > 0) {
+      // Usar caché o cargar nuevas relaciones
+      let productCategoryMap = { ...productCategoryCache };
+      const uncachedIds = productIds.filter(id => !(id in productCategoryMap));
+
+      if (uncachedIds.length > 0) {
         const { data: productCategoriesData } = await supabase
           .from('product_categories')
           .select('product_id, category_id')
-          .in('product_id', productIds);
+          .in('product_id', uncachedIds);
 
         if (productCategoriesData) {
           productCategoriesData.forEach(pc => {
@@ -272,6 +282,7 @@ export const PublicMenu: React.FC = () => {
               productCategoryMap[pc.product_id] = pc.category_id;
             }
           });
+          setProductCategoryCache(productCategoryMap);
         }
       }
 
