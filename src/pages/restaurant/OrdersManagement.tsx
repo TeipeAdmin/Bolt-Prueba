@@ -490,21 +490,31 @@ export const OrdersManagement: React.FC = () => {
     printWindow.print();
   };
 
-  const generateOrderNumber = () => {
-    // Find the highest order number from existing orders
+  const generateOrderNumber = async () => {
+    if (!restaurant) return '#RES-1001';
+
+    // Query all orders from the restaurant to ensure consistent numbering
+    const { data: allOrders } = await supabase
+      .from('orders')
+      .select('order_number')
+      .eq('restaurant_id', restaurant.id);
+
     let maxNumber = 1000;
-    orders.forEach((order: Order) => {
-      // Extract number from format #RES-XXXX
-      if (order.order_number && typeof order.order_number === 'string') {
-        const match = order.order_number.match(/#RES-(\d+)/);
-        if (match) {
-          const orderNum = parseInt(match[1]);
-          if (!isNaN(orderNum) && orderNum > maxNumber) {
-            maxNumber = orderNum;
+    if (allOrders && allOrders.length > 0) {
+      allOrders.forEach((order) => {
+        // Extract number from formats #RES-XXXX or RES-XXXX for backwards compatibility
+        if (order.order_number && typeof order.order_number === 'string') {
+          const match = order.order_number.match(/#?RES-(\d+)/);
+          if (match) {
+            const orderNum = parseInt(match[1]);
+            if (!isNaN(orderNum) && orderNum > maxNumber) {
+              maxNumber = orderNum;
+            }
           }
         }
-      }
-    });
+      });
+    }
+
     // Return next consecutive number
     return `#RES-${maxNumber + 1}`;
   };
@@ -1208,7 +1218,7 @@ export const OrdersManagement: React.FC = () => {
 
     const newOrder = {
       restaurant_id: restaurant.id,
-      order_number: generateOrderNumber(),
+      order_number: await generateOrderNumber(),
       status: 'pending',
       order_type: orderForm.order_type,
       customer_name: orderForm.customer.name,

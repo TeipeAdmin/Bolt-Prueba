@@ -261,18 +261,19 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, r
         .select('order_number')
         .eq('restaurant_id', restaurant.id);
 
-      let nextOrderNumber = 'RES-1001';
+      let nextOrderNumber = '#RES-1001';
       if (allOrders && allOrders.length > 0) {
         const numericOrderNumbers = allOrders
           .map(o => {
-            const match = o.order_number?.match(/RES-(\d+)/);
+            // Match both formats: #RES-XXXX and RES-XXXX for backwards compatibility
+            const match = o.order_number?.match(/#?RES-(\d+)/);
             return match ? parseInt(match[1]) : null;
           })
           .filter(n => n !== null) as number[];
 
         if (numericOrderNumbers.length > 0) {
           const maxOrderNumber = Math.max(...numericOrderNumbers, 1000);
-          nextOrderNumber = `RES-${maxOrderNumber + 1}`;
+          nextOrderNumber = `#RES-${maxOrderNumber + 1}`;
         }
       }
 
