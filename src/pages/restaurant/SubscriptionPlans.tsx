@@ -231,6 +231,17 @@ export const SubscriptionPlans: React.FC = () => {
     return currentSubscription?.plan_type === planId;
   };
 
+  const handleContactWhatsApp = (plan: any) => {
+    const billingText = billingPeriod === 'monthly' ? 'mensual' : 'anual';
+    const priceText = formatPrice(getDisplayPrice(plan));
+    const restaurantName = restaurant?.name || 'Mi restaurante';
+
+    const message = `Hola, estoy interesado en adquirir el plan *${plan.name}* con facturación *${billingText}* por ${priceText} para mi restaurante "${restaurantName}". ¿Podrían ayudarme con el proceso de activación?`;
+
+    const whatsappUrl = `https://wa.me/573027099669?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   return (
     <div className="p-6">
       <div className="text-center mb-8">
@@ -352,20 +363,23 @@ export const SubscriptionPlans: React.FC = () => {
                     className="w-full"
                     disabled
                   >
-                    {t('currentPlan')}
+                    Plan Actual
                   </Button>
+                ) : plan.id === 'free' ? (
+                  <div className="text-center py-2">
+                    <span className="text-sm text-gray-500">Plan gratuito por defecto</span>
+                  </div>
                 ) : (
                   <Button
-                    onClick={() => handleSelectPlan(plan.id)}
-                    loading={loading}
+                    onClick={() => handleContactWhatsApp(plan)}
                     className={`w-full ${
                       plan.popular
                         ? 'bg-blue-600 hover:bg-blue-700'
-                        : ''
+                        : 'bg-green-600 hover:bg-green-700'
                     }`}
-                    variant={plan.popular ? 'primary' : 'primary'}
+                    variant="primary"
                   >
-                    Comenzar
+                    Contactar por WhatsApp
                   </Button>
                 )}
               </div>
