@@ -156,7 +156,7 @@ export const PublicMenu: React.FC = () => {
       // FASE 2: Primero cargar productos para obtener sus IDs
       const productsResult = await supabase
         .from('products')
-        .select('id, restaurant_id, name, description, price, images, status, is_available, is_featured, variations, display_order, compare_at_price')
+        .select('id, restaurant_id, name, description, price, images, status, is_available, is_featured, variations, display_order, compare_at_price, ingredients')
         .eq('restaurant_id', restaurantData.id)
         .in('status', ['active', 'out_of_stock'])
         .order('display_order', { ascending: true })
@@ -283,7 +283,7 @@ export const PublicMenu: React.FC = () => {
 
       const { data: moreProductsData, error: moreProductsError } = await supabase
         .from('products')
-        .select('id, restaurant_id, name, description, price, images, status, is_available, is_featured, variations, display_order, compare_at_price')
+        .select('id, restaurant_id, name, description, price, images, status, is_available, is_featured, variations, display_order, compare_at_price, ingredients')
         .eq('restaurant_id', restaurant.id)
         .in('status', ['active', 'out_of_stock'])
         .order('display_order', { ascending: true })
@@ -487,7 +487,7 @@ export const PublicMenu: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen relative p-1 gap-1" /*DF:NECESITO QUE VERIFIQUEMOS ESTO*/
+      className="min-h-screen relative p-1 gap-1 overflow-x-hidden"
       style={
         {
           backgroundColor: menuBackgroundColor,
@@ -600,9 +600,9 @@ export const PublicMenu: React.FC = () => {
           
           {' '}
           {/* DF: SE REDUJO EL PADDING PARA QUE QUEDE MAS DELGADO */}
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center justify-between gap-2 md:gap-4">
             {/* Search Bar */}
-            <div className="flex-1 max-w-xs shadow-lg rounded-lg">
+            <div className="flex-1 max-w-[150px] md:max-w-xs shadow-lg rounded-lg">
               <div className="relative">
                 {/* Icono de lupa */}
                 <Search
@@ -654,7 +654,7 @@ export const PublicMenu: React.FC = () => {
             </div>
 
             {/* Logo */}
-            <div className="flex-shrink-0 text-center">
+            <div className="flex-shrink-0 text-center hidden md:block">
               {restaurant.logo_url ? (
                 <img
                   src={restaurant.logo_url}
@@ -677,7 +677,7 @@ export const PublicMenu: React.FC = () => {
 
             {/* Action Buttons */}
 
-            <div className="flex items-center gap-2 flex-1 justify-end max-w-xs">
+            <div className="flex items-center gap-1 md:gap-2 flex-1 justify-end max-w-[150px] md:max-w-xs">
               {/* DF:OPEN/CLOSED STATUS BUTTON */}
               <button
                 onClick={() => setShowHoursModal(true)}
