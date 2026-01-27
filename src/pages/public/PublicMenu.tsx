@@ -870,7 +870,7 @@ export const PublicMenu: React.FC = () => {
         <div className="flex flex-col justify-center items-center w-full max-w-7xl mx-auto py-4 relative z-20 md:items-center md:flex-row  md:justify-between ">
           {/* 1. SECCIÓN DE CATEGORÍAS (Izquierda en móvil / Centro en desktop) */}
           {/* w-full md:w-auto md:mx-auto permite el scroll en móvil y centra en desktop. */}
-          <div className="w-[85%] mx-auto">
+          <div className="w-full md:w-[85%] mx-auto">
             <div className="flex gap-2 py-[2px] overflow-x-auto scrollbar-hide justify-start px-4">
               {' '}
               {/* Eliminamos justify-center de aquí */}
