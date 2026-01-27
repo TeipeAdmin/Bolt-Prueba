@@ -13,17 +13,40 @@ export const ResetPasswordPage: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [isValidRecovery, setIsValidRecovery] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const checkSession = async () => {
+    const handleRecovery = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+
+      if (session) {
+        setIsValidRecovery(true);
+        return;
+      }
+
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      const type = hashParams.get('type');
+
+      if (!accessToken || type !== 'recovery') {
         setError('El enlace de recuperación ha expirado o es inválido. Por favor solicita uno nuevo.');
+        return;
+      }
+
+      const { data, error: sessionError } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: hashParams.get('refresh_token') || '',
+      });
+
+      if (sessionError || !data.session) {
+        setError('El enlace de recuperación ha expirado o es inválido. Por favor solicita uno nuevo.');
+      } else {
+        setIsValidRecovery(true);
       }
     };
 
-    checkSession();
+    handleRecovery();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -82,6 +105,17 @@ export const ResetPasswordPage: React.FC = () => {
           <p className="text-sm text-gray-500">
             Serás redirigido al inicio de sesión en unos segundos...
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isValidRecovery && !error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Verificando enlace de recuperación...</p>
         </div>
       </div>
     );
