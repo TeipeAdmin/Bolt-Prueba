@@ -174,8 +174,7 @@ export const MenuManagement: React.FC = () => {
           )
         `)
         .eq('restaurant_id', restaurant.id)
-        .order('display_order', { ascending: true })
-        .limit(100);
+        .order('display_order', { ascending: true });
 
       if (error) {
         console.error('Error loading products:', error);

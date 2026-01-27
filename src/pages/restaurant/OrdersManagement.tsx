@@ -65,7 +65,7 @@ export const OrdersManagement: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [orderItems, setOrderItems] = useState<Order['items']>([]);
-  const [isLoadingOrdersOrders, setIsLoadingOrders] = useState(true);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -91,8 +91,7 @@ export const OrdersManagement: React.FC = () => {
         .from('orders')
         .select('*')
         .eq('restaurant_id', restaurant.id)
-        .order('created_at', { ascending: false })
-        .limit(50);
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error loading orders:', error);
