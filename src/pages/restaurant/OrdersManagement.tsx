@@ -65,7 +65,7 @@ export const OrdersManagement: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [orderItems, setOrderItems] = useState<Order['items']>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingOrdersOrders, setIsLoadingOrders] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -79,15 +79,8 @@ export const OrdersManagement: React.FC = () => {
   }, [orders]);
 
   const loadInitialData = async () => {
-    setIsLoading(true);
-    try {
-      await Promise.all([
-        loadOrders(),
-        loadProductsAndCategories()
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
+    setIsLoadingOrders(true);
+    loadOrders();
   };
 
   const loadOrders = async () => {
@@ -98,7 +91,8 @@ export const OrdersManagement: React.FC = () => {
         .from('orders')
         .select('*')
         .eq('restaurant_id', restaurant.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(50);
 
       if (error) {
         console.error('Error loading orders:', error);
@@ -148,6 +142,8 @@ export const OrdersManagement: React.FC = () => {
     } catch (error) {
       console.error('Error loading orders:', error);
       showToast('error', 'Error', 'No se pudieron cargar las órdenes');
+    } finally {
+      setIsLoadingOrders(false);
     }
   };
 
@@ -1337,7 +1333,7 @@ export const OrdersManagement: React.FC = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        {isLoading ? (
+        {isLoadingOrders ? (
           [...Array(4)].map((_, index) => (
             <div key={index} className="bg-white p-6 rounded-xl shadow-md border border-gray-200 animate-pulse">
               <div className="flex items-start justify-between mb-4">
@@ -1559,7 +1555,7 @@ export const OrdersManagement: React.FC = () => {
       )}
 
       {/* Order List */}
-      {isLoading ? (
+      {isLoadingOrders ? (
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">

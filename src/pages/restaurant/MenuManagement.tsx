@@ -45,7 +45,8 @@ export const MenuManagement: React.FC = () => {
     productName: ''
   });
   const [draggedProduct, setDraggedProduct] = useState<Product | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
   const handleActivateProduct = async (productId: string) => {
@@ -109,15 +110,14 @@ export const MenuManagement: React.FC = () => {
   }, [restaurant?.id]);
 
   const loadInitialData = async () => {
-    setIsLoading(true);
-    try {
-      await Promise.all([
-        loadMenuData(),
-        loadSubscription()
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
+    setIsLoadingCategories(true);
+    setIsLoadingProducts(true);
+
+    loadSubscription();
+
+    loadCategories().then(() => {
+      loadProducts();
+    });
   };
 
   const loadSubscription = async () => {
@@ -138,47 +138,68 @@ export const MenuManagement: React.FC = () => {
     setCurrentSubscription(data);
   };
 
-  const loadMenuData = async () => {
+  const loadCategories = async () => {
     if (!restaurant?.id) return;
 
     try {
-      const [categoriesResult, productsResult] = await Promise.all([
-        supabase
-          .from('categories')
-          .select('*')
-          .eq('restaurant_id', restaurant.id)
-          .eq('is_active', true),
-        supabase
-          .from('products')
-          .select(`
-            *,
-            product_categories (
-              category_id
-            )
-          `)
-          .eq('restaurant_id', restaurant.id)
-          .order('display_order', { ascending: true })
-      ]);
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('restaurant_id', restaurant.id)
+        .eq('is_active', true)
+        .order('name', { ascending: true });
 
-      if (categoriesResult.error) {
-        console.error('Error loading categories:', categoriesResult.error);
+      if (error) {
+        console.error('Error loading categories:', error);
+      } else {
+        setCategories(data || []);
       }
-
-      if (productsResult.error) {
-        console.error('Error loading products:', productsResult.error);
-      }
-
-      const productsWithCategories = (productsResult.data || []).map((product: any) => ({
-        ...product,
-        category_id: product.product_categories?.[0]?.category_id || ''
-      }));
-
-      setCategories(categoriesResult.data || []);
-      setProducts(productsWithCategories);
     } catch (error) {
-      console.error('Error loading menu data:', error);
-      showToast('error', 'Error', 'No se pudo cargar el menú');
+      console.error('Error loading categories:', error);
+    } finally {
+      setIsLoadingCategories(false);
     }
+  };
+
+  const loadProducts = async () => {
+    if (!restaurant?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select(`
+          *,
+          product_categories (
+            category_id
+          )
+        `)
+        .eq('restaurant_id', restaurant.id)
+        .order('display_order', { ascending: true })
+        .limit(100);
+
+      if (error) {
+        console.error('Error loading products:', error);
+      } else {
+        const productsWithCategories = (data || []).map((product: any) => ({
+          ...product,
+          category_id: product.product_categories?.[0]?.category_id || ''
+        }));
+
+        setProducts(productsWithCategories);
+      }
+    } catch (error) {
+      console.error('Error loading products:', error);
+      showToast('error', 'Error', 'No se pudo cargar el menú');
+    } finally {
+      setIsLoadingProducts(false);
+    }
+  };
+
+  const loadMenuData = async () => {
+    await Promise.all([
+      loadCategories(),
+      loadProducts()
+    ]);
   };
 
   const filteredProducts = products
@@ -617,7 +638,7 @@ export const MenuManagement: React.FC = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        {isLoading ? (
+        {isLoadingProducts ? (
           [...Array(4)].map((_, index) => (
             <div key={index} className="bg-white rounded-lg p-4 border border-gray-200 animate-pulse">
               <div className="flex items-center gap-3">
@@ -756,7 +777,7 @@ export const MenuManagement: React.FC = () => {
       </div>
 
       {/* Products Grid */}
-      {isLoading ? (
+      {isLoadingProducts ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           {[...Array(8)].map((_, index) => (
             <div key={index} className="bg-white rounded-xl shadow-sm border-2 border-gray-200 overflow-hidden animate-pulse">

@@ -62,43 +62,46 @@ export const RestaurantDashboard: React.FC = () => {
     console.log('[Dashboard] Loading dashboard data for restaurant:', restaurant.id);
 
     try {
-      const { data: productsData, error: productsError } = await supabase
-        .from('products')
-        .select('*')
-        .eq('restaurant_id', restaurant.id);
+      const [productsResult, ordersResult, categoriesResult] = await Promise.all([
+        supabase
+          .from('products')
+          .select('id, name, status, price')
+          .eq('restaurant_id', restaurant.id)
+          .limit(100),
+        supabase
+          .from('orders')
+          .select('*')
+          .eq('restaurant_id', restaurant.id)
+          .order('created_at', { ascending: false })
+          .limit(20),
+        supabase
+          .from('categories')
+          .select('id, name')
+          .eq('restaurant_id', restaurant.id)
+          .eq('is_active', true)
+      ]);
 
-      if (productsError) {
-        console.error('[Dashboard] Error loading products:', productsError);
+      if (productsResult.error) {
+        console.error('[Dashboard] Error loading products:', productsResult.error);
       } else {
-        console.log('[Dashboard] Products loaded:', productsData?.length || 0);
+        console.log('[Dashboard] Products loaded:', productsResult.data?.length || 0);
       }
 
-      const { data: ordersData, error: ordersError } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('restaurant_id', restaurant.id);
-
-      if (ordersError) {
-        console.error('[Dashboard] Error loading orders:', ordersError);
+      if (ordersResult.error) {
+        console.error('[Dashboard] Error loading orders:', ordersResult.error);
       } else {
-        console.log('[Dashboard] Orders loaded:', ordersData?.length || 0);
+        console.log('[Dashboard] Orders loaded:', ordersResult.data?.length || 0);
       }
 
-      const { data: categoriesData, error: categoriesError } = await supabase
-        .from('categories')
-        .select('*')
-        .eq('restaurant_id', restaurant.id)
-        .eq('is_active', true);
-
-      if (categoriesError) {
-        console.error('[Dashboard] Error loading categories:', categoriesError);
+      if (categoriesResult.error) {
+        console.error('[Dashboard] Error loading categories:', categoriesResult.error);
       } else {
-        console.log('[Dashboard] Categories loaded:', categoriesData?.length || 0);
+        console.log('[Dashboard] Categories loaded:', categoriesResult.data?.length || 0);
       }
 
-      setProducts(productsData || []);
-      setOrders(ordersData || []);
-      setCategories(categoriesData || []);
+      setProducts(productsResult.data || []);
+      setOrders(ordersResult.data || []);
+      setCategories(categoriesResult.data || []);
     } catch (err) {
       console.error('[Dashboard] Exception loading dashboard data:', err);
     }
