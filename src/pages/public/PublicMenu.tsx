@@ -503,7 +503,49 @@ export const PublicMenu: React.FC = () => {
         } as React.CSSProperties
       }
     >
-      <style>{`p, span { color: ${primaryTextColor} !important; }`}</style>
+      <style>{`
+        p, span { color: ${primaryTextColor} !important; }
+
+        /* Custom scrollbar for categories on desktop */
+        @media (min-width: 768px) {
+          .categories-scroll {
+            scrollbar-width: thin;
+            scrollbar-color: ${primaryColor} transparent;
+          }
+
+          .categories-scroll::-webkit-scrollbar {
+            height: 8px;
+          }
+
+          .categories-scroll::-webkit-scrollbar-track {
+            background: transparent;
+            border-radius: 4px;
+          }
+
+          .categories-scroll::-webkit-scrollbar-thumb {
+            background-color: ${primaryColor};
+            border-radius: 4px;
+            opacity: 0.6;
+          }
+
+          .categories-scroll::-webkit-scrollbar-thumb:hover {
+            background-color: ${primaryColor};
+            opacity: 1;
+          }
+        }
+
+        /* Hide scrollbar on mobile */
+        @media (max-width: 767px) {
+          .categories-scroll {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+          }
+
+          .categories-scroll::-webkit-scrollbar {
+            display: none;
+          }
+        }
+      `}</style>
       {/*<LeftShape color={primaryColor} />*/}
       {/* DECORATIVE ORGANIC SHAPES - MATCHING REFERENCE */}
       {/*SE AGREGARON TODOS LOS SVG*/}
@@ -871,7 +913,7 @@ export const PublicMenu: React.FC = () => {
           {/* 1. SECCIÓN DE CATEGORÍAS (Izquierda en móvil / Centro en desktop) */}
           {/* w-full md:w-auto md:mx-auto permite el scroll en móvil y centra en desktop. */}
           <div className="w-full md:w-[85%] mx-auto">
-            <div className="flex gap-2 py-[2px] overflow-x-auto scrollbar-hide justify-start px-4">
+            <div className="flex gap-2 py-[2px] overflow-x-auto justify-start px-4 categories-scroll">
               {' '}
               {/* Eliminamos justify-center de aquí */}
               {/* Botón 'Todos' */}
