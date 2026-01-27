@@ -9,7 +9,6 @@ import { DashboardPage } from './pages/DashboardPage';
 import { PublicMenu } from './pages/public/PublicMenu';
 import { LandingPage } from './pages/LandingPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
-import { AuthCallbackPage } from './pages/AuthCallbackPage';
 import { SupabaseHealthMonitor } from './components/ui/SupabaseHealthMonitor';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -68,7 +67,6 @@ const AppRoutes: React.FC = () => {
         }
       />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
-      <Route path="/auth/callback" element={<AuthCallbackPage />} />
       <Route
         path="/dashboard"
         element={

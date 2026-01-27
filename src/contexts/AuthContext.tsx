@@ -232,26 +232,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const loginWithGoogle = async (): Promise<{ success: boolean; error?: string }> => {
-    try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
-
-      return { success: true };
-    } catch (error) {
-      console.error('Google login error:', error);
-      return { success: false, error: 'Error al iniciar sesión con Google' };
-    }
-  };
-
   const changePassword = async (newPassword: string): Promise<{ success: boolean; error?: string }> => {
     try {
       if (!user) return { success: false, error: 'Usuario no autenticado' };
@@ -506,7 +486,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     restaurant,
     isAuthenticated,
     login,
-    loginWithGoogle,
     register,
     logout,
     loading,
