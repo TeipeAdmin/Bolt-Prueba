@@ -657,6 +657,7 @@ export const OrdersManagement: React.FC = () => {
     const billing = restaurant.settings?.billing;
     const subtotal = order.subtotal;
     const iva = billing?.responsableIVA ? subtotal * 0.19 : 0;
+    const ipc = billing?.aplicaIPC ? subtotal * ((billing?.porcentajeIPC || 8) / 100) : 0;
     const propina = billing?.aplicaPropina ?
     subtotal * 0.10 : 0;
     const total = order.total;
@@ -939,6 +940,12 @@ export const OrdersManagement: React.FC = () => {
             `
               <div class="total-row">
                 <span>${t('ivaLabel')}:</span> <span>${formatCurrency(iva, currency)}</span>
+              </div>
+            ` : ''}
+            ${billing?.aplicaIPC ?
+            `
+              <div class="total-row">
+                <span>IPC (${billing?.porcentajeIPC || 8}%):</span> <span>${formatCurrency(ipc, currency)}</span>
               </div>
             ` : ''}
             ${billing?.aplicaPropina ?

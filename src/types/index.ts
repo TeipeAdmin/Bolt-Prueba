@@ -204,6 +204,8 @@ interface BillingSettings {
   correo?: string;
   regimenTributario: 'simple' | 'comun' | 'no_responsable_iva';
   responsableIVA: boolean;
+  aplicaIPC: boolean;
+  porcentajeIPC: number;
   tieneResolucionDIAN: boolean;
   numeroResolucionDIAN?: string;
   fechaResolucion?: string;

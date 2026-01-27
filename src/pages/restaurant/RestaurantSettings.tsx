@@ -150,6 +150,8 @@ export const RestaurantSettings: React.FC = () => {
             correo: restaurant.email || '',
             regimenTributario: 'simple' as const,
             responsableIVA: false,
+            aplicaIPC: false,
+            porcentajeIPC: 8,
             tieneResolucionDIAN: false,
             numeroResolucionDIAN: '',
             fechaResolucion: '',
@@ -2269,6 +2271,55 @@ export const RestaurantSettings: React.FC = () => {
                         </label>
                       </div>
                     </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        ¿Aplica Impuesto al Consumo (IPC)?
+                      </label>
+                      <div className="flex items-center gap-6 h-12">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="aplicaIPC"
+                            checked={formData.settings.billing?.aplicaIPC === true}
+                            onChange={() => updateFormData('settings.billing.aplicaIPC', true)}
+                            className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                          />
+                          <span className="text-sm text-gray-700">{t('yes')}</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="aplicaIPC"
+                            checked={formData.settings.billing?.aplicaIPC === false}
+                            onChange={() => updateFormData('settings.billing.aplicaIPC', false)}
+                            className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                          />
+                          <span className="text-sm text-gray-700">No</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    {formData.settings.billing?.aplicaIPC && (
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Porcentaje IPC (%)
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.01"
+                          value={formData.settings.billing?.porcentajeIPC || 8}
+                          onChange={(e) => updateFormData('settings.billing.porcentajeIPC', parseFloat(e.target.value) || 0)}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="8"
+                        />
+                        <p className="text-xs text-gray-500">
+                          El porcentaje estándar de IPC en Colombia es 8%
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-2">
