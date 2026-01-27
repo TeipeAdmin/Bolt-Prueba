@@ -49,6 +49,7 @@ export const MenuManagement: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   const handleActivateProduct = async (productId: string) => {
+    const previousProducts = [...products];
     setProducts(prev => prev.map(p =>
       p.id === productId ? { ...p, status: 'active' as Product['status'] } : p
     ));
@@ -65,12 +66,12 @@ export const MenuManagement: React.FC = () => {
         'success',
         t('productActivatedTitle'),
         t('productActivatedMessage'),
-        3000
+        2000
       );
     } catch (error: any) {
       console.error('Error activating product:', error);
+      setProducts(previousProducts);
       showToast('error', 'Error', 'No se pudo activar el producto');
-      await loadMenuData(false);
     }
   };
 
@@ -103,10 +104,21 @@ export const MenuManagement: React.FC = () => {
 
   useEffect(() => {
     if (restaurant) {
-      loadMenuData();
-      loadSubscription();
+      loadInitialData();
     }
-  }, [restaurant]);
+  }, [restaurant?.id]);
+
+  const loadInitialData = async () => {
+    setIsLoading(true);
+    try {
+      await Promise.all([
+        loadMenuData(),
+        loadSubscription()
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const loadSubscription = async () => {
     if (!restaurant?.id) return;
@@ -126,10 +138,8 @@ export const MenuManagement: React.FC = () => {
     setCurrentSubscription(data);
   };
 
-  const loadMenuData = async (showLoader = true) => {
+  const loadMenuData = async () => {
     if (!restaurant?.id) return;
-
-    if (showLoader) setIsLoading(true);
 
     try {
       const [categoriesResult, productsResult] = await Promise.all([
@@ -168,8 +178,6 @@ export const MenuManagement: React.FC = () => {
     } catch (error) {
       console.error('Error loading menu data:', error);
       showToast('error', 'Error', 'No se pudo cargar el menú');
-    } finally {
-      if (showLoader) setIsLoading(false);
     }
   };
 
@@ -271,7 +279,7 @@ export const MenuManagement: React.FC = () => {
         }
       }
 
-      await loadMenuData(false);
+      await loadMenuData();
       setShowProductModal(false);
       setEditingProduct(null);
 
@@ -469,7 +477,7 @@ export const MenuManagement: React.FC = () => {
           });
       }
 
-      await loadMenuData(false);
+      await loadMenuData();
 
       showToast(
         'success',

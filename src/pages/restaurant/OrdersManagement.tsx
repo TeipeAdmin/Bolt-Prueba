@@ -70,19 +70,28 @@ export const OrdersManagement: React.FC = () => {
 
   useEffect(() => {
     if (restaurant) {
-      loadOrders();
-      loadProductsAndCategories();
+      loadInitialData();
     }
-  }, [restaurant]);
+  }, [restaurant?.id]);
 
   useEffect(() => {
     calculateStats();
   }, [orders]);
 
-  const loadOrders = async (showLoader = true) => {
-    if (!restaurant?.id) return;
+  const loadInitialData = async () => {
+    setIsLoading(true);
+    try {
+      await Promise.all([
+        loadOrders(),
+        loadProductsAndCategories()
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    if (showLoader) setIsLoading(true);
+  const loadOrders = async () => {
+    if (!restaurant?.id) return;
 
     try {
       const { data, error } = await supabase
@@ -139,8 +148,6 @@ export const OrdersManagement: React.FC = () => {
     } catch (error) {
       console.error('Error loading orders:', error);
       showToast('error', 'Error', 'No se pudieron cargar las órdenes');
-    } finally {
-      if (showLoader) setIsLoading(false);
     }
   };
 
