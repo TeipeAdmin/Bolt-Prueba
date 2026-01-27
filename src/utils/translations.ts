@@ -70,6 +70,7 @@ interface Translations {
   termsSection4Title: string;
   termsSection4Content: string;
   termsSection4Item1: string;
+  termsSection4Item2: string;
   termsSection4Item3: string;
   termsSection4Item4: string;
   termsSection5Title: string;
@@ -899,6 +900,7 @@ const translations: Record<Language, Translations> = {
     termsSection4Title: 'Suscripciones y Pagos',
     termsSection4Content: 'Platyo ofrece tres planes de suscripción: FREE (gratuito con funcionalidades básicas), BUSINESS (mensual con características avanzadas) y ENTERPRISE (anual con todas las funcionalidades premium). Al suscribirse, usted acepta:',
     termsSection4Item1: 'Pagar todas las tarifas asociadas con su plan seleccionado según la periodicidad elegida (mensual o anual)',
+    termsSection4Item2: 'Las renovaciones automáticas al finalizar cada período, a menos que cancele antes de la fecha de renovación',
     termsSection4Item3: 'Que los precios, límites de productos, categorías y características pueden cambiar con previo aviso de 30 días',
     termsSection4Item4: 'La política de reembolso: no se realizan devoluciones por períodos parcialmente utilizados. Al cancelar, mantendrá acceso hasta el final del período pagado',
     
@@ -2572,6 +2574,7 @@ const translations: Record<Language, Translations> = {
     termsSection4Title: 'Subscriptions and Payments',
     termsSection4Content: 'Platyo offers three subscription plans: FREE (free with basic functionalities), BUSINESS (monthly with advanced features), and ENTERPRISE (annual with all premium functionalities). By subscribing, you agree to:',
     termsSection4Item1: 'Pay all fees associated with your selected plan according to the chosen periodicity (monthly or annual)',
+    termsSection4Item2: 'Automatic renewals at the end of each period, unless canceled before the renewal date',
     termsSection4Item3: 'That prices, product limits, categories, and features may change with 30 days prior notice',
     termsSection4Item4: 'Refund policy: no refunds for partially used periods. Upon cancellation, you will maintain access until the end of the paid period',
     
