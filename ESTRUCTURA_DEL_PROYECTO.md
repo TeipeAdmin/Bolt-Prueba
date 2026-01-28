@@ -56,25 +56,17 @@
 - Historial completo de pedidos
 - Generación automática de números de orden
 
-**Sistema de Facturación POS Completo**
+**Sistema de Facturación POS**
 - Generación de facturas tipo recibo POS
 - Impresión optimizada para impresoras térmicas de 80mm
 - Diseño responsive que se adapta a cualquier tamaño de papel
 - Información detallada del restaurante con logo
-- Configuración de facturación completa:
-  - Datos comerciales (NIT, razón social, dirección fiscal)
-  - Régimen tributario configurable
-  - Soporte para IVA (19%) con toggle activable
-  - Soporte para IPC (Impuesto al Consumo) con porcentaje personalizable (por defecto 8%)
-  - Resolución DIAN configurable
-  - Propinas opcionales (10%)
-  - Logo personalizable en ticket
-  - Mensaje final personalizable
 - Desglose completo de productos con variaciones
 - Información del cliente y tipo de pedido
-- Cálculo automático de subtotal, IVA, IPC, delivery y total
+- Subtotales, costos de delivery y totales claramente marcados
 - Número de orden y fecha/hora de emisión
 - Notas especiales del pedido
+- Pie de página personalizable con mensaje de agradecimiento
 - Vista previa antes de imprimir
 - Impresión directa desde el navegador
 
@@ -128,20 +120,6 @@
 - Límites claros por plan (productos, categorías, analytics)
 - Notificaciones de vencimiento
 - Sistema de pagos simulado (preparado para integración real)
-
-**Asistente de Voz con IA (ElevenLabs)**
-- Widget flotante en el menú público
-- Conversación por voz en tiempo real con los clientes
-- Agente inteligente que puede:
-  - Responder preguntas sobre el menú
-  - Recomendar productos
-  - Tomar pedidos completos
-  - Explicar ingredientes y variaciones
-  - Informar sobre tiempos de entrega y costos
-- Integración directa con ElevenLabs Conversational AI
-- ID de agente configurable por restaurante
-- Experiencia de voz natural y fluida
-- Mejora la conversión de ventas y experiencia del cliente
 
 **Sistema de Tutoriales Integrado**
 - Tutorial interactivo paso a paso para nuevos usuarios
@@ -255,42 +233,43 @@
 
 ### Planes de Suscripción
 
-**Free Plan** (Gratuito - 30 días)
-- Hasta 15 productos
-- Hasta 5 categorías
-- Menú público básico con todas las características
+**Free Plan** (1 mes)
+- Hasta 10 productos
+- Hasta 3 categorías
+- Menú público básico
 - Gestión de pedidos ilimitados
-- Gestión de clientes completa
-- Sistema de facturación POS con IVA e IPC
-- Personalización de temas
-- Soporte por email y tickets
-- Asistente de voz con IA (ElevenLabs)
-- Notificaciones por WhatsApp
+- Gestión de clientes
+- Soporte por email
 
-**Business Plan** ($29.990 COP/mes o $9 USD/mes)
-- Hasta 100 productos
-- Hasta 15 categorías
+**Basic Plan** ($9 USD/mes)
+- Hasta 50 productos
+- Hasta 10 categorías
 - Todo de Free +
-- Analytics avanzadas con gráficos y reportes
-- Panel de estadísticas detalladas
-- Múltiples imágenes por producto (hasta 5)
-- Soporte prioritario 24/7
-- Renovación automática opcional
-- Historial completo de pedidos
-- Reportes de productos más vendidos
+- Personalización completa de temas
+- Múltiples imágenes por producto
+- Soporte prioritario
+- Sin marca de agua
 
-**Enterprise Plan** ($299.990 COP/año o $90 USD/año)
+**Pro Plan** ($19 USD/mes)
+- Hasta 200 productos
+- Hasta 20 categorías
+- Todo de Basic +
+- Analytics avanzadas con gráficos
+- Reportes exportables
+- Múltiples ubicaciones
+- Soporte 24/7 por chat
+- Facturación POS avanzada
+
+**Business Plan** ($39 USD/mes)
 - Productos ilimitados
 - Categorías ilimitadas
-- Todo de Business +
-- Analytics completas con tendencias
-- Reportes exportables avanzados
-- Soporte dedicado con prioridad máxima
-- Personalización completa de la plataforma
-- Configuración de múltiples sucursales (preparado)
-- API access para integraciones (preparado)
-- Capacitación personalizada
-- 2 meses gratis (pago anual)
+- Todo de Pro +
+- API access para integraciones
+- White label completo
+- Soporte dedicado con account manager
+- Personalización total de la plataforma
+- Capacitación y onboarding personalizado
+- Backups diarios
 
 ---
 
@@ -312,17 +291,13 @@ PLATYO es una aplicación web multi-tenant construida con tecnologías modernas 
 - React Router DOM 7.8.2 - Navegación SPA
 - Tailwind CSS 3.4.1 - Sistema de diseño utility-first
 - Lucide React 0.344.0 - Biblioteca de iconos moderna
+- date-fns 4.1.0 - Manipulación de fechas
 
 **Backend y Base de Datos**
-- Supabase 2.89.0 - Backend as a Service
+- Supabase 2.58.0 - Backend as a Service
 - PostgreSQL - Base de datos relacional
 - Row Level Security (RLS) - Seguridad a nivel de fila
 - Real-time subscriptions - Actualizaciones en tiempo real
-- Supabase Edge Functions - Funciones serverless
-
-**Integraciones**
-- ElevenLabs Client 0.13.0 - Asistente de voz con IA conversacional
-- WhatsApp Business - Notificaciones y comunicación con clientes
 
 **Herramientas de Desarrollo**
 - Vite 5.4.2 - Build tool ultra rápido
@@ -394,15 +369,9 @@ project/
 │   │   │   ├── Header.tsx      # Header con perfil y logout
 │   │   │   └── Sidebar.tsx     # Navegación lateral
 │   │   ├── public/             # Menú público
-│   │   │   ├── AnimatedCarousel.tsx    # Carrusel animado
-│   │   │   ├── CartPreview.tsx         # Vista previa del carrito
 │   │   │   ├── CartSidebar.tsx         # Carrito flotante
 │   │   │   ├── CheckoutModal.tsx       # Modal de checkout
-│   │   │   ├── FloatingFooter.tsx      # Footer flotante
-│   │   │   ├── ProductCard.tsx         # Tarjeta de producto
-│   │   │   ├── ProductCardSkeleton.tsx # Skeleton loader
 │   │   │   ├── ProductDetail.tsx       # Detalle de producto
-│   │   │   ├── VoiceAssistantWidget.tsx # Asistente de voz IA
 │   │   │   ├── Pathformbottom.tsx      # Decoración SVG
 │   │   │   ├── Pathformleft.tsx        # Decoración SVG
 │   │   │   └── Pathformtop.tsx         # Decoración SVG
@@ -427,8 +396,7 @@ project/
 │   │   └── mockData.ts         # Datos iniciales y helpers legacy
 │   │
 │   ├── hooks/                  # Custom hooks
-│   │   ├── useToast.tsx        # Sistema de notificaciones toast
-│   │   └── useElevenLabsConversation.ts # Hook para asistente de voz IA
+│   │   └── useToast.tsx        # Sistema de notificaciones toast
 │   │
 │   ├── lib/
 │   │   └── supabase.ts         # Cliente de Supabase configurado
@@ -473,20 +441,15 @@ project/
 │   └── vite-env.d.ts           # Tipos de Vite
 │
 ├── supabase/
-│   ├── functions/              # Edge Functions (serverless)
-│   │   ├── create-user/        # Creación de usuarios por admin
-│   │   ├── delete-user/        # Eliminación de usuarios
-│   │   ├── delete-restaurant/  # Eliminación de restaurantes
-│   │   └── transfer-restaurant-ownership/ # Transferir propiedad
-│   │
-│   └── migrations/             # Migraciones de base de datos (80+ migraciones)
+│   └── migrations/             # Migraciones de base de datos
 │       ├── 20251002185927_create_restaurant_management_tables.sql
-│       ├── 20251218210004_create_platyo_database_schema.sql
-│       ├── 20260113173642_fix_rls_performance_and_security_issues.sql
-│       ├── 20260113193631_add_display_order_to_products.sql
-│       ├── 20260114171142_add_elevenlabs_agent_id_to_restaurants.sql
-│       ├── 20260127155605_add_auto_create_free_subscription_trigger.sql
-│       └── ... (múltiples migraciones de optimización y features)
+│       ├── 20251003213638_add_subscription_expiry_automation.sql
+│       ├── 20251003214032_fix_subscription_expiry_realtime.sql
+│       ├── 20251003215240_improve_subscription_expiry_system.sql
+│       ├── 20251018002437_add_new_theme_colors.sql
+│       ├── 20251024195850_add_public_order_creation_policy.sql
+│       ├── 20251024200205_add_public_read_policies.sql
+│       └── 20251029000000_add_auto_renew_functionality.sql
 │
 ├── public/
 │   └── PLATYO FAVICON BLANCO.svg # Logo de la aplicación
@@ -550,27 +513,12 @@ restaurants (
 ```
 
 **Settings JSONB incluye**:
-- theme (color_scheme, primary_color, secondary_color, text_color, secondary_text_color)
+- theme (color_scheme, primary_color, secondary_color, etc.)
 - language (es | en)
 - currency (COP, USD, EUR, etc.)
-- business_hours (horarios por día de la semana)
+- business_hours
 - order_types (pickup, delivery, table)
-- delivery_zones con costos por ciudad
-- billing (configuración de facturación):
-  - nombreComercial, razonSocial, NIT
-  - direccion, departamento, ciudad
-  - telefono, correo
-  - regimenTributario (simple, comun, no_responsable_iva)
-  - responsableIVA (boolean)
-  - aplicaIPC (boolean)
-  - porcentajeIPC (número, default 8)
-  - tieneResolucionDIAN (boolean)
-  - numeroResolucionDIAN, fechaResolucion
-  - rangoNumeracionDesde, rangoNumeracionHasta
-  - aplicaPropina (boolean)
-  - mostrarLogoEnTicket (boolean)
-  - logoTicket, mensajeFinalTicket
-- elevenlabs_agent_id (ID del agente de voz IA)
+- delivery_zones con costos
 
 #### Tabla: `categories`
 ```sql
@@ -602,11 +550,9 @@ products (
   preparation_time: text,
   status: text DEFAULT 'active',
   sku: text,
-  compare_at_price: numeric,  -- Precio de comparación (precio tachado)
   is_available: boolean DEFAULT true,
   is_featured: boolean DEFAULT false,
   order_index: integer DEFAULT 0,
-  display_order: integer DEFAULT 0,  -- Orden de visualización
   created_at: timestamptz DEFAULT now(),
   updated_at: timestamptz DEFAULT now()
 )
@@ -2579,8 +2525,7 @@ Para preguntas, sugerencias o reportar bugs, por favor usa el sistema de issues 
 
 ---
 
-**Última actualización**: Enero 2026
-**Versión**: 3.0.0
-**Autor**: Equipo PLATYO - Digital Fenix Pro
-**Licencia**: Propietaria
-**Email**: admin@digitalfenixpro.com
+**Última actualización**: Noviembre 2024
+**Versión**: 2.0.0
+**Autor**: Equipo PLATYO
+**Licencia**: [Especificar licencia]
