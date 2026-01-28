@@ -70,7 +70,6 @@ interface Translations {
   termsSection4Title: string;
   termsSection4Content: string;
   termsSection4Item1: string;
-  termsSection4Item2: string;
   termsSection4Item3: string;
   termsSection4Item4: string;
   termsSection5Title: string;
@@ -880,15 +879,15 @@ const translations: Record<Language, Translations> = {
 
     // Terms and Conditions
     termsSection1Title: 'Aceptación de los Términos',
-    termsSection1Content: 'Al registrarse y utilizar Platyo, usted acepta estar legalmente vinculado por estos Términos y Condiciones. Si no está de acuerdo con alguna parte de estos términos, no debe utilizar nuestro servicio.',
-    
+    termsSection1Content: 'Al registrarse y utilizar Platyo, usted acepta estar legalmente vinculado por estos Términos y Condiciones. Si no está de acuerdo con alguna parte de estos términos, no debe utilizar nuestro servicio. Estos términos aplican a todos los usuarios: propietarios de restaurantes, personal administrativo y clientes finales.',
+
     termsSection2Title: 'Descripción del Servicio',
-    termsSection2Content: 'Platyo es una plataforma de gestión para restaurantes que proporciona herramientas para:',
-    termsSection2Item1: 'Gestión de menú digital y catálogo de productos',
-    termsSection2Item2: 'Sistema de pedidos en línea',
-    termsSection2Item3: 'Administración de clientes y órdenes',
-    termsSection2Item4: 'Análisis y reportes de ventas',
-    termsSection2Item5: 'Gestión de inventario y categorías',
+    termsSection2Content: 'Platyo es una plataforma integral de gestión para restaurantes que proporciona herramientas tecnológicas avanzadas para:',
+    termsSection2Item1: 'Gestión completa de menú digital con catálogo de productos, categorías, variaciones de productos e ingredientes opcionales',
+    termsSection2Item2: 'Sistema inteligente de pedidos en línea con seguimiento en tiempo real y notificaciones automáticas vía WhatsApp',
+    termsSection2Item3: 'Administración avanzada de clientes con historial de pedidos, datos de contacto y análisis de comportamiento',
+    termsSection2Item4: 'Panel de analíticas con reportes detallados de ventas, productos más vendidos, ingresos por período y estadísticas en tiempo real',
+    termsSection2Item5: 'Sistema de facturación electrónica configurable con soporte para IVA (19%), Impuesto al Consumo (IPC), propinas y resolución DIAN',
     
     termsSection3Title: 'Registro y Cuenta',
     termsSection3Content: 'Para utilizar Platyo, debe crear una cuenta proporcionando información precisa y completa. Usted es responsable de:',
@@ -898,11 +897,10 @@ const translations: Record<Language, Translations> = {
     termsSection3Item4: 'Proporcionar información veraz y actualizada',
     
     termsSection4Title: 'Suscripciones y Pagos',
-    termsSection4Content: 'Platyo ofrece diferentes planes de suscripción. Al suscribirse, usted acepta:',
-    termsSection4Item1: 'Pagar todas las tarifas asociadas con su plan seleccionado',
-    termsSection4Item2: 'Las renovaciones automáticas según la periodicidad del plan',
-    termsSection4Item3: 'Que los precios pueden cambiar con previo aviso de 30 días',
-    termsSection4Item4: 'La política de reembolso según el plan contratado',
+    termsSection4Content: 'Platyo ofrece tres planes de suscripción: FREE (gratuito con funcionalidades básicas), BUSINESS (mensual con características avanzadas) y ENTERPRISE (anual con todas las funcionalidades premium). Al suscribirse, usted acepta:',
+    termsSection4Item1: 'Pagar todas las tarifas asociadas con su plan seleccionado según la periodicidad elegida (mensual o anual)',
+    termsSection4Item3: 'Que los precios, límites de productos, categorías y características pueden cambiar con previo aviso de 30 días',
+    termsSection4Item4: 'La política de reembolso: no se realizan devoluciones por períodos parcialmente utilizados. Al cancelar, mantendrá acceso hasta el final del período pagado',
     
     termsSection5Title: 'Uso Aceptable',
     termsSection5Content: 'Al usar Platyo, usted se compromete a NO:',
@@ -914,15 +912,15 @@ const translations: Record<Language, Translations> = {
     termsSection5Item6: 'Interferir con el funcionamiento del servicio',
     
     termsSection6Title: 'Propiedad Intelectual',
-    termsSection6Content1: 'Todo el contenido, características y funcionalidad de Platyo son propiedad exclusiva de la empresa y están protegidos por leyes de derechos de autor, marcas registradas y otras leyes de propiedad intelectual.',
-    termsSection6Content2: 'Usted conserva todos los derechos sobre el contenido que cargue (menús, productos, imágenes), pero nos otorga una licencia para usarlo en la prestación del servicio.',
+    termsSection6Content1: 'Todo el contenido, características, funcionalidad, código fuente, diseño, marca "Platyo", logotipos, interfaz de usuario y tecnología subyacente son propiedad exclusiva de Digital Fenix Pro y están protegidos por leyes de derechos de autor, marcas registradas y otras leyes de propiedad intelectual internacionales.',
+    termsSection6Content2: 'Usted conserva todos los derechos sobre el contenido que cargue (menús, productos, imágenes, datos de clientes, configuraciones), pero nos otorga una licencia limitada, no exclusiva y revocable para almacenar, procesar y mostrar dicho contenido únicamente para la prestación del servicio contratado. Nunca compartiremos su contenido con terceros sin su autorización expresa.',
     
     termsSection7Title: 'Privacidad y Protección de Datos',
-    termsSection7Content: 'Recopilamos y procesamos datos personales de acuerdo con nuestra Política de Privacidad y cumpliendo con:',
-    termsSection7Item1: 'Ley 1581 de 2012 de Protección de Datos Personales en Colombia',
-    termsSection7Item2: 'Decreto 1377 de 2013',
-    termsSection7Item3: 'Principios de legalidad, finalidad, libertad, veracidad, transparencia, acceso y seguridad',
-    termsSection7Content2: 'Sus derechos incluyen: conocer, actualizar, rectificar y suprimir sus datos personales, así como revocar la autorización otorgada.',
+    termsSection7Content: 'Recopilamos y procesamos datos personales (información de restaurante, datos de clientes, pedidos, transacciones) de acuerdo con nuestra Política de Privacidad y cumpliendo estrictamente con:',
+    termsSection7Item1: 'Ley 1581 de 2012 de Protección de Datos Personales en Colombia y su normativa complementaria',
+    termsSection7Item2: 'Decreto 1377 de 2013 sobre tratamiento de datos personales',
+    termsSection7Item3: 'Principios de legalidad, finalidad, libertad, veracidad, transparencia, acceso, circulación restringida y seguridad en el tratamiento de datos',
+    termsSection7Content2: 'Sus derechos incluyen: conocer, actualizar, rectificar y suprimir sus datos personales, así como revocar la autorización otorgada. Utilizamos encriptación SSL/TLS, almacenamiento seguro en servidores certificados y medidas de seguridad robustas para proteger su información. Puede ejercer sus derechos contactándonos en admin@digitalfenixpro.com.',
     
     termsSection8Title: 'Limitación de Responsabilidad',
     termsSection8Content: 'Platyo se proporciona "tal cual" y "según disponibilidad". No garantizamos que:',
@@ -967,8 +965,8 @@ const translations: Record<Language, Translations> = {
     termsSection14Item2: 'Dentro de la plataforma mediante el sistema de tickets de soporte',
     
     termsLastUpdate: 'Última actualización',
-    termsLastUpdateDate: 'Noviembre 2025',
-    termsAcceptDisclaimer: 'Al hacer clic en "Aceptar" o al usar el servicio, usted reconoce que ha leído, entendido y acepta estar legalmente vinculado por estos Términos y Condiciones.',
+    termsLastUpdateDate: 'Enero 2026',
+    termsAcceptDisclaimer: 'Al hacer clic en "Aceptar" o al usar el servicio, usted reconoce que ha leído, entendido y acepta estar legalmente vinculado por estos Términos y Condiciones. Para cualquier duda o aclaración, contáctenos en admin@digitalfenixpro.com o mediante el sistema de soporte dentro de la plataforma.',
     acceptTermsAndConditionsButton: 'Aceptar Términos y Condiciones',
 
 
@@ -2554,15 +2552,15 @@ const translations: Record<Language, Translations> = {
 
     // Terms and Conditions
     termsSection1Title: 'Acceptance of Terms',
-    termsSection1Content: 'By registering and using Platyo, you agree to be legally bound by these Terms and Conditions. If you do not agree with any part of these terms, you should not use our service.',
-    
+    termsSection1Content: 'By registering and using Platyo, you agree to be legally bound by these Terms and Conditions. If you do not agree with any part of these terms, you should not use our service. These terms apply to all users: restaurant owners, administrative staff, and end customers.',
+
     termsSection2Title: 'Service Description',
-    termsSection2Content: 'Platyo is a restaurant management platform that provides tools for:',
-    termsSection2Item1: 'Digital menu management and product catalog',
-    termsSection2Item2: 'Online ordering system',
-    termsSection2Item3: 'Customer and order administration',
-    termsSection2Item4: 'Sales analysis and reports',
-    termsSection2Item5: 'Inventory and category management',
+    termsSection2Content: 'Platyo is a comprehensive restaurant management platform that provides advanced technological tools for:',
+    termsSection2Item1: 'Complete digital menu management with product catalog, categories, product variations, and optional ingredients',
+    termsSection2Item2: 'Smart online ordering system with real-time tracking and automatic WhatsApp notifications',
+    termsSection2Item3: 'Advanced customer management with order history, contact data, and behavior analysis',
+    termsSection2Item4: 'Analytics dashboard with detailed sales reports, best-selling products, revenue by period, and real-time statistics',
+    termsSection2Item5: 'Configurable electronic billing system with support for VAT (19%), Consumption Tax (IPC), tips, and DIAN resolution',
     
     termsSection3Title: 'Registration and Account',
     termsSection3Content: 'To use Platyo, you must create an account by providing accurate and complete information. You are responsible for:',
@@ -2572,11 +2570,10 @@ const translations: Record<Language, Translations> = {
     termsSection3Item4: 'Providing truthful and updated information',
     
     termsSection4Title: 'Subscriptions and Payments',
-    termsSection4Content: 'Platyo offers different subscription plans. By subscribing, you agree to:',
-    termsSection4Item1: 'Pay all fees associated with your selected plan',
-    termsSection4Item2: 'Automatic renewals according to the plan periodicity',
-    termsSection4Item3: 'That prices may change with 30 days prior notice',
-    termsSection4Item4: 'The refund policy according to the contracted plan',
+    termsSection4Content: 'Platyo offers three subscription plans: FREE (free with basic functionalities), BUSINESS (monthly with advanced features), and ENTERPRISE (annual with all premium functionalities). By subscribing, you agree to:',
+    termsSection4Item1: 'Pay all fees associated with your selected plan according to the chosen periodicity (monthly or annual)',
+    termsSection4Item3: 'That prices, product limits, categories, and features may change with 30 days prior notice',
+    termsSection4Item4: 'Refund policy: no refunds for partially used periods. Upon cancellation, you will maintain access until the end of the paid period',
     
     termsSection5Title: 'Acceptable Use',
     termsSection5Content: 'By using Platyo, you agree NOT to:',
@@ -2588,15 +2585,15 @@ const translations: Record<Language, Translations> = {
     termsSection5Item6: 'Interfere with the operation of the service',
     
     termsSection6Title: 'Intellectual Property',
-    termsSection6Content1: 'All content, features and functionality of Platyo are the exclusive property of the company and are protected by copyright laws, trademarks and other intellectual property laws.',
-    termsSection6Content2: 'You retain all rights to the content you upload (menus, products, images), but grant us a license to use it in providing the service.',
-    
+    termsSection6Content1: 'All content, features, functionality, source code, design, "Platyo" brand, logos, user interface, and underlying technology are the exclusive property of Digital Fenix Pro and are protected by copyright laws, trademarks, and other international intellectual property laws.',
+    termsSection6Content2: 'You retain all rights to the content you upload (menus, products, images, customer data, configurations), but grant us a limited, non-exclusive, and revocable license to store, process, and display such content solely for the provision of the contracted service. We will never share your content with third parties without your express authorization.',
+
     termsSection7Title: 'Privacy and Data Protection',
-    termsSection7Content: 'We collect and process personal data in accordance with our Privacy Policy and complying with:',
-    termsSection7Item1: 'Law 1581 of 2012 on Personal Data Protection in Colombia',
-    termsSection7Item2: 'Decree 1377 of 2013',
-    termsSection7Item3: 'Principles of legality, purpose, freedom, veracity, transparency, access and security',
-    termsSection7Content2: 'Your rights include: knowing, updating, rectifying and deleting your personal data, as well as revoking the authorization granted.',
+    termsSection7Content: 'We collect and process personal data (restaurant information, customer data, orders, transactions) in accordance with our Privacy Policy and strictly complying with:',
+    termsSection7Item1: 'Law 1581 of 2012 on Personal Data Protection in Colombia and its complementary regulations',
+    termsSection7Item2: 'Decree 1377 of 2013 on personal data processing',
+    termsSection7Item3: 'Principles of legality, purpose, freedom, veracity, transparency, access, restricted circulation, and security in data processing',
+    termsSection7Content2: 'Your rights include: knowing, updating, rectifying and deleting your personal data, as well as revoking the authorization granted. We use SSL/TLS encryption, secure storage on certified servers, and robust security measures to protect your information. You can exercise your rights by contacting us at admin@digitalfenixpro.com.',
     
     termsSection8Title: 'Limitation of Liability',
     termsSection8Content: 'Platyo is provided "as is" and "as available". We do not guarantee that:',
@@ -2641,8 +2638,8 @@ const translations: Record<Language, Translations> = {
     termsSection14Item2: 'Within the platform through the support ticket system',
     
     termsLastUpdate: 'Last Update',
-    termsLastUpdateDate: 'November 2025',
-    termsAcceptDisclaimer: 'By clicking "Accept" or by using the service, you acknowledge that you have read, understood and agree to be legally bound by these Terms and Conditions.',
+    termsLastUpdateDate: 'January 2026',
+    termsAcceptDisclaimer: 'By clicking "Accept" or by using the service, you acknowledge that you have read, understood and agree to be legally bound by these Terms and Conditions. For any questions or clarifications, contact us at admin@digitalfenixpro.com or through the support system within the platform.',
     acceptTermsAndConditionsButton: 'Accept Terms and Conditions',
 
 

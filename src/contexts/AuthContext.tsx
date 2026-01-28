@@ -389,23 +389,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (userError) throw userError;
 
-      const { error: subscriptionError } = await supabase
-        .from('subscriptions')
-        .insert([{
-          restaurant_id: restaurantResult.id,
-          plan_name: 'free',
-          duration: 'monthly',
-          status: 'active',
-          start_date: new Date().toISOString(),
-          end_date: '2099-12-31T23:59:59Z',
-          auto_renew: false,
-          monthly_price: 0,
-          max_products: 10,
-          max_orders: 999999,
-        }]);
-
-      if (subscriptionError) throw subscriptionError;
-
       await supabase.auth.signOut();
 
       return { success: true };
@@ -427,40 +410,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const requestPasswordReset = async (email: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      const { data: userData } = await supabase
-        .from('users')
-        .select('id, full_name, role, restaurant_id')
-        .eq('email', email)
-        .maybeSingle();
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
 
-      if (!userData) {
-        return { success: false, error: 'No se encontró una cuenta con ese email' };
+      if (error) {
+        if (error.message.includes('User not found')) {
+          return { success: false, error: 'No se encontró una cuenta con ese email' };
+        }
+        throw error;
       }
-
-      let restaurantData = null;
-      if (userData.restaurant_id) {
-        const { data } = await supabase
-          .from('restaurants')
-          .select('id, name, phone')
-          .eq('id', userData.restaurant_id)
-          .maybeSingle();
-        restaurantData = data;
-      }
-
-      const { error: ticketError } = await supabase
-        .from('support_tickets')
-        .insert([{
-          restaurant_id: restaurantData?.id || null,
-          subject: 'Solicitud de recuperación de contraseña',
-          category: 'account',
-          priority: 'high',
-          message: `El usuario ${userData.full_name || 'Sin nombre'} con email ${email} ha solicitado recuperar su contraseña.\n\nRol del usuario: ${userData.role}\nFecha de solicitud: ${new Date().toLocaleString('es-CO')}`,
-          contact_email: email,
-          contact_phone: restaurantData?.phone || null,
-          status: 'pending',
-        }]);
-
-      if (ticketError) throw ticketError;
 
       return { success: true };
     } catch (error: any) {

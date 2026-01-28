@@ -35,7 +35,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, onChe
 
       {/* Sidebar */}
 <div
-  className="fixed right-0 top-0 h-full w-[90%] md:w-96 shadow-xl z-50 transform transition-transform"
+  className="fixed right-0 top-0 h-full w-[90%] md:w-96 shadow-xl z-[50] transition-transform"
   style={{ backgroundColor:cardBackgroundColor }}
 >
         <div className="flex flex-col h-full">

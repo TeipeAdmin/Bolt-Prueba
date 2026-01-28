@@ -62,43 +62,46 @@ export const RestaurantDashboard: React.FC = () => {
     console.log('[Dashboard] Loading dashboard data for restaurant:', restaurant.id);
 
     try {
-      const { data: productsData, error: productsError } = await supabase
-        .from('products')
-        .select('*')
-        .eq('restaurant_id', restaurant.id);
+      const [productsResult, ordersResult, categoriesResult] = await Promise.all([
+        supabase
+          .from('products')
+          .select('id, name, status, price')
+          .eq('restaurant_id', restaurant.id)
+          .limit(100),
+        supabase
+          .from('orders')
+          .select('*')
+          .eq('restaurant_id', restaurant.id)
+          .order('created_at', { ascending: false })
+          .limit(20),
+        supabase
+          .from('categories')
+          .select('id, name')
+          .eq('restaurant_id', restaurant.id)
+          .eq('is_active', true)
+      ]);
 
-      if (productsError) {
-        console.error('[Dashboard] Error loading products:', productsError);
+      if (productsResult.error) {
+        console.error('[Dashboard] Error loading products:', productsResult.error);
       } else {
-        console.log('[Dashboard] Products loaded:', productsData?.length || 0);
+        console.log('[Dashboard] Products loaded:', productsResult.data?.length || 0);
       }
 
-      const { data: ordersData, error: ordersError } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('restaurant_id', restaurant.id);
-
-      if (ordersError) {
-        console.error('[Dashboard] Error loading orders:', ordersError);
+      if (ordersResult.error) {
+        console.error('[Dashboard] Error loading orders:', ordersResult.error);
       } else {
-        console.log('[Dashboard] Orders loaded:', ordersData?.length || 0);
+        console.log('[Dashboard] Orders loaded:', ordersResult.data?.length || 0);
       }
 
-      const { data: categoriesData, error: categoriesError } = await supabase
-        .from('categories')
-        .select('*')
-        .eq('restaurant_id', restaurant.id)
-        .eq('is_active', true);
-
-      if (categoriesError) {
-        console.error('[Dashboard] Error loading categories:', categoriesError);
+      if (categoriesResult.error) {
+        console.error('[Dashboard] Error loading categories:', categoriesResult.error);
       } else {
-        console.log('[Dashboard] Categories loaded:', categoriesData?.length || 0);
+        console.log('[Dashboard] Categories loaded:', categoriesResult.data?.length || 0);
       }
 
-      setProducts(productsData || []);
-      setOrders(ordersData || []);
-      setCategories(categoriesData || []);
+      setProducts(productsResult.data || []);
+      setOrders(ordersResult.data || []);
+      setCategories(categoriesResult.data || []);
     } catch (err) {
       console.error('[Dashboard] Exception loading dashboard data:', err);
     }
@@ -302,87 +305,6 @@ export const RestaurantDashboard: React.FC = () => {
             </Badge>
           </div>
         </div>
-      </div>
-
-      {/* Recent Orders */}
-      <div className="bg-white rounded-lg md:rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all">
-        <div className="px-4 md:px-6 py-4 md:py-5 bg-gradient-to-r from-gray-50 to-white border-b border-gray-200">
-          <h2 className="text-lg md:text-xl font-semibold text-gray-900 flex items-center gap-2">
-            <div className="w-1 h-6 bg-green-600 rounded-full"></div>
-            <ShoppingBag className="w-5 h-5 text-green-600" />
-            {t('recentOrders')}
-          </h2>
-        </div>
-
-        {recentOrders.length === 0 ? (
-          <div className="p-8 md:p-12 text-center">
-            <div className="w-16 h-16 md:w-20 md:h-20 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <ShoppingBag className="w-8 h-8 md:w-10 md:h-10 text-gray-400" />
-            </div>
-            <p className="text-gray-600 font-medium">{t('noOrdersYet')}</p>
-            <p className="text-sm text-gray-500 mt-1">{t('ordersWillAppear')}</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {t('orderNumber')}
-                  </th>
-                  <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {t('customer')}
-                  </th>
-                  <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {t('orderType')}
-                  </th>
-                  <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {t('total')}
-                  </th>
-                  <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {t('status')}
-                  </th>
-                  <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {t('date')}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {recentOrders.map((order) => (
-                  <tr key={order.id}>
-                    <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {order.order_number}
-                    </td>
-                    <td className="px-4 md:px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{order.customer?.name || t('na')}</div>
-                      <div className="text-sm text-gray-500">{order.customer?.phone || t('na')}</div>
-                    </td>
-                    <td className="px-4 md:px-6 py-4 whitespace-nowrap">
-                      {order.order_type === 'dine-in' ? (
-                        <Badge variant="warning">
-                          {t('orderTable')} {order.table_number}
-                        </Badge>
-                      ) : (
-                        <Badge variant={order.order_type === 'delivery' ? 'info' : 'gray'}>
-                          {order.order_type === 'delivery' ? t('Delivery') : t('pickup')}
-                        </Badge>
-                      )}
-                    </td>
-                    <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatCurrency(order.total, restaurant?.settings?.currency || 'USD')}
-                    </td>
-                    <td className="px-4 md:px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(order.status)}
-                    </td>
-                    <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(order.created_at).toLocaleString()}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
       </div>
     </div>
   );

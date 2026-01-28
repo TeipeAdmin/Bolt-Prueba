@@ -8,6 +8,8 @@ import { AuthPage } from './pages/AuthPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { PublicMenu } from './pages/public/PublicMenu';
 import { LandingPage } from './pages/LandingPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
+import { SupabaseHealthMonitor } from './components/ui/SupabaseHealthMonitor';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, loading, restaurant } = useAuth();
@@ -64,6 +66,7 @@ const AppRoutes: React.FC = () => {
           )
         }
       />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route
         path="/dashboard"
         element={
@@ -107,6 +110,7 @@ function App() {
       <AuthProvider>
         <LanguageProvider>
           <Router>
+            <SupabaseHealthMonitor />
             <AppRoutes />
           </Router>
         </LanguageProvider>

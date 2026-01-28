@@ -33,10 +33,14 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, restauran
 
   const isOutOfStock = product.status === 'out_of_stock';
 
+  const includedIngredients = product.ingredients && Array.isArray(product.ingredients)
+    ? product.ingredients.filter((ing: any) => !ing.optional).map((ing: any) => ing.name)
+    : [];
+
   if (viewMode === 'editorial') {
     return (
       <div
-        className="rounded-xl shadow-sm hover:shadow-lg transition-all cursor-pointer overflow-hidden relative"
+        className="rounded-xl shadow-sm hover:shadow-lg transition-all cursor-pointer overflow-hidden relative mx-2 md:mx-0"
         onClick={() => !isOutOfStock && onClick()}
         style={{
           borderRadius: theme.button_style === 'rounded' ? '0.75rem' : '0.25rem',
@@ -45,16 +49,16 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, restauran
           cursor: isOutOfStock ? 'not-allowed' : 'pointer',
         }}
       >
-        <div className="flex flex-col md:flex-row gap-2 px-4 md:px-0">
+        <div className="flex flex-col md:flex-row gap-2 px-0 md:px-0">
           {product.images[0] && (
-            <div className="relative">
+            <div className="relative w-full md:w-auto">
               <img
                 src={product.images[0]}
                 alt={product.name}
                 loading="lazy"
                 className={`
-                  w-full md:w-[164px] md:h-[154px] object-cover flex-shrink-0
-                  ${theme.button_style === 'rounded' ? 'md:rounded-lg md:rounded-tr-none md:rounded-br-none' : 'md:rounded-sm md:rounded-tr-none md:rounded-br-none'}
+                  w-full h-[200px] md:w-[164px] md:h-[154px] object-cover flex-shrink-0
+                  ${theme.button_style === 'rounded' ? 'rounded-t-lg md:rounded-lg md:rounded-tr-none md:rounded-br-none' : 'rounded-t-sm md:rounded-sm md:rounded-tr-none md:rounded-br-none'}
                 `}
               />
               {isOutOfStock && (
@@ -66,7 +70,7 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, restauran
               )}
             </div>
           )}
-          <div className="flex-1 flex flex-col justify-center p-2">
+          <div className="flex-1 flex flex-col justify-center p-4">
             <div className="flex items-start justify-between gap-2 mb-3">
               <h2
                 className="font-bold flex-1"
@@ -103,7 +107,7 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, restauran
               </div>
             </div>
             <p
-              className="mb-4 text-base leading-relaxed line-clamp-2"
+              className="mb-2 text-base leading-relaxed line-clamp-2"
               style={{
                 fontFamily: theme.secondary_font || 'Inter',
                 color: secondaryTextColor,
@@ -111,6 +115,18 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, restauran
             >
               {product.description}
             </p>
+            {includedIngredients.length > 0 && (
+              <p
+                className="mb-4 text-sm italic line-clamp-1"
+                style={{
+                  fontFamily: theme.secondary_font || 'Inter',
+                  color: secondaryTextColor,
+                  opacity: 0.8,
+                }}
+              >
+                {includedIngredients.join(', ')}
+              </p>
+            )}
             <div className="flex items-center gap-2">
               {hasDiscount && (
                 <span
@@ -199,7 +215,7 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, restauran
             {product.name}
           </h2>
           <p
-            className="text-base leading-relaxed line-clamp-2"
+            className="text-base leading-relaxed line-clamp-2 mb-1"
             style={{
               fontFamily: theme.secondary_font || 'Inter',
               color: secondaryTextColor,
@@ -207,6 +223,18 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, restauran
           >
             {product.description}
           </p>
+          {includedIngredients.length > 0 && (
+            <p
+              className="text-xs italic line-clamp-1 mb-2"
+              style={{
+                fontFamily: theme.secondary_font || 'Inter',
+                color: secondaryTextColor,
+                opacity: 0.8,
+              }}
+            >
+              {includedIngredients.join(', ')}
+            </p>
+          )}
           <div className="flex items-center gap-2">
             {hasDiscount && (
               <span
@@ -307,11 +335,26 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, restauran
           {product.name}
         </h2>
         <p
-          className="text-gray-600 text-sm mb-2 line-clamp-2"
-          style={{ fontFamily: theme.secondary_font || 'Inter' }}
+          className="text-sm mb-1 line-clamp-2"
+          style={{
+            fontFamily: theme.secondary_font || 'Inter',
+            color: secondaryTextColor,
+          }}
         >
           {product.description}
         </p>
+        {includedIngredients.length > 0 && (
+          <p
+            className="text-xs italic line-clamp-1 mb-2"
+            style={{
+              fontFamily: theme.secondary_font || 'Inter',
+              color: secondaryTextColor,
+              opacity: 0.8,
+            }}
+          >
+            {includedIngredients.join(', ')}
+          </p>
+        )}
         <div className="flex items-center gap-2">
           {hasDiscount && (
             <span
