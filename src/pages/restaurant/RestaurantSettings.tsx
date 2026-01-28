@@ -150,8 +150,6 @@ export const RestaurantSettings: React.FC = () => {
             correo: restaurant.email || '',
             regimenTributario: 'simple' as const,
             responsableIVA: false,
-            aplicaIPC: false,
-            porcentajeIPC: 8,
             tieneResolucionDIAN: false,
             numeroResolucionDIAN: '',
             fechaResolucion: '',
@@ -785,7 +783,7 @@ export const RestaurantSettings: React.FC = () => {
                     </div>
                     <div>
                       <h3 className="text-base md:text-lg font-bold text-gray-900">Asistente de Voz</h3>
-                      <p className="text-sm text-gray-600">Configura tu agente de voz</p>
+                      <p className="text-sm text-gray-600">Configura tu agente de voz con ElevenLabs</p>
                     </div>
                   </div>
                 </div>
@@ -795,7 +793,7 @@ export const RestaurantSettings: React.FC = () => {
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                         <Phone className="w-4 h-4 text-gray-500" />
-                        Agent ID
+                        ElevenLabs Agent ID
                       </label>
                       <input
                         type="text"
@@ -805,11 +803,37 @@ export const RestaurantSettings: React.FC = () => {
                         placeholder="agent_xxxxxxxxxxxxxxxxxxxxx"
                       />
                       <p className="text-xs text-gray-500 mt-2">
-                        Ingresa el Agent ID de tu agente para habilitar el widget de voz en tu menú público.
+                        Ingresa el Agent ID de tu agente de ElevenLabs para habilitar el widget de voz en tu menú público.
                       </p>
                     </div>
 
-                    
+                    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-100">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold text-gray-900 mb-2">¿Cómo obtener tu Agent ID?</p>
+                          <ol className="space-y-1.5 text-xs text-gray-700 list-decimal list-inside">
+                            <li>Ve a tu dashboard de ElevenLabs</li>
+                            <li>Navega a la sección "Conversational AI"</li>
+                            <li>Selecciona o crea un agente</li>
+                            <li>Copia el Agent ID que empieza con "agent_"</li>
+                          </ol>
+                          <a
+                            href="https://elevenlabs.io/app/conversational-ai"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 mt-3 text-xs font-semibold text-indigo-600 hover:text-indigo-700 transition-colors"
+                          >
+                            Ir a ElevenLabs
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </div>
+                      </div>
+                    </div>
 
                     {formData.elevenlabs_agent_id && (
                       <div className="bg-green-50 border border-green-200 rounded-xl p-4">
@@ -2271,55 +2295,6 @@ export const RestaurantSettings: React.FC = () => {
                         </label>
                       </div>
                     </div>
-
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700">
-                        ¿Aplica Impuesto al Consumo (IPC)?
-                      </label>
-                      <div className="flex items-center gap-6 h-12">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="radio"
-                            name="aplicaIPC"
-                            checked={formData.settings.billing?.aplicaIPC === true}
-                            onChange={() => updateFormData('settings.billing.aplicaIPC', true)}
-                            className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                          />
-                          <span className="text-sm text-gray-700">{t('yes')}</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="radio"
-                            name="aplicaIPC"
-                            checked={formData.settings.billing?.aplicaIPC === false}
-                            onChange={() => updateFormData('settings.billing.aplicaIPC', false)}
-                            className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                          />
-                          <span className="text-sm text-gray-700">No</span>
-                        </label>
-                      </div>
-                    </div>
-
-                    {formData.settings.billing?.aplicaIPC && (
-                      <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">
-                          Porcentaje IPC (%)
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          max="100"
-                          step="0.01"
-                          value={formData.settings.billing?.porcentajeIPC || 8}
-                          onChange={(e) => updateFormData('settings.billing.porcentajeIPC', parseFloat(e.target.value) || 0)}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="8"
-                        />
-                        <p className="text-xs text-gray-500">
-                          El porcentaje estándar de IPC en Colombia es 8%
-                        </p>
-                      </div>
-                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -2686,22 +2661,12 @@ export const RestaurantSettings: React.FC = () => {
                 <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 max-h-96 overflow-y-auto">
                   {(() => {
                     const selectedIds = formData.settings.promo?.featured_product_ids || [];
-                    // Filter to only valid product IDs (products that actually exist)
-                    const validProductIds = products.map((p: any) => p.id);
-                    const validSelectedIds = selectedIds.filter((id: string) => validProductIds.includes(id));
-
-                    // Auto-cleanup: if there are invalid IDs, update the form data
-                    if (validSelectedIds.length !== selectedIds.length) {
-                      setTimeout(() => {
-                        updateFormData('settings.promo.featured_product_ids', validSelectedIds);
-                      }, 0);
-                    }
 
                     return (
                       <div className="space-y-2">
                         {products.map((product: any) => {
-                          const isSelected = validSelectedIds.includes(product.id);
-                          const canSelect = validSelectedIds.length < 5 || isSelected;
+                          const isSelected = selectedIds.includes(product.id);
+                          const canSelect = selectedIds.length < 5 || isSelected;
 
                           return (
                             <label
@@ -2719,7 +2684,7 @@ export const RestaurantSettings: React.FC = () => {
                                 checked={isSelected}
                                 disabled={!canSelect}
                                 onChange={(e) => {
-                                  let newIds = [...validSelectedIds];
+                                  let newIds = [...selectedIds];
                                   if (e.target.checked) {
                                     if (newIds.length < 5) {
                                       newIds.push(product.id);
@@ -2758,12 +2723,7 @@ export const RestaurantSettings: React.FC = () => {
                   })()}
                 </div>
                 <p className="text-xs text-gray-600">
-                  {(() => {
-                    const selectedIds = formData.settings.promo?.featured_product_ids || [];
-                    const validProductIds = products.map((p: any) => p.id);
-                    const validCount = selectedIds.filter((id: string) => validProductIds.includes(id)).length;
-                    return `${validCount} ${t('featured_products_selected')}`;
-                  })()}
+                  {formData.settings.promo?.featured_product_ids?.length || 0} {t('featured_products_selected')}
                 </p>
               </div>
 

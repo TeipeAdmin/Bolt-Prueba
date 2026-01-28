@@ -65,85 +65,72 @@ export const OrdersManagement: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [orderItems, setOrderItems] = useState<Order['items']>([]);
-  const [isLoadingOrders, setIsLoadingOrders] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (restaurant) {
-      loadInitialData();
+      loadOrders();
+      loadProductsAndCategories();
     }
-  }, [restaurant?.id]);
+  }, [restaurant]);
 
   useEffect(() => {
     calculateStats();
   }, [orders]);
 
-  const loadInitialData = async () => {
-    setIsLoadingOrders(true);
-    loadOrders();
-  };
-
   const loadOrders = async () => {
     if (!restaurant?.id) return;
 
-    try {
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('restaurant_id', restaurant.id)
-        .order('created_at', { ascending: false });
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('restaurant_id', restaurant.id)
+      .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error loading orders:', error);
-        showToast('error', 'Error', 'No se pudieron cargar las órdenes');
-        return;
-      }
-
-      const mappedOrders = (data || []).map((order: any) => {
-        const items = order.items || [];
-        const mappedItems = items.map((item: any, index: number) => ({
-          id: item.id || `${order.id}-${index}`,
-          product_id: item.product_id,
-          product: {
-            id: item.product_id,
-            name: item.product_name || 'Producto'
-          },
-          variation: {
-            id: item.variation_id,
-            name: item.variation_name || 'Variación',
-            price: item.unit_price || 0
-          },
-          quantity: item.quantity || 1,
-          unit_price: item.unit_price || 0,
-          price: item.unit_price || 0,
-          total_price: item.total_price || (item.unit_price * item.quantity) || 0,
-          special_notes: item.special_notes || '',
-          selected_ingredients: item.selected_ingredients || []
-        }));
-
-        return {
-          ...order,
-          items: mappedItems,
-          total: order.total || order.total_amount || 0,
-          subtotal: order.subtotal || 0,
-          delivery_cost: order.delivery_cost || 0,
-          customer: {
-            name: order.customer_name || '',
-            phone: order.customer_phone || '',
-            email: order.customer_email || '',
-            address: order.customer_address || '',
-            delivery_instructions: '',
-          }
-        };
-      });
-
-      setOrders(mappedOrders);
-    } catch (error) {
+    if (error) {
       console.error('Error loading orders:', error);
       showToast('error', 'Error', 'No se pudieron cargar las órdenes');
-    } finally {
-      setIsLoadingOrders(false);
+      return;
     }
+
+    const mappedOrders = (data || []).map((order: any) => {
+      const items = order.items || [];
+      const mappedItems = items.map((item: any, index: number) => ({
+        id: item.id || `${order.id}-${index}`,
+        product_id: item.product_id,
+        product: {
+          id: item.product_id,
+          name: item.product_name || 'Producto'
+        },
+        variation: {
+          id: item.variation_id,
+          name: item.variation_name || 'Variación',
+          price: item.unit_price || 0
+        },
+        quantity: item.quantity || 1,
+        unit_price: item.unit_price || 0,
+        price: item.unit_price || 0,
+        total_price: item.total_price || (item.unit_price * item.quantity) || 0,
+        special_notes: item.special_notes || '',
+        selected_ingredients: item.selected_ingredients || []
+      }));
+
+      return {
+        ...order,
+        items: mappedItems,
+        total: order.total || order.total_amount || 0,
+        subtotal: order.subtotal || 0,
+        delivery_cost: order.delivery_cost || 0,
+        customer: {
+          name: order.customer_name || '',
+          phone: order.customer_phone || '',
+          email: order.customer_email || '',
+          address: order.customer_address || '',
+          delivery_instructions: '',
+        }
+      };
+    });
+
+    setOrders(mappedOrders);
   };
 
   const loadProductsAndCategories = async () => {
@@ -198,11 +185,6 @@ export const OrdersManagement: React.FC = () => {
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
-    const previousOrders = [...orders];
-    setOrders(prev => prev.map(o =>
-      o.id === orderId ? { ...o, status: newStatus } : o
-    ));
-
     try {
       const { error } = await supabase
         .from('orders')
@@ -210,6 +192,8 @@ export const OrdersManagement: React.FC = () => {
         .eq('id', orderId);
 
       if (error) throw error;
+
+      await loadOrders();
 
       const statusMessages = {
         confirmed: t('orderConfirmedMsg'),
@@ -222,11 +206,10 @@ export const OrdersManagement: React.FC = () => {
         'success',
         t('statusUpdatedTitle'),
         statusMessages[newStatus] || t('orderStatusUpdated'),
-        2000
+        3000
       );
     } catch (error: any) {
       console.error('Error updating order status:', error);
-      setOrders(previousOrders);
       showToast('error', 'Error', 'No se pudo actualizar el estado de la orden');
     }
   };
@@ -259,30 +242,25 @@ export const OrdersManagement: React.FC = () => {
   };
 
   const handleQuickStatusUpdate = async (orderId: string, newStatus: Order['status']) => {
-    const previousOrders = [...orders];
-    setOrders(prev => prev.map(o =>
-      o.id === orderId ? { ...o, status: newStatus } : o
-    ));
+    const { error } = await supabase
+      .from('orders')
+      .update({ status: newStatus, updated_at: new Date().toISOString() })
+      .eq('id', orderId);
 
-    try {
-      const { error } = await supabase
-        .from('orders')
-        .update({ status: newStatus, updated_at: new Date().toISOString() })
-        .eq('id', orderId);
-
-      if (error) throw error;
-
-      showToast(
-        'success',
-        t('statusUpdatedTitle'),
-        t('orderStatusMarkedSuccess'),
-        2000
-      );
-    } catch (error: any) {
+    if (error) {
       console.error('Error updating order status:', error);
-      setOrders(previousOrders);
-      showToast('error', t('errorTitle'), 'No se pudo actualizar el estado');
+      showToast('error', t('errorTitle'), 'No se pudo actualizar el estado', 4000);
+      return;
     }
+
+    await loadOrders();
+    
+    showToast(
+      'success',
+      t('statusUpdatedTitle'),
+      t('orderStatusMarkedSuccess'),
+      3000
+    );
   };
 
   const getStatusBadge = (status: Order['status']) => {
@@ -390,36 +368,28 @@ export const OrdersManagement: React.FC = () => {
   const handleBulkAction = async () => {
     if (!bulkAction || selectedOrders.length === 0) return;
 
-    const previousOrders = [...orders];
-    const selectedCount = selectedOrders.length;
+    const { error } = await supabase
+      .from('orders')
+      .update({ status: bulkAction as Order['status'], updated_at: new Date().toISOString() })
+      .in('id', selectedOrders);
 
-    setOrders(prev => prev.map(o =>
-      selectedOrders.includes(o.id) ? { ...o, status: bulkAction as Order['status'] } : o
-    ));
+    if (error) {
+      console.error('Error updating orders:', error);
+      showToast('error', t('errorTitle'), 'No se pudieron actualizar los pedidos', 4000);
+      return;
+    }
 
+    await loadOrders();
     setSelectedOrders([]);
     setBulkAction('');
     setShowBulkActions(false);
-
-    try {
-      const { error } = await supabase
-        .from('orders')
-        .update({ status: bulkAction as Order['status'], updated_at: new Date().toISOString() })
-        .in('id', selectedOrders);
-
-      if (error) throw error;
-
-      showToast(
-        'success',
-        t('bulkActionCompleteTitle'),
-        `${selectedCount} ${t('ordersUpdatedCount')}`,
-        2000
-      );
-    } catch (error: any) {
-      console.error('Error updating orders:', error);
-      setOrders(previousOrders);
-      showToast('error', t('errorTitle'), 'No se pudieron actualizar los pedidos');
-    }
+    
+    showToast(
+      'success',
+      t('bulkActionCompleteTitle'),
+      `${selectedOrders.length} ${t('ordersUpdatedCount')}`,
+      3000
+    );
   };
 
   const toggleOrderSelection = (orderId: string) => {
@@ -687,7 +657,6 @@ export const OrdersManagement: React.FC = () => {
     const billing = restaurant.settings?.billing;
     const subtotal = order.subtotal;
     const iva = billing?.responsableIVA ? subtotal * 0.19 : 0;
-    const ipc = billing?.aplicaIPC ? subtotal * ((billing?.porcentajeIPC || 8) / 100) : 0;
     const propina = billing?.aplicaPropina ?
     subtotal * 0.10 : 0;
     const total = order.total;
@@ -970,12 +939,6 @@ export const OrdersManagement: React.FC = () => {
             `
               <div class="total-row">
                 <span>${t('ivaLabel')}:</span> <span>${formatCurrency(iva, currency)}</span>
-              </div>
-            ` : ''}
-            ${billing?.aplicaIPC ?
-            `
-              <div class="total-row">
-                <span>IPC (${billing?.porcentajeIPC || 8}%):</span> <span>${formatCurrency(ipc, currency)}</span>
               </div>
             ` : ''}
             ${billing?.aplicaPropina ?
@@ -1332,42 +1295,24 @@ export const OrdersManagement: React.FC = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        {isLoadingOrders ? (
-          [...Array(4)].map((_, index) => (
-            <div key={index} className="bg-white p-6 rounded-xl shadow-md border border-gray-200 animate-pulse">
-              <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 bg-gray-200 rounded-lg" />
-                <div className="text-right flex-1 ml-4">
-                  <div className="h-4 bg-gray-200 rounded w-24 mb-2 ml-auto" />
-                  <div className="h-8 bg-gray-200 rounded w-16 ml-auto" />
-                </div>
-              </div>
-              <div className="flex items-center justify-between pt-3 border-t border-gray-200">
-                <div className="h-3 bg-gray-200 rounded w-16" />
-                <div className="h-4 bg-gray-200 rounded w-12" />
-              </div>
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-md border border-blue-200 hover:shadow-lg transition-shadow">
+          <div className="flex items-start justify-between mb-4">
+            <div className="p-3 bg-blue-600 rounded-lg">
+              <Calendar className="h-6 w-6 text-white" />
             </div>
-          ))
-        ) : (
-          <>
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-md border border-blue-200 hover:shadow-lg transition-shadow">
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-3 bg-blue-600 rounded-lg">
-                  <Calendar className="h-6 w-6 text-white" />
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium text-blue-900 mb-1">{t('ordersToday')}</p>
-                  <p className="text-3xl font-bold text-blue-900">{orderStats.todayOrders}</p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between pt-3
-              border-t border-blue-200">
-                <span className="text-xs text-blue-700 font-medium">{t('dailySales')}</span>
-                <span className="text-sm font-bold text-green-700">
-                  {formatCurrency(orderStats.todayRevenue, currency)}
-                </span>
-              </div>
+            <div className="text-right">
+              <p className="text-sm font-medium text-blue-900 mb-1">{t('ordersToday')}</p>
+              <p className="text-3xl font-bold text-blue-900">{orderStats.todayOrders}</p>
             </div>
+          </div>
+          <div className="flex items-center justify-between pt-3 
+          border-t border-blue-200">
+            <span className="text-xs text-blue-700 font-medium">{t('dailySales')}</span>
+            <span className="text-sm font-bold text-green-700">
+              {formatCurrency(orderStats.todayRevenue, currency)}
+            </span>
+          </div>
+        </div>
         <div className="bg-gradient-to-br from-amber-50 to-amber-100 p-6 rounded-xl shadow-md border border-amber-200 hover:shadow-lg transition-shadow">
           <div className="flex items-start justify-between mb-4">
             <div className="p-3 bg-amber-600 rounded-lg">
@@ -1419,8 +1364,6 @@ export const OrdersManagement: React.FC = () => {
             <span className="text-sm font-bold text-purple-800">{orderStats.total}</span>
           </div>
         </div>
-          </>
-        )}
       </div>
 
         {/* Search and Bulk Actions */}
@@ -1554,46 +1497,7 @@ export const OrdersManagement: React.FC = () => {
       )}
 
       {/* Order List */}
-      {isLoadingOrders ? (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3"><div className="h-4 w-4 bg-gray-200 rounded animate-pulse" /></th>
-                  <th className="px-6 py-3"><div className="h-4 bg-gray-200 rounded w-24 animate-pulse" /></th>
-                  <th className="px-6 py-3"><div className="h-4 bg-gray-200 rounded w-32 animate-pulse" /></th>
-                  <th className="px-6 py-3"><div className="h-4 bg-gray-200 rounded w-20 animate-pulse" /></th>
-                  <th className="px-6 py-3"><div className="h-4 bg-gray-200 rounded w-16 animate-pulse" /></th>
-                  <th className="px-6 py-3"><div className="h-4 bg-gray-200 rounded w-20 animate-pulse" /></th>
-                  <th className="px-6 py-3"><div className="h-4 bg-gray-200 rounded w-24 animate-pulse" /></th>
-                  <th className="px-6 py-3"><div className="h-4 bg-gray-200 rounded w-20 animate-pulse" /></th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {[...Array(5)].map((_, index) => (
-                  <tr key={index}>
-                    <td className="px-6 py-4"><div className="h-4 w-4 bg-gray-200 rounded animate-pulse" /></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-20 animate-pulse" /></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-32 animate-pulse" /></td>
-                    <td className="px-6 py-4"><div className="h-6 bg-gray-200 rounded-full w-16 animate-pulse" /></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-20 animate-pulse" /></td>
-                    <td className="px-6 py-4"><div className="h-6 bg-gray-200 rounded-full w-20 animate-pulse" /></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-24 animate-pulse" /></td>
-                    <td className="px-6 py-4">
-                      <div className="flex gap-2">
-                        <div className="h-8 w-8 bg-gray-200 rounded animate-pulse" />
-                        <div className="h-8 w-8 bg-gray-200 rounded animate-pulse" />
-                        <div className="h-8 w-8 bg-gray-200 rounded animate-pulse" />
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      ) : paginatedOrders.length === 0 ? (
+      {paginatedOrders.length === 0 ? (
         <div className="text-center bg-white p-8 rounded-lg shadow-lg">
           <ShoppingBag className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">

@@ -156,7 +156,7 @@ export const PublicMenu: React.FC = () => {
       // FASE 2: Primero cargar productos para obtener sus IDs
       const productsResult = await supabase
         .from('products')
-        .select('id, restaurant_id, name, description, price, images, status, is_available, is_featured, variations, display_order, compare_at_price, ingredients')
+        .select('id, restaurant_id, name, description, price, images, status, is_available, is_featured, variations, display_order, compare_at_price')
         .eq('restaurant_id', restaurantData.id)
         .in('status', ['active', 'out_of_stock'])
         .order('display_order', { ascending: true })
@@ -236,33 +236,6 @@ export const PublicMenu: React.FC = () => {
       setHasMoreProducts(transformedInitialProducts.length === PRODUCTS_PER_PAGE);
       setLoadingPhase('complete');
       console.log('[PublicMenu] Initial menu loading complete!');
-
-      // Clean up invalid featured product IDs
-      if (restaurantData.settings?.promo?.featured_product_ids?.length) {
-        const validProductIds = transformedInitialProducts.map((p: any) => p.id);
-        const configuredIds = restaurantData.settings.promo.featured_product_ids;
-        const invalidIds = configuredIds.filter((id: string) => !validProductIds.includes(id));
-
-        if (invalidIds.length > 0) {
-          console.log('[PublicMenu] Found', invalidIds.length, 'invalid featured product IDs, cleaning up...');
-          const validFeaturedIds = configuredIds.filter((id: string) => validProductIds.includes(id));
-
-          await supabase
-            .from('restaurants')
-            .update({
-              settings: {
-                ...restaurantData.settings,
-                promo: {
-                  ...restaurantData.settings.promo,
-                  featured_product_ids: validFeaturedIds
-                }
-              }
-            })
-            .eq('id', restaurantData.id);
-
-          console.log('[PublicMenu] Cleaned up invalid product IDs');
-        }
-      }
     } catch (err) {
       console.error('[PublicMenu] Error loading menu:', err);
       setError('Error al cargar el menú');
@@ -283,7 +256,7 @@ export const PublicMenu: React.FC = () => {
 
       const { data: moreProductsData, error: moreProductsError } = await supabase
         .from('products')
-        .select('id, restaurant_id, name, description, price, images, status, is_available, is_featured, variations, display_order, compare_at_price, ingredients')
+        .select('id, restaurant_id, name, description, price, images, status, is_available, is_featured, variations, display_order, compare_at_price')
         .eq('restaurant_id', restaurant.id)
         .in('status', ['active', 'out_of_stock'])
         .order('display_order', { ascending: true })
@@ -369,27 +342,12 @@ export const PublicMenu: React.FC = () => {
   }, [products, selectedCategory, searchTerm]);
 
   const featuredProducts = useMemo(() => {
-    console.log('[PublicMenu] Calculating featured products. Total products:', products.length);
-    console.log('[PublicMenu] Products with is_featured:', products.filter((p) => p.is_featured).length);
-    console.log('[PublicMenu] Featured IDs from settings:', restaurant?.settings.promo?.featured_product_ids);
-
     if (!restaurant?.settings.promo?.featured_product_ids?.length) {
-      const featured = products.filter((p) => p.is_featured).slice(0, 5);
-      console.log('[PublicMenu] Using is_featured flag, found:', featured.length, 'products');
-      return featured;
+      return products.filter((p) => p.is_featured).slice(0, 5);
     }
 
     const featuredIds = restaurant.settings.promo.featured_product_ids;
-    const validFeatured = products.filter((p) => featuredIds.includes(p.id));
-    console.log('[PublicMenu] Using featured IDs from settings, found:', validFeatured.length, 'valid products');
-
-    if (validFeatured.length === 0) {
-      const featured = products.filter((p) => p.is_featured).slice(0, 5);
-      console.log('[PublicMenu] No valid IDs, falling back to is_featured flag, found:', featured.length);
-      return featured;
-    }
-
-    return validFeatured.slice(0, 5);
+    return products.filter((p) => featuredIds.includes(p.id)).slice(0, 5);
   }, [products, restaurant?.settings.promo?.featured_product_ids]);
   const cartItemsCount = cartItems.reduce(
     (sum, item) => sum + item.quantity,
@@ -494,7 +452,7 @@ export const PublicMenu: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen relative p-1 gap-1 overflow-x-hidden"
+      className="min-h-screen relative p-1 gap-1" /*DF:NECESITO QUE VERIFIQUEMOS ESTO*/
       style={
         {
           backgroundColor: menuBackgroundColor,
@@ -510,49 +468,7 @@ export const PublicMenu: React.FC = () => {
         } as React.CSSProperties
       }
     >
-      <style>{`
-        p, span { color: ${primaryTextColor} !important; }
-
-        /* Custom scrollbar for categories on desktop */
-        @media (min-width: 768px) {
-          .categories-scroll {
-            scrollbar-width: thin;
-            scrollbar-color: ${primaryColor} transparent;
-          }
-
-          .categories-scroll::-webkit-scrollbar {
-            height: 8px;
-          }
-
-          .categories-scroll::-webkit-scrollbar-track {
-            background: transparent;
-            border-radius: 4px;
-          }
-
-          .categories-scroll::-webkit-scrollbar-thumb {
-            background-color: ${primaryColor};
-            border-radius: 4px;
-            opacity: 0.6;
-          }
-
-          .categories-scroll::-webkit-scrollbar-thumb:hover {
-            background-color: ${primaryColor};
-            opacity: 1;
-          }
-        }
-
-        /* Hide scrollbar on mobile */
-        @media (max-width: 767px) {
-          .categories-scroll {
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-          }
-
-          .categories-scroll::-webkit-scrollbar {
-            display: none;
-          }
-        }
-      `}</style>
+      <style>{`p, span { color: ${primaryTextColor} !important; }`}</style>
       {/*<LeftShape color={primaryColor} />*/}
       {/* DECORATIVE ORGANIC SHAPES - MATCHING REFERENCE */}
       {/*SE AGREGARON TODOS LOS SVG*/}
@@ -649,9 +565,9 @@ export const PublicMenu: React.FC = () => {
           
           {' '}
           {/* DF: SE REDUJO EL PADDING PARA QUE QUEDE MAS DELGADO */}
-          <div className="flex items-center justify-between gap-2 md:gap-4">
+          <div className="flex items-center justify-between gap-4">
             {/* Search Bar */}
-            <div className="flex-1 max-w-[150px] md:max-w-xs shadow-lg rounded-lg">
+            <div className="flex-1 max-w-xs shadow-lg rounded-lg">
               <div className="relative">
                 {/* Icono de lupa */}
                 <Search
@@ -703,7 +619,7 @@ export const PublicMenu: React.FC = () => {
             </div>
 
             {/* Logo */}
-            <div className="flex-shrink-0 text-center hidden md:block">
+            <div className="flex-shrink-0 text-center">
               {restaurant.logo_url ? (
                 <img
                   src={restaurant.logo_url}
@@ -726,7 +642,7 @@ export const PublicMenu: React.FC = () => {
 
             {/* Action Buttons */}
 
-            <div className="flex items-center gap-1 md:gap-2 flex-1 justify-end max-w-[150px] md:max-w-xs">
+            <div className="flex items-center gap-2 flex-1 justify-end max-w-xs">
               {/* DF:OPEN/CLOSED STATUS BUTTON */}
               <button
                 onClick={() => setShowHoursModal(true)}
@@ -864,16 +780,7 @@ export const PublicMenu: React.FC = () => {
           </div>
         </div>
       </header>
-      {(() => {
-        const shouldShow = !searchTerm && !showInitialSkeletons && featuredProducts.length > 0;
-        console.log('[PublicMenu] Featured section check:', {
-          searchTerm,
-          showInitialSkeletons,
-          featuredProductsLength: featuredProducts.length,
-          shouldShow
-        });
-        return shouldShow;
-      })() && (
+      {!searchTerm && !showInitialSkeletons && featuredProducts.length > 0 && (
         <div className="text-left px-[15px]  md:px-[210px] md:-mt-[9px] md:-mb-[30px] scale-[0.85]">
           {' '}
           {/*DF:pasar toda esta seccion completa*/}
@@ -907,16 +814,7 @@ export const PublicMenu: React.FC = () => {
         </div>
       )}
       {/* ANIMATED CAROUSEL */}
-      {(() => {
-        const shouldShow = !searchTerm && !showInitialSkeletons && featuredProducts.length > 0;
-        console.log('[PublicMenu] Carousel section check:', {
-          searchTerm,
-          showInitialSkeletons,
-          featuredProductsLength: featuredProducts.length,
-          shouldShow
-        });
-        return shouldShow;
-      })() && (
+      {!searchTerm && !showInitialSkeletons && featuredProducts.length > 0 && (
         <AnimatedCarousel
           products={featuredProducts}
           primaryColor={primaryColor}
@@ -937,8 +835,8 @@ export const PublicMenu: React.FC = () => {
         <div className="flex flex-col justify-center items-center w-full max-w-7xl mx-auto py-4 relative z-20 md:items-center md:flex-row  md:justify-between ">
           {/* 1. SECCIÓN DE CATEGORÍAS (Izquierda en móvil / Centro en desktop) */}
           {/* w-full md:w-auto md:mx-auto permite el scroll en móvil y centra en desktop. */}
-          <div className="w-full md:w-[85%] mx-auto">
-            <div className="flex gap-2 py-[2px] overflow-x-auto justify-start px-4 categories-scroll">
+          <div className="w-full  md:mx-auto">
+            <div className="flex gap-2 py-[2px] overflow-x-auto scrollbar-hide justify-start px-4">
               {' '}
               {/* Eliminamos justify-center de aquí */}
               {/* Botón 'Todos' */}

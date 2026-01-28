@@ -45,16 +45,8 @@ export const MenuManagement: React.FC = () => {
     productName: ''
   });
   const [draggedProduct, setDraggedProduct] = useState<Product | null>(null);
-  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
-  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
 
   const handleActivateProduct = async (productId: string) => {
-    const previousProducts = [...products];
-    setProducts(prev => prev.map(p =>
-      p.id === productId ? { ...p, status: 'active' as Product['status'] } : p
-    ));
-
     try {
       const { error } = await supabase
         .from('products')
@@ -63,25 +55,21 @@ export const MenuManagement: React.FC = () => {
 
       if (error) throw error;
 
+      await loadMenuData();
+
       showToast(
         'success',
         t('productActivatedTitle'),
         t('productActivatedMessage'),
-        2000
+        4000
       );
     } catch (error: any) {
       console.error('Error activating product:', error);
-      setProducts(previousProducts);
       showToast('error', 'Error', 'No se pudo activar el producto');
     }
   };
 
   const handleChangeProductStatus = async (productId: string, newStatus: Product['status']) => {
-    const previousProducts = [...products];
-    setProducts(prev => prev.map(p =>
-      p.id === productId ? { ...p, status: newStatus } : p
-    ));
-
     try {
       const { error } = await supabase
         .from('products')
@@ -90,35 +78,26 @@ export const MenuManagement: React.FC = () => {
 
       if (error) throw error;
 
+      await loadMenuData();
+
       showToast(
         'success',
         t('statusUpdated'),
         `${t('productStatusChangedTo')} ${t(newStatus)}`,
-        2000
+        3000
       );
     } catch (error: any) {
       console.error('Error changing product status:', error);
-      setProducts(previousProducts);
       showToast('error', 'Error', 'No se pudo cambiar el estado del producto');
     }
   };
 
   useEffect(() => {
     if (restaurant) {
-      loadInitialData();
+      loadMenuData();
+      loadSubscription();
     }
-  }, [restaurant?.id]);
-
-  const loadInitialData = async () => {
-    setIsLoadingCategories(true);
-    setIsLoadingProducts(true);
-
-    loadSubscription();
-
-    loadCategories().then(() => {
-      loadProducts();
-    });
-  };
+  }, [restaurant]);
 
   const loadSubscription = async () => {
     if (!restaurant?.id) return;
@@ -138,67 +117,41 @@ export const MenuManagement: React.FC = () => {
     setCurrentSubscription(data);
   };
 
-  const loadCategories = async () => {
-    if (!restaurant?.id) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .eq('restaurant_id', restaurant.id)
-        .eq('is_active', true)
-        .order('name', { ascending: true });
-
-      if (error) {
-        console.error('Error loading categories:', error);
-      } else {
-        setCategories(data || []);
-      }
-    } catch (error) {
-      console.error('Error loading categories:', error);
-    } finally {
-      setIsLoadingCategories(false);
-    }
-  };
-
-  const loadProducts = async () => {
-    if (!restaurant?.id) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('products')
-        .select(`
-          *,
-          product_categories (
-            category_id
-          )
-        `)
-        .eq('restaurant_id', restaurant.id)
-        .order('display_order', { ascending: true });
-
-      if (error) {
-        console.error('Error loading products:', error);
-      } else {
-        const productsWithCategories = (data || []).map((product: any) => ({
-          ...product,
-          category_id: product.product_categories?.[0]?.category_id || ''
-        }));
-
-        setProducts(productsWithCategories);
-      }
-    } catch (error) {
-      console.error('Error loading products:', error);
-      showToast('error', 'Error', 'No se pudo cargar el menú');
-    } finally {
-      setIsLoadingProducts(false);
-    }
-  };
-
   const loadMenuData = async () => {
-    await Promise.all([
-      loadCategories(),
-      loadProducts()
-    ]);
+    if (!restaurant?.id) return;
+
+    const { data: categoriesData, error: categoriesError } = await supabase
+      .from('categories')
+      .select('*')
+      .eq('restaurant_id', restaurant.id)
+      .eq('is_active', true);
+
+    if (categoriesError) {
+      console.error('Error loading categories:', categoriesError);
+    }
+
+    const { data: productsData, error: productsError } = await supabase
+      .from('products')
+      .select(`
+        *,
+        product_categories (
+          category_id
+        )
+      `)
+      .eq('restaurant_id', restaurant.id)
+      .order('display_order', { ascending: true });
+
+    if (productsError) {
+      console.error('Error loading products:', productsError);
+    }
+
+    const productsWithCategories = (productsData || []).map((product: any) => ({
+      ...product,
+      category_id: product.product_categories?.[0]?.category_id || ''
+    }));
+
+    setCategories(categoriesData || []);
+    setProducts(productsWithCategories);
   };
 
   const filteredProducts = products
@@ -236,8 +189,6 @@ export const MenuManagement: React.FC = () => {
   const handleSaveProduct = async (productData: any) => {
     if (!restaurant) return;
 
-    setIsSaving(true);
-
     try {
       const minPrice = productData.variations && productData.variations.length > 0
         ? Math.min(...productData.variations.map((v: any) => v.price))
@@ -262,17 +213,21 @@ export const MenuManagement: React.FC = () => {
         if (updateError) throw updateError;
 
         if (category_id) {
-          await supabase
+          const { error: deleteCategoriesError } = await supabase
             .from('product_categories')
             .delete()
             .eq('product_id', editingProduct.id);
 
-          await supabase
+          if (deleteCategoriesError) throw deleteCategoriesError;
+
+          const { error: insertCategoryError } = await supabase
             .from('product_categories')
             .insert({
               product_id: editingProduct.id,
               category_id: category_id
             });
+
+          if (insertCategoryError) throw insertCategoryError;
         }
       } else {
         const maxDisplayOrder = Math.max(...products.map(p => (p as any).display_order || 0), -1);
@@ -290,12 +245,14 @@ export const MenuManagement: React.FC = () => {
         if (insertError) throw insertError;
 
         if (category_id && newProduct) {
-          await supabase
+          const { error: categoryError } = await supabase
             .from('product_categories')
             .insert({
               product_id: newProduct.id,
               category_id: category_id
             });
+
+          if (categoryError) throw categoryError;
         }
       }
 
@@ -307,13 +264,11 @@ export const MenuManagement: React.FC = () => {
         'success',
         editingProduct ? t('productUpdatedTitle') : t('productCreatedTitle'),
         editingProduct ? t('productUpdatedMessage') : t('productCreatedMessage'),
-        3000
+        4000
       );
     } catch (error: any) {
       console.error('Error saving product:', error);
       showToast('error', 'Error', error.message || 'No se pudo guardar el producto');
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -323,10 +278,6 @@ export const MenuManagement: React.FC = () => {
   };
 
   const handleDeleteProduct = async (productId: string) => {
-    const previousProducts = [...products];
-    setProducts(prev => prev.filter(p => p.id !== productId));
-    setDeleteConfirm({ show: false, productId: '', productName: '' });
-
     try {
       const { error } = await supabase
         .from('products')
@@ -335,34 +286,18 @@ export const MenuManagement: React.FC = () => {
 
       if (error) throw error;
 
-      if (restaurant?.settings?.promo?.featured_product_ids?.includes(productId)) {
-        const updatedFeaturedIds = restaurant.settings.promo.featured_product_ids.filter(
-          (id: string) => id !== productId
-        );
-
-        await supabase
-          .from('restaurants')
-          .update({
-            settings: {
-              ...restaurant.settings,
-              promo: {
-                ...restaurant.settings.promo,
-                featured_product_ids: updatedFeaturedIds
-              }
-            }
-          })
-          .eq('id', restaurant.id);
-      }
+      await loadMenuData();
 
       showToast(
         'info',
         t('productDeletedTitle'),
         t('productDeletedMessage'),
-        3000
+        4000
       );
+
+      setDeleteConfirm({ show: false, productId: '', productName: '' });
     } catch (error: any) {
       console.error('Error deleting product:', error);
-      setProducts(previousProducts);
       showToast('error', 'Error', 'No se pudo eliminar el producto');
     }
   };
@@ -382,34 +317,31 @@ export const MenuManagement: React.FC = () => {
     const currentProduct = filteredProducts[currentIndex];
     const previousProduct = filteredProducts[currentIndex - 1];
 
-    const previousProducts = [...products];
-    setProducts(prev => prev.map(p => {
-      if (p.id === currentProduct.id) return { ...p, display_order: previousProduct.display_order };
-      if (p.id === previousProduct.id) return { ...p, display_order: currentProduct.display_order };
-      return p;
-    }));
-
     try {
-      await Promise.all([
-        supabase
-          .from('products')
-          .update({ display_order: previousProduct.display_order })
-          .eq('id', currentProduct.id),
-        supabase
-          .from('products')
-          .update({ display_order: currentProduct.display_order })
-          .eq('id', previousProduct.id)
-      ]);
+      const { error: error1 } = await supabase
+        .from('products')
+        .update({ display_order: previousProduct.display_order })
+        .eq('id', currentProduct.id);
+
+      if (error1) throw error1;
+
+      const { error: error2 } = await supabase
+        .from('products')
+        .update({ display_order: currentProduct.display_order })
+        .eq('id', previousProduct.id);
+
+      if (error2) throw error2;
+
+      await loadMenuData();
 
       showToast(
         'success',
         t('orderUpdatedTitle'),
         t('orderUpdatedMessage'),
-        1500
+        2000
       );
     } catch (error: any) {
       console.error('Error reordering product:', error);
-      setProducts(previousProducts);
       showToast('error', 'Error', 'No se pudo reordenar el producto');
     }
   };
@@ -421,34 +353,31 @@ export const MenuManagement: React.FC = () => {
     const currentProduct = filteredProducts[currentIndex];
     const nextProduct = filteredProducts[currentIndex + 1];
 
-    const previousProducts = [...products];
-    setProducts(prev => prev.map(p => {
-      if (p.id === currentProduct.id) return { ...p, display_order: nextProduct.display_order };
-      if (p.id === nextProduct.id) return { ...p, display_order: currentProduct.display_order };
-      return p;
-    }));
-
     try {
-      await Promise.all([
-        supabase
-          .from('products')
-          .update({ display_order: nextProduct.display_order })
-          .eq('id', currentProduct.id),
-        supabase
-          .from('products')
-          .update({ display_order: currentProduct.display_order })
-          .eq('id', nextProduct.id)
-      ]);
+      const { error: error1 } = await supabase
+        .from('products')
+        .update({ display_order: nextProduct.display_order })
+        .eq('id', currentProduct.id);
+
+      if (error1) throw error1;
+
+      const { error: error2 } = await supabase
+        .from('products')
+        .update({ display_order: currentProduct.display_order })
+        .eq('id', nextProduct.id);
+
+      if (error2) throw error2;
+
+      await loadMenuData();
 
       showToast(
         'success',
         t('orderUpdatedTitle'),
         t('orderUpdatedMessage'),
-        1500
+        2000
       );
     } catch (error: any) {
       console.error('Error reordering product:', error);
-      setProducts(previousProducts);
       showToast('error', 'Error', 'No se pudo reordenar el producto');
     }
   };
@@ -489,12 +418,14 @@ export const MenuManagement: React.FC = () => {
       if (insertError) throw insertError;
 
       if (productToDuplicate.category_id && newProduct) {
-        await supabase
+        const { error: categoryError } = await supabase
           .from('product_categories')
           .insert({
             product_id: newProduct.id,
             category_id: productToDuplicate.category_id
           });
+
+        if (categoryError) console.error('Error adding category:', categoryError);
       }
 
       await loadMenuData();
@@ -503,7 +434,7 @@ export const MenuManagement: React.FC = () => {
         'success',
         t('productDuplicatedTitle'),
         t('productDuplicatedMessage', { name: productToDuplicate.name }),
-        3000
+        4000
       );
     } catch (error: any) {
       console.error('Error duplicating product:', error);
@@ -512,11 +443,6 @@ export const MenuManagement: React.FC = () => {
   };
 
   const handleArchiveProduct = async (productId: string) => {
-    const previousProducts = [...products];
-    setProducts(prev => prev.map(p =>
-      p.id === productId ? { ...p, status: 'archived' as Product['status'] } : p
-    ));
-
     try {
       const { error } = await supabase
         .from('products')
@@ -525,15 +451,16 @@ export const MenuManagement: React.FC = () => {
 
       if (error) throw error;
 
+      await loadMenuData();
+
       showToast(
         'info',
         t('productArchivedTitle'),
         t('productArchivedMessage'),
-        3000
+        4000
       );
     } catch (error: any) {
       console.error('Error archiving product:', error);
-      setProducts(previousProducts);
       showToast('error', 'Error', 'No se pudo archivar el producto');
     }
   };
@@ -561,41 +488,38 @@ export const MenuManagement: React.FC = () => {
 
     if (draggedIndex === -1 || targetIndex === -1) return;
 
-    const reorderedProducts = [...filteredProducts];
-    reorderedProducts.splice(draggedIndex, 1);
-    reorderedProducts.splice(targetIndex, 0, draggedProduct);
-
-    const previousProducts = [...products];
-    const updatedProducts = products.map(p => {
-      const newIndex = reorderedProducts.findIndex(rp => rp.id === p.id);
-      if (newIndex !== -1) {
-        return { ...p, display_order: newIndex };
-      }
-      return p;
-    });
-    setProducts(updatedProducts);
-    setDraggedProduct(null);
-
     try {
-      const updatePromises = reorderedProducts.map((product, index) =>
-        supabase
-          .from('products')
-          .update({ display_order: index })
-          .eq('id', product.id)
-      );
+      const reorderedProducts = [...filteredProducts];
+      reorderedProducts.splice(draggedIndex, 1);
+      reorderedProducts.splice(targetIndex, 0, draggedProduct);
 
-      await Promise.all(updatePromises);
+      const updates = reorderedProducts.map((product, index) => ({
+        id: product.id,
+        display_order: index
+      }));
+
+      for (const update of updates) {
+        const { error } = await supabase
+          .from('products')
+          .update({ display_order: update.display_order })
+          .eq('id', update.id);
+
+        if (error) throw error;
+      }
+
+      await loadMenuData();
+      setDraggedProduct(null);
 
       showToast(
         'success',
         t('orderUpdatedTitle'),
         t('productsReorderedMessage'),
-        1500
+        2000
       );
     } catch (error: any) {
       console.error('Error reordering products:', error);
-      setProducts(previousProducts);
       showToast('error', 'Error', 'No se pudo reordenar los productos');
+      setDraggedProduct(null);
     }
   };
 
@@ -637,69 +561,53 @@ export const MenuManagement: React.FC = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        {isLoadingProducts ? (
-          [...Array(4)].map((_, index) => (
-            <div key={index} className="bg-white rounded-lg p-4 border border-gray-200 animate-pulse">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gray-200 rounded-xl" />
-                <div className="flex-1">
-                  <div className="h-4 bg-gray-200 rounded w-24 mb-2" />
-                  <div className="h-7 bg-gray-200 rounded w-12" />
-                </div>
-              </div>
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
+              <Package className="w-5 h-5 text-white" />
             </div>
-          ))
-        ) : (
-          <>
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-100">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
-                  <Package className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">{t('totalProducts')}</p>
-                  <p className="text-2xl font-bold text-gray-900">{products.length}</p>
-                </div>
-              </div>
+            <div>
+              <p className="text-sm text-gray-600">{t('totalProducts')}</p>
+              <p className="text-2xl font-bold text-gray-900">{products.length}</p>
             </div>
+          </div>
+        </div>
 
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-4 border border-green-100">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md">
-                  <CheckCircle className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">{t('active')}</p>
-                  <p className="text-2xl font-bold text-gray-900">{products.filter(p => p.status === 'active').length}</p>
-                </div>
-              </div>
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-4 border border-green-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md">
+              <CheckCircle className="w-5 h-5 text-white" />
             </div>
+            <div>
+              <p className="text-sm text-gray-600">{t('active')}</p>
+              <p className="text-2xl font-bold text-gray-900">{products.filter(p => p.status === 'active').length}</p>
+            </div>
+          </div>
+        </div>
 
-            <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-lg p-4 border border-orange-100">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl flex items-center justify-center shadow-md">
-                  <AlertCircle className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">{t('outOfStock')}</p>
-                  <p className="text-2xl font-bold text-gray-900">{products.filter(p => p.status === 'out_of_stock').length}</p>
-                </div>
-              </div>
+        <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-lg p-4 border border-orange-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl flex items-center justify-center shadow-md">
+              <AlertCircle className="w-5 h-5 text-white" />
             </div>
+            <div>
+              <p className="text-sm text-gray-600">{t('outOfStock')}</p>
+              <p className="text-2xl font-bold text-gray-900">{products.filter(p => p.status === 'out_of_stock').length}</p>
+            </div>
+          </div>
+        </div>
 
-            <div className="bg-gradient-to-br from-gray-50 to-slate-50 rounded-lg p-4 border border-gray-200">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-gray-400 to-gray-600 rounded-xl flex items-center justify-center shadow-md">
-                  <Archive className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">{t('archived')}</p>
-                  <p className="text-2xl font-bold text-gray-900">{products.filter(p => p.status === 'archived').length}</p>
-                </div>
-              </div>
+        <div className="bg-gradient-to-br from-gray-50 to-slate-50 rounded-lg p-4 border border-gray-200">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-gray-400 to-gray-600 rounded-xl flex items-center justify-center shadow-md">
+              <Archive className="w-5 h-5 text-white" />
             </div>
-          </>
-        )}
+            <div>
+              <p className="text-sm text-gray-600">{t('archived')}</p>
+              <p className="text-2xl font-bold text-gray-900">{products.filter(p => p.status === 'archived').length}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
             {/* Search and Category Filter */}
@@ -776,27 +684,7 @@ export const MenuManagement: React.FC = () => {
       </div>
 
       {/* Products Grid */}
-      {isLoadingProducts ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-          {[...Array(8)].map((_, index) => (
-            <div key={index} className="bg-white rounded-xl shadow-sm border-2 border-gray-200 overflow-hidden animate-pulse">
-              <div className="aspect-[4/3] bg-gray-200" />
-              <div className="p-4 space-y-3">
-                <div className="h-5 bg-gray-200 rounded w-3/4" />
-                <div className="h-4 bg-gray-200 rounded w-1/2" />
-                <div className="h-3 bg-gray-200 rounded w-full" />
-                <div className="h-3 bg-gray-200 rounded w-5/6" />
-                <div className="h-8 bg-gray-200 rounded w-1/2" />
-                <div className="flex gap-1">
-                  <div className="h-8 bg-gray-200 rounded flex-1" />
-                  <div className="h-8 bg-gray-200 rounded flex-1" />
-                  <div className="h-8 bg-gray-200 rounded flex-1" />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : filteredProducts.length === 0 ? (
+      {filteredProducts.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-12 text-center">
           <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
