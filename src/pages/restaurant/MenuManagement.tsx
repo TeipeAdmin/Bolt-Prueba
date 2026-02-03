@@ -1,22 +1,20 @@
-import React, { useState, useEffect } from 'react';
+// src/pages/restaurant/MenuManagement.tsx
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Plus,
   Pencil as Edit,
   Trash2,
-  Eye,
-  Archive,
   AlertCircle,
   Search,
   Package,
-  CheckCircle,
-  XCircle,
-  ArrowUp,
-  ArrowDown,
-  Copy,
   GripVertical,
-  ExternalLink
+  ExternalLink,
+  Copy,
+  CheckCircle,
+  Archive
 } from 'lucide-react';
-import { Category, Product, Restaurant, Subscription } from '../../types';
+
+import { Category, Product, Subscription } from '../../types';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -28,97 +26,97 @@ import { ProductForm } from '../../components/restaurant/ProductForm';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { formatCurrency } from '../../utils/currencyUtils';
 
+type ProductListItem = Pick<
+  Product,
+  | 'id'
+  | 'restaurant_id'
+  | 'name'
+  | 'description'
+  | 'images'
+  | 'status'
+  | 'sku'
+  | 'is_available'
+  | 'is_featured'
+  | 'display_order'
+  | 'price'
+  | 'updated_at'
+> & {
+  category_id: string;
+};
+
+type GlobalStats = {
+  total: number;
+  active: number;
+  out_of_stock: number;
+  archived: number;
+};
+
 export const MenuManagement: React.FC = () => {
   const { restaurant } = useAuth();
   const { showToast } = useToast();
   const { t } = useLanguage();
+
+  // ====== Config ======
+  const PAGE_SIZE = 12;
+  const CACHE_TTL_MS = 60_000;
+  const cacheKey = (restaurantId: string) => `menu_cache_v3:${restaurantId}`;
+
+  // ====== State ======
   const [categories, setCategories] = useState<Category[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductListItem[]>([]);
   const [currentSubscription, setCurrentSubscription] = useState<Subscription | null>(null);
+
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
   const [showProductModal, setShowProductModal] = useState(false);
+
+  // Lazy edit
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; productId: string; productName: string }>({
-    show: false,
-    productId: '',
-    productName: ''
-  });
-  const [draggedProduct, setDraggedProduct] = useState<Product | null>(null);
-  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
-  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+  const [loadingEditingProduct, setLoadingEditingProduct] = useState(false);
 
-  const handleActivateProduct = async (productId: string) => {
-    const previousProducts = [...products];
-    setProducts(prev => prev.map(p =>
-      p.id === productId ? { ...p, status: 'active' as Product['status'] } : p
-    ));
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    show: boolean;
+    productId: string;
+    productName: string;
+  }>({ show: false, productId: '', productName: '' });
 
-    try {
-      const { error } = await supabase
-        .from('products')
-        .update({ status: 'active', updated_at: new Date().toISOString() })
-        .eq('id', productId);
+  const [draggedProduct, setDraggedProduct] = useState<ProductListItem | null>(null);
 
-      if (error) throw error;
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [loadingProducts, setLoadingProducts] = useState(false);
 
-      showToast(
-        'success',
-        t('productActivatedTitle'),
-        t('productActivatedMessage'),
-        2000
-      );
-    } catch (error: any) {
-      console.error('Error activating product:', error);
-      setProducts(previousProducts);
-      showToast('error', 'Error', 'No se pudo activar el producto');
-    }
-  };
+  // ✅ Stats globales solo para ALL (todos los productos)
+  const [globalStatsAll, setGlobalStatsAll] = useState<GlobalStats | null>(null);
+  const [loadingGlobalStatsAll, setLoadingGlobalStatsAll] = useState(false);
 
-  const handleChangeProductStatus = async (productId: string, newStatus: Product['status']) => {
-    const previousProducts = [...products];
-    setProducts(prev => prev.map(p =>
-      p.id === productId ? { ...p, status: newStatus } : p
-    ));
+  const currency = restaurant?.settings?.currency || 'USD';
+  const totalPages = Math.max(1, Math.ceil(totalProducts / PAGE_SIZE));
 
-    try {
-      const { error } = await supabase
-        .from('products')
-        .update({ status: newStatus, updated_at: new Date().toISOString() })
-        .eq('id', productId);
+  // drag paging cooldown
+  const dragPagingCooldownRef = useRef<number>(0);
 
-      if (error) throw error;
-
-      showToast(
-        'success',
-        t('statusUpdated'),
-        `${t('productStatusChangedTo')} ${t(newStatus)}`,
-        2000
-      );
-    } catch (error: any) {
-      console.error('Error changing product status:', error);
-      setProducts(previousProducts);
-      showToast('error', 'Error', 'No se pudo cambiar el estado del producto');
-    }
-  };
-
+  // ====== Debounce búsqueda ======
   useEffect(() => {
-    if (restaurant) {
-      loadInitialData();
-    }
-  }, [restaurant?.id]);
+    const id = window.setTimeout(() => setDebouncedSearchTerm(searchTerm.trim()), 300);
+    return () => window.clearTimeout(id);
+  }, [searchTerm]);
 
-  const loadInitialData = async () => {
-    setIsLoadingCategories(true);
-    setIsLoadingProducts(true);
+  // Reset a página 1 cuando cambien filtros/búsqueda (server-side)
+  useEffect(() => {
+    setPage(1);
+  }, [selectedCategory, debouncedSearchTerm]);
 
+  // ====== Subscription ======
+  useEffect(() => {
+    if (!restaurant?.id) return;
     loadSubscription();
-
-    loadCategories().then(() => {
-      loadProducts();
-    });
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restaurant?.id]);
 
   const loadSubscription = async () => {
     if (!restaurant?.id) return;
@@ -138,81 +136,249 @@ export const MenuManagement: React.FC = () => {
     setCurrentSubscription(data);
   };
 
-  const loadCategories = async () => {
+  // ====== Cache helpers (ARREGLADO: no rompe si excede cuota) ======
+  const saveCache = (payload: { categories: Category[]; products: ProductListItem[]; totalProducts: number }) => {
     if (!restaurant?.id) return;
-
     try {
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .eq('restaurant_id', restaurant.id)
-        .eq('is_active', true)
-        .order('name', { ascending: true });
-
-      if (error) {
-        console.error('Error loading categories:', error);
-      } else {
-        setCategories(data || []);
-      }
-    } catch (error) {
-      console.error('Error loading categories:', error);
-    } finally {
-      setIsLoadingCategories(false);
+      sessionStorage.setItem(
+        cacheKey(restaurant.id),
+        JSON.stringify({
+          ts: Date.now(),
+          page,
+          selectedCategory,
+          search: debouncedSearchTerm,
+          ...payload
+        })
+      );
+    } catch (err) {
+      // IMPORTANT: no romper la app por el cache
+      console.warn('[MenuManagement] Cache skipped (quota/storage error):', err);
     }
   };
 
-  const loadProducts = async () => {
+  const invalidateCache = () => {
     if (!restaurant?.id) return;
-
     try {
-      const { data, error } = await supabase
-        .from('products')
-        .select(`
-          *,
-          product_categories (
-            category_id
-          )
-        `)
-        .eq('restaurant_id', restaurant.id)
-        .order('display_order', { ascending: true });
-
-      if (error) {
-        console.error('Error loading products:', error);
-      } else {
-        const productsWithCategories = (data || []).map((product: any) => ({
-          ...product,
-          category_id: product.product_categories?.[0]?.category_id || ''
-        }));
-
-        setProducts(productsWithCategories);
-      }
-    } catch (error) {
-      console.error('Error loading products:', error);
-      showToast('error', 'Error', 'No se pudo cargar el menú');
-    } finally {
-      setIsLoadingProducts(false);
+      sessionStorage.removeItem(cacheKey(restaurant.id));
+    } catch {
+      // ignore
     }
   };
+
+  // ====== Menú (server-side search + category + pagination) con cache ======
+  useEffect(() => {
+    if (!restaurant?.id) return;
+
+    const tryLoadFromCache = () => {
+      let raw: string | null = null;
+      try {
+        raw = sessionStorage.getItem(cacheKey(restaurant.id));
+      } catch {
+        return false;
+      }
+      if (!raw) return false;
+
+      try {
+        const cached = JSON.parse(raw);
+        const isFresh = Date.now() - cached.ts < CACHE_TTL_MS;
+
+        if (
+          isFresh &&
+          cached.page === page &&
+          cached.selectedCategory === selectedCategory &&
+          cached.search === debouncedSearchTerm
+        ) {
+          setCategories(cached.categories ?? []);
+          setProducts(cached.products ?? []);
+          setTotalProducts(cached.totalProducts ?? 0);
+          return true;
+        }
+      } catch {
+        return false;
+      }
+      return false;
+    };
+
+    if (tryLoadFromCache()) return;
+
+    loadMenuData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restaurant?.id, page, selectedCategory, debouncedSearchTerm]);
 
   const loadMenuData = async () => {
-    await Promise.all([
-      loadCategories(),
-      loadProducts()
-    ]);
+    if (!restaurant?.id) return;
+
+    // 1) categorías
+    const { data: categoriesData, error: categoriesError } = await supabase
+      .from('categories')
+      .select('*')
+      .eq('restaurant_id', restaurant.id)
+      .eq('is_active', true);
+
+    if (categoriesError) console.error('Error loading categories:', categoriesError);
+    const safeCategories = categoriesData || [];
+    setCategories(safeCategories);
+
+    setLoadingProducts(true);
+
+    const from = (page - 1) * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+
+    // 2) Si hay filtro de categoría, obtenemos IDs desde tabla puente (robusto)
+    let productIdsForCategory: string[] | null = null;
+
+    if (selectedCategory !== 'all') {
+      const { data: pcData, error: pcError } = await supabase
+        .from('product_categories')
+        .select('product_id')
+        .eq('category_id', selectedCategory);
+
+      if (pcError) {
+        console.error('Error loading product_categories:', pcError);
+        setLoadingProducts(false);
+        return;
+      }
+
+      productIdsForCategory = (pcData ?? []).map((r: any) => r.product_id);
+
+      if (productIdsForCategory.length === 0) {
+        setProducts([]);
+        setTotalProducts(0);
+        setLoadingProducts(false);
+        saveCache({ categories: safeCategories, products: [], totalProducts: 0 });
+        return;
+      }
+    }
+
+    // 3) Query base ligera
+    let query = supabase
+      .from('products')
+      .select(
+        selectedCategory === 'all'
+          ? `
+            id,
+            restaurant_id,
+            name,
+            description,
+            images,
+            status,
+            sku,
+            is_available,
+            is_featured,
+            display_order,
+            price,
+            updated_at,
+            product_categories ( category_id )
+          `
+          : `
+            id,
+            restaurant_id,
+            name,
+            description,
+            images,
+            status,
+            sku,
+            is_available,
+            is_featured,
+            display_order,
+            price,
+            updated_at
+          `,
+        { count: 'exact' }
+      )
+      .eq('restaurant_id', restaurant.id)
+      .order('display_order', { ascending: true });
+
+    // 4) búsqueda server-side
+    if (debouncedSearchTerm) {
+      const s = debouncedSearchTerm.replace(/%/g, '\\%').replace(/_/g, '\\_');
+      query = query.or(`name.ilike.%${s}%,description.ilike.%${s}%,sku.ilike.%${s}%`);
+    }
+
+    // 5) filtro categoría por IDs
+    if (productIdsForCategory) {
+      query = query.in('id', productIdsForCategory);
+    }
+
+    // 6) paginación
+    const { data: productsData, error: productsError, count } = await query.range(from, to);
+
+    setLoadingProducts(false);
+
+    if (productsError) {
+      console.error('Error loading products:', productsError);
+      return;
+    }
+
+    const total = count ?? 0;
+    setTotalProducts(total);
+
+    const productsWithCategory: ProductListItem[] = (productsData ?? []).map((p: any) => ({
+      ...p,
+      category_id:
+        selectedCategory === 'all'
+          ? (p.product_categories?.[0]?.category_id || '')
+          : selectedCategory
+    }));
+
+    setProducts(productsWithCategory);
+
+    saveCache({
+      categories: safeCategories,
+      products: productsWithCategory,
+      totalProducts: total
+    });
   };
 
-  const filteredProducts = products
-    .filter(product => {
-      const matchesSearch =
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (product.sku && product.sku.toLowerCase().includes(searchTerm.toLowerCase()));
+  // ====== ✅ Stats globales (solo ALL, sin búsqueda) ======
+  const shouldUseGlobalAllStats = selectedCategory === 'all' && debouncedSearchTerm === '';
 
-      const matchesCategory = selectedCategory === 'all' || product.category_id === selectedCategory;
+  useEffect(() => {
+    if (!restaurant?.id) return;
 
-      return matchesSearch && matchesCategory;
-    });
+    // si no estamos en ALL “puro”, no hace falta mantener stats globales
+    if (!shouldUseGlobalAllStats) {
+      setGlobalStatsAll(null);
+      setLoadingGlobalStatsAll(false);
+      return;
+    }
 
+    const loadGlobalAllStats = async () => {
+      setLoadingGlobalStatsAll(true);
+      try {
+        // Nota: esto NO trae filas; solo count.
+        const base = supabase.from('products');
+
+        const [{ count: total, error: e1 }, { count: active, error: e2 }, { count: out, error: e3 }, { count: arch, error: e4 }] =
+          await Promise.all([
+            base.select('id', { count: 'exact', head: true }).eq('restaurant_id', restaurant.id),
+            base.select('id', { count: 'exact', head: true }).eq('restaurant_id', restaurant.id).eq('status', 'active'),
+            base.select('id', { count: 'exact', head: true }).eq('restaurant_id', restaurant.id).eq('status', 'out_of_stock'),
+            base.select('id', { count: 'exact', head: true }).eq('restaurant_id', restaurant.id).eq('status', 'archived')
+          ]);
+
+        const firstError = e1 || e2 || e3 || e4;
+        if (firstError) throw firstError;
+
+        setGlobalStatsAll({
+          total: total ?? 0,
+          active: active ?? 0,
+          out_of_stock: out ?? 0,
+          archived: arch ?? 0
+        });
+      } catch (err) {
+        console.error('[MenuManagement] Error loading global ALL stats:', err);
+        // fallback: dejamos null para que use stats de página
+        setGlobalStatsAll(null);
+      } finally {
+        setLoadingGlobalStatsAll(false);
+      }
+    };
+
+    loadGlobalAllStats();
+  }, [restaurant?.id, shouldUseGlobalAllStats]);
+
+  // ====== UI helpers ======
   const getStatusBadge = (status: Product['status']) => {
     switch (status) {
       case 'active':
@@ -229,19 +395,245 @@ export const MenuManagement: React.FC = () => {
   };
 
   const getCategoryName = (categoryId: string) => {
-    const category = categories.find(cat => cat.id === categoryId);
+    if (!categoryId) return t('unknownCategory');
+    const category = categories.find((cat) => cat.id === categoryId);
     return category ? category.name : t('unknownCategory');
+  };
+
+  // ====== Reorder global (solo en ALL y sin búsqueda) ======
+  const canReorder = selectedCategory === 'all' && debouncedSearchTerm === '';
+
+  const persistDisplayOrders = async (updates: { id: string; display_order: number }[]) => {
+    // En paralelo para que no sea tan lento (y reduzca timeouts)
+    const jobs = updates.map((u) =>
+      supabase
+        .from('products')
+        .update({ display_order: u.display_order, updated_at: new Date().toISOString() })
+        .eq('id', u.id)
+    );
+
+    const results = await Promise.all(jobs);
+    const firstError = results.find((r) => r.error)?.error;
+    if (firstError) throw firstError;
+  };
+
+  const reorderGlobalByInsert = async (draggedId: string, targetId: string, place: 'before' | 'after') => {
+    // Necesitamos el orden global real (ids+display_order).
+    if (!restaurant?.id) return;
+
+    const { data: allData, error } = await supabase
+      .from('products')
+      .select('id, display_order')
+      .eq('restaurant_id', restaurant.id)
+      .order('display_order', { ascending: true });
+
+    if (error) throw error;
+
+    const sorted = (allData || []).map((x: any) => ({ id: x.id, display_order: x.display_order || 0 }));
+
+    const fromIndex = sorted.findIndex((x) => x.id === draggedId);
+    const toIndex = sorted.findIndex((x) => x.id === targetId);
+    if (fromIndex === -1 || toIndex === -1) return;
+
+    const working = [...sorted];
+    const [dragged] = working.splice(fromIndex, 1);
+
+    const insertIndex =
+      place === 'before'
+        ? (toIndex > fromIndex ? toIndex - 1 : toIndex)
+        : (toIndex > fromIndex ? toIndex : toIndex + 1);
+
+    working.splice(insertIndex, 0, dragged);
+
+    const start = Math.min(fromIndex, insertIndex);
+    const end = Math.max(fromIndex, insertIndex);
+
+    const affected = working.slice(start, end + 1);
+    const originalOrders = sorted
+      .slice(start, end + 1)
+      .map((x) => x.display_order)
+      .sort((a, b) => a - b);
+
+    const updates = affected.map((x, i) => ({ id: x.id, display_order: originalOrders[i] }));
+
+    await persistDisplayOrders(updates);
+
+    invalidateCache();
+    await loadMenuData();
+  };
+
+  const moveDraggedToPageEdge = async (edge: 'start' | 'end') => {
+    if (!draggedProduct) return;
+    if (products.length === 0) return;
+
+    const target = edge === 'start' ? products[0] : products[products.length - 1];
+    await reorderGlobalByInsert(draggedProduct.id, target.id, edge === 'start' ? 'before' : 'after');
+  };
+
+  const maybeTurnPageWhileDragging = (direction: 'prev' | 'next') => {
+    if (!draggedProduct) return;
+    const now = Date.now();
+    if (now - dragPagingCooldownRef.current < 450) return;
+    dragPagingCooldownRef.current = now;
+
+    setPage((p) => {
+      if (direction === 'prev') return Math.max(1, p - 1);
+      return Math.min(totalPages, p + 1);
+    });
+  };
+
+  // ====== Drag handlers ======
+  const handleDragStart = (e: React.DragEvent, product: ProductListItem) => {
+    if (!canReorder) return;
+    setDraggedProduct(product);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    if (!canReorder) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDropOnItem = async (e: React.DragEvent, targetProduct: ProductListItem) => {
+    e.preventDefault();
+
+    if (!canReorder) return;
+
+    if (!draggedProduct || draggedProduct.id === targetProduct.id) {
+      setDraggedProduct(null);
+      return;
+    }
+
+    try {
+      await reorderGlobalByInsert(draggedProduct.id, targetProduct.id, 'before');
+    } catch (err) {
+      console.error(err);
+      showToast('error', 'Error', 'No se pudo reordenar el producto');
+    } finally {
+      setDraggedProduct(null);
+    }
+  };
+
+  const handleDropOnPageStart = async (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!canReorder) return;
+
+    try {
+      await moveDraggedToPageEdge('start');
+    } catch (err) {
+      console.error(err);
+      showToast('error', 'Error', 'No se pudo reordenar el producto');
+    } finally {
+      setDraggedProduct(null);
+    }
+  };
+
+  const handleDropOnPageEnd = async (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!canReorder) return;
+
+    try {
+      await moveDraggedToPageEdge('end');
+    } catch (err) {
+      console.error(err);
+      showToast('error', 'Error', 'No se pudo reordenar el producto');
+    } finally {
+      setDraggedProduct(null);
+    }
+  };
+
+  const handleDragEnd = () => setDraggedProduct(null);
+
+  // ====== DUPLICAR (AÑADIDO) ======
+  const handleDuplicateProduct = async (product: ProductListItem) => {
+    if (!restaurant?.id) return;
+
+    try {
+      // 1) Traer detalle completo del producto a duplicar
+      const { data: full, error: fullError } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', product.id)
+        .eq('restaurant_id', restaurant.id)
+        .single();
+
+      if (fullError) throw fullError;
+
+      // 2) Calcular nuevo display_order al final
+      const maxDisplayOrder = Math.max(...products.map((p) => (p as any).display_order || 0), -1);
+
+      // 3) Preparar copia (limpiar campos que no deben clonarse)
+      const nowIso = new Date().toISOString();
+      const copyName = `${full.name} (Copia)`;
+
+      const insertPayload: any = {
+        ...full,
+        id: undefined,
+        name: copyName,
+        display_order: maxDisplayOrder + 1,
+        created_at: undefined,
+        updated_at: nowIso
+      };
+
+      // Asegurar restaurant_id
+      insertPayload.restaurant_id = restaurant.id;
+
+      // 4) Insertar el producto duplicado
+      const { data: inserted, error: insertError } = await supabase
+        .from('products')
+        .insert(insertPayload)
+        .select('id')
+        .single();
+
+      if (insertError) throw insertError;
+
+      // 5) Copiar categoría (si existe)
+      if (product.category_id) {
+        await supabase.from('product_categories').insert({
+          product_id: inserted.id,
+          category_id: product.category_id
+        });
+      }
+
+      invalidateCache();
+      await loadMenuData();
+
+      showToast('success', 'Duplicado', 'Producto duplicado correctamente', 3000);
+    } catch (error: any) {
+      console.error('Error duplicating product:', error);
+      showToast('error', 'Error', error?.message || 'No se pudo duplicar el producto');
+    }
+  };
+
+  // ====== Status / CRUD (igual) ======
+  const handleChangeProductStatus = async (productId: string, newStatus: Product['status']) => {
+    try {
+      const { error } = await supabase
+        .from('products')
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .eq('id', productId);
+
+      if (error) throw error;
+
+      invalidateCache();
+      await loadMenuData();
+
+      showToast('success', t('statusUpdated'), `${t('productStatusChangedTo')} ${t(newStatus)}`, 3000);
+    } catch (error: any) {
+      console.error('Error changing product status:', error);
+      showToast('error', 'Error', 'No se pudo cambiar el estado del producto');
+    }
   };
 
   const handleSaveProduct = async (productData: any) => {
     if (!restaurant) return;
 
-    setIsSaving(true);
-
     try {
-      const minPrice = productData.variations && productData.variations.length > 0
-        ? Math.min(...productData.variations.map((v: any) => v.price))
-        : 0;
+      const minPrice =
+        productData.variations && productData.variations.length > 0
+          ? Math.min(...productData.variations.map((v: any) => v.price))
+          : 0;
 
       const { category_id, ...productDataWithoutCategory } = productData;
 
@@ -250,363 +642,149 @@ export const MenuManagement: React.FC = () => {
         price: minPrice
       };
 
-      if (editingProduct) {
+      if (editingProductId) {
         const { error: updateError } = await supabase
           .from('products')
           .update({
             ...dataToSave,
-            updated_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           })
-          .eq('id', editingProduct.id);
+          .eq('id', editingProductId);
 
         if (updateError) throw updateError;
 
         if (category_id) {
-          await supabase
+          const { error: deleteCategoriesError } = await supabase
             .from('product_categories')
             .delete()
-            .eq('product_id', editingProduct.id);
+            .eq('product_id', editingProductId);
 
-          await supabase
-            .from('product_categories')
-            .insert({
-              product_id: editingProduct.id,
-              category_id: category_id
-            });
+          if (deleteCategoriesError) throw deleteCategoriesError;
+
+          const { error: insertCategoryError } = await supabase.from('product_categories').insert({
+            product_id: editingProductId,
+            category_id
+          });
+
+          if (insertCategoryError) throw insertCategoryError;
         }
       } else {
-        const maxDisplayOrder = Math.max(...products.map(p => (p as any).display_order || 0), -1);
+        const maxDisplayOrder = Math.max(...products.map((p) => (p as any).display_order || 0), -1);
 
         const { data: newProduct, error: insertError } = await supabase
           .from('products')
           .insert({
             restaurant_id: restaurant.id,
             ...dataToSave,
-            display_order: maxDisplayOrder + 1,
+            display_order: maxDisplayOrder + 1
           })
-          .select()
+          .select('id')
           .single();
 
         if (insertError) throw insertError;
 
         if (category_id && newProduct) {
-          await supabase
-            .from('product_categories')
-            .insert({
-              product_id: newProduct.id,
-              category_id: category_id
-            });
+          const { error: categoryError } = await supabase.from('product_categories').insert({
+            product_id: newProduct.id,
+            category_id
+          });
+          if (categoryError) throw categoryError;
         }
       }
 
-      await loadMenuData();
       setShowProductModal(false);
+      setEditingProductId(null);
       setEditingProduct(null);
+
+      invalidateCache();
+      await loadMenuData();
 
       showToast(
         'success',
-        editingProduct ? t('productUpdatedTitle') : t('productCreatedTitle'),
-        editingProduct ? t('productUpdatedMessage') : t('productCreatedMessage'),
-        3000
+        editingProductId ? t('productUpdatedTitle') : t('productCreatedTitle'),
+        editingProductId ? t('productUpdatedMessage') : t('productCreatedMessage'),
+        4000
       );
     } catch (error: any) {
       console.error('Error saving product:', error);
       showToast('error', 'Error', error.message || 'No se pudo guardar el producto');
-    } finally {
-      setIsSaving(false);
     }
   };
 
-  const handleEditProduct = (product: Product) => {
-    setEditingProduct(product);
+  useEffect(() => {
+    const fetchEditingProduct = async () => {
+      if (!showProductModal) return;
+
+      if (!editingProductId) {
+        setEditingProduct(null);
+        return;
+      }
+
+      setLoadingEditingProduct(true);
+
+      const { data, error } = await supabase
+        .from('products')
+        .select(
+          `
+          *,
+          product_categories ( category_id )
+        `
+        )
+        .eq('id', editingProductId)
+        .single();
+
+      setLoadingEditingProduct(false);
+
+      if (error) {
+        console.error('Error loading product detail:', error);
+        showToast('error', 'Error', 'No se pudo cargar el producto');
+        return;
+      }
+
+      const fullProduct = {
+        ...data,
+        category_id: data.product_categories?.[0]?.category_id || ''
+      };
+
+      setEditingProduct(fullProduct as any);
+    };
+
+    fetchEditingProduct();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showProductModal, editingProductId]);
+
+  const handleEditProduct = (product: ProductListItem) => {
+    setEditingProductId(product.id);
     setShowProductModal(true);
   };
 
   const handleDeleteProduct = async (productId: string) => {
-    const previousProducts = [...products];
-    setProducts(prev => prev.filter(p => p.id !== productId));
-    setDeleteConfirm({ show: false, productId: '', productName: '' });
-
     try {
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', productId);
-
+      const { error } = await supabase.from('products').delete().eq('id', productId);
       if (error) throw error;
 
-      if (restaurant?.settings?.promo?.featured_product_ids?.includes(productId)) {
-        const updatedFeaturedIds = restaurant.settings.promo.featured_product_ids.filter(
-          (id: string) => id !== productId
-        );
+      setDeleteConfirm({ show: false, productId: '', productName: '' });
 
-        await supabase
-          .from('restaurants')
-          .update({
-            settings: {
-              ...restaurant.settings,
-              promo: {
-                ...restaurant.settings.promo,
-                featured_product_ids: updatedFeaturedIds
-              }
-            }
-          })
-          .eq('id', restaurant.id);
-      }
+      invalidateCache();
+      await loadMenuData();
 
-      showToast(
-        'info',
-        t('productDeletedTitle'),
-        t('productDeletedMessage'),
-        3000
-      );
+      showToast('info', t('productDeletedTitle'), t('productDeletedMessage'), 4000);
     } catch (error: any) {
       console.error('Error deleting product:', error);
-      setProducts(previousProducts);
       showToast('error', 'Error', 'No se pudo eliminar el producto');
     }
   };
 
-  const openDeleteConfirm = (product: Product) => {
-    setDeleteConfirm({
-      show: true,
-      productId: product.id,
-      productName: product.name
-    });
+  const openDeleteConfirm = (product: ProductListItem) => {
+    setDeleteConfirm({ show: true, productId: product.id, productName: product.name });
   };
 
-  const moveProductUp = async (productId: string) => {
-    const currentIndex = filteredProducts.findIndex((p: Product) => p.id === productId);
-    if (currentIndex <= 0) return;
-
-    const currentProduct = filteredProducts[currentIndex];
-    const previousProduct = filteredProducts[currentIndex - 1];
-
-    const previousProducts = [...products];
-    setProducts(prev => prev.map(p => {
-      if (p.id === currentProduct.id) return { ...p, display_order: previousProduct.display_order };
-      if (p.id === previousProduct.id) return { ...p, display_order: currentProduct.display_order };
-      return p;
-    }));
-
-    try {
-      await Promise.all([
-        supabase
-          .from('products')
-          .update({ display_order: previousProduct.display_order })
-          .eq('id', currentProduct.id),
-        supabase
-          .from('products')
-          .update({ display_order: currentProduct.display_order })
-          .eq('id', previousProduct.id)
-      ]);
-
-      showToast(
-        'success',
-        t('orderUpdatedTitle'),
-        t('orderUpdatedMessage'),
-        1500
-      );
-    } catch (error: any) {
-      console.error('Error reordering product:', error);
-      setProducts(previousProducts);
-      showToast('error', 'Error', 'No se pudo reordenar el producto');
-    }
-  };
-
-  const moveProductDown = async (productId: string) => {
-    const currentIndex = filteredProducts.findIndex((p: Product) => p.id === productId);
-    if (currentIndex >= filteredProducts.length - 1) return;
-
-    const currentProduct = filteredProducts[currentIndex];
-    const nextProduct = filteredProducts[currentIndex + 1];
-
-    const previousProducts = [...products];
-    setProducts(prev => prev.map(p => {
-      if (p.id === currentProduct.id) return { ...p, display_order: nextProduct.display_order };
-      if (p.id === nextProduct.id) return { ...p, display_order: currentProduct.display_order };
-      return p;
-    }));
-
-    try {
-      await Promise.all([
-        supabase
-          .from('products')
-          .update({ display_order: nextProduct.display_order })
-          .eq('id', currentProduct.id),
-        supabase
-          .from('products')
-          .update({ display_order: currentProduct.display_order })
-          .eq('id', nextProduct.id)
-      ]);
-
-      showToast(
-        'success',
-        t('orderUpdatedTitle'),
-        t('orderUpdatedMessage'),
-        1500
-      );
-    } catch (error: any) {
-      console.error('Error reordering product:', error);
-      setProducts(previousProducts);
-      showToast('error', 'Error', 'No se pudo reordenar el producto');
-    }
-  };
-
-  const handleDuplicateProduct = async (productId: string) => {
-    if (!restaurant) return;
-
-    const productToDuplicate = products.find((p: Product) => p.id === productId);
-    if (!productToDuplicate) return;
-
-    try {
-      const maxDisplayOrder = Math.max(...products.map(p => (p as any).display_order || 0), -1);
-
-      const { data: newProduct, error: insertError } = await supabase
-        .from('products')
-        .insert({
-          restaurant_id: restaurant.id,
-          name: `${productToDuplicate.name} (${t('copyLabel')})`,
-          description: productToDuplicate.description,
-          images: productToDuplicate.images,
-          variations: productToDuplicate.variations,
-          ingredients: productToDuplicate.ingredients,
-          dietary_restrictions: productToDuplicate.dietary_restrictions,
-          spice_level: productToDuplicate.spice_level,
-          preparation_time: productToDuplicate.preparation_time,
-          status: productToDuplicate.status,
-          sku: productToDuplicate.sku ? `${productToDuplicate.sku}-COPY` : '',
-          is_available: productToDuplicate.is_available,
-          is_featured: false,
-          display_order: maxDisplayOrder + 1,
-          price: productToDuplicate.variations && productToDuplicate.variations.length > 0
-            ? Math.min(...productToDuplicate.variations.map(v => v.price))
-            : 0
-        })
-        .select()
-        .single();
-
-      if (insertError) throw insertError;
-
-      if (productToDuplicate.category_id && newProduct) {
-        await supabase
-          .from('product_categories')
-          .insert({
-            product_id: newProduct.id,
-            category_id: productToDuplicate.category_id
-          });
-      }
-
-      await loadMenuData();
-
-      showToast(
-        'success',
-        t('productDuplicatedTitle'),
-        t('productDuplicatedMessage', { name: productToDuplicate.name }),
-        3000
-      );
-    } catch (error: any) {
-      console.error('Error duplicating product:', error);
-      showToast('error', 'Error', error.message || 'No se pudo duplicar el producto');
-    }
-  };
-
-  const handleArchiveProduct = async (productId: string) => {
-    const previousProducts = [...products];
-    setProducts(prev => prev.map(p =>
-      p.id === productId ? { ...p, status: 'archived' as Product['status'] } : p
-    ));
-
-    try {
-      const { error } = await supabase
-        .from('products')
-        .update({ status: 'archived', updated_at: new Date().toISOString() })
-        .eq('id', productId);
-
-      if (error) throw error;
-
-      showToast(
-        'info',
-        t('productArchivedTitle'),
-        t('productArchivedMessage'),
-        3000
-      );
-    } catch (error: any) {
-      console.error('Error archiving product:', error);
-      setProducts(previousProducts);
-      showToast('error', 'Error', 'No se pudo archivar el producto');
-    }
-  };
-
-  const handleDragStart = (e: React.DragEvent, product: Product) => {
-    setDraggedProduct(product);
-    e.dataTransfer.effectAllowed = 'move';
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  };
-
-  const handleDrop = async (e: React.DragEvent, targetProduct: Product) => {
-    e.preventDefault();
-
-    if (!draggedProduct || draggedProduct.id === targetProduct.id) {
-      setDraggedProduct(null);
-      return;
-    }
-
-    const draggedIndex = filteredProducts.findIndex((p: Product) => p.id === draggedProduct.id);
-    const targetIndex = filteredProducts.findIndex((p: Product) => p.id === targetProduct.id);
-
-    if (draggedIndex === -1 || targetIndex === -1) return;
-
-    const reorderedProducts = [...filteredProducts];
-    reorderedProducts.splice(draggedIndex, 1);
-    reorderedProducts.splice(targetIndex, 0, draggedProduct);
-
-    const previousProducts = [...products];
-    const updatedProducts = products.map(p => {
-      const newIndex = reorderedProducts.findIndex(rp => rp.id === p.id);
-      if (newIndex !== -1) {
-        return { ...p, display_order: newIndex };
-      }
-      return p;
-    });
-    setProducts(updatedProducts);
-    setDraggedProduct(null);
-
-    try {
-      const updatePromises = reorderedProducts.map((product, index) =>
-        supabase
-          .from('products')
-          .update({ display_order: index })
-          .eq('id', product.id)
-      );
-
-      await Promise.all(updatePromises);
-
-      showToast(
-        'success',
-        t('orderUpdatedTitle'),
-        t('productsReorderedMessage'),
-        1500
-      );
-    } catch (error: any) {
-      console.error('Error reordering products:', error);
-      setProducts(previousProducts);
-      showToast('error', 'Error', 'No se pudo reordenar los productos');
-    }
-  };
-
-  const handleDragEnd = () => {
-    setDraggedProduct(null);
-  };
-
+  // ===== UI =====
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">{t('productManagement')}</h1>
+
         <div className="flex gap-3">
           <a
             href={restaurant?.slug ? `/${restaurant.slug}` : '#'}
@@ -623,9 +801,11 @@ export const MenuManagement: React.FC = () => {
             <ExternalLink className="w-4 h-4" />
             {t('viewMenu')}
           </a>
+
           <Button
             icon={Plus}
             onClick={() => {
+              setEditingProductId(null);
               setEditingProduct(null);
               setShowProductModal(true);
             }}
@@ -637,7 +817,7 @@ export const MenuManagement: React.FC = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        {isLoadingProducts ? (
+        {(loadingProducts || (shouldUseGlobalAllStats && loadingGlobalStatsAll)) ? (
           [...Array(4)].map((_, index) => (
             <div key={index} className="bg-white rounded-lg p-4 border border-gray-200 animate-pulse">
               <div className="flex items-center gap-3">
@@ -658,7 +838,9 @@ export const MenuManagement: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">{t('totalProducts')}</p>
-                  <p className="text-2xl font-bold text-gray-900">{products.length}</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {shouldUseGlobalAllStats && globalStatsAll ? globalStatsAll.total : products.length}
+                  </p>
                 </div>
               </div>
             </div>
@@ -670,7 +852,11 @@ export const MenuManagement: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">{t('active')}</p>
-                  <p className="text-2xl font-bold text-gray-900">{products.filter(p => p.status === 'active').length}</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {shouldUseGlobalAllStats && globalStatsAll
+                      ? globalStatsAll.active
+                      : products.filter(p => p.status === 'active').length}
+                  </p>
                 </div>
               </div>
             </div>
@@ -682,7 +868,11 @@ export const MenuManagement: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">{t('outOfStock')}</p>
-                  <p className="text-2xl font-bold text-gray-900">{products.filter(p => p.status === 'out_of_stock').length}</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {shouldUseGlobalAllStats && globalStatsAll
+                      ? globalStatsAll.out_of_stock
+                      : products.filter(p => p.status === 'out_of_stock').length}
+                  </p>
                 </div>
               </div>
             </div>
@@ -694,7 +884,11 @@ export const MenuManagement: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">{t('archived')}</p>
-                  <p className="text-2xl font-bold text-gray-900">{products.filter(p => p.status === 'archived').length}</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {shouldUseGlobalAllStats && globalStatsAll
+                      ? globalStatsAll.archived
+                      : products.filter(p => p.status === 'archived').length}
+                  </p>
                 </div>
               </div>
             </div>
@@ -702,9 +896,8 @@ export const MenuManagement: React.FC = () => {
         )}
       </div>
 
-            {/* Search and Category Filter */}
+      {/* Search + category filter */}
       <div className="bg-white rounded-lg shadow p-4 mb-6 space-y-4">
-        {/* Search Bar */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
@@ -716,7 +909,6 @@ export const MenuManagement: React.FC = () => {
           />
         </div>
 
-        {/* Category Filter */}
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setSelectedCategory('all')}
@@ -726,257 +918,198 @@ export const MenuManagement: React.FC = () => {
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            {t('all')} ({products.filter(p =>
-              p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              p.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              (p.sku && p.sku.toLowerCase().includes(searchTerm.toLowerCase()))
-            ).length})
+            {t('all')}
           </button>
 
-          {categories.map(category => {
-            const categoryProductCount = products.filter(p => {
-              const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                   p.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                   (p.sku && p.sku.toLowerCase().includes(searchTerm.toLowerCase()));
-              return p.category_id === category.id && matchesSearch;
-            }).length;
-
-            return (
-              <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all font-medium ${
-                  selectedCategory === category.id
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {category.icon && <span>{category.icon}</span>}
-                <span>{category.name}</span>
-                <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs ${
-                  selectedCategory === category.id
-                    ? 'bg-white/20 text-white'
-                    : 'bg-gray-200 text-gray-700'
-                }`}>
-                  {categoryProductCount}
-                </span>
-              </button>
-            );
-          })}
+          {categories.map((category) => (
+            <button
+              key={category.id}
+              onClick={() => setSelectedCategory(category.id)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all font-medium ${
+                selectedCategory === category.id
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {(category as any).icon && <span>{(category as any).icon}</span>}
+              <span>{category.name}</span>
+            </button>
+          ))}
         </div>
 
-        {searchTerm === '' && filteredProducts.length > 1 && (
+        {canReorder && (
           <div className="flex items-center gap-2 text-sm text-gray-600 bg-blue-50 rounded-lg p-3 border border-blue-100">
             <GripVertical className="w-4 h-4 text-blue-600 flex-shrink-0" />
             <p>
-              <strong className="text-blue-700">{t('tipLabel')}:</strong> {t('dragToReorder')}
+              <strong className="text-blue-700">{t('tipLabel')}:</strong> Arrastra un producto, pasa por “Anterior/Siguiente” para cambiar de página, y suelta sobre otro producto (o en la franja superior/inferior).
             </p>
+          </div>
+        )}
+
+        {!canReorder && (
+          <div className="text-xs text-gray-500">
+            Para reordenar con drag-and-drop, selecciona <strong>ALL</strong> y limpia la búsqueda.
           </div>
         )}
       </div>
 
-      {/* Products Grid */}
-      {isLoadingProducts ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-          {[...Array(8)].map((_, index) => (
-            <div key={index} className="bg-white rounded-xl shadow-sm border-2 border-gray-200 overflow-hidden animate-pulse">
-              <div className="aspect-[4/3] bg-gray-200" />
-              <div className="p-4 space-y-3">
-                <div className="h-5 bg-gray-200 rounded w-3/4" />
-                <div className="h-4 bg-gray-200 rounded w-1/2" />
-                <div className="h-3 bg-gray-200 rounded w-full" />
-                <div className="h-3 bg-gray-200 rounded w-5/6" />
-                <div className="h-8 bg-gray-200 rounded w-1/2" />
-                <div className="flex gap-1">
-                  <div className="h-8 bg-gray-200 rounded flex-1" />
-                  <div className="h-8 bg-gray-200 rounded flex-1" />
-                  <div className="h-8 bg-gray-200 rounded flex-1" />
-                </div>
-              </div>
-            </div>
-          ))}
+      {/* Grid */}
+      {loadingProducts ? (
+        <div className="bg-white rounded-lg shadow p-12 text-center text-gray-600">
+          Cargando productos...
         </div>
-      ) : filteredProducts.length === 0 ? (
+      ) : products.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-12 text-center">
           <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
             {searchTerm ? t('noProductsFound') : t('noProductsInCategory')}
           </h3>
-          <p className="text-gray-600 mb-4">
-            {searchTerm ? t('tryDifferentSearch') : t('createFirstProduct')}
-          </p>
-
-          {!searchTerm && (
-            <Button
-              icon={Plus}
-              onClick={() => {
-                setEditingProduct(null);
-                setShowProductModal(true);
-              }}
-            >
-              {t('create')} {t('newProduct')}
-            </Button>
-          )}
-          {searchTerm && (
-            <Button
-              variant="outline"
-              onClick={() => setSearchTerm('')}
-            >
-              {t('clearSearch')}
-            </Button>
-          )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-          {filteredProducts.map(product => (
+        <>
+          {/* Drop zone: inicio de página */}
+          {canReorder && draggedProduct && (
             <div
-              key={product.id}
-              draggable={searchTerm === ''}
-              onDragStart={(e) => handleDragStart(e, product)}
               onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, product)}
-              onDragEnd={handleDragEnd}
-              className={`bg-white rounded-xl shadow-sm border-2 transition-all overflow-hidden group ${
-                searchTerm === '' ? 'cursor-move' : ''
-              } ${
-                draggedProduct?.id === product.id
-                  ? 'opacity-50 scale-95 border-blue-400'
-                  : 'border-gray-200 hover:shadow-lg hover:border-blue-300'
-              }`}
+              onDrop={handleDropOnPageStart}
+              className="mb-3 rounded-lg border border-dashed border-blue-300 bg-blue-50 text-blue-700 text-sm px-4 py-2"
             >
-              {/* Product Image */}
-              <div className="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
-                {product.images.length > 0 ? (
-                  <img
-                    src={product.images[0]}
-                    alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
-                    <Package className="w-12 h-12 mb-2" />
-                    <span className="text-sm">{t('noImage')}</span>
-                  </div>
-                )}
-                <div className="absolute top-2 right-2">
-                  {getStatusBadge(product.status)}
-                </div>
-                {product.images.length > 1 && (
-                  <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/60 backdrop-blur-sm text-white text-xs rounded-lg">
-                    +{product.images.length - 1}
-                  </div>
-                )}
-              </div>
+              Suelta aquí para mover al inicio de esta página
+            </div>
+          )}
 
-              {/* Product Info */}
-              <div className="p-4">
-                <div className="mb-2">
-                  <h3 className="text-lg font-semibold text-gray-900 truncate">
-                    {product.name}
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    {getCategoryName(product.category_id)}
-                  </p>
-                </div>
-
-                <p className="text-gray-700 text-sm mb-3 line-clamp-2">
-                  {product.description}
-                </p>
-
-                {/* Price Range */}
-                <div className="mb-4">
-                  {product.variations.length > 0 && (
-                    <div className="space-y-1">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-2xl font-bold text-gray-900">
-                          {formatCurrency(Math.min(...product.variations.map(v => v.price)), restaurant?.settings?.currency || 'USD')}
-                        </span>
-                        {product.variations.length > 1 && (
-                          <span className="text-sm font-normal text-gray-600">
-                            - {formatCurrency(Math.max(...product.variations.map(v => v.price)), restaurant?.settings?.currency || 'USD')}
-                          </span>
-                        )}
-                      </div>
-                      {product.variations.some(v => v.compare_at_price && v.compare_at_price > v.price) && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-500 line-through">
-                            {formatCurrency(Math.min(...product.variations.filter(v => v.compare_at_price).map(v => v.compare_at_price!)), restaurant?.settings?.currency || 'USD')}
-                          </span>
-                          <span className="inline-flex items-center px-2 py-0.5 bg-red-100 text-red-700 rounded text-xs font-medium">
-                            {t('offer')}
-                          </span>
-                        </div>
-                      )}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+            {products.map((product) => (
+              <div
+                key={product.id}
+                draggable={canReorder}
+                onDragStart={(e) => handleDragStart(e, product)}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDropOnItem(e, product)}
+                onDragEnd={handleDragEnd}
+                className={`bg-white rounded-xl shadow-sm border-2 transition-all overflow-hidden group ${
+                  canReorder ? 'cursor-move' : ''
+                } ${
+                  draggedProduct?.id === product.id
+                    ? 'opacity-50 scale-95 border-blue-400'
+                    : 'border-gray-200 hover:shadow-lg hover:border-blue-300'
+                }`}
+              >
+                <div className="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
+                  {product.images?.length > 0 ? (
+                    <img
+                      src={product.images[0]}
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
+                      <Package className="w-12 h-12 mb-2" />
+                      <span className="text-sm">{t('noImage')}</span>
                     </div>
                   )}
+
+                  <div className="absolute top-2 right-2">{getStatusBadge(product.status)}</div>
                 </div>
 
-                {/* Actions */}
-                <div className="space-y-2">
-                  <div className="flex gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      icon={ArrowUp}
-                      onClick={() => moveProductUp(product.id)}
-                      className="text-blue-600 hover:text-blue-700"
-                      title={t('moveUp')}
-                      disabled={filteredProducts[0]?.id === product.id}
-                    />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      icon={ArrowDown}
-                      onClick={() => moveProductDown(product.id)}
-                      className="text-blue-600 hover:text-blue-700"
-                      title={t('moveDown')}
-                      disabled={filteredProducts[filteredProducts.length - 1]?.id === product.id}
-                    />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      icon={Edit}
-                      onClick={() => handleEditProduct(product)}
-                      title={t('editProduct')}
-                    />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      icon={Copy}
-                      onClick={() => handleDuplicateProduct(product.id)}
-                      className="text-purple-600 hover:text-purple-700"
-                      title={t('duplicateProduct')}
-                    />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      icon={Trash2}
-                      onClick={() => openDeleteConfirm(product)}
-                      className="text-red-600 hover:text-red-700"
-                      title={t('deleteProduct')}
-                    />
+                <div className="p-4">
+                  <div className="mb-2">
+                    <h3 className="text-lg font-semibold text-gray-900 truncate">{product.name}</h3>
+                    <p className="text-sm text-gray-600">{getCategoryName(product.category_id)}</p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <select
-                      value={product.status}
-                      onChange={(e) => handleChangeProductStatus(product.id, e.target.value as Product['status'])}
-                      className="flex-1 text-xs px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                    >
-                      <option value="active">{t('active')}</option>
-                      <option value="out_of_stock">{t('outOfStock')}</option>
-                      <option value="archived">{t('archived')}</option>
-                    </select>
-                    {product.sku && (
-                      <span className="text-xs text-gray-500">
-                        {product.sku}
+
+                  <p className="text-gray-700 text-sm mb-3 line-clamp-2">{product.description}</p>
+
+                  <div className="mb-4">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-bold text-gray-900">
+                        {formatCurrency(product.price || 0, currency)}
                       </span>
-                    )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    {/* Acciones */}
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="sm" icon={Edit} onClick={() => handleEditProduct(product)} />
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDuplicateProduct(product)}
+                        className="text-blue-600 hover:text-blue-700"
+                      >
+                        <Copy className="w-4 h-4 text-blue-600" />
+                      </Button>
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        icon={Trash2}
+                        onClick={() => openDeleteConfirm(product)}
+                        className="text-red-600 hover:text-red-700"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={product.status}
+                        onChange={(e) => handleChangeProductStatus(product.id, e.target.value as Product['status'])}
+                        className="flex-1 text-xs px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                      >
+                        <option value="active">{t('active')}</option>
+                        <option value="out_of_stock">{t('outOfStock')}</option>
+                        <option value="archived">{t('archived')}</option>
+                      </select>
+                      {product.sku && <span className="text-xs text-gray-500">{product.sku}</span>}
+                    </div>
                   </div>
                 </div>
               </div>
+            ))}
+          </div>
+
+          {/* Drop zone: final de página */}
+          {canReorder && draggedProduct && (
+            <div
+              onDragOver={handleDragOver}
+              onDrop={handleDropOnPageEnd}
+              className="mt-3 rounded-lg border border-dashed border-blue-300 bg-blue-50 text-blue-700 text-sm px-4 py-2"
+            >
+              Suelta aquí para mover al final de esta página
             </div>
-          ))}
-        </div>
+          )}
+
+          {/* Pagination */}
+          {totalProducts > PAGE_SIZE && (
+            <div className="flex items-center justify-between mt-6 bg-white p-3 rounded-lg shadow border">
+              <div className="text-sm text-gray-600">
+                Página <strong>{page}</strong> de <strong>{totalPages}</strong> · {totalProducts} productos
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  onDragEnter={() => canReorder && maybeTurnPageWhileDragging('prev')}
+                >
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page >= totalPages}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  onDragEnter={() => canReorder && maybeTurnPageWhileDragging('next')}
+                >
+                  Siguiente
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* Product Form Modal */}
@@ -984,23 +1117,28 @@ export const MenuManagement: React.FC = () => {
         isOpen={showProductModal}
         onClose={() => {
           setShowProductModal(false);
+          setEditingProductId(null);
           setEditingProduct(null);
         }}
-        title={editingProduct ? `${t('edit')} ${t('newProduct')}` : t('newProduct')}
+        title={editingProductId ? `${t('edit')} ${t('newProduct')}` : t('newProduct')}
         size="xl"
       >
-        <ProductForm
-          categories={categories}
-          product={editingProduct}
-          onSave={handleSaveProduct}
-          onCancel={() => {
-            setShowProductModal(false);
-            setEditingProduct(null);
-          }}
-        />
+        {loadingEditingProduct ? (
+          <div className="p-6 text-sm text-gray-600">Cargando producto...</div>
+        ) : (
+          <ProductForm
+            categories={categories}
+            product={editingProduct}
+            onSave={handleSaveProduct}
+            onCancel={() => {
+              setShowProductModal(false);
+              setEditingProductId(null);
+              setEditingProduct(null);
+            }}
+          />
+        )}
       </Modal>
 
-      {/* Delete Confirmation Dialog */}
       <ConfirmDialog
         isOpen={deleteConfirm.show}
         onClose={() => setDeleteConfirm({ show: false, productId: '', productName: '' })}
