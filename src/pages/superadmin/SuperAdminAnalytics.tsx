@@ -1,780 +1,1013 @@
-import React, { useState, useEffect } from 'react';
-import { BarChart3, TrendingUp, Users, Store, Calendar, DollarSign, Filter, Download, FileText, RefreshCw, Clock } from 'lucide-react';
-import { Restaurant, Subscription, User, SubscriptionPlan } from '../../types';
-import { Badge } from '../../components/ui/Badge';
-import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
+// src/pages/restaurant/MenuManagement.tsx
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  Plus,
+  Pencil as Edit,
+  Trash2,
+  AlertCircle,
+  Search,
+  Package,
+  GripVertical,
+  ExternalLink,
+  Copy
+} from 'lucide-react';
+
+import { Category, Product, Subscription } from '../../types';
 import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { useToast } from '../../hooks/useToast';
+import { Button } from '../../components/ui/Button';
+import { Badge } from '../../components/ui/Badge';
+import { Modal } from '../../components/ui/Modal';
+import { ProductForm } from '../../components/restaurant/ProductForm';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { formatCurrency } from '../../utils/currencyUtils';
 
-export const SuperAdminAnalytics: React.FC = () => {
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
-  const [selectedPlanFilter, setSelectedPlanFilter] = useState<string>('all');
-  const [selectedPeriodFilter, setSelectedPeriodFilter] = useState<string>('all');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [loading, setLoading] = useState(true);
+type ProductListItem = Pick<
+  Product,
+  | 'id'
+  | 'restaurant_id'
+  | 'name'
+  | 'description'
+  | 'images'
+  | 'status'
+  | 'sku'
+  | 'is_available'
+  | 'is_featured'
+  | 'display_order'
+  | 'price'
+  | 'updated_at'
+> & {
+  category_id: string;
+};
 
-  const calculateNewEndDate = (currentEndDate: string, duration: Subscription['duration']): string => {
-    const endDate = new Date(currentEndDate);
+export const MenuManagement: React.FC = () => {
+  const { restaurant } = useAuth();
+  const { showToast } = useToast();
+  const { t } = useLanguage();
 
-    if (duration === 'monthly') {
-      endDate.setMonth(endDate.getMonth() + 1);
-    } else if (duration === 'annual') {
-      endDate.setFullYear(endDate.getFullYear() + 1);
+  // ====== Config ======
+  const PAGE_SIZE = 12;
+  const CACHE_TTL_MS = 60_000;
+  const cacheKey = (restaurantId: string) => `menu_cache_v3:${restaurantId}`;
+
+  // ====== State ======
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [products, setProducts] = useState<ProductListItem[]>([]);
+  const [currentSubscription, setCurrentSubscription] = useState<Subscription | null>(null);
+
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+  const [showProductModal, setShowProductModal] = useState(false);
+
+  // Lazy edit
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [loadingEditingProduct, setLoadingEditingProduct] = useState(false);
+
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    show: boolean;
+    productId: string;
+    productName: string;
+  }>({ show: false, productId: '', productName: '' });
+
+  const [draggedProduct, setDraggedProduct] = useState<ProductListItem | null>(null);
+
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+
+  const currency = restaurant?.settings?.currency || 'USD';
+  const totalPages = Math.max(1, Math.ceil(totalProducts / PAGE_SIZE));
+
+  // drag paging cooldown
+  const dragPagingCooldownRef = useRef<number>(0);
+
+  // ====== Debounce búsqueda ======
+  useEffect(() => {
+    const id = window.setTimeout(() => setDebouncedSearchTerm(searchTerm.trim()), 300);
+    return () => window.clearTimeout(id);
+  }, [searchTerm]);
+
+  // Reset a página 1 cuando cambien filtros/búsqueda (server-side)
+  useEffect(() => {
+    setPage(1);
+  }, [selectedCategory, debouncedSearchTerm]);
+
+  // ====== Subscription ======
+  useEffect(() => {
+    if (!restaurant?.id) return;
+    loadSubscription();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restaurant?.id]);
+
+  const loadSubscription = async () => {
+    if (!restaurant?.id) return;
+
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('restaurant_id', restaurant.id)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error loading subscription:', error);
+      return;
     }
 
-    return endDate.toISOString();
+    setCurrentSubscription(data);
+  };
+
+  // ====== Cache helpers (ARREGLADO: no rompe si excede cuota) ======
+  const saveCache = (payload: { categories: Category[]; products: ProductListItem[]; totalProducts: number }) => {
+    if (!restaurant?.id) return;
+    try {
+      sessionStorage.setItem(
+        cacheKey(restaurant.id),
+        JSON.stringify({
+          ts: Date.now(),
+          page,
+          selectedCategory,
+          search: debouncedSearchTerm,
+          ...payload
+        })
+      );
+    } catch (err) {
+      // IMPORTANT: no romper la app por el cache
+      console.warn('[MenuManagement] Cache skipped (quota/storage error):', err);
+    }
+  };
+
+  const invalidateCache = () => {
+    if (!restaurant?.id) return;
+    try {
+      sessionStorage.removeItem(cacheKey(restaurant.id));
+    } catch {
+      // ignore
+    }
+  };
+
+  // ====== Menú (server-side search + category + pagination) con cache ======
+  useEffect(() => {
+    if (!restaurant?.id) return;
+
+    const tryLoadFromCache = () => {
+      let raw: string | null = null;
+      try {
+        raw = sessionStorage.getItem(cacheKey(restaurant.id));
+      } catch {
+        return false;
+      }
+      if (!raw) return false;
+
+      try {
+        const cached = JSON.parse(raw);
+        const isFresh = Date.now() - cached.ts < CACHE_TTL_MS;
+
+        if (
+          isFresh &&
+          cached.page === page &&
+          cached.selectedCategory === selectedCategory &&
+          cached.search === debouncedSearchTerm
+        ) {
+          setCategories(cached.categories ?? []);
+          setProducts(cached.products ?? []);
+          setTotalProducts(cached.totalProducts ?? 0);
+          return true;
+        }
+      } catch {
+        return false;
+      }
+      return false;
+    };
+
+    if (tryLoadFromCache()) return;
+
+    loadMenuData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restaurant?.id, page, selectedCategory, debouncedSearchTerm]);
+
+  const loadMenuData = async () => {
+    if (!restaurant?.id) return;
+
+    // 1) categorías
+    const { data: categoriesData, error: categoriesError } = await supabase
+      .from('categories')
+      .select('*')
+      .eq('restaurant_id', restaurant.id)
+      .eq('is_active', true);
+
+    if (categoriesError) console.error('Error loading categories:', categoriesError);
+    const safeCategories = categoriesData || [];
+    setCategories(safeCategories);
+
+    setLoadingProducts(true);
+
+    const from = (page - 1) * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+
+    // 2) Si hay filtro de categoría, obtenemos IDs desde tabla puente (robusto)
+    let productIdsForCategory: string[] | null = null;
+
+    if (selectedCategory !== 'all') {
+      const { data: pcData, error: pcError } = await supabase
+        .from('product_categories')
+        .select('product_id')
+        .eq('category_id', selectedCategory);
+
+      if (pcError) {
+        console.error('Error loading product_categories:', pcError);
+        setLoadingProducts(false);
+        return;
+      }
+
+      productIdsForCategory = (pcData ?? []).map((r: any) => r.product_id);
+
+      if (productIdsForCategory.length === 0) {
+        setProducts([]);
+        setTotalProducts(0);
+        setLoadingProducts(false);
+        saveCache({ categories: safeCategories, products: [], totalProducts: 0 });
+        return;
+      }
+    }
+
+    // 3) Query base ligera
+    let query = supabase
+      .from('products')
+      .select(
+        selectedCategory === 'all'
+          ? `
+            id,
+            restaurant_id,
+            name,
+            description,
+            images,
+            status,
+            sku,
+            is_available,
+            is_featured,
+            display_order,
+            price,
+            updated_at,
+            product_categories ( category_id )
+          `
+          : `
+            id,
+            restaurant_id,
+            name,
+            description,
+            images,
+            status,
+            sku,
+            is_available,
+            is_featured,
+            display_order,
+            price,
+            updated_at
+          `,
+        { count: 'exact' }
+      )
+      .eq('restaurant_id', restaurant.id)
+      .order('display_order', { ascending: true });
+
+    // 4) búsqueda server-side
+    if (debouncedSearchTerm) {
+      const s = debouncedSearchTerm.replace(/%/g, '\\%').replace(/_/g, '\\_');
+      query = query.or(`name.ilike.%${s}%,description.ilike.%${s}%,sku.ilike.%${s}%`);
+    }
+
+    // 5) filtro categoría por IDs
+    if (productIdsForCategory) {
+      query = query.in('id', productIdsForCategory);
+    }
+
+    // 6) paginación
+    const { data: productsData, error: productsError, count } = await query.range(from, to);
+
+    setLoadingProducts(false);
+
+    if (productsError) {
+      console.error('Error loading products:', productsError);
+      return;
+    }
+
+    const total = count ?? 0;
+    setTotalProducts(total);
+
+    const productsWithCategory: ProductListItem[] = (productsData ?? []).map((p: any) => ({
+      ...p,
+      category_id:
+        selectedCategory === 'all'
+          ? (p.product_categories?.[0]?.category_id || '')
+          : selectedCategory
+    }));
+
+    setProducts(productsWithCategory);
+
+    saveCache({
+      categories: safeCategories,
+      products: productsWithCategory,
+      totalProducts: total
+    });
+  };
+
+  // ====== UI helpers ======
+  const getStatusBadge = (status: Product['status']) => {
+    switch (status) {
+      case 'active':
+        return <Badge variant="success">{t('active')}</Badge>;
+      case 'draft':
+        return <Badge variant="info">{t('draft')}</Badge>;
+      case 'out_of_stock':
+        return <Badge variant="warning">{t('outOfStock')}</Badge>;
+      case 'archived':
+        return <Badge variant="gray">{t('archived')}</Badge>;
+      default:
+        return <Badge variant="gray">{t('unknown')}</Badge>;
+    }
+  };
+
+  const getCategoryName = (categoryId: string) => {
+    if (!categoryId) return t('unknownCategory');
+    const category = categories.find((cat) => cat.id === categoryId);
+    return category ? category.name : t('unknownCategory');
+  };
+
+  // ====== Reorder global (solo en ALL y sin búsqueda) ======
+  const canReorder = selectedCategory === 'all' && debouncedSearchTerm === '';
+
+  const persistDisplayOrders = async (updates: { id: string; display_order: number }[]) => {
+    // En paralelo para que no sea tan lento (y reduzca timeouts)
+    const jobs = updates.map((u) =>
+      supabase
+        .from('products')
+        .update({ display_order: u.display_order, updated_at: new Date().toISOString() })
+        .eq('id', u.id)
+    );
+
+    const results = await Promise.all(jobs);
+    const firstError = results.find((r) => r.error)?.error;
+    if (firstError) throw firstError;
+  };
+
+  const reorderGlobalByInsert = async (draggedId: string, targetId: string, place: 'before' | 'after') => {
+    // Necesitamos el orden global real (ids+display_order).
+    if (!restaurant?.id) return;
+
+    const { data: allData, error } = await supabase
+      .from('products')
+      .select('id, display_order')
+      .eq('restaurant_id', restaurant.id)
+      .order('display_order', { ascending: true });
+
+    if (error) throw error;
+
+    const sorted = (allData || []).map((x: any) => ({ id: x.id, display_order: x.display_order || 0 }));
+
+    const fromIndex = sorted.findIndex((x) => x.id === draggedId);
+    const toIndex = sorted.findIndex((x) => x.id === targetId);
+    if (fromIndex === -1 || toIndex === -1) return;
+
+    const working = [...sorted];
+    const [dragged] = working.splice(fromIndex, 1);
+
+    const insertIndex =
+      place === 'before'
+        ? (toIndex > fromIndex ? toIndex - 1 : toIndex)
+        : (toIndex > fromIndex ? toIndex : toIndex + 1);
+
+    working.splice(insertIndex, 0, dragged);
+
+    const start = Math.min(fromIndex, insertIndex);
+    const end = Math.max(fromIndex, insertIndex);
+
+    const affected = working.slice(start, end + 1);
+    const originalOrders = sorted
+      .slice(start, end + 1)
+      .map((x) => x.display_order)
+      .sort((a, b) => a - b);
+
+    const updates = affected.map((x, i) => ({ id: x.id, display_order: originalOrders[i] }));
+
+    await persistDisplayOrders(updates);
+
+    invalidateCache();
+    await loadMenuData();
+  };
+
+  const moveDraggedToPageEdge = async (edge: 'start' | 'end') => {
+    if (!draggedProduct) return;
+    if (products.length === 0) return;
+
+    const target = edge === 'start' ? products[0] : products[products.length - 1];
+    await reorderGlobalByInsert(draggedProduct.id, target.id, edge === 'start' ? 'before' : 'after');
+  };
+
+  const maybeTurnPageWhileDragging = (direction: 'prev' | 'next') => {
+    if (!draggedProduct) return;
+    const now = Date.now();
+    if (now - dragPagingCooldownRef.current < 450) return;
+    dragPagingCooldownRef.current = now;
+
+    setPage((p) => {
+      if (direction === 'prev') return Math.max(1, p - 1);
+      return Math.min(totalPages, p + 1);
+    });
+  };
+
+  // ====== Drag handlers ======
+  const handleDragStart = (e: React.DragEvent, product: ProductListItem) => {
+    if (!canReorder) return;
+    setDraggedProduct(product);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    if (!canReorder) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDropOnItem = async (e: React.DragEvent, targetProduct: ProductListItem) => {
+    e.preventDefault();
+
+    if (!canReorder) return;
+
+    if (!draggedProduct || draggedProduct.id === targetProduct.id) {
+      setDraggedProduct(null);
+      return;
+    }
+
+    try {
+      await reorderGlobalByInsert(draggedProduct.id, targetProduct.id, 'before');
+    } catch (err) {
+      console.error(err);
+      showToast('error', 'Error', 'No se pudo reordenar el producto');
+    } finally {
+      setDraggedProduct(null);
+    }
+  };
+
+  const handleDropOnPageStart = async (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!canReorder) return;
+
+    try {
+      await moveDraggedToPageEdge('start');
+    } catch (err) {
+      console.error(err);
+      showToast('error', 'Error', 'No se pudo reordenar el producto');
+    } finally {
+      setDraggedProduct(null);
+    }
+  };
+
+  const handleDropOnPageEnd = async (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!canReorder) return;
+
+    try {
+      await moveDraggedToPageEdge('end');
+    } catch (err) {
+      console.error(err);
+      showToast('error', 'Error', 'No se pudo reordenar el producto');
+    } finally {
+      setDraggedProduct(null);
+    }
+  };
+
+  const handleDragEnd = () => setDraggedProduct(null);
+
+  // ====== DUPLICAR (AÑADIDO) ======
+  const handleDuplicateProduct = async (product: ProductListItem) => {
+    if (!restaurant?.id) return;
+
+    try {
+      // 1) Traer detalle completo del producto a duplicar
+      const { data: full, error: fullError } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', product.id)
+        .eq('restaurant_id', restaurant.id)
+        .single();
+
+      if (fullError) throw fullError;
+
+      // 2) Calcular nuevo display_order al final
+      const maxDisplayOrder = Math.max(...products.map((p) => (p as any).display_order || 0), -1);
+
+      // 3) Preparar copia (limpiar campos que no deben clonarse)
+      const nowIso = new Date().toISOString();
+      const copyName = `${full.name} (Copia)`;
+
+      const insertPayload: any = {
+        ...full,
+        id: undefined,
+        name: copyName,
+        display_order: maxDisplayOrder + 1,
+        created_at: undefined,
+        updated_at: nowIso
+      };
+
+      // Asegurar restaurant_id
+      insertPayload.restaurant_id = restaurant.id;
+
+      // 4) Insertar el producto duplicado
+      const { data: inserted, error: insertError } = await supabase
+        .from('products')
+        .insert(insertPayload)
+        .select('id')
+        .single();
+
+      if (insertError) throw insertError;
+
+      // 5) Copiar categoría (si existe)
+      if (product.category_id) {
+        // limpia relaciones previas por si tu tabla tiene constraints (normalmente no hace falta, pero es seguro)
+        await supabase.from('product_categories').insert({
+          product_id: inserted.id,
+          category_id: product.category_id
+        });
+      }
+
+      invalidateCache();
+      await loadMenuData();
+
+      showToast('success', 'Duplicado', 'Producto duplicado correctamente', 3000);
+    } catch (error: any) {
+      console.error('Error duplicating product:', error);
+      showToast('error', 'Error', error?.message || 'No se pudo duplicar el producto');
+    }
+  };
+
+  // ====== Status / CRUD (igual) ======
+  const handleChangeProductStatus = async (productId: string, newStatus: Product['status']) => {
+    try {
+      const { error } = await supabase
+        .from('products')
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .eq('id', productId);
+
+      if (error) throw error;
+
+      invalidateCache();
+      await loadMenuData();
+
+      showToast('success', t('statusUpdated'), `${t('productStatusChangedTo')} ${t(newStatus)}`, 3000);
+    } catch (error: any) {
+      console.error('Error changing product status:', error);
+      showToast('error', 'Error', 'No se pudo cambiar el estado del producto');
+    }
+  };
+
+  const handleSaveProduct = async (productData: any) => {
+    if (!restaurant) return;
+
+    try {
+      const minPrice =
+        productData.variations && productData.variations.length > 0
+          ? Math.min(...productData.variations.map((v: any) => v.price))
+          : 0;
+
+      const { category_id, ...productDataWithoutCategory } = productData;
+
+      const dataToSave = {
+        ...productDataWithoutCategory,
+        price: minPrice
+      };
+
+      if (editingProductId) {
+        const { error: updateError } = await supabase
+          .from('products')
+          .update({
+            ...dataToSave,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', editingProductId);
+
+        if (updateError) throw updateError;
+
+        if (category_id) {
+          const { error: deleteCategoriesError } = await supabase
+            .from('product_categories')
+            .delete()
+            .eq('product_id', editingProductId);
+
+          if (deleteCategoriesError) throw deleteCategoriesError;
+
+          const { error: insertCategoryError } = await supabase.from('product_categories').insert({
+            product_id: editingProductId,
+            category_id
+          });
+
+          if (insertCategoryError) throw insertCategoryError;
+        }
+      } else {
+        const maxDisplayOrder = Math.max(...products.map((p) => (p as any).display_order || 0), -1);
+
+        const { data: newProduct, error: insertError } = await supabase
+          .from('products')
+          .insert({
+            restaurant_id: restaurant.id,
+            ...dataToSave,
+            display_order: maxDisplayOrder + 1
+          })
+          .select('id')
+          .single();
+
+        if (insertError) throw insertError;
+
+        if (category_id && newProduct) {
+          const { error: categoryError } = await supabase.from('product_categories').insert({
+            product_id: newProduct.id,
+            category_id
+          });
+          if (categoryError) throw categoryError;
+        }
+      }
+
+      setShowProductModal(false);
+      setEditingProductId(null);
+      setEditingProduct(null);
+
+      invalidateCache();
+      await loadMenuData();
+
+      showToast(
+        'success',
+        editingProductId ? t('productUpdatedTitle') : t('productCreatedTitle'),
+        editingProductId ? t('productUpdatedMessage') : t('productCreatedMessage'),
+        4000
+      );
+    } catch (error: any) {
+      console.error('Error saving product:', error);
+      showToast('error', 'Error', error.message || 'No se pudo guardar el producto');
+    }
   };
 
   useEffect(() => {
-    loadData();
-  }, []);
+    const fetchEditingProduct = async () => {
+      if (!showProductModal) return;
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-
-      const [restaurantsRes, subscriptionsRes, usersRes, plansRes] = await Promise.all([
-        supabase.from('restaurants').select('*').order('created_at', { ascending: false }),
-        supabase.from('subscriptions').select('*').order('created_at', { ascending: false }),
-        supabase.from('users').select('*').order('created_at', { ascending: false }),
-        supabase.from('subscription_plans').select('*').order('display_order', { ascending: true })
-      ]);
-
-      if (restaurantsRes.error) throw restaurantsRes.error;
-      if (subscriptionsRes.error) throw subscriptionsRes.error;
-      if (usersRes.error) throw usersRes.error;
-      if (plansRes.error) throw plansRes.error;
-
-      const now = new Date();
-      const updatedSubscriptions = (subscriptionsRes.data || []).map((sub: any) => {
-        const endDate = new Date(sub.end_date);
-
-        if (endDate < now && sub.status === 'active') {
-          if (sub.auto_renew) {
-            return {
-              ...sub,
-              start_date: sub.end_date,
-              end_date: calculateNewEndDate(sub.end_date, sub.duration),
-              status: 'active' as const
-            };
-          } else {
-            return { ...sub, status: 'expired' as const };
-          }
-        }
-        return sub;
-      });
-
-      setRestaurants(restaurantsRes.data || []);
-      setSubscriptions(updatedSubscriptions);
-      setUsers(usersRes.data || []);
-      setPlans(plansRes.data || []);
-    } catch (error) {
-      console.error('Error loading analytics data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getFilteredSubscriptions = () => {
-    let filtered = [...subscriptions];
-
-    if (selectedPlanFilter !== 'all') {
-      filtered = filtered.filter(s => s.plan_type === selectedPlanFilter);
-    }
-
-    if (selectedPeriodFilter !== 'all' && !startDate && !endDate) {
-      const now = new Date();
-      const periodStartDate = new Date();
-
-      switch (selectedPeriodFilter) {
-        case 'today':
-          periodStartDate.setHours(0, 0, 0, 0);
-          break;
-        case 'week':
-          periodStartDate.setDate(now.getDate() - 7);
-          break;
-        case 'month':
-          periodStartDate.setMonth(now.getMonth() - 1);
-          break;
-        case 'year':
-          periodStartDate.setFullYear(now.getFullYear() - 1);
-          break;
+      if (!editingProductId) {
+        setEditingProduct(null);
+        return;
       }
 
-      filtered = filtered.filter(s => new Date(s.created_at) >= periodStartDate);
+      setLoadingEditingProduct(true);
+
+      const { data, error } = await supabase
+        .from('products')
+        .select(
+          `
+          *,
+          product_categories ( category_id )
+        `
+        )
+        .eq('id', editingProductId)
+        .single();
+
+      setLoadingEditingProduct(false);
+
+      if (error) {
+        console.error('Error loading product detail:', error);
+        showToast('error', 'Error', 'No se pudo cargar el producto');
+        return;
+      }
+
+      const fullProduct = {
+        ...data,
+        category_id: data.product_categories?.[0]?.category_id || ''
+      };
+
+      setEditingProduct(fullProduct as any);
+    };
+
+    fetchEditingProduct();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showProductModal, editingProductId]);
+
+  const handleEditProduct = (product: ProductListItem) => {
+    setEditingProductId(product.id);
+    setShowProductModal(true);
+  };
+
+  const handleDeleteProduct = async (productId: string) => {
+    try {
+      const { error } = await supabase.from('products').delete().eq('id', productId);
+      if (error) throw error;
+
+      setDeleteConfirm({ show: false, productId: '', productName: '' });
+
+      invalidateCache();
+      await loadMenuData();
+
+      showToast('info', t('productDeletedTitle'), t('productDeletedMessage'), 4000);
+    } catch (error: any) {
+      console.error('Error deleting product:', error);
+      showToast('error', 'Error', 'No se pudo eliminar el producto');
     }
-
-    if (startDate || endDate) {
-      filtered = filtered.filter(s => {
-        const subDate = new Date(s.created_at);
-        if (startDate && subDate < new Date(startDate)) return false;
-        if (endDate) {
-          const end = new Date(endDate);
-          end.setHours(23, 59, 59, 999);
-          if (subDate > end) return false;
-        }
-        return true;
-      });
-    }
-
-    return filtered;
   };
 
-  const filteredSubscriptions = getFilteredSubscriptions();
-
-  const totalRestaurants = restaurants.length;
-  const activeRestaurants = subscriptions.filter(s => s.status === 'active').length;
-  const expiredRestaurants = subscriptions.filter(s => s.status === 'expired').length;
-  const totalUsers = users.length;
-  const verifiedUsers = users.filter(u => u.email_verified).length;
-  const restaurantOwners = users.filter(u => u.role === 'restaurant_owner').length;
-  const superAdmins = users.filter(u => u.role === 'superadmin').length;
-
-  const activeSubscriptions = filteredSubscriptions.filter(s => s.status === 'active').length;
-  const expiredSubscriptions = filteredSubscriptions.filter(s => s.status === 'expired').length;
-  const totalFilteredSubscriptions = filteredSubscriptions.length;
-
-  const getMonthlyRegistrations = () => {
-    const monthlyData: { [key: string]: number } = {};
-
-    restaurants.forEach(restaurant => {
-      const date = new Date(restaurant.created_at);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      monthlyData[monthKey] = (monthlyData[monthKey] || 0) + 1;
-    });
-
-    return Object.entries(monthlyData)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .slice(-6);
+  const openDeleteConfirm = (product: ProductListItem) => {
+    setDeleteConfirm({ show: true, productId: product.id, productName: product.name });
   };
 
-  const monthlyRegistrations = getMonthlyRegistrations();
-
-  const planDistribution = {
-    free: filteredSubscriptions.filter(s => s.plan_name === 'free').length,
-    basic: filteredSubscriptions.filter(s => s.plan_name === 'basic').length,
-    pro: filteredSubscriptions.filter(s => s.plan_name === 'pro').length,
-    business: filteredSubscriptions.filter(s => s.plan_name === 'business').length,
-  };
-
-  const durationDistribution = {
-    monthly: filteredSubscriptions.filter(s => s.duration === 'monthly').length,
-    annual: filteredSubscriptions.filter(s => s.duration === 'annual').length,
-  };
-
-  const getPlanPrice = (planName: string): number => {
-    const plan = plans.find(p => p.slug === planName || p.name.toLowerCase() === planName.toLowerCase());
-    if (!plan) return 0;
-    return plan.billing_period === 'monthly' ? Number(plan.price) : Number(plan.price) / 12;
-  };
-
-  const durationMultipliers: Record<string, number> = {
-    monthly: 1,
-    annual: 12,
-  };
-
-  const calculateRevenue = (subs: Subscription[]) => {
-    return subs.reduce((total, sub) => {
-      const monthlyPrice = sub.monthly_price || getPlanPrice(sub.plan_name);
-      const multiplier = durationMultipliers[sub.duration] || 1;
-      return total + (monthlyPrice * multiplier);
-    }, 0);
-  };
-
-  const totalRevenue = calculateRevenue(filteredSubscriptions.filter(s => s.status === 'active'));
-  const potentialRevenue = calculateRevenue(filteredSubscriptions);
-
-  const calculateMRR = () => {
-    return subscriptions
-      .filter(s => s.status === 'active')
-      .reduce((total, sub) => {
-        const monthlyPrice = sub.monthly_price || getPlanPrice(sub.plan_name);
-        return total + monthlyPrice;
-      }, 0);
-  };
-
-  const mrr = calculateMRR();
-
-  const calculateARR = () => {
-    return mrr * 12;
-  };
-
-  const arr = calculateARR();
-
-  const revenueByPlan = {
-    free: calculateRevenue(filteredSubscriptions.filter(s => s.plan_name === 'free')),
-    basic: calculateRevenue(filteredSubscriptions.filter(s => s.plan_name === 'basic')),
-    pro: calculateRevenue(filteredSubscriptions.filter(s => s.plan_name === 'pro')),
-    business: calculateRevenue(filteredSubscriptions.filter(s => s.plan_name === 'business')),
-  };
-
-  const expiringSoon = subscriptions.filter(sub => {
-    const endDate = new Date(sub.end_date);
-    const now = new Date();
-    const daysUntilExpiry = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    return daysUntilExpiry <= 7 && daysUntilExpiry > 0;
-  });
-
-  const calculateChurnRate = () => {
-    const totalSubs = subscriptions.length;
-    const expired = subscriptions.filter(s => s.status === 'expired').length;
-    return totalSubs > 0 ? ((expired / totalSubs) * 100).toFixed(1) : '0.0';
-  };
-
-  const calculateConversionRate = () => {
-    const paidPlans = subscriptions.filter(s => s.plan_name !== 'free').length;
-    const totalSubs = subscriptions.length;
-    return totalSubs > 0 ? ((paidPlans / totalSubs) * 100).toFixed(1) : '0.0';
-  };
-
-  const calculateAveragePlanValue = () => {
-    const paidSubs = subscriptions.filter(s => s.plan_name !== 'free' && s.status === 'active');
-    if (paidSubs.length === 0) return 0;
-
-    const totalValue = paidSubs.reduce((sum, sub) => {
-      const monthlyPrice = sub.monthly_price || getPlanPrice(sub.plan_name);
-      return sum + monthlyPrice;
-    }, 0);
-
-    return (totalValue / paidSubs.length).toFixed(2);
-  };
-
-  const exportToCSV = () => {
-    const csvData = [];
-
-    csvData.push(['REPORTE DE ESTADÍSTICAS DEL SISTEMA']);
-    csvData.push(['Fecha de generación:', new Date().toLocaleString()]);
-    csvData.push([]);
-
-    csvData.push(['MÉTRICAS GENERALES']);
-    csvData.push(['Total Restaurantes', totalRestaurants]);
-    csvData.push(['Restaurantes Activos', activeRestaurants]);
-    csvData.push(['Restaurantes Expirados', expiredRestaurants]);
-    csvData.push(['Total Usuarios', totalUsers]);
-    csvData.push(['Usuarios Verificados', verifiedUsers]);
-    csvData.push(['Propietarios de Restaurantes', restaurantOwners]);
-    csvData.push(['Super Administradores', superAdmins]);
-    csvData.push([]);
-
-    csvData.push(['MÉTRICAS FINANCIERAS']);
-    csvData.push(['MRR (Ingreso Recurrente Mensual)', `$${mrr.toFixed(2)}`]);
-    csvData.push(['ARR (Ingreso Recurrente Anual)', `$${arr.toFixed(2)}`]);
-    csvData.push(['Ingresos Totales Activos', `$${totalRevenue.toFixed(2)}`]);
-    csvData.push(['Potencial de Ingresos', `$${potentialRevenue.toFixed(2)}`]);
-    csvData.push(['Valor Promedio por Plan', `$${calculateAveragePlanValue()}`]);
-    csvData.push([]);
-
-    csvData.push(['SUSCRIPCIONES']);
-    csvData.push(['Total Suscripciones', totalFilteredSubscriptions]);
-    csvData.push(['Suscripciones Activas', activeSubscriptions]);
-    csvData.push(['Suscripciones Expiradas', expiredSubscriptions]);
-    csvData.push(['Tasa de Abandono (Churn)', `${calculateChurnRate()}%`]);
-    csvData.push(['Tasa de Conversión', `${calculateConversionRate()}%`]);
-    csvData.push([]);
-
-    csvData.push(['DISTRIBUCIÓN POR PLAN']);
-    csvData.push(['Plan FREE', planDistribution.free, `$${revenueByPlan.free.toFixed(2)}`]);
-    csvData.push(['Plan Basic', planDistribution.basic, `$${revenueByPlan.basic.toFixed(2)}`]);
-    csvData.push(['Plan Pro', planDistribution.pro, `$${revenueByPlan.pro.toFixed(2)}`]);
-    csvData.push(['Plan Business', planDistribution.business, `$${revenueByPlan.business.toFixed(2)}`]);
-    csvData.push([]);
-
-    csvData.push(['DISTRIBUCIÓN POR DURACIÓN']);
-    csvData.push(['Mensual', durationDistribution.monthly]);
-    csvData.push(['Anual', durationDistribution.annual]);
-    csvData.push([]);
-
-    csvData.push(['DETALLE DE RESTAURANTES']);
-    csvData.push(['Nombre', 'Email', 'Plan', 'Estado', 'Fecha de Creación']);
-    restaurants.forEach(restaurant => {
-      const subscription = subscriptions.find(s => s.restaurant_id === restaurant.id);
-      csvData.push([
-        restaurant.name,
-        restaurant.email,
-        subscription?.plan_type || 'N/A',
-        subscription?.status || 'N/A',
-        new Date(restaurant.created_at).toLocaleDateString()
-      ]);
-    });
-
-    const csvContent = csvData.map(row => row.join(',')).join('\n');
-    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-
-    link.setAttribute('href', url);
-    link.setAttribute('download', `estadisticas_sistema_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <RefreshCw className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">Cargando estadísticas...</p>
-        </div>
-      </div>
-    );
-  }
-
+  // ===== UI =====
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">Estadísticas del Sistema</h1>
-        <div className="flex items-center gap-3">
-          <Button
-            onClick={loadData}
-            icon={RefreshCw}
-            variant="ghost"
-            size="sm"
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">{t('productManagement')}</h1>
+
+        <div className="flex gap-3">
+          <a
+            href={restaurant?.slug ? `/${restaurant.slug}` : '#'}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => {
+              if (!restaurant?.slug) {
+                e.preventDefault();
+                showToast('warning', 'No disponible', 'El menú público aún no está disponible', 3000);
+              }
+            }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg text-sm font-medium hover:from-green-700 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg"
           >
-            Actualizar
-          </Button>
-          <div className="text-sm text-gray-500">
-            Última actualización: {new Date().toLocaleString()}
-          </div>
+            <ExternalLink className="w-4 h-4" />
+            {t('viewMenu')}
+          </a>
+
           <Button
-            onClick={exportToCSV}
-            icon={Download}
-            variant="primary"
+            icon={Plus}
+            onClick={() => {
+              setEditingProductId(null);
+              setEditingProduct(null);
+              setShowProductModal(true);
+            }}
           >
-            Exportar CSV
+            {t('newProduct')}
           </Button>
         </div>
       </div>
 
-      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Filter className="w-5 h-5 text-gray-600" />
-            <span className="text-sm font-medium text-gray-700">Filtros:</span>
+      {/* Search + category filter */}
+      <div className="bg-white rounded-lg shadow p-4 mb-6 space-y-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Buscar por nombre, descripción o SKU..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setSelectedCategory('all')}
+            className={`px-4 py-2 rounded-lg transition-all font-medium ${
+              selectedCategory === 'all'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            {t('all')}
+          </button>
+
+          {categories.map((category) => (
+            <button
+              key={category.id}
+              onClick={() => setSelectedCategory(category.id)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all font-medium ${
+                selectedCategory === category.id
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {(category as any).icon && <span>{(category as any).icon}</span>}
+              <span>{category.name}</span>
+            </button>
+          ))}
+        </div>
+
+        {canReorder && (
+          <div className="flex items-center gap-2 text-sm text-gray-600 bg-blue-50 rounded-lg p-3 border border-blue-100">
+            <GripVertical className="w-4 h-4 text-blue-600 flex-shrink-0" />
+            <p>
+              <strong className="text-blue-700">{t('tipLabel')}:</strong> Arrastra un producto, pasa por “Anterior/Siguiente” para cambiar de página, y suelta sobre otro producto (o en la franja superior/inferior).
+            </p>
           </div>
+        )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Plan</label>
-              <select
-                value={selectedPlanFilter}
-                onChange={(e) => setSelectedPlanFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="all">Todos los planes</option>
-                <option value="free">FREE</option>
-                <option value="basic">Basic</option>
-                <option value="pro">Pro</option>
-                <option value="business">Business</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Período</label>
-              <select
-                value={selectedPeriodFilter}
-                onChange={(e) => setSelectedPeriodFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                disabled={!!(startDate || endDate)}
-              >
-                <option value="all">Todo el tiempo</option>
-                <option value="today">Hoy</option>
-                <option value="week">Última semana</option>
-                <option value="month">Último mes</option>
-                <option value="year">Último año</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Desde</label>
-              <Input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Hasta</label>
-              <Input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
-            </div>
+        {!canReorder && (
+          <div className="text-xs text-gray-500">
+            Para reordenar con drag-and-drop, selecciona <strong>ALL</strong> y limpia la búsqueda.
           </div>
+        )}
+      </div>
 
-          {(selectedPlanFilter !== 'all' || selectedPeriodFilter !== 'all' || startDate || endDate) && (
-            <div className="flex justify-end">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setSelectedPlanFilter('all');
-                  setSelectedPeriodFilter('all');
-                  setStartDate('');
-                  setEndDate('');
-                }}
-              >
-                Limpiar filtros
-              </Button>
+      {/* Grid */}
+      {loadingProducts ? (
+        <div className="bg-white rounded-lg shadow p-12 text-center text-gray-600">
+          Cargando productos...
+        </div>
+      ) : products.length === 0 ? (
+        <div className="bg-white rounded-lg shadow p-12 text-center">
+          <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            {searchTerm ? t('noProductsFound') : t('noProductsInCategory')}
+          </h3>
+        </div>
+      ) : (
+        <>
+          {/* Drop zone: inicio de página */}
+          {canReorder && draggedProduct && (
+            <div
+              onDragOver={handleDragOver}
+              onDrop={handleDropOnPageStart}
+              className="mb-3 rounded-lg border border-dashed border-blue-300 bg-blue-50 text-blue-700 text-sm px-4 py-2"
+            >
+              Suelta aquí para mover al inicio de esta página
             </div>
           )}
-        </div>
-      </div>
 
-      <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-lg shadow-sm border border-green-200">
-        <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-          <DollarSign className="w-6 h-6 mr-2 text-green-600" />
-          Estadísticas Económicas
-        </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white p-4 rounded-lg border border-green-200">
-            <p className="text-sm font-medium text-gray-600">MRR</p>
-            <p className="text-3xl font-bold text-blue-600 mt-2">
-              ${mrr.toFixed(2)}
-            </p>
-            <p className="text-xs text-gray-500 mt-1">Ingreso Recurrente Mensual</p>
-          </div>
-
-          <div className="bg-white p-4 rounded-lg border border-green-200">
-            <p className="text-sm font-medium text-gray-600">ARR</p>
-            <p className="text-3xl font-bold text-purple-600 mt-2">
-              ${arr.toFixed(2)}
-            </p>
-            <p className="text-xs text-gray-500 mt-1">Ingreso Recurrente Anual</p>
-          </div>
-
-          <div className="bg-white p-4 rounded-lg border border-green-200">
-            <p className="text-sm font-medium text-gray-600">Ingresos Totales</p>
-            <p className="text-3xl font-bold text-green-600 mt-2">
-              ${totalRevenue.toFixed(2)}
-            </p>
-            <p className="text-xs text-gray-500 mt-1">Suscripciones activas</p>
-          </div>
-
-          <div className="bg-white p-4 rounded-lg border border-green-200">
-            <p className="text-sm font-medium text-gray-600">Valor Promedio</p>
-            <p className="text-3xl font-bold text-orange-600 mt-2">
-              ${calculateAveragePlanValue()}
-            </p>
-            <p className="text-xs text-gray-500 mt-1">Por suscripción de pago</p>
-          </div>
-        </div>
-
-        <div className="mt-6 bg-white p-4 rounded-lg border border-green-200">
-          <h3 className="text-sm font-medium text-gray-700 mb-3">Ingresos por Plan</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <p className="text-xs text-gray-600 mb-1">Gratis</p>
-              <p className="text-lg font-bold text-gray-900">${revenueByPlan.free.toFixed(2)}</p>
-              <p className="text-xs text-gray-500 mt-1">{planDistribution.free} suscripciones</p>
-            </div>
-            <div className="text-center p-3 bg-blue-50 rounded-lg">
-              <p className="text-xs text-blue-600 mb-1">Basic</p>
-              <p className="text-lg font-bold text-blue-900">${revenueByPlan.basic.toFixed(2)}</p>
-              <p className="text-xs text-blue-600 mt-1">{planDistribution.basic} suscripciones</p>
-            </div>
-            <div className="text-center p-3 bg-purple-50 rounded-lg">
-              <p className="text-xs text-purple-600 mb-1">Pro</p>
-              <p className="text-lg font-bold text-purple-900">${revenueByPlan.pro.toFixed(2)}</p>
-              <p className="text-xs text-purple-600 mt-1">{planDistribution.pro} suscripciones</p>
-            </div>
-            <div className="text-center p-3 bg-orange-50 rounded-lg">
-              <p className="text-xs text-orange-600 mb-1">Business</p>
-              <p className="text-lg font-bold text-orange-900">${revenueByPlan.business.toFixed(2)}</p>
-              <p className="text-xs text-orange-600 mt-1">{planDistribution.business} suscripciones</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <Store className="h-8 w-8 text-blue-600" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Restaurantes</p>
-              <p className="text-2xl font-semibold text-gray-900">{totalRestaurants}</p>
-            </div>
-          </div>
-          <div className="mt-2">
-            <span className="text-sm text-green-600 font-medium">
-              {activeRestaurants} activos
-            </span>
-            <span className="text-sm text-gray-400 mx-1">•</span>
-            <span className="text-sm text-red-600 font-medium">
-              {expiredRestaurants} expirados
-            </span>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <Users className="h-8 w-8 text-green-600" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Usuarios</p>
-              <p className="text-2xl font-semibold text-gray-900">{totalUsers}</p>
-            </div>
-          </div>
-          <div className="mt-2">
-            <span className="text-sm text-green-600 font-medium">
-              {verifiedUsers} verificados
-            </span>
-            <span className="text-sm text-gray-400 mx-1">•</span>
-            <span className="text-sm text-blue-600 font-medium">
-              {restaurantOwners} propietarios
-            </span>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <DollarSign className="h-8 w-8 text-purple-600" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Suscripciones</p>
-              <p className="text-2xl font-semibold text-gray-900">{totalFilteredSubscriptions}</p>
-            </div>
-          </div>
-          <div className="mt-2">
-            <span className="text-sm text-green-600 font-medium">
-              {activeSubscriptions} activas
-            </span>
-            <span className="text-sm text-gray-400 mx-1">•</span>
-            <span className="text-sm text-red-600 font-medium">
-              {expiredSubscriptions} vencidas
-            </span>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <TrendingUp className="h-8 w-8 text-orange-600" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Crecimiento</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {monthlyRegistrations.length > 0 ? monthlyRegistrations[monthlyRegistrations.length - 1][1] : 0}
-              </p>
-            </div>
-          </div>
-          <div className="mt-2">
-            <span className="text-sm text-purple-600 font-medium">
-              Este mes
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium text-gray-600">Tasa de Abandono</p>
-            <RefreshCw className="h-5 w-5 text-red-600" />
-          </div>
-          <p className="text-3xl font-bold text-red-600">{calculateChurnRate()}%</p>
-          <p className="text-xs text-gray-500 mt-1">Churn rate</p>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium text-gray-600">Tasa de Conversión</p>
-            <TrendingUp className="h-5 w-5 text-green-600" />
-          </div>
-          <p className="text-3xl font-bold text-green-600">{calculateConversionRate()}%</p>
-          <p className="text-xs text-gray-500 mt-1">A planes de pago</p>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium text-gray-600">Suscripciones Mensuales</p>
-            <Calendar className="h-5 w-5 text-blue-600" />
-          </div>
-          <p className="text-3xl font-bold text-blue-600">{durationDistribution.monthly}</p>
-          <p className="text-xs text-gray-500 mt-1">Duración mensual</p>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium text-gray-600">Suscripciones Anuales</p>
-            <Clock className="h-5 w-5 text-purple-600" />
-          </div>
-          <p className="text-3xl font-bold text-purple-600">{durationDistribution.annual}</p>
-          <p className="text-xs text-gray-500 mt-1">Duración anual</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-            <Calendar className="w-5 h-5 mr-2" />
-            Registros por Mes
-          </h3>
-          <div className="space-y-3">
-            {monthlyRegistrations.map(([month, count]) => (
-              <div key={month} className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">{month}</span>
-                <div className="flex items-center">
-                  <div className="w-32 bg-gray-200 rounded-full h-2 mr-3">
-                    <div
-                      className="bg-blue-600 h-2 rounded-full"
-                      style={{ width: `${(count / Math.max(...monthlyRegistrations.map(([, c]) => c))) * 100}%` }}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+            {products.map((product) => (
+              <div
+                key={product.id}
+                draggable={canReorder}
+                onDragStart={(e) => handleDragStart(e, product)}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDropOnItem(e, product)}
+                onDragEnd={handleDragEnd}
+                className={`bg-white rounded-xl shadow-sm border-2 transition-all overflow-hidden group ${
+                  canReorder ? 'cursor-move' : ''
+                } ${
+                  draggedProduct?.id === product.id
+                    ? 'opacity-50 scale-95 border-blue-400'
+                    : 'border-gray-200 hover:shadow-lg hover:border-blue-300'
+                }`}
+              >
+                <div className="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
+                  {product.images?.length > 0 ? (
+                    <img
+                      src={product.images[0]}
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
+                      <Package className="w-12 h-12 mb-2" />
+                      <span className="text-sm">{t('noImage')}</span>
+                    </div>
+                  )}
+
+                  <div className="absolute top-2 right-2">{getStatusBadge(product.status)}</div>
+                </div>
+
+                <div className="p-4">
+                  <div className="mb-2">
+                    <h3 className="text-lg font-semibold text-gray-900 truncate">{product.name}</h3>
+                    <p className="text-sm text-gray-600">{getCategoryName(product.category_id)}</p>
                   </div>
-                  <span className="text-sm font-medium text-gray-900">{count}</span>
+
+                  <p className="text-gray-700 text-sm mb-3 line-clamp-2">{product.description}</p>
+
+                  <div className="mb-4">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-bold text-gray-900">
+                        {formatCurrency(product.price || 0, currency)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    {/* Acciones (AQUÍ se restaura Duplicar) */}
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="sm" icon={Edit} onClick={() => handleEditProduct(product)} />
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        icon={Copy}
+                        onClick={() => handleDuplicateProduct(product)}
+                        title="Duplicar"
+                      />
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        icon={Trash2}
+                        onClick={() => openDeleteConfirm(product)}
+                        className="text-red-600 hover:text-red-700"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={product.status}
+                        onChange={(e) => handleChangeProductStatus(product.id, e.target.value as Product['status'])}
+                        className="flex-1 text-xs px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                      >
+                        <option value="active">{t('active')}</option>
+                        <option value="out_of_stock">{t('outOfStock')}</option>
+                        <option value="archived">{t('archived')}</option>
+                      </select>
+                      {product.sku && <span className="text-xs text-gray-500">{product.sku}</span>}
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
-        </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-            <BarChart3 className="w-5 h-5 mr-2" />
-            Distribución de Planes
-          </h3>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Gratis</span>
-              <div className="flex items-center">
-                <div className="w-32 bg-gray-200 rounded-full h-2 mr-3">
-                  <div
-                    className="bg-gray-500 h-2 rounded-full"
-                    style={{ width: `${totalFilteredSubscriptions > 0 ? (planDistribution.free / totalFilteredSubscriptions) * 100 : 0}%` }}
-                  />
-                </div>
-                <span className="text-sm font-medium text-gray-900">{planDistribution.free}</span>
+          {/* Drop zone: final de página */}
+          {canReorder && draggedProduct && (
+            <div
+              onDragOver={handleDragOver}
+              onDrop={handleDropOnPageEnd}
+              className="mt-3 rounded-lg border border-dashed border-blue-300 bg-blue-50 text-blue-700 text-sm px-4 py-2"
+            >
+              Suelta aquí para mover al final de esta página
+            </div>
+          )}
+
+          {/* Pagination */}
+          {totalProducts > PAGE_SIZE && (
+            <div className="flex items-center justify-between mt-6 bg-white p-3 rounded-lg shadow border">
+              <div className="text-sm text-gray-600">
+                Página <strong>{page}</strong> de <strong>{totalPages}</strong> · {totalProducts} productos
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  onDragEnter={() => canReorder && maybeTurnPageWhileDragging('prev')}
+                >
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page >= totalPages}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  onDragEnter={() => canReorder && maybeTurnPageWhileDragging('next')}
+                >
+                  Siguiente
+                </Button>
               </div>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Basic</span>
-              <div className="flex items-center">
-                <div className="w-32 bg-gray-200 rounded-full h-2 mr-3">
-                  <div
-                    className="bg-blue-500 h-2 rounded-full"
-                    style={{ width: `${totalFilteredSubscriptions > 0 ? (planDistribution.basic / totalFilteredSubscriptions) * 100 : 0}%` }}
-                  />
-                </div>
-                <span className="text-sm font-medium text-gray-900">{planDistribution.basic}</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Pro</span>
-              <div className="flex items-center">
-                <div className="w-32 bg-gray-200 rounded-full h-2 mr-3">
-                  <div
-                    className="bg-green-500 h-2 rounded-full"
-                    style={{ width: `${totalFilteredSubscriptions > 0 ? (planDistribution.pro / totalFilteredSubscriptions) * 100 : 0}%` }}
-                  />
-                </div>
-                <span className="text-sm font-medium text-gray-900">{planDistribution.pro}</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Business</span>
-              <div className="flex items-center">
-                <div className="w-32 bg-gray-200 rounded-full h-2 mr-3">
-                  <div
-                    className="bg-orange-500 h-2 rounded-full"
-                    style={{ width: `${totalFilteredSubscriptions > 0 ? (planDistribution.business / totalFilteredSubscriptions) * 100 : 0}%` }}
-                  />
-                </div>
-                <span className="text-sm font-medium text-gray-900">{planDistribution.business}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+          )}
+        </>
+      )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">Rendimiento por Plan</h3>
-          </div>
-          <div className="p-6">
-            <div className="space-y-4">
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">Plan Gratis</span>
-                  <Badge variant="default">{planDistribution.free} suscripciones</Badge>
-                </div>
-                <div className="text-xs text-gray-600">
-                  Ingreso: $0.00/mes
-                </div>
-              </div>
+      {/* Product Form Modal */}
+      <Modal
+        isOpen={showProductModal}
+        onClose={() => {
+          setShowProductModal(false);
+          setEditingProductId(null);
+          setEditingProduct(null);
+        }}
+        title={editingProductId ? `${t('edit')} ${t('newProduct')}` : t('newProduct')}
+        size="xl"
+      >
+        {loadingEditingProduct ? (
+          <div className="p-6 text-sm text-gray-600">Cargando producto...</div>
+        ) : (
+          <ProductForm
+            categories={categories}
+            product={editingProduct}
+            onSave={handleSaveProduct}
+            onCancel={() => {
+              setShowProductModal(false);
+              setEditingProductId(null);
+              setEditingProduct(null);
+            }}
+          />
+        )}
+      </Modal>
 
-              <div className="p-3 bg-blue-50 rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-blue-700">Plan Basic</span>
-                  <Badge variant="info">{planDistribution.basic} suscripciones</Badge>
-                </div>
-                <div className="text-xs text-blue-600">
-                  Ingreso: ${(planDistribution.basic * getPlanPrice('basic')).toFixed(2)}/mes
-                </div>
-              </div>
-
-              <div className="p-3 bg-green-50 rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-green-700">Plan Pro</span>
-                  <Badge variant="success">{planDistribution.pro} suscripciones</Badge>
-                </div>
-                <div className="text-xs text-green-600">
-                  Ingreso: ${(planDistribution.pro * getPlanPrice('pro')).toFixed(2)}/mes
-                </div>
-              </div>
-
-              <div className="p-3 bg-orange-50 rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-orange-700">Plan Business</span>
-                  <Badge variant="warning">{planDistribution.business} suscripciones</Badge>
-                </div>
-                <div className="text-xs text-orange-600">
-                  Ingreso: ${(planDistribution.business * getPlanPrice('business')).toFixed(2)}/mes
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">Suscripciones por Vencer</h3>
-          </div>
-          <div className="p-6">
-            {expiringSoon.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-4">
-                No hay suscripciones próximas a vencer
-              </p>
-            ) : (
-              <div className="space-y-4">
-                {expiringSoon.slice(0, 5).map(subscription => {
-                  const restaurant = restaurants.find(r => r.id === subscription.restaurant_id);
-                  const daysLeft = Math.ceil((new Date(subscription.end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-
-                  return (
-                    <div key={subscription.id} className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{restaurant?.name}</p>
-                        <p className="text-xs text-gray-500">
-                          Vence en {daysLeft} día{daysLeft !== 1 ? 's' : ''}
-                        </p>
-                      </div>
-                      <Badge variant="warning">
-                        {subscription.plan_type}
-                      </Badge>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+      <ConfirmDialog
+        isOpen={deleteConfirm.show}
+        onClose={() => setDeleteConfirm({ show: false, productId: '', productName: '' })}
+        onConfirm={() => handleDeleteProduct(deleteConfirm.productId)}
+        title={t('deleteProductQuestion')}
+        message={t('deleteProductWarning')}
+        confirmText={t('deleteProduct')}
+        cancelText={t('cancel')}
+        variant="danger"
+        itemName={deleteConfirm.productName}
+      />
     </div>
   );
 };
